@@ -30,9 +30,9 @@ class CookieDefinitionAdminController extends AbstractController
     /**
      * Creates a new cookie definition admin controller.
      *
-     * @param CookieConsentConfigRepository $configRepository     Repository for consent profiles
-     * @param CookieDefinitionRepository    $definitionRepository Repository for cookie definitions
-     * @param TranslatorInterface           $translator           Symfony translator for flash messages
+     * @param CookieConsentConfigRepository $configRepository Repository for consent profiles
+     * @param CookieDefinitionRepository $definitionRepository Repository for cookie definitions
+     * @param TranslatorInterface $translator Symfony translator for flash messages
      */
     public function __construct(
         private readonly CookieConsentConfigRepository $configRepository,
@@ -62,9 +62,9 @@ class CookieDefinitionAdminController extends AbstractController
     /**
      * Creates a new cookie definition for a consent profile.
      *
-     * @param int                     $configId      The consent profile identifier
-     * @param Request                 $request       The current HTTP request
-     * @param EntityManagerInterface  $entityManager Doctrine entity manager
+     * @param int $configId The consent profile identifier
+     * @param Request $request The current HTTP request
+     * @param EntityManagerInterface $entityManager Doctrine entity manager
      *
      * @return Response The rendered form or redirect after success
      */
@@ -81,10 +81,10 @@ class CookieDefinitionAdminController extends AbstractController
     /**
      * Edits an existing cookie definition.
      *
-     * @param int                     $configId      The consent profile identifier
-     * @param int                     $id            The cookie definition identifier
-     * @param Request                 $request       The current HTTP request
-     * @param EntityManagerInterface  $entityManager Doctrine entity manager
+     * @param int $configId The consent profile identifier
+     * @param int $id The cookie definition identifier
+     * @param Request $request The current HTTP request
+     * @param EntityManagerInterface $entityManager Doctrine entity manager
      *
      * @return Response The rendered form or redirect after success
      */
@@ -104,10 +104,10 @@ class CookieDefinitionAdminController extends AbstractController
     /**
      * Deletes a cookie definition after CSRF validation.
      *
-     * @param int                     $configId      The consent profile identifier
-     * @param int                     $id            The cookie definition identifier
-     * @param Request                 $request       The current HTTP request
-     * @param EntityManagerInterface  $entityManager Doctrine entity manager
+     * @param int $configId The consent profile identifier
+     * @param int $id The cookie definition identifier
+     * @param Request $request The current HTTP request
+     * @param EntityManagerInterface $entityManager Doctrine entity manager
      *
      * @return Response Redirect to the index page
      */

@@ -22,8 +22,6 @@ class NowoCookieConsentExtension extends Extension
      *
      * @param array<int, array<string, mixed>> $configs The bundle configuration arrays
      * @param ContainerBuilder $container The service container builder
-     *
-     * @return void
      */
     public function load(array $configs, ContainerBuilder $container): void
     {
