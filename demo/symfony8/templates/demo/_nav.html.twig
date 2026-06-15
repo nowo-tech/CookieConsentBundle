@@ -1,0 +1,40 @@
+{% import 'demo/_routes.html.twig' as demo_route %}
+
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark mb-4">
+    <div class="container">
+        <a class="navbar-brand" href="{{ demo_route.path('demo_home') }}">{{ 'demo.brand'|trans }}</a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#demoNavbar" aria-controls="demoNavbar" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="demoNavbar">
+            <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                <li class="nav-item">
+                    <a class="nav-link {{ app.request.attributes.get('_route') == 'demo_home' ? 'active' : '' }}" href="{{ demo_route.path('demo_home') }}">
+                        {{ 'demo.nav.home'|trans }}
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link {{ app.request.attributes.get('_route') starts with 'demo_cookie_consent_config_' ? 'active' : '' }}" href="{{ demo_route.path('demo_cookie_consent_config_index') }}">
+                        {{ 'demo.nav.config'|trans }}
+                    </a>
+                </li>
+            </ul>
+            <div class="d-flex align-items-center gap-2">
+                <div class="dropdown">
+                    <button class="btn btn-outline-light btn-sm dropdown-toggle" type="button" id="demoLocaleDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                        {{ app.request.locale|upper }}
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="demoLocaleDropdown">
+                        {% for locale in nowo_cookie_consent_enabled_locales() %}
+                            <li>
+                                <a class="dropdown-item {{ app.request.locale == locale ? 'active' : '' }}" href="{{ demo_route.switch_locale(locale) }}">
+                                    {{ locale|upper }}
+                                </a>
+                            </li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</nav>

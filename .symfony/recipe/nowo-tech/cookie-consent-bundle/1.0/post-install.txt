@@ -1,0 +1,15 @@
+Cookie Consent Bundle has been installed!
+
+The following files have been created:
+  - config/packages/nowo_cookie_consent.yaml (configuration)
+  - config/routes/nowo_cookie_consent.yaml (bundle routes import)
+
+Next steps:
+1. Publish assets: php bin/console assets:install
+2. When use_logger is true, create the consent log table (migration or doctrine:schema:update)
+3. Render the modal in your base layout when consent is not saved yet:
+   {% if not nowo_cookie_consent_is_saved() %}
+       {{ render(path('nowo_cookie_consent.show_if_not_set')) }}
+   {% endif %}
+
+See docs/INSTALLATION.md and docs/CONFIGURATION.md for details.

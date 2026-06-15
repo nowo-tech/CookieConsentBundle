@@ -1,0 +1,20 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}{{ 'demo.config.new.title'|trans }}{% endblock %}
+
+{% block body %}
+    {% include 'demo/_nav.html.twig' %}
+
+    <main class="container pb-5">
+        <div class="row justify-content-center">
+            <div class="col-lg-8">
+                <div class="card shadow-sm">
+                    <div class="card-body p-4">
+                        <h1 class="h4 mb-3">{{ 'demo.config.new.title'|trans }} — {{ config.displayName }}</h1>
+                        {% include 'demo/config/_form.html.twig' with { submit_label: 'demo.config.form.create'|trans } %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+{% endblock %}

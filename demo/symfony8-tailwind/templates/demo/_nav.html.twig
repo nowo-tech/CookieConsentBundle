@@ -1,0 +1,24 @@
+{% import 'demo/_routes.html.twig' as demo_route %}
+
+<nav class="border-b border-slate-800 bg-slate-900 text-white">
+    <div class="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-4 px-4 py-4">
+        <div class="flex items-center gap-6">
+            <a class="text-lg font-semibold" href="{{ demo_route.path('demo_home') }}">{{ 'demo.brand'|trans }} <span class="text-indigo-300">Tailwind</span></a>
+            <div class="flex gap-4 text-sm">
+                <a class="{{ app.request.attributes.get('_route') == 'demo_home' ? 'text-white' : 'text-slate-300 hover:text-white' }}" href="{{ demo_route.path('demo_home') }}">
+                    {{ 'demo.nav.home'|trans }}
+                </a>
+                <a class="{{ app.request.attributes.get('_route') starts with 'demo_cookie_consent_config_' ? 'text-white' : 'text-slate-300 hover:text-white' }}" href="{{ demo_route.path('demo_cookie_consent_config_index') }}">
+                    {{ 'demo.nav.config'|trans }}
+                </a>
+            </div>
+        </div>
+        <div class="flex flex-wrap gap-1" id="demoLocaleDropdown">
+            {% for locale in nowo_cookie_consent_enabled_locales() %}
+                <a class="rounded px-2 py-1 text-xs font-medium {{ app.request.locale == locale ? 'bg-indigo-600 text-white' : 'bg-slate-800 text-slate-300 hover:bg-slate-700' }}" href="{{ demo_route.switch_locale(locale) }}">
+                    {{ locale|upper }}
+                </a>
+            {% endfor %}
+        </div>
+    </div>
+</nav>

@@ -1,0 +1,10 @@
+{% macro path(name, params = {}) -%}
+    {{- path(name, params|merge({ '_locale': app.request.locale })) -}}
+{% endmacro %}
+
+{% macro switch_locale(locale) -%}
+    {{- path(
+        app.request.attributes.get('_route', 'demo_home'),
+        app.request.attributes.get('_route_params', {})|merge({ '_locale': locale })
+    ) -}}
+{% endmacro %}

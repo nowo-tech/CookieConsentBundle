@@ -1,0 +1,13 @@
+# CSRF is required for admin delete forms (csrf_token in Twig) and Symfony forms.
+framework:
+    csrf_protection:
+        enabled: true
+        stateless_token_ids:
+            - submit
+            - authenticate
+            - logout
+
+    form:
+        csrf_protection:
+            enabled: true
+            token_id: submit

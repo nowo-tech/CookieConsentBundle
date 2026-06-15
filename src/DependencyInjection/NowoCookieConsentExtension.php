@@ -1,0 +1,75 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Nowo\CookieConsentBundle\DependencyInjection;
+
+use Symfony\Component\Config\FileLocator;
+use Symfony\Component\DependencyInjection\ContainerBuilder;
+use Symfony\Component\DependencyInjection\Definition;
+use Symfony\Component\DependencyInjection\Extension\Extension;
+use Symfony\Component\DependencyInjection\Loader\YamlFileLoader;
+use Symfony\Component\Translation\Loader\ArrayLoader;
+
+/**
+ * Loads bundle configuration and registers services in the container.
+ */
+class NowoCookieConsentExtension extends Extension
+{
+    /**
+     * Processes configuration and loads service definitions.
+     *
+     * @param array<int, array<string, mixed>> $configs The bundle configuration arrays
+     * @param ContainerBuilder $container The service container builder
+     */
+    public function load(array $configs, ContainerBuilder $container): void
+    {
+        $configuration = new Configuration();
+        $config        = $this->processConfiguration($configuration, $configs);
+
+        $container->setParameter('nowo_cookie_consent.table_prefix', $config['table_prefix']);
+        $container->setParameter('nowo_cookie_consent.categories', $config['categories']);
+        $container->setParameter('nowo_cookie_consent.use_logger', $config['use_logger']);
+        $container->setParameter('nowo_cookie_consent.use_database_config', $config['use_database_config']);
+        $container->setParameter('nowo_cookie_consent.fetch_config_via_api', $config['fetch_config_via_api']);
+        $container->setParameter('nowo_cookie_consent.http_only', $config['http_only']);
+        $container->setParameter('nowo_cookie_consent.form_action', $config['form_action']);
+        $container->setParameter('nowo_cookie_consent.csrf_protection', $config['csrf_protection']);
+        $container->setParameter('nowo_cookie_consent.disabled_routes', $config['disabled_routes']);
+        $container->setParameter('nowo_cookie_consent.route_targeting_mode', $config['route_targeting_mode']);
+        $container->setParameter('nowo_cookie_consent.target_routes', $config['target_routes']);
+        $container->setParameter('nowo_cookie_consent.default_locale', $config['default_locale']);
+        $container->setParameter('nowo_cookie_consent.enabled_locales', $config['enabled_locales']);
+        $container->setParameter('nowo_cookie_consent.detect_locale_from_accept_language', $config['detect_locale_from_accept_language']);
+        $container->setParameter('nowo_cookie_consent.ui_theme', $config['ui_theme']);
+
+        $loader = new YamlFileLoader($container, new FileLocator(__DIR__ . '/../Resources/config'));
+        $loader->load('services.yaml');
+
+        if ($config['table_prefix'] !== '') {
+            $container->setDefinition(
+                TablePrefixListener::class,
+                (new Definition(TablePrefixListener::class))
+                    ->setArguments([$config['table_prefix']])
+                    ->addTag('doctrine.event_listener', ['event' => 'loadClassMetadata']),
+            );
+        }
+
+        if (!$config['use_database_config']) {
+            $container->removeDefinition(\Nowo\CookieConsentBundle\EventSubscriber\CookieConsentConfigTranslationSubscriber::class);
+        } else {
+            $container->register('nowo_cookie_consent.translation.loader.array', ArrayLoader::class)
+                ->addTag('translation.loader', ['alias' => 'array']);
+        }
+    }
+
+    /**
+     * Returns the configuration alias used in config files.
+     *
+     * @return string The configuration root alias
+     */
+    public function getAlias(): string
+    {
+        return Configuration::ALIAS;
+    }
+}

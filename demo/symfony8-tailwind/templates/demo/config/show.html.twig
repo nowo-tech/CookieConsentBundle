@@ -1,0 +1,80 @@
+{% extends 'base.html.twig' %}
+{% import 'demo/_routes.html.twig' as demo_route %}
+
+{% block title %}{{ config.displayName }}{% endblock %}
+
+{% block body %}
+    {% include 'demo/_nav.html.twig' %}
+
+    <main class="mx-auto max-w-6xl px-4 pb-10">
+        <div class="mb-6 flex flex-wrap items-center justify-between gap-4">
+            <div>
+                <h1 class="text-2xl font-semibold text-slate-900">{{ config.displayName }}</h1>
+                <p class="mt-1 text-sm text-slate-600">
+                    {% if config.routePatterns is not empty %}
+                        {{ 'demo.config.profile_patterns'|trans({'%patterns%': config.routePatterns|join(', ')}) }}
+                    {% else %}
+                        {{ 'demo.config.profile_fallback'|trans }}
+                    {% endif %}
+                </p>
+            </div>
+            <div class="flex flex-wrap gap-2">
+                <a class="inline-flex rounded-md border border-slate-300 px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50" href="{{ demo_route.path('demo_cookie_consent_config_index') }}">{{ 'demo.config.back_to_profiles'|trans }}</a>
+                <a class="inline-flex rounded-md border border-slate-300 px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50" href="{{ demo_route.path('demo_cookie_consent_config_profile_settings', { configId: config.id }) }}">{{ 'demo.config.display_settings'|trans }}</a>
+                <a class="inline-flex rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white hover:bg-indigo-500" href="{{ demo_route.path('demo_cookie_consent_config_new', { configId: config.id }) }}">{{ 'demo.config.new_translation'|trans }}</a>
+            </div>
+        </div>
+
+        {% for label, messages in app.flashes %}
+            {% for message in messages %}
+                <div class="mb-4 rounded-lg border px-4 py-3 text-sm {{ label == 'success' ? 'border-emerald-200 bg-emerald-50 text-emerald-800' : 'border-slate-200 bg-slate-50 text-slate-700' }}" role="alert">
+                    {{ message }}
+                </div>
+            {% endfor %}
+        {% endfor %}
+
+        <div class="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-slate-200 text-sm">
+                    <thead class="bg-slate-50">
+                        <tr>
+                            <th class="px-4 py-3 text-left font-semibold text-slate-700">{{ 'demo.config.table.locale'|trans }}</th>
+                            <th class="px-4 py-3 text-left font-semibold text-slate-700">{{ 'demo.config.table.title'|trans }}</th>
+                            <th class="px-4 py-3 text-left font-semibold text-slate-700">{{ 'demo.config.table.intro'|trans }}</th>
+                            <th class="px-4 py-3 text-right font-semibold text-slate-700">{{ 'demo.config.table.actions'|trans }}</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-200">
+                        {% for translation in translations %}
+                            <tr>
+                                <td class="px-4 py-3"><code class="rounded bg-slate-100 px-1.5 py-0.5 text-xs">{{ translation.locale }}</code></td>
+                                <td class="px-4 py-3">{{ translation.consentModalTitle }}</td>
+                                <td class="max-w-xs truncate px-4 py-3 text-slate-600">{{ translation.consentModalDescription }}</td>
+                                <td class="px-4 py-3 text-right">
+                                    <a class="mr-2 inline-flex rounded-md border border-slate-300 px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50" href="{{ demo_route.path('demo_cookie_consent_config_edit', { id: translation.id }) }}">{{ 'demo.config.edit'|trans }}</a>
+                                    <form method="post" action="{{ demo_route.path('demo_cookie_consent_config_delete', { id: translation.id }) }}" class="inline" onsubmit="return confirm('{{ 'demo.config.delete_confirm'|trans({'%locale%': translation.locale})|e('js') }}');">
+                                        <input type="hidden" name="_token" value="{{ csrf_token('delete-cookie-consent-config-' ~ translation.id) }}">
+                                        <button type="submit" class="inline-flex rounded-md border border-rose-300 px-3 py-1.5 text-xs font-medium text-rose-700 hover:bg-rose-50">{{ 'demo.config.delete'|trans }}</button>
+                                    </form>
+                                </td>
+                            </tr>
+                        {% else %}
+                            <tr>
+                                <td colspan="4" class="px-4 py-8 text-center text-slate-500">
+                                    {{ 'demo.config.empty'|trans }}
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        {% if not config.default %}
+            <form method="post" action="{{ demo_route.path('demo_cookie_consent_config_delete_profile', { configId: config.id }) }}" class="mt-6" onsubmit="return confirm('{{ 'demo.config.delete_profile_confirm'|trans({'%name%': config.displayName})|e('js') }}');">
+                <input type="hidden" name="_token" value="{{ csrf_token('delete-cookie-consent-profile-' ~ config.id) }}">
+                <button type="submit" class="inline-flex rounded-md border border-rose-300 px-4 py-2 text-sm font-semibold text-rose-700 hover:bg-rose-50">{{ 'demo.config.delete_profile'|trans }}</button>
+            </form>
+        {% endif %}
+    </main>
+{% endblock %}

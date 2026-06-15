@@ -1,0 +1,57 @@
+# Release
+
+This checklist helps maintainers prepare and publish a release safely.
+
+## Pre-release
+
+Run the full release pipeline:
+
+```bash
+make release-check
+```
+
+Expected steps:
+
+- Asset build (`pnpm run build`)
+- Composer validation and lock sync
+- Code style checks
+- Static analysis (Rector dry run + PHPStan)
+- PHP and TypeScript test suites with coverage
+- Demo verification (`demo/Makefile` `release-check`)
+
+## Security checklist (12.4.1)
+
+Before tagging, confirm each item in [SECURITY.md — Release security checklist](SECURITY.md#release-security-checklist-1241). Note confirmation in the release PR or tag message.
+
+## Tag and publish
+
+1. Move `[Unreleased]` entries in `docs/CHANGELOG.md` to a new `## [X.Y.Z] - YYYY-MM-DD` section.
+2. Update `docs/UPGRADING.md` if consumers must change code or configuration.
+3. Create an **annotated** tag: `git tag -a vX.Y.Z -m "Release vX.Y.Z"`.
+4. Push the tag: `git push origin vX.Y.Z`.
+5. Confirm GitHub workflows `release.yml` and `sync-releases.yml` completed successfully.
+
+## Post-release checks
+
+- Verify Packagist metadata is updated.
+- Confirm the GitHub release contains the tag message and changelog section.
+- Validate installation in a clean Symfony app:
+
+```bash
+composer require nowo-tech/cookie-consent-bundle
+```
+
+- Smoke-test the consent modal (bootstrap and tailwind if applicable).
+
+## Coverage goals (v1.0.0)
+
+- **PHP**: **100%** line coverage (114 tests; `make test-coverage`)
+- **TypeScript**: **~96%** line coverage (`make test-ts`)
+
+Update README **Tests and coverage** percentages after each release when coverage changes materially.
+
+## Release history
+
+| Version | Date | Notes |
+| --- | --- | --- |
+| [1.0.0](CHANGELOG.md#100---2026-06-15) | 2026-06-15 | First stable release |

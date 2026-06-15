@@ -1,0 +1,76 @@
+{% form_theme form '@NowoCookieConsentBundle/form/cookie_consent_theme.tailwind.html.twig' %}
+
+{% set ui = display_config is defined and display_config ? display_config.config : null %}
+
+{% block script %}
+    <script type="text/javascript" src="{{ asset('bundles/nowocookieconsent/nowo-consent-modal.js') }}"></script>
+{% endblock %}
+
+<div id="cookieconsent"
+     class="nowo-cookie-consent fixed inset-0 z-50 hidden items-center justify-center p-4"
+     tabindex="-1"
+     data-nowo-ui-theme="tailwind"
+     data-nowo-open="{{ nowo_cookie_consent_is_open_by_default(app.request.attributes.get('_route'), disabled_routes) }}"
+     {% if config_api_url %}
+         data-nowo-config-url="{{ config_api_url }}"
+     {% endif %}
+     {% if ui %}
+         data-nowo-layout="{{ ui.consentModalLayout }}"
+         data-nowo-variant="{{ ui.consentModalVariant }}"
+         data-nowo-position-y="{{ ui.consentModalPositionY }}"
+         data-nowo-position-x="{{ ui.consentModalPositionX ?? '' }}"
+         data-nowo-equal-weight-buttons="{{ ui.consentModalEqualWeightButtons ? 'true' : 'false' }}"
+         data-nowo-flip-buttons="{{ ui.consentModalFlipButtons ? 'true' : 'false' }}"
+         data-nowo-disable-page-interaction="{{ ui.disablePageInteraction ? 'true' : 'false' }}"
+         data-nowo-revision="{{ ui.revision }}"
+     {% endif %}
+     aria-labelledby="nowoCookieConsentTitle"
+     aria-hidden="true"
+     role="dialog">
+    <div class="nowo-cookie-consent__dialog w-full max-w-4xl{% if ui %} nowo-cookie-consent__dialog--{{ ui.consentModalLayout }}{% endif %}">
+        <div class="nowo-cookie-consent__panel overflow-hidden rounded-xl border border-slate-200 bg-white shadow-2xl">
+            {% block title %}
+                <div class="border-b border-slate-200 px-6 py-4">
+                    <h2 id="nowoCookieConsentTitle" class="nowo-cookie-consent__title text-lg font-semibold text-slate-900">
+                        {{ 'nowo_cookie_consent.title'|trans({}, 'NowoCookieConsentBundle') }}
+                    </h2>
+                </div>
+            {% endblock %}
+            <div class="px-6 py-5">
+                {% block intro %}
+                    <p class="nowo-cookie-consent__intro text-sm text-slate-600">{{ 'nowo_cookie_consent.intro'|trans({}, 'NowoCookieConsentBundle') }}</p>
+                {% endblock %}
+
+                {% block read_more %}
+                    {% set privacy_route = 'nowo_cookie_consent.privacy_route'|trans({}, 'NowoCookieConsentBundle') %}
+                    {% if privacy_route %}
+                        <a class="nowo-cookie-consent__read-more mt-2 inline-flex text-sm font-medium text-indigo-600 hover:text-indigo-500"
+                           href="{% block read_more_link %}{{ path(privacy_route) }}{% endblock %}">
+                            {{ 'nowo_cookie_consent.read_more'|trans({}, 'NowoCookieConsentBundle') }}
+                        </a>
+                    {% else %}
+                        <p class="mt-2 text-sm text-slate-600">{{ 'nowo_cookie_consent.read_more'|trans({}, 'NowoCookieConsentBundle') }}</p>
+                    {% endif %}
+                {% endblock %}
+
+                {{ form_start(form, {attr: {class: 'nowo-cookie-consent__form mt-6'}}) }}
+                    <div class="nowo-cookie-consent__category-group divide-y divide-slate-200 border-y border-slate-200">
+                        <div class="grid gap-4 py-4 sm:grid-cols-2 lg:grid-cols-3">
+                            {% for child in form %}
+                                {% if child.vars.block_prefixes[0] != 'button' %}
+                                    {{ form_row(child) }}
+                                {% endif %}
+                            {% endfor %}
+                        </div>
+                    </div>
+
+                    <div class="nowo-cookie-consent__btn-group mt-5 flex flex-wrap justify-end gap-2">
+                        {{ form_rest(form) }}
+                    </div>
+                {{ form_end(form) }}
+            </div>
+        </div>
+    </div>
+</div>
+
+{{ block('script') }}

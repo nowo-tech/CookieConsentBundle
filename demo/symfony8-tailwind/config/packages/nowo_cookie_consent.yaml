@@ -1,0 +1,22 @@
+nowo_cookie_consent:
+    table_prefix: 'demo_tailwind_'
+    ui_theme: tailwind
+    use_logger: true
+    use_database_config: true
+    fetch_config_via_api: true
+    default_locale: en
+    enabled_locales:
+        - en
+        - es
+        - it
+        - fr
+        - de
+        - pt
+        - nl
+        - pl
+        - ca
+    detect_locale_from_accept_language: false
+    categories:
+        - analytics
+        - marketing
+        - preferences

@@ -1,0 +1,17 @@
+{% import 'demo/_routes.html.twig' as demo_route %}
+{% form_theme form with ['bootstrap_5_layout.html.twig'] %}
+{{ form_start(form) }}
+    {{ form_row(form.locale) }}
+    {{ form_row(form.consentModalTitle) }}
+    {{ form_row(form.consentModalDescription) }}
+    {{ form_row(form.consentModalFooter) }}
+    {{ form_row(form.consentModalAcceptAllBtn) }}
+    {{ form_row(form.consentModalAcceptNecessaryBtn) }}
+    {{ form_row(form.preferencesModalSavePreferencesBtn) }}
+    {{ form_row(form.privacyRoute) }}
+
+    <div class="d-flex gap-2">
+        <button type="submit" class="btn btn-primary">{{ submit_label|default('Save') }}</button>
+        <a href="{{ demo_route.path('demo_cookie_consent_config_index') }}" class="btn btn-outline-secondary">{{ 'demo.config.form.cancel'|trans }}</a>
+    </div>
+{{ form_end(form) }}

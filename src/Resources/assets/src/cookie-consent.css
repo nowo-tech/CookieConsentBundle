@@ -1,0 +1,107 @@
+.nowo-cookie-consent {
+  background-color: transparent;
+}
+
+.nowo-cookie-consent.show {
+  display: flex !important;
+}
+
+.nowo-cookie-consent .modal-dialog,
+.nowo-cookie-consent .nowo-cookie-consent__dialog {
+  margin: 1.75rem auto;
+}
+
+.nowo-cookie-consent.nowo-cookie-consent--pos-y-top {
+  align-items: flex-start;
+}
+
+.nowo-cookie-consent.nowo-cookie-consent--pos-y-middle {
+  align-items: center;
+}
+
+.nowo-cookie-consent.nowo-cookie-consent--pos-y-bottom {
+  align-items: flex-end;
+}
+
+.nowo-cookie-consent.nowo-cookie-consent--pos-x-left .modal-dialog,
+.nowo-cookie-consent.nowo-cookie-consent--pos-x-left .nowo-cookie-consent__dialog {
+  margin-left: 1.75rem;
+  margin-right: auto;
+}
+
+.nowo-cookie-consent.nowo-cookie-consent--pos-x-center .modal-dialog,
+.nowo-cookie-consent.nowo-cookie-consent--pos-x-center .nowo-cookie-consent__dialog {
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.nowo-cookie-consent.nowo-cookie-consent--pos-x-right .modal-dialog,
+.nowo-cookie-consent.nowo-cookie-consent--pos-x-right .nowo-cookie-consent__dialog {
+  margin-left: auto;
+  margin-right: 1.75rem;
+}
+
+.nowo-cookie-consent.nowo-cookie-consent--layout-bar .modal-dialog,
+.nowo-cookie-consent.nowo-cookie-consent--layout-bar .nowo-cookie-consent__dialog,
+.nowo-cookie-consent.nowo-cookie-consent--layout-bar .nowo-cookie-consent--dialog-bar {
+  width: 100%;
+  max-width: 100%;
+  margin: 0;
+}
+
+.nowo-cookie-consent.nowo-cookie-consent--layout-bar .modal-content,
+.nowo-cookie-consent.nowo-cookie-consent--layout-bar .nowo-cookie-consent__panel {
+  border-radius: 0;
+  border-left: 0;
+  border-right: 0;
+}
+
+.nowo-cookie-consent.nowo-cookie-consent--layout-box .modal-dialog,
+.nowo-cookie-consent.nowo-cookie-consent--layout-box .nowo-cookie-consent__dialog {
+  max-width: 42rem;
+}
+
+.nowo-cookie-consent.nowo-cookie-consent--layout-cloud .modal-content,
+.nowo-cookie-consent.nowo-cookie-consent--layout-cloud .nowo-cookie-consent__panel {
+  border-radius: 1.25rem;
+  box-shadow: 0 1.25rem 3rem rgba(15, 23, 42, 0.18);
+}
+
+.nowo-cookie-consent.nowo-cookie-consent--variant-inline .modal-body,
+.nowo-cookie-consent.nowo-cookie-consent--variant-inline .nowo-cookie-consent__panel > div:last-child,
+.nowo-cookie-consent.nowo-cookie-consent--variant-inline .modal-header {
+  padding-top: 1rem;
+  padding-bottom: 1rem;
+}
+
+.nowo-cookie-consent.nowo-cookie-consent--variant-wide .modal-dialog,
+.nowo-cookie-consent.nowo-cookie-consent--variant-wide .nowo-cookie-consent__dialog {
+  max-width: min(56rem, calc(100vw - 2rem));
+}
+
+.nowo-cookie-consent.nowo-cookie-consent--equal-weight-buttons .nowo-cookie-consent__btn-group {
+  display: flex;
+  gap: 0.75rem;
+  width: 100%;
+}
+
+.nowo-cookie-consent.nowo-cookie-consent--equal-weight-buttons .nowo-cookie-consent__btn-group .btn,
+.nowo-cookie-consent.nowo-cookie-consent--equal-weight-buttons .nowo-cookie-consent__btn-group .nowo-cookie-consent__btn {
+  flex: 1 1 0;
+}
+
+.nowo-cookie-consent.nowo-cookie-consent--flip-buttons .nowo-cookie-consent__btn-group {
+  flex-direction: row-reverse;
+}
+
+.nowo-cookie-consent.nowo-cookie-consent--disable-page-interaction.show::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.45);
+  z-index: -1;
+}
+
+body.nowo-cookie-consent-page-blocked {
+  overflow: hidden;
+}

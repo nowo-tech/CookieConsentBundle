@@ -1,0 +1,37 @@
+name: cookie-consent-bundle-demo-symfony-8
+
+services:
+  php:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: cookie-consent-demo-symfony8-php
+    working_dir: /app
+    ports:
+      - "${PORT:-8014}:80"
+    volumes:
+      - .:/app
+      - ../..:/var/cookie-consent-bundle
+      - ../../../TwigInspectorBundle:/var/twig-inspector-bundle
+      - ./docker/frankenphp/Caddyfile.dev:/etc/frankenphp/Caddyfile.dev
+      - ./docker/php-dev.ini:/usr/local/etc/php/conf.d/99-dev.ini:ro
+      - composer-cache:/root/.composer/cache
+    environment:
+      - COMPOSER_ALLOW_SUPERUSER=1
+      - APP_ENV=dev
+      - APP_DEBUG=1
+      - APP_SECRET=${APP_SECRET:-demo-secret}
+      - DATABASE_URL=${DATABASE_URL:-sqlite:///%kernel.project_dir%/var/data.db}
+    dns:
+      - 8.8.8.8
+      - 8.8.4.4
+    networks:
+      - cookie-consent-demo-network
+
+volumes:
+  composer-cache:
+    driver: local
+
+networks:
+  cookie-consent-demo-network:
+    driver: bridge

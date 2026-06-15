@@ -1,0 +1,80 @@
+{% extends 'base.html.twig' %}
+{% import 'demo/_routes.html.twig' as demo_route %}
+
+{% block title %}{{ config.displayName }}{% endblock %}
+
+{% block body %}
+    {% include 'demo/_nav.html.twig' %}
+
+    <main class="container pb-5">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h1 class="h3 mb-1">{{ config.displayName }}</h1>
+                <p class="text-muted mb-0">
+                    {% if config.routePatterns is not empty %}
+                        {{ 'demo.config.profile_patterns'|trans({'%patterns%': config.routePatterns|join(', ')}) }}
+                    {% else %}
+                        {{ 'demo.config.profile_fallback'|trans }}
+                    {% endif %}
+                </p>
+            </div>
+            <div class="d-flex gap-2">
+                <a class="btn btn-outline-secondary" href="{{ demo_route.path('demo_cookie_consent_config_index') }}">{{ 'demo.config.back_to_profiles'|trans }}</a>
+                <a class="btn btn-outline-secondary" href="{{ demo_route.path('demo_cookie_consent_config_profile_settings', { configId: config.id }) }}">{{ 'demo.config.display_settings'|trans }}</a>
+                <a class="btn btn-primary" href="{{ demo_route.path('demo_cookie_consent_config_new', { configId: config.id }) }}">{{ 'demo.config.new_translation'|trans }}</a>
+            </div>
+        </div>
+
+        {% for label, messages in app.flashes %}
+            {% for message in messages %}
+                <div class="alert alert-{{ label == 'success' ? 'success' : label }} mb-3" role="alert">
+                    {{ message }}
+                </div>
+            {% endfor %}
+        {% endfor %}
+
+        <div class="card shadow-sm">
+            <div class="table-responsive">
+                <table class="table table-striped mb-0 align-middle">
+                    <thead>
+                        <tr>
+                            <th>{{ 'demo.config.table.locale'|trans }}</th>
+                            <th>{{ 'demo.config.table.title'|trans }}</th>
+                            <th>{{ 'demo.config.table.intro'|trans }}</th>
+                            <th class="text-end">{{ 'demo.config.table.actions'|trans }}</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for translation in translations %}
+                            <tr>
+                                <td><code>{{ translation.locale }}</code></td>
+                                <td>{{ translation.consentModalTitle }}</td>
+                                <td class="text-truncate" style="max-width: 20rem;">{{ translation.consentModalDescription }}</td>
+                                <td class="text-end">
+                                    <a class="btn btn-sm btn-outline-secondary" href="{{ demo_route.path('demo_cookie_consent_config_edit', { id: translation.id }) }}">{{ 'demo.config.edit'|trans }}</a>
+                                    <form method="post" action="{{ demo_route.path('demo_cookie_consent_config_delete', { id: translation.id }) }}" class="d-inline" onsubmit="return confirm('{{ 'demo.config.delete_confirm'|trans({'%locale%': translation.locale})|e('js') }}');">
+                                        <input type="hidden" name="_token" value="{{ csrf_token('delete-cookie-consent-config-' ~ translation.id) }}">
+                                        <button type="submit" class="btn btn-sm btn-outline-danger">{{ 'demo.config.delete'|trans }}</button>
+                                    </form>
+                                </td>
+                            </tr>
+                        {% else %}
+                            <tr>
+                                <td colspan="4" class="text-center text-muted py-4">
+                                    {{ 'demo.config.empty'|trans }}
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        {% if not config.default %}
+            <form method="post" action="{{ demo_route.path('demo_cookie_consent_config_delete_profile', { configId: config.id }) }}" class="mt-4" onsubmit="return confirm('{{ 'demo.config.delete_profile_confirm'|trans({'%name%': config.displayName})|e('js') }}');">
+                <input type="hidden" name="_token" value="{{ csrf_token('delete-cookie-consent-profile-' ~ config.id) }}">
+                <button type="submit" class="btn btn-outline-danger">{{ 'demo.config.delete_profile'|trans }}</button>
+            </form>
+        {% endif %}
+    </main>
+{% endblock %}

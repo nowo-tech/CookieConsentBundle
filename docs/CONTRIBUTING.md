@@ -1,0 +1,90 @@
+# Contributing Guide
+
+Thank you for your interest in contributing to Cookie Consent Bundle! This document provides guidelines for contributing to the project.
+
+## Code of Conduct
+
+This project adheres to a code of conduct. By participating, you are expected to uphold this code. Please report unacceptable behavior to hectorfranco@nowo.tech.
+
+## How Can I Contribute?
+
+### Reporting Bugs
+
+1. **Check existing issues** at [GitHub Issues](https://github.com/nowo-tech/cookie-consent-bundle/issues)
+2. **Create a new issue** with steps to reproduce, expected vs. actual behavior, and PHP/Symfony versions
+
+### Suggesting Enhancements
+
+1. **Search for duplicate suggestions** in the issue tracker
+2. **Describe the use case**, benefits, and possible implementation
+
+### Contributing Code
+
+#### Development environment
+
+```bash
+git clone https://github.com/nowo-tech/cookie-consent-bundle.git
+cd cookie-consent-bundle
+make up
+make install
+```
+
+#### Code standards
+
+- PSR-12 via PHP-CS-Fixer
+- PHP 8.1+ with `declare(strict_types=1);`
+- PHPDoc in English for public classes and methods
+
+```bash
+make cs-check
+make cs-fix
+make phpstan
+make rector-dry
+```
+
+#### Tests
+
+```bash
+make test
+make test-coverage
+make test-ts
+make assets
+```
+
+Add or update tests under `tests/Unit/` (and `tests/Integration/` when applicable) for behavior changes.
+
+#### Demos
+
+```bash
+make -C demo up-symfony8
+make -C demo up-symfony8-tailwind
+make -C demo release-check
+```
+
+After editing bundle PHP code in a mounted demo, run `make update-bundle` inside the demo directory (or rely on `release-check`, which syncs the bundle first).
+
+#### Release pipeline
+
+Before opening a PR that targets a release:
+
+```bash
+make release-check
+```
+
+See [Release](RELEASE.md) for maintainer steps.
+
+## Pull requests
+
+1. Fork and create a feature branch
+2. Update `docs/CHANGELOG.md` under `[Unreleased]` for user-facing changes
+3. Update `docs/UPGRADING.md` when consumers must change configuration or code
+4. Ensure `make release-check` passes locally (or document why not)
+
+## Documentation
+
+- Integrator docs: `docs/INSTALLATION.md`, `docs/CONFIGURATION.md`, `docs/USAGE.md`
+- Product spec and `REQ-*` traceability: `docs/SPEC-DRIVEN-DEVELOPMENT.md`
+
+## License
+
+By contributing, you agree that your contributions will be licensed under the MIT License.

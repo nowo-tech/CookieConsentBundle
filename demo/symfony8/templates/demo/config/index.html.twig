@@ -1,0 +1,73 @@
+{% extends 'base.html.twig' %}
+{% import 'demo/_routes.html.twig' as demo_route %}
+
+{% block title %}{{ 'demo.config.title'|trans }}{% endblock %}
+
+{% block body %}
+    {% include 'demo/_nav.html.twig' %}
+
+    <main class="container pb-5">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h1 class="h3 mb-1">{{ 'demo.config.title'|trans }}</h1>
+                <p class="text-muted mb-0">{{ 'demo.config.lead_profiles'|trans }}</p>
+            </div>
+            <a class="btn btn-primary" href="{{ demo_route.path('demo_cookie_consent_config_new_profile') }}">{{ 'demo.config.new_profile'|trans }}</a>
+        </div>
+
+        {% for label, messages in app.flashes %}
+            {% for message in messages %}
+                <div class="alert alert-{{ label == 'success' ? 'success' : label }} mb-3" role="alert">
+                    {{ message }}
+                </div>
+            {% endfor %}
+        {% endfor %}
+
+        <div class="card shadow-sm">
+            <div class="table-responsive">
+                <table class="table table-striped mb-0 align-middle">
+                    <thead>
+                        <tr>
+                            <th>{{ 'demo.config.table.profile'|trans }}</th>
+                            <th>{{ 'demo.config.table.route_patterns'|trans }}</th>
+                            <th>{{ 'demo.config.table.priority'|trans }}</th>
+                            <th>{{ 'demo.config.table.layout'|trans }}</th>
+                            <th class="text-end">{{ 'demo.config.table.actions'|trans }}</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for config in configs %}
+                            <tr>
+                                <td>
+                                    <strong>{{ config.displayName }}</strong>
+                                    {% if config.default %}
+                                        <span class="badge text-bg-secondary ms-1">{{ 'demo.config.default_badge'|trans }}</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if config.routePatterns is not empty %}
+                                        <code>{{ config.routePatterns|join(', ') }}</code>
+                                    {% else %}
+                                        <span class="text-muted">{{ 'demo.config.fallback_only'|trans }}</span>
+                                    {% endif %}
+                                </td>
+                                <td>{{ config.priority }}</td>
+                                <td>{{ config.consentModalLayout }}</td>
+                                <td class="text-end">
+                                    <a class="btn btn-sm btn-outline-primary" href="{{ demo_route.path('demo_cookie_consent_config_show', { configId: config.id }) }}">{{ 'demo.config.view'|trans }}</a>
+                                    <a class="btn btn-sm btn-outline-secondary" href="{{ demo_route.path('demo_cookie_consent_config_profile_settings', { configId: config.id }) }}">{{ 'demo.config.display_settings'|trans }}</a>
+                                </td>
+                            </tr>
+                        {% else %}
+                            <tr>
+                                <td colspan="5" class="text-center text-muted py-4">
+                                    {{ 'demo.config.empty_profiles'|trans }}
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+{% endblock %}

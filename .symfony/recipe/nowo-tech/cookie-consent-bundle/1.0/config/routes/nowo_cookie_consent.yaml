@@ -1,0 +1,3 @@
+# Cookie Consent Bundle - HTTP routes for the consent modal and optional config API
+nowo_cookie_consent:
+    resource: '@NowoCookieConsentBundle/Resources/config/routing.yaml'

@@ -1,0 +1,62 @@
+{% extends 'base.html.twig' %}
+{% import 'demo/_routes.html.twig' as demo_route %}
+
+{% block title %}{{ 'demo.home.title'|trans }}{% endblock %}
+
+{% block body %}
+    {% include 'demo/_nav.html.twig' %}
+
+    <main class="container py-5">
+        <div class="row justify-content-center">
+            <div class="col-lg-8">
+                <div class="card shadow-sm">
+                    <div class="card-body p-4">
+                        <h1 class="h3 mb-3">{{ 'demo.home.title'|trans }}</h1>
+                        <p class="text-muted mb-4">
+                            {{ 'demo.home.lead'|trans({
+                                '%table%': 'demo_nowo_cookie_consent_log',
+                                '%prefix%': 'table_prefix',
+                            }) }}
+                        </p>
+
+                        <ul class="list-group list-group-flush mb-4">
+                            <li class="list-group-item d-flex justify-content-between">
+                                <span>{{ 'demo.home.consent_saved'|trans }}</span>
+                                <span class="badge {{ nowo_cookie_consent_is_saved() ? 'text-bg-success' : 'text-bg-warning' }}">
+                                    {{ nowo_cookie_consent_is_saved() ? 'demo.home.yes'|trans : 'demo.home.no'|trans }}
+                                </span>
+                            </li>
+                            <li class="list-group-item d-flex justify-content-between">
+                                <span>{{ 'demo.home.analytics_allowed'|trans }}</span>
+                                <span class="badge {{ nowo_cookie_consent_is_category_allowed('analytics') ? 'text-bg-success' : 'text-bg-secondary' }}">
+                                    {{ nowo_cookie_consent_is_category_allowed('analytics') ? 'demo.home.yes'|trans : 'demo.home.no'|trans }}
+                                </span>
+                            </li>
+                            <li class="list-group-item d-flex justify-content-between">
+                                <span>{{ 'demo.home.marketing_allowed'|trans }}</span>
+                                <span class="badge {{ nowo_cookie_consent_is_category_allowed('marketing') ? 'text-bg-success' : 'text-bg-secondary' }}">
+                                    {{ nowo_cookie_consent_is_category_allowed('marketing') ? 'demo.home.yes'|trans : 'demo.home.no'|trans }}
+                                </span>
+                            </li>
+                        </ul>
+
+                        {% for label, messages in app.flashes %}
+                            {% for message in messages %}
+                                <div class="alert alert-{{ label == 'success' ? 'success' : label }} mb-3" role="alert">
+                                    {{ message }}
+                                </div>
+                            {% endfor %}
+                        {% endfor %}
+
+                        <form method="post" action="{{ demo_route.path('demo_reset_consent') }}" class="d-flex flex-wrap gap-2 align-items-center">
+                            <button type="submit" class="btn btn-outline-danger">
+                                {{ 'demo.home.reset'|trans }}
+                            </button>
+                            <span class="small text-muted">{{ 'demo.home.reset_help'|trans }}</span>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+{% endblock %}

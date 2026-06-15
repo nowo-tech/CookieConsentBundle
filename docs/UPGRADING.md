@@ -1,0 +1,61 @@
+# Upgrade Guide
+
+This guide provides step-by-step instructions for upgrading Cookie Consent Bundle between versions.
+
+## General upgrade process
+
+1. **Backup** your `config/packages/nowo_cookie_consent.yaml` (and any Doctrine config entities if you use `use_database_config`)
+2. **Review** [CHANGELOG.md](CHANGELOG.md) for breaking changes
+3. **Update**: `composer update nowo-tech/cookie-consent-bundle`
+4. **Clear cache**: `php bin/console cache:clear`
+5. **Rebuild assets** if you ship the bundled JS: `php bin/console assets:install`
+6. **Test** the consent modal and logging in your environments
+
+## Database migrations
+
+When `use_logger` or `use_database_config` is enabled, ensure Doctrine migrations for bundle tables are applied after upgrading. Table names respect `table_prefix` (see [CONFIGURATION.md](CONFIGURATION.md)).
+
+## UI theme changes
+
+If you switch `ui_theme` from `bootstrap` to `tailwind` (or vice versa):
+
+1. Update `nowo_cookie_consent.ui_theme` in YAML
+2. Load the matching CSS framework in your layout (Bootstrap 5 or Tailwind)
+3. Override the correct Twig templates (see the theme table in [CONFIGURATION.md](CONFIGURATION.md))
+
+## To 1.0.0 (initial release)
+
+This is the first stable release. Install or require the package:
+
+```bash
+composer require nowo-tech/cookie-consent-bundle:^1.0
+```
+
+### Requirements
+
+- PHP `>=8.1` (<8.6). Symfony **8.0** and **8.1** require **PHP 8.4+**.
+- Symfony **7.4**, **8.0**, or **8.1** (minimum tested minors). The bundle also resolves on Symfony 6.x and 7.0–7.3 when `composer.json` constraints allow.
+- Doctrine ORM when `use_logger: true` or `use_database_config: true`
+
+### Enable and configure
+
+1. Register the bundle (or use the Symfony Flex recipe — see [Installation](INSTALLATION.md)).
+2. Import routes in `config/routes/nowo_cookie_consent.yaml`.
+3. Run `php bin/console assets:install`.
+4. Create the consent log table when `use_logger: true`.
+
+See [Installation](INSTALLATION.md) and [Configuration](CONFIGURATION.md).
+
+### Breaking changes
+
+None — there is no prior stable release.
+
+## Future versions
+
+For upgrade instructions between versions, see the [Changelog](CHANGELOG.md).
+
+## Getting help
+
+- [Usage](USAGE.md) — integration examples
+- [Configuration](CONFIGURATION.md) — all options
+- [GitHub Issues](https://github.com/nowo-tech/cookie-consent-bundle/issues)

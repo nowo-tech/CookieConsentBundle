@@ -1,0 +1,5 @@
+# Cookie Consent Bundle - default configuration
+# See docs/CONFIGURATION.md for all options.
+
+nowo_cookie_consent:
+    use_logger: true

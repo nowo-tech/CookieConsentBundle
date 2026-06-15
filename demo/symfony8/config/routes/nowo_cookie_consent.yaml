@@ -1,0 +1,2 @@
+nowo_cookie_consent:
+    resource: '@NowoCookieConsentBundle/Resources/config/routing.yaml'

@@ -1,0 +1,55 @@
+parameters:
+
+services:
+  _defaults:
+    autowire: true
+    autoconfigure: true
+    public: false
+    bind:
+      $cookieCategories: '%nowo_cookie_consent.categories%'
+      $useLogger: '%nowo_cookie_consent.use_logger%'
+      $httpOnly: '%nowo_cookie_consent.http_only%'
+      $formAction: '%nowo_cookie_consent.form_action%'
+      $csrfProtection: '%nowo_cookie_consent.csrf_protection%'
+      $cookieConsentDisabledRoutes: '%nowo_cookie_consent.disabled_routes%'
+      $enabledLocales: '%nowo_cookie_consent.enabled_locales%'
+      $defaultLocale: '%nowo_cookie_consent.default_locale%'
+      $detectLocaleFromAcceptLanguage: '%nowo_cookie_consent.detect_locale_from_accept_language%'
+      $useDatabaseConfig: '%nowo_cookie_consent.use_database_config%'
+      $fetchConfigViaApi: '%nowo_cookie_consent.fetch_config_via_api%'
+      $uiTheme: '%nowo_cookie_consent.ui_theme%'
+
+  Nowo\CookieConsentBundle\Locale\LocaleResolver:
+    arguments:
+      $enabledLocales: '%nowo_cookie_consent.enabled_locales%'
+      $defaultLocale: '%nowo_cookie_consent.default_locale%'
+      $detectLocaleFromAcceptLanguage: '%nowo_cookie_consent.detect_locale_from_accept_language%'
+
+  Nowo\CookieConsentBundle\:
+    resource: '../../'
+    exclude:
+      - '../../DependencyInjection/'
+      - '../../Entity/'
+      - '../../NowoCookieConsentBundle.php'
+
+  Nowo\CookieConsentBundle\Twig\CookieConsentTwigExtension:
+    arguments:
+      $yamlRouteTargetingMode: '%nowo_cookie_consent.route_targeting_mode%'
+      $yamlTargetRoutes: '%nowo_cookie_consent.target_routes%'
+      $useDatabaseConfig: '%nowo_cookie_consent.use_database_config%'
+
+  Nowo\CookieConsentBundle\Config\CookieConsentConfigPayloadFactory:
+    arguments:
+      $categories: '%nowo_cookie_consent.categories%'
+
+  Nowo\CookieConsentBundle\Controller\:
+    resource: '../../Controller/'
+    public: true
+
+  Nowo\CookieConsentBundle\Entity\CookieConsentLog:
+    autowire: false
+
+  nowo_cookie_consent.translation.loader.array:
+    class: Symfony\Component\Translation\Loader\ArrayLoader
+    tags:
+      - { name: translation.loader, alias: array }

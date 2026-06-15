@@ -1,0 +1,73 @@
+{% extends 'base.html.twig' %}
+{% import 'demo/_routes.html.twig' as demo_route %}
+
+{% block title %}{{ 'demo.config.title'|trans }}{% endblock %}
+
+{% block body %}
+    {% include 'demo/_nav.html.twig' %}
+
+    <main class="mx-auto max-w-6xl px-4 pb-10">
+        <div class="mb-6 flex flex-wrap items-center justify-between gap-4">
+            <div>
+                <h1 class="text-2xl font-semibold text-slate-900">{{ 'demo.config.title'|trans }}</h1>
+                <p class="mt-1 text-sm text-slate-600">{{ 'demo.config.lead_profiles'|trans }}</p>
+            </div>
+            <a class="inline-flex items-center rounded-md bg-indigo-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500" href="{{ demo_route.path('demo_cookie_consent_config_new_profile') }}">{{ 'demo.config.new_profile'|trans }}</a>
+        </div>
+
+        {% for label, messages in app.flashes %}
+            {% for message in messages %}
+                <div class="mb-4 rounded-lg border px-4 py-3 text-sm {{ label == 'success' ? 'border-emerald-200 bg-emerald-50 text-emerald-800' : 'border-slate-200 bg-slate-50 text-slate-700' }}" role="alert">
+                    {{ message }}
+                </div>
+            {% endfor %}
+        {% endfor %}
+
+        <div class="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-slate-200 text-sm">
+                    <thead class="bg-slate-50">
+                        <tr>
+                            <th class="px-4 py-3 text-left font-semibold text-slate-700">{{ 'demo.config.table.profile'|trans }}</th>
+                            <th class="px-4 py-3 text-left font-semibold text-slate-700">{{ 'demo.config.table.route_patterns'|trans }}</th>
+                            <th class="px-4 py-3 text-left font-semibold text-slate-700">{{ 'demo.config.table.priority'|trans }}</th>
+                            <th class="px-4 py-3 text-left font-semibold text-slate-700">{{ 'demo.config.table.layout'|trans }}</th>
+                            <th class="px-4 py-3 text-right font-semibold text-slate-700">{{ 'demo.config.table.actions'|trans }}</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-200">
+                        {% for config in configs %}
+                            <tr>
+                                <td class="px-4 py-3">
+                                    <strong>{{ config.displayName }}</strong>
+                                    {% if config.default %}
+                                        <span class="ml-2 rounded-full bg-slate-100 px-2 py-0.5 text-xs text-slate-600">{{ 'demo.config.default_badge'|trans }}</span>
+                                    {% endif %}
+                                </td>
+                                <td class="px-4 py-3">
+                                    {% if config.routePatterns is not empty %}
+                                        <code class="rounded bg-slate-100 px-1.5 py-0.5 text-xs">{{ config.routePatterns|join(', ') }}</code>
+                                    {% else %}
+                                        <span class="text-slate-500">{{ 'demo.config.fallback_only'|trans }}</span>
+                                    {% endif %}
+                                </td>
+                                <td class="px-4 py-3">{{ config.priority }}</td>
+                                <td class="px-4 py-3">{{ config.consentModalLayout }}</td>
+                                <td class="px-4 py-3 text-right">
+                                    <a class="mr-2 inline-flex rounded-md border border-indigo-200 px-3 py-1.5 text-xs font-medium text-indigo-700 hover:bg-indigo-50" href="{{ demo_route.path('demo_cookie_consent_config_show', { configId: config.id }) }}">{{ 'demo.config.view'|trans }}</a>
+                                    <a class="inline-flex rounded-md border border-slate-300 px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50" href="{{ demo_route.path('demo_cookie_consent_config_profile_settings', { configId: config.id }) }}">{{ 'demo.config.display_settings'|trans }}</a>
+                                </td>
+                            </tr>
+                        {% else %}
+                            <tr>
+                                <td colspan="5" class="px-4 py-8 text-center text-slate-500">
+                                    {{ 'demo.config.empty_profiles'|trans }}
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+{% endblock %}

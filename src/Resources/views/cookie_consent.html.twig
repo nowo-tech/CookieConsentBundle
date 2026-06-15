@@ -1,0 +1,74 @@
+{% form_theme form '@NowoCookieConsentBundle/form/cookie_consent_theme.html.twig' %}
+
+{% set ui = display_config is defined and display_config ? display_config.config : null %}
+
+{% block script %}
+    <script type="text/javascript" src="{{ asset('bundles/nowocookieconsent/nowo-consent-modal.js') }}"></script>
+{% endblock %}
+
+<div id="cookieconsent"
+     class="modal nowo-cookie-consent"
+     tabindex="-1"
+     data-nowo-open="{{ nowo_cookie_consent_is_open_by_default(app.request.attributes.get('_route'), disabled_routes) }}"
+     {% if config_api_url %}
+         data-nowo-config-url="{{ config_api_url }}"
+     {% endif %}
+     {% if ui %}
+         data-nowo-layout="{{ ui.consentModalLayout }}"
+         data-nowo-variant="{{ ui.consentModalVariant }}"
+         data-nowo-position-y="{{ ui.consentModalPositionY }}"
+         data-nowo-position-x="{{ ui.consentModalPositionX ?? '' }}"
+         data-nowo-equal-weight-buttons="{{ ui.consentModalEqualWeightButtons ? 'true' : 'false' }}"
+         data-nowo-flip-buttons="{{ ui.consentModalFlipButtons ? 'true' : 'false' }}"
+         data-nowo-disable-page-interaction="{{ ui.disablePageInteraction ? 'true' : 'false' }}"
+         data-nowo-revision="{{ ui.revision }}"
+     {% endif %}
+     aria-labelledby="nowoCookieConsentTitle"
+     aria-hidden="true">
+    <div class="modal-dialog modal-xl{% if ui %} nowo-cookie-consent__dialog--{{ ui.consentModalLayout }}{% endif %}">
+        <div class="modal-content">
+            {% block title %}
+                <div class="modal-header">
+                    <h5 id="nowoCookieConsentTitle" class="modal-title fw-bold nowo-cookie-consent__title">
+                        {{ 'nowo_cookie_consent.title'|trans({}, 'NowoCookieConsentBundle') }}
+                    </h5>
+                </div>
+            {% endblock %}
+            <div class="modal-body">
+                {% block intro %}
+                    <p class="nowo-cookie-consent__intro">{{ 'nowo_cookie_consent.intro'|trans({}, 'NowoCookieConsentBundle') }}</p>
+                {% endblock %}
+
+                {% block read_more %}
+                    {% set privacy_route = 'nowo_cookie_consent.privacy_route'|trans({}, 'NowoCookieConsentBundle') %}
+                    {% if privacy_route %}
+                        <a class="btn btn-link text-decoration-none nowo-cookie-consent__read-more"
+                           href="{% block read_more_link %}{{ path(privacy_route) }}{% endblock %}">
+                            {{ 'nowo_cookie_consent.read_more'|trans({}, 'NowoCookieConsentBundle') }}
+                        </a>
+                    {% else %}
+                        <p>{{ 'nowo_cookie_consent.read_more'|trans({}, 'NowoCookieConsentBundle') }}</p>
+                    {% endif %}
+                {% endblock %}
+
+                {{ form_start(form, {attr: {class: 'mt-4 nowo-cookie-consent__form'}}) }}
+                    <div class="d-flex border-top border-bottom border-dark nowo-cookie-consent__category-group">
+                        <div class="row">
+                            {% for child in form %}
+                                {% if child.vars.block_prefixes[0] != 'button' %}
+                                    {{ form_row(child) }}
+                                {% endif %}
+                            {% endfor %}
+                        </div>
+                    </div>
+
+                    <div class="d-flex justify-content-end my-3 nowo-cookie-consent__btn-group">
+                        {{ form_rest(form) }}
+                    </div>
+                {{ form_end(form) }}
+            </div>
+        </div>
+    </div>
+</div>
+
+{{ block('script') }}
