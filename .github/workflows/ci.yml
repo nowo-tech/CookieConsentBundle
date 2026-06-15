@@ -64,7 +64,7 @@ jobs:
           UPDATE_PACKAGES="symfony/*"
           if [[ "${{ matrix.symfony }}" == 8.* ]]; then
             # doctrine/doctrine-bundle 2.x supports Symfony only up to 7.x; Symfony 8 needs 3.2+ (PHP 8.4+).
-            composer require doctrine/doctrine-bundle:^3.2 doctrine/orm:^3.0 --no-interaction --no-update
+            composer require doctrine/doctrine-bundle:^3.2 doctrine/orm:^3.4 --no-interaction --no-update
             UPDATE_PACKAGES="symfony/* doctrine/doctrine-bundle doctrine/orm"
           fi
           composer update ${UPDATE_PACKAGES} --with-all-dependencies --no-interaction --prefer-dist --no-progress
@@ -131,6 +131,12 @@ jobs:
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
           git add -A
+          git restore --staged composer.json composer.lock 2>/dev/null || true
+          git checkout -- composer.json composer.lock 2>/dev/null || true
+          if [ -z "$(git status --porcelain)" ]; then
+            echo "No PHP CS Fixer changes to commit (composer files excluded)."
+            exit 0
+          fi
           git commit -m "Apply PHP CS Fixer fixes [skip ci]"
           git push
 
