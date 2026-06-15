@@ -63,7 +63,7 @@ jobs:
           SYMFONY_PACKAGES="symfony/framework-bundle:^${{ matrix.symfony }} symfony/form:^${{ matrix.symfony }} symfony/http-kernel:^${{ matrix.symfony }} symfony/routing:^${{ matrix.symfony }} symfony/translation:^${{ matrix.symfony }} symfony/twig-bundle:^${{ matrix.symfony }}"
           if [[ "${{ matrix.symfony }}" == 8.* ]]; then
             # doctrine/doctrine-bundle 2.x supports Symfony only up to 7.x; Symfony 8 needs 3.2+ (PHP 8.4+).
-            SYMFONY_PACKAGES="${SYMFONY_PACKAGES} doctrine/doctrine-bundle:^3.2 doctrine/orm:^3.4"
+            SYMFONY_PACKAGES="${SYMFONY_PACKAGES} doctrine/doctrine-bundle:^3.2 doctrine/orm:^3.4 symfony/var-exporter:^${{ matrix.symfony }}"
           fi
           composer update ${SYMFONY_PACKAGES} --with-all-dependencies --no-interaction --prefer-dist --no-progress
 
