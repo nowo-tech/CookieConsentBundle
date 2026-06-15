@@ -13,6 +13,9 @@ use Nowo\CookieConsentBundle\Repository\CookieDefinitionRepository;
 #[ORM\Entity(repositoryClass: CookieDefinitionRepository::class)]
 #[ORM\Table(name: 'nowo_cookie_consent_cookie_definition')]
 #[ORM\UniqueConstraint(name: 'uniq_cookie_definition_config_name', columns: ['config_id', 'name'])]
+/**
+ * Doctrine entity describing a single cookie in the inventory for a consent profile.
+ */
 class CookieDefinition
 {
     public const TYPE_FIRST_PARTY = 'first_party';
@@ -51,21 +54,41 @@ class CookieDefinition
     #[ORM\OneToMany(targetEntity: CookieDefinitionTranslation::class, mappedBy: 'definition', cascade: ['persist', 'remove'], orphanRemoval: true)]
     private Collection $translations;
 
+    /**
+     * Initializes the translation collection.
+     */
     public function __construct()
     {
         $this->translations = new ArrayCollection();
     }
 
+    /**
+     * Returns the cookie definition primary key.
+     *
+     * @return int|null The entity identifier
+     */
     public function getId(): ?int
     {
         return $this->id;
     }
 
+    /**
+     * Returns the cookie name.
+     *
+     * @return string The cookie identifier (e.g. _ga)
+     */
     public function getName(): string
     {
         return $this->name;
     }
 
+    /**
+     * Sets the cookie name.
+     *
+     * @param string $name The cookie identifier
+     *
+     * @return self Fluent interface
+     */
     public function setName(string $name): self
     {
         $this->name = $name;
@@ -73,11 +96,23 @@ class CookieDefinition
         return $this;
     }
 
+    /**
+     * Returns the retention period label.
+     *
+     * @return string Human-readable duration (e.g. Session, 2 years)
+     */
     public function getDuration(): string
     {
         return $this->duration;
     }
 
+    /**
+     * Sets the retention period label.
+     *
+     * @param string $duration Human-readable duration
+     *
+     * @return self Fluent interface
+     */
     public function setDuration(string $duration): self
     {
         $this->duration = $duration;
@@ -85,11 +120,23 @@ class CookieDefinition
         return $this;
     }
 
+    /**
+     * Returns the consent category key.
+     *
+     * @return string Category slug (required, analytics, marketing, …)
+     */
     public function getCategory(): string
     {
         return $this->category;
     }
 
+    /**
+     * Sets the consent category key.
+     *
+     * @param string $category Category slug
+     *
+     * @return self Fluent interface
+     */
     public function setCategory(string $category): self
     {
         $this->category = $category;
@@ -97,11 +144,23 @@ class CookieDefinition
         return $this;
     }
 
+    /**
+     * Returns the cookie party type.
+     *
+     * @return string Either TYPE_FIRST_PARTY or TYPE_THIRD_PARTY
+     */
     public function getType(): string
     {
         return $this->type;
     }
 
+    /**
+     * Sets the cookie party type.
+     *
+     * @param string $type Either TYPE_FIRST_PARTY or TYPE_THIRD_PARTY
+     *
+     * @return self Fluent interface
+     */
     public function setType(string $type): self
     {
         $this->type = $type;
@@ -109,11 +168,23 @@ class CookieDefinition
         return $this;
     }
 
+    /**
+     * Returns the display sort order.
+     *
+     * @return int Zero-based sort index
+     */
     public function getSortOrder(): int
     {
         return $this->sortOrder;
     }
 
+    /**
+     * Sets the display sort order.
+     *
+     * @param int $sortOrder Zero-based sort index
+     *
+     * @return self Fluent interface
+     */
     public function setSortOrder(int $sortOrder): self
     {
         $this->sortOrder = $sortOrder;
@@ -121,11 +192,23 @@ class CookieDefinition
         return $this;
     }
 
+    /**
+     * Returns whether the cookie is pre-checked before consent is saved.
+     *
+     * @return bool True when selected by default in granular mode
+     */
     public function isAllowedByDefault(): bool
     {
         return $this->allowedByDefault;
     }
 
+    /**
+     * Sets whether the cookie is pre-checked before consent is saved.
+     *
+     * @param bool $allowedByDefault True to pre-check in granular mode
+     *
+     * @return self Fluent interface
+     */
     public function setAllowedByDefault(bool $allowedByDefault): self
     {
         $this->allowedByDefault = $allowedByDefault;
@@ -133,11 +216,23 @@ class CookieDefinition
         return $this;
     }
 
+    /**
+     * Returns the parent consent configuration profile.
+     *
+     * @return CookieConsentConfig|null The owning config entity
+     */
     public function getConfig(): ?CookieConsentConfig
     {
         return $this->config;
     }
 
+    /**
+     * Sets the parent consent configuration profile.
+     *
+     * @param CookieConsentConfig|null $config The owning config entity
+     *
+     * @return self Fluent interface
+     */
     public function setConfig(?CookieConsentConfig $config): self
     {
         $this->config = $config;
@@ -145,12 +240,23 @@ class CookieDefinition
         return $this;
     }
 
-    /** @return Collection<int, CookieDefinitionTranslation> */
+    /**
+     * Returns all locale-specific translations.
+     *
+     * @return Collection<int, CookieDefinitionTranslation> Translation entities
+     */
     public function getTranslations(): Collection
     {
         return $this->translations;
     }
 
+    /**
+     * Finds a translation for the given locale.
+     *
+     * @param string $locale BCP 47 locale code (e.g. en, es)
+     *
+     * @return CookieDefinitionTranslation|null The matching translation or null
+     */
     public function findTranslation(string $locale): ?CookieDefinitionTranslation
     {
         foreach ($this->translations as $translation) {
@@ -162,6 +268,13 @@ class CookieDefinition
         return null;
     }
 
+    /**
+     * Adds a locale-specific translation.
+     *
+     * @param CookieDefinitionTranslation $translation The translation to attach
+     *
+     * @return self Fluent interface
+     */
     public function addTranslation(CookieDefinitionTranslation $translation): self
     {
         if (!$this->translations->contains($translation)) {
@@ -172,6 +285,13 @@ class CookieDefinition
         return $this;
     }
 
+    /**
+     * Removes a locale-specific translation.
+     *
+     * @param CookieDefinitionTranslation $translation The translation to detach
+     *
+     * @return self Fluent interface
+     */
     public function removeTranslation(CookieDefinitionTranslation $translation): self
     {
         if ($this->translations->removeElement($translation) && $translation->getDefinition() === $this) {

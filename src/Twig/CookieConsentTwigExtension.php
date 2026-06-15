@@ -133,7 +133,9 @@ class CookieConsentTwigExtension extends AbstractExtension
     /**
      * Builds a structured diagnostic report for browser console debugging.
      *
-     * @return array<string, mixed>
+     * @param string|null $currentRoute Optional fallback route name
+     *
+     * @return array<string, mixed> Diagnostic data for client-side debugging
      */
     public function getDiagnosticReport(?string $currentRoute = null): array
     {
@@ -295,43 +297,80 @@ class CookieConsentTwigExtension extends AbstractExtension
         return $this->cookieChecker->isCategoryAllowedByUser($category);
     }
 
+    /**
+     * Returns the active modal color theme identifier.
+     *
+     * @return string The configured color theme
+     */
     public function getColorTheme(): string
     {
         return $this->cmpUxOptionsResolver->getColorTheme();
     }
 
+    /**
+     * Returns whether dark mode styling is enabled.
+     *
+     * @return bool True when dark mode classes are applied
+     */
     public function isDarkModeEnabled(): bool
     {
         return $this->cmpUxOptionsResolver->isDarkModeEnabled();
     }
 
+    /**
+     * Returns whether CSS transitions are disabled on the modal.
+     *
+     * @return bool True when transitions are suppressed
+     */
     public function isDisableTransitions(): bool
     {
         return $this->cmpUxOptionsResolver->isDisableTransitions();
     }
 
+    /**
+     * Returns whether the two-step modal flow is enabled.
+     *
+     * @return bool True when banner and preferences steps are used
+     */
     public function isTwoStepModal(): bool
     {
         return $this->cmpUxOptionsResolver->isTwoStepModal();
     }
 
+    /**
+     * Returns whether the preferences step opens by default.
+     *
+     * @return bool True when preferences are shown first
+     */
     public function isOpenPreferencesModal(): bool
     {
         return $this->cmpUxOptionsResolver->isOpenPreferencesModal();
     }
 
+    /**
+     * Returns whether iframe placeholders are managed after consent.
+     *
+     * @return bool True when iframe activation is enabled
+     */
     public function isManageIframePlaceholders(): bool
     {
         return $this->cmpUxOptionsResolver->isManageIframePlaceholders();
     }
 
+    /**
+     * Returns whether granular per-cookie selection is enabled.
+     *
+     * @return bool True when per-cookie toggles are shown
+     */
     public function isGranularCookieSelection(): bool
     {
         return $this->cmpUxOptionsResolver->isGranularCookieSelection();
     }
 
     /**
-     * @return list<array{title: string, description: string, categories: list<string>}>
+     * Returns grouped preference sections configured for the active profile.
+     *
+     * @return list<array{title: string, description: string, categories: list<string>}> Preference sections
      */
     public function getPreferenceSections(): array
     {
@@ -339,7 +378,9 @@ class CookieConsentTwigExtension extends AbstractExtension
     }
 
     /**
-     * @return list<array{name: string, provider: string, purpose: string, duration: string, category: string, type: string}>
+     * Returns the cookie inventory rows for the active profile and locale.
+     *
+     * @return list<array{name: string, provider: string, purpose: string, duration: string, category: string, type: string}> Cookie rows
      */
     public function getCookieInventory(): array
     {
@@ -353,17 +394,32 @@ class CookieConsentTwigExtension extends AbstractExtension
         return $this->inventoryProvider->listForLocale($config, $this->getResolvedLocale());
     }
 
+    /**
+     * Returns whether the consent modal should remain embedded after consent is saved.
+     *
+     * @return bool True when the modal markup should stay in the DOM
+     */
     public function shouldEmbedModal(): bool
     {
         return !$this->cookieChecker->isCookieConsentSavedByUser()
             || $this->cmpUxOptionsResolver->isPreferencesBubbleEnabled();
     }
 
+    /**
+     * Returns whether the floating preferences bubble is enabled.
+     *
+     * @return bool True when the bubble button is rendered
+     */
     public function isPreferencesBubbleEnabled(): bool
     {
         return $this->cmpUxOptionsResolver->isPreferencesBubbleEnabled();
     }
 
+    /**
+     * Returns the screen corner used for the preferences bubble.
+     *
+     * @return string The configured bubble position
+     */
     public function getPreferencesBubblePosition(): string
     {
         return $this->cmpUxOptionsResolver->getPreferencesBubblePosition();

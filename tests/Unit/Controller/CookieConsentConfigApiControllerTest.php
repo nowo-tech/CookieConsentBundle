@@ -8,10 +8,12 @@ use Nowo\CookieConsentBundle\Config\CookieConsentConfigPayloadFactory;
 use Nowo\CookieConsentBundle\Config\CookieConsentConfigResolver;
 use Nowo\CookieConsentBundle\Config\CookieConsentConfigSelector;
 use Nowo\CookieConsentBundle\Config\CookieConsentRoutePatternMatcher;
+use Nowo\CookieConsentBundle\Config\CookieInventoryProvider;
 use Nowo\CookieConsentBundle\Controller\CookieConsentConfigApiController;
 use Nowo\CookieConsentBundle\Locale\LocaleResolver;
 use Nowo\CookieConsentBundle\Repository\CookieConsentConfigRepository;
 use Nowo\CookieConsentBundle\Repository\CookieConsentConfigTranslationRepository;
+use Nowo\CookieConsentBundle\Repository\CookieDefinitionRepository;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\RequestStack;
@@ -47,7 +49,7 @@ final class CookieConsentConfigApiControllerTest extends TestCase
         );
 
         $controller = new CookieConsentConfigApiController(
-            new CookieConsentConfigPayloadFactory($resolver, $this->createTranslator(), ['analytics']),
+            new CookieConsentConfigPayloadFactory($resolver, $this->createTranslator(), $this->createInventoryProvider(), ['analytics']),
             new LocaleResolver(['en', 'de'], 'en', false, new RequestStack()),
         );
 
@@ -105,7 +107,12 @@ final class CookieConsentConfigApiControllerTest extends TestCase
             false,
         );
 
-        return new CookieConsentConfigPayloadFactory($resolver, $this->createTranslator(), ['analytics']);
+        return new CookieConsentConfigPayloadFactory($resolver, $this->createTranslator(), $this->createInventoryProvider(), ['analytics']);
+    }
+
+    private function createInventoryProvider(): CookieInventoryProvider
+    {
+        return new CookieInventoryProvider($this->createMock(CookieDefinitionRepository::class), false, []);
     }
 
     private function createTranslator(): TranslatorInterface

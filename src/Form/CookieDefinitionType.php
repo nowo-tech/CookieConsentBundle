@@ -15,8 +15,19 @@ use Symfony\Component\Form\Extension\Core\Type\TextType;
 use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 
+/**
+ * Symfony form type for creating and editing cookie inventory definitions.
+ */
 class CookieDefinitionType extends AbstractType
 {
+    /**
+     * Builds the cookie definition form fields.
+     *
+     * @param FormBuilderInterface $builder The form builder
+     * @param array<string, mixed> $options Resolved form options
+     *
+     * @return void
+     */
     public function buildForm(FormBuilderInterface $builder, array $options): void
     {
         $categoryChoices = [
@@ -69,6 +80,13 @@ class CookieDefinitionType extends AbstractType
             ]);
     }
 
+    /**
+     * Configures default options for the cookie definition form.
+     *
+     * @param OptionsResolver $resolver The options resolver
+     *
+     * @return void
+     */
     public function configureOptions(OptionsResolver $resolver): void
     {
         $resolver->setDefaults([

@@ -11,6 +11,12 @@ export default defineConfig({
       reportsDirectory: './coverage-ts',
       include: ['src/Resources/assets/src/**/*.ts'],
       exclude: ['**/*.test.ts', '**/node_modules/**'],
+      thresholds: {
+        lines: 90,
+        functions: 90,
+        branches: 90,
+        statements: 90,
+      },
     },
   },
 });

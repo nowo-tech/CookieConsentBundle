@@ -227,6 +227,8 @@ class CookieConsentConfig
      * Sets whether the configuration is enabled.
      *
      * @param bool $enabled True to enable the configuration
+     *
+     * @return self Fluent interface
      */
     public function setEnabled(bool $enabled): self
     {
@@ -249,6 +251,8 @@ class CookieConsentConfig
      * Sets whether this is the default configuration.
      *
      * @param bool $default True to mark as the default configuration
+     *
+     * @return self Fluent interface
      */
     public function setDefault(bool $default): self
     {
@@ -271,6 +275,8 @@ class CookieConsentConfig
      * Sets whether the consent modal should auto-show.
      *
      * @param bool $autoShow True to enable auto-show
+     *
+     * @return self Fluent interface
      */
     public function setAutoShow(bool $autoShow): self
     {
@@ -293,6 +299,8 @@ class CookieConsentConfig
      * Sets the configuration revision number.
      *
      * @param int $revision The revision counter
+     *
+     * @return self Fluent interface
      */
     public function setRevision(int $revision): self
     {
@@ -315,6 +323,8 @@ class CookieConsentConfig
      * Sets whether script tag management is enabled.
      *
      * @param bool $manageScriptTags True to manage script tags
+     *
+     * @return self Fluent interface
      */
     public function setManageScriptTags(bool $manageScriptTags): self
     {
@@ -337,6 +347,8 @@ class CookieConsentConfig
      * Sets whether cookies are auto-cleared when consent is withdrawn.
      *
      * @param bool $autoClearCookies True to enable auto-clear
+     *
+     * @return self Fluent interface
      */
     public function setAutoClearCookies(bool $autoClearCookies): self
     {
@@ -359,6 +371,8 @@ class CookieConsentConfig
      * Sets whether the modal is hidden from bots.
      *
      * @param bool $hideFromBots True to hide the modal from bots
+     *
+     * @return self Fluent interface
      */
     public function setHideFromBots(bool $hideFromBots): self
     {
@@ -381,6 +395,8 @@ class CookieConsentConfig
      * Sets whether page interaction is disabled while the modal is open.
      *
      * @param bool $disablePageInteraction True to block page interaction
+     *
+     * @return self Fluent interface
      */
     public function setDisablePageInteraction(bool $disablePageInteraction): self
     {
@@ -403,6 +419,8 @@ class CookieConsentConfig
      * Sets whether HTML generation is deferred.
      *
      * @param bool $lazyHtmlGeneration True to enable lazy HTML generation
+     *
+     * @return self Fluent interface
      */
     public function setLazyHtmlGeneration(bool $lazyHtmlGeneration): self
     {
@@ -425,6 +443,8 @@ class CookieConsentConfig
      * Sets the consent modal layout.
      *
      * @param string $consentModalLayout The layout identifier
+     *
+     * @return self Fluent interface
      */
     public function setConsentModalLayout(string $consentModalLayout): self
     {
@@ -451,6 +471,8 @@ class CookieConsentConfig
      * Sets the consent modal variant.
      *
      * @param string $consentModalVariant The variant identifier
+     *
+     * @return self Fluent interface
      */
     public function setConsentModalVariant(string $consentModalVariant): self
     {
@@ -473,6 +495,8 @@ class CookieConsentConfig
      * Sets the consent modal vertical position.
      *
      * @param string $consentModalPositionY The vertical position identifier
+     *
+     * @return self Fluent interface
      */
     public function setConsentModalPositionY(string $consentModalPositionY): self
     {
@@ -505,6 +529,8 @@ class CookieConsentConfig
      * Sets the consent modal horizontal position.
      *
      * @param string|null $consentModalPositionX The horizontal position identifier
+     *
+     * @return self Fluent interface
      */
     public function setConsentModalPositionX(?string $consentModalPositionX): self
     {
@@ -527,6 +553,8 @@ class CookieConsentConfig
      * Sets whether consent modal buttons have equal weight.
      *
      * @param bool $consentModalEqualWeightButtons True for equal button weight
+     *
+     * @return self Fluent interface
      */
     public function setConsentModalEqualWeightButtons(bool $consentModalEqualWeightButtons): self
     {
@@ -549,6 +577,8 @@ class CookieConsentConfig
      * Sets whether consent modal buttons are flipped.
      *
      * @param bool $consentModalFlipButtons True to flip button order
+     *
+     * @return self Fluent interface
      */
     public function setConsentModalFlipButtons(bool $consentModalFlipButtons): self
     {
@@ -571,6 +601,8 @@ class CookieConsentConfig
      * Sets the auto-show route targeting mode.
      *
      * @param string $autoShowRouteMode The route targeting mode
+     *
+     * @return self Fluent interface
      */
     public function setAutoShowRouteMode(string $autoShowRouteMode): self
     {
@@ -597,6 +629,8 @@ class CookieConsentConfig
      * Sets the auto-show route names.
      *
      * @param list<string> $autoShowRoutes
+     *
+     * @return self Fluent interface
      */
     public function setAutoShowRoutes(array $autoShowRoutes): self
     {
@@ -619,6 +653,8 @@ class CookieConsentConfig
      * Sets auto-show routes from newline-separated text.
      *
      * @param string|null $autoShowRoutesText The route names as text input
+     *
+     * @return self Fluent interface
      */
     public function setAutoShowRoutesText(?string $autoShowRoutesText): self
     {
@@ -639,6 +675,8 @@ class CookieConsentConfig
      * Sets the configuration name.
      *
      * @param string|null $name The optional configuration name
+     *
+     * @return self Fluent interface
      */
     public function setName(?string $name): self
     {
@@ -661,6 +699,8 @@ class CookieConsentConfig
      * Sets the route patterns used to match this configuration.
      *
      * @param list<string> $routePatterns
+     *
+     * @return self Fluent interface
      */
     public function setRoutePatterns(array $routePatterns): self
     {
@@ -683,6 +723,8 @@ class CookieConsentConfig
      * Sets route patterns from newline-separated text.
      *
      * @param string|null $routePatternsText The route patterns as text input
+     *
+     * @return self Fluent interface
      */
     public function setRoutePatternsText(?string $routePatternsText): self
     {
@@ -703,6 +745,8 @@ class CookieConsentConfig
      * Sets the configuration priority.
      *
      * @param int $priority The priority value
+     *
+     * @return self Fluent interface
      */
     public function setPriority(int $priority): self
     {
@@ -766,6 +810,8 @@ class CookieConsentConfig
      * Sets the preferences modal layout.
      *
      * @param string $preferencesModalLayout The layout identifier
+     *
+     * @return self Fluent interface
      */
     public function setPreferencesModalLayout(string $preferencesModalLayout): self
     {
@@ -792,6 +838,8 @@ class CookieConsentConfig
      * Sets the preferences modal variant.
      *
      * @param string $preferencesModalVariant The variant identifier
+     *
+     * @return self Fluent interface
      */
     public function setPreferencesModalVariant(string $preferencesModalVariant): self
     {
@@ -814,6 +862,8 @@ class CookieConsentConfig
      * Sets the preferences modal vertical position.
      *
      * @param string $preferencesModalPositionY The vertical position identifier
+     *
+     * @return self Fluent interface
      */
     public function setPreferencesModalPositionY(string $preferencesModalPositionY): self
     {
@@ -846,6 +896,8 @@ class CookieConsentConfig
      * Sets the preferences modal horizontal position.
      *
      * @param string|null $preferencesModalPositionX The horizontal position identifier
+     *
+     * @return self Fluent interface
      */
     public function setPreferencesModalPositionX(?string $preferencesModalPositionX): self
     {
@@ -868,6 +920,8 @@ class CookieConsentConfig
      * Sets whether preferences modal buttons have equal weight.
      *
      * @param bool $preferencesModalEqualWeightButtons True for equal button weight
+     *
+     * @return self Fluent interface
      */
     public function setPreferencesModalEqualWeightButtons(bool $preferencesModalEqualWeightButtons): self
     {
@@ -890,6 +944,8 @@ class CookieConsentConfig
      * Sets whether preferences modal buttons are flipped.
      *
      * @param bool $preferencesModalFlipButtons True to flip button order
+     *
+     * @return self Fluent interface
      */
     public function setPreferencesModalFlipButtons(bool $preferencesModalFlipButtons): self
     {
@@ -912,6 +968,8 @@ class CookieConsentConfig
      * Adds a locale translation to this configuration.
      *
      * @param CookieConsentConfigTranslation $translation The translation to add
+     *
+     * @return self Fluent interface
      */
     public function addTranslation(CookieConsentConfigTranslation $translation): self
     {
@@ -927,6 +985,8 @@ class CookieConsentConfig
      * Removes a locale translation from this configuration.
      *
      * @param CookieConsentConfigTranslation $translation The translation to remove
+     *
+     * @return self Fluent interface
      */
     public function removeTranslation(CookieConsentConfigTranslation $translation): self
     {
@@ -955,11 +1015,23 @@ class CookieConsentConfig
         return null;
     }
 
+    /**
+     * Returns the modal color theme identifier.
+     *
+     * @return string One of the COLOR_THEMES constants
+     */
     public function getColorTheme(): string
     {
         return $this->colorTheme;
     }
 
+    /**
+     * Sets the modal color theme identifier.
+     *
+     * @param string $colorTheme One of the COLOR_THEMES constants
+     *
+     * @return self Fluent interface
+     */
     public function setColorTheme(string $colorTheme): self
     {
         if (!in_array($colorTheme, self::COLOR_THEMES, true)) {
@@ -971,11 +1043,23 @@ class CookieConsentConfig
         return $this;
     }
 
+    /**
+     * Returns whether dark mode styling is enabled.
+     *
+     * @return bool True when dark mode classes are applied
+     */
     public function isDarkModeEnabled(): bool
     {
         return $this->darkModeEnabled;
     }
 
+    /**
+     * Enables or disables dark mode styling.
+     *
+     * @param bool $darkModeEnabled True to enable dark mode
+     *
+     * @return self Fluent interface
+     */
     public function setDarkModeEnabled(bool $darkModeEnabled): self
     {
         $this->darkModeEnabled = $darkModeEnabled;
@@ -983,11 +1067,23 @@ class CookieConsentConfig
         return $this;
     }
 
+    /**
+     * Returns whether CSS transitions are disabled on the modal.
+     *
+     * @return bool True when transitions are suppressed
+     */
     public function isDisableTransitions(): bool
     {
         return $this->disableTransitions;
     }
 
+    /**
+     * Enables or disables CSS transitions on the modal.
+     *
+     * @param bool $disableTransitions True to disable transitions
+     *
+     * @return self Fluent interface
+     */
     public function setDisableTransitions(bool $disableTransitions): self
     {
         $this->disableTransitions = $disableTransitions;
@@ -995,11 +1091,23 @@ class CookieConsentConfig
         return $this;
     }
 
+    /**
+     * Returns whether the modal uses a two-step banner/preferences flow.
+     *
+     * @return bool True when the two-step layout is active
+     */
     public function isTwoStepModal(): bool
     {
         return $this->twoStepModal;
     }
 
+    /**
+     * Enables or disables the two-step modal flow.
+     *
+     * @param bool $twoStepModal True to use banner and preferences steps
+     *
+     * @return self Fluent interface
+     */
     public function setTwoStepModal(bool $twoStepModal): self
     {
         $this->twoStepModal = $twoStepModal;
@@ -1007,11 +1115,23 @@ class CookieConsentConfig
         return $this;
     }
 
+    /**
+     * Returns whether the preferences step opens by default.
+     *
+     * @return bool True when preferences are shown first
+     */
     public function isOpenPreferencesModal(): bool
     {
         return $this->openPreferencesModal;
     }
 
+    /**
+     * Sets whether the preferences step opens by default.
+     *
+     * @param bool $openPreferencesModal True to open preferences first
+     *
+     * @return self Fluent interface
+     */
     public function setOpenPreferencesModal(bool $openPreferencesModal): self
     {
         $this->openPreferencesModal = $openPreferencesModal;
@@ -1019,11 +1139,23 @@ class CookieConsentConfig
         return $this;
     }
 
+    /**
+     * Returns whether blocked iframe placeholders are managed after consent.
+     *
+     * @return bool True when iframe activation is enabled
+     */
     public function isManageIframePlaceholders(): bool
     {
         return $this->manageIframePlaceholders;
     }
 
+    /**
+     * Enables or disables iframe placeholder management.
+     *
+     * @param bool $manageIframePlaceholders True to activate placeholders after consent
+     *
+     * @return self Fluent interface
+     */
     public function setManageIframePlaceholders(bool $manageIframePlaceholders): self
     {
         $this->manageIframePlaceholders = $manageIframePlaceholders;
@@ -1031,11 +1163,23 @@ class CookieConsentConfig
         return $this;
     }
 
+    /**
+     * Returns whether per-cookie toggles are shown in the preferences step.
+     *
+     * @return bool True when granular selection is enabled
+     */
     public function isGranularCookieSelection(): bool
     {
         return $this->granularCookieSelection;
     }
 
+    /**
+     * Enables or disables granular per-cookie selection.
+     *
+     * @param bool $granularCookieSelection True to show per-cookie toggles
+     *
+     * @return self Fluent interface
+     */
     public function setGranularCookieSelection(bool $granularCookieSelection): self
     {
         $this->granularCookieSelection = $granularCookieSelection;
@@ -1043,11 +1187,23 @@ class CookieConsentConfig
         return $this;
     }
 
+    /**
+     * Returns whether the floating preferences bubble is enabled.
+     *
+     * @return bool True when the bubble button is rendered
+     */
     public function isPreferencesBubbleEnabled(): bool
     {
         return $this->preferencesBubbleEnabled;
     }
 
+    /**
+     * Enables or disables the floating preferences bubble.
+     *
+     * @param bool $preferencesBubbleEnabled True to render the bubble button
+     *
+     * @return self Fluent interface
+     */
     public function setPreferencesBubbleEnabled(bool $preferencesBubbleEnabled): self
     {
         $this->preferencesBubbleEnabled = $preferencesBubbleEnabled;
@@ -1055,11 +1211,23 @@ class CookieConsentConfig
         return $this;
     }
 
+    /**
+     * Returns the screen corner used for the preferences bubble.
+     *
+     * @return string One of the PREFERENCES_BUBBLE_POSITIONS constants
+     */
     public function getPreferencesBubblePosition(): string
     {
         return $this->preferencesBubblePosition;
     }
 
+    /**
+     * Sets the screen corner used for the preferences bubble.
+     *
+     * @param string $preferencesBubblePosition One of the PREFERENCES_BUBBLE_POSITIONS constants
+     *
+     * @return self Fluent interface
+     */
     public function setPreferencesBubblePosition(string $preferencesBubblePosition): self
     {
         if (!in_array($preferencesBubblePosition, self::PREFERENCES_BUBBLE_POSITIONS, true)) {
@@ -1071,12 +1239,23 @@ class CookieConsentConfig
         return $this;
     }
 
-    /** @return Collection<int, CookieDefinition> */
+    /**
+     * Returns cookie definitions linked to this configuration profile.
+     *
+     * @return Collection<int, CookieDefinition> Cookie definition entities
+     */
     public function getCookieDefinitions(): Collection
     {
         return $this->cookieDefinitions;
     }
 
+    /**
+     * Adds a cookie definition to this configuration profile.
+     *
+     * @param CookieDefinition $definition The cookie definition to attach
+     *
+     * @return self Fluent interface
+     */
     public function addCookieDefinition(CookieDefinition $definition): self
     {
         if (!$this->cookieDefinitions->contains($definition)) {

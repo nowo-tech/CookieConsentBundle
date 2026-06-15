@@ -22,8 +22,18 @@ use Symfony\Contracts\Translation\TranslatorInterface;
     name: 'nowo_cookie_consent_cookie_definitions_',
     requirements: ['configId' => '\d+'],
 )]
+/**
+ * Admin CRUD controller for cookie inventory definitions linked to a consent profile.
+ */
 class CookieDefinitionAdminController extends AbstractController
 {
+    /**
+     * Creates a new cookie definition admin controller.
+     *
+     * @param CookieConsentConfigRepository $configRepository     Repository for consent profiles
+     * @param CookieDefinitionRepository    $definitionRepository Repository for cookie definitions
+     * @param TranslatorInterface           $translator           Symfony translator for flash messages
+     */
     public function __construct(
         private readonly CookieConsentConfigRepository $configRepository,
         private readonly CookieDefinitionRepository $definitionRepository,
@@ -31,6 +41,13 @@ class CookieDefinitionAdminController extends AbstractController
     ) {
     }
 
+    /**
+     * Lists cookie definitions for a consent profile.
+     *
+     * @param int $configId The consent profile identifier
+     *
+     * @return Response The rendered index page
+     */
     #[Route('', name: 'index', methods: ['GET'])]
     public function index(int $configId): Response
     {
@@ -42,6 +59,15 @@ class CookieDefinitionAdminController extends AbstractController
         ]);
     }
 
+    /**
+     * Creates a new cookie definition for a consent profile.
+     *
+     * @param int                     $configId      The consent profile identifier
+     * @param Request                 $request       The current HTTP request
+     * @param EntityManagerInterface  $entityManager Doctrine entity manager
+     *
+     * @return Response The rendered form or redirect after success
+     */
     #[Route('/new', name: 'new', methods: ['GET', 'POST'])]
     public function new(int $configId, Request $request, EntityManagerInterface $entityManager): Response
     {
@@ -52,6 +78,16 @@ class CookieDefinitionAdminController extends AbstractController
         return $this->handleForm($request, $entityManager, $config, $definition, true);
     }
 
+    /**
+     * Edits an existing cookie definition.
+     *
+     * @param int                     $configId      The consent profile identifier
+     * @param int                     $id            The cookie definition identifier
+     * @param Request                 $request       The current HTTP request
+     * @param EntityManagerInterface  $entityManager Doctrine entity manager
+     *
+     * @return Response The rendered form or redirect after success
+     */
     #[Route('/{id}/edit', name: 'edit', requirements: ['id' => '\d+'], methods: ['GET', 'POST'])]
     public function edit(int $configId, int $id, Request $request, EntityManagerInterface $entityManager): Response
     {
@@ -65,6 +101,16 @@ class CookieDefinitionAdminController extends AbstractController
         return $this->handleForm($request, $entityManager, $config, $definition, false);
     }
 
+    /**
+     * Deletes a cookie definition after CSRF validation.
+     *
+     * @param int                     $configId      The consent profile identifier
+     * @param int                     $id            The cookie definition identifier
+     * @param Request                 $request       The current HTTP request
+     * @param EntityManagerInterface  $entityManager Doctrine entity manager
+     *
+     * @return Response Redirect to the index page
+     */
     #[Route('/{id}/delete', name: 'delete', requirements: ['id' => '\d+'], methods: ['POST'])]
     public function delete(int $configId, int $id, Request $request, EntityManagerInterface $entityManager): Response
     {

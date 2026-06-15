@@ -16,6 +16,9 @@ final class CookieConsentConfigSelector
 {
     /**
      * Creates a new configuration selector.
+     *
+     * @param CookieConsentConfigRepository $configRepository Repository for consent profiles
+     * @param CookieConsentRoutePatternMatcher $routePatternMatcher Matches route patterns
      */
     public function __construct(
         private readonly CookieConsentConfigRepository $configRepository,

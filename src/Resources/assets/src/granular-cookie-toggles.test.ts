@@ -82,4 +82,23 @@ describe('granular-cookie-toggles', () => {
       expect(input.checked).toBe(true);
     });
   });
+
+  it('ignores sync helpers when category toggles are missing', () => {
+    document.body.innerHTML = '<div class="nowo-cookie-consent__category--granular"></div>';
+    const categoryBlock = document.querySelector('.nowo-cookie-consent__category--granular')!;
+
+    expect(() => syncCategoryToggleFromCookies(categoryBlock)).not.toThrow();
+    expect(() => syncCookiesFromCategoryToggle(categoryBlock)).not.toThrow();
+  });
+
+  it('clears indeterminate state when syncing cookies from the category toggle', () => {
+    const categoryBlock = buildCategoryBlock();
+    const categoryInput = categoryBlock.querySelector<HTMLInputElement>('[data-nowo-toggle] input')!;
+
+    categoryInput.indeterminate = true;
+    categoryInput.checked = false;
+    syncCookiesFromCategoryToggle(categoryBlock);
+
+    expect(categoryInput.indeterminate).toBe(false);
+  });
 });

@@ -11,6 +11,8 @@ final class CookieConsentRouteTargeting
 {
     /**
      * Creates a new route targeting helper.
+     *
+     * @param CookieConsentRoutePatternMatcher $routePatternMatcher Matches route patterns
      */
     public function __construct(
         private readonly CookieConsentRoutePatternMatcher $routePatternMatcher,

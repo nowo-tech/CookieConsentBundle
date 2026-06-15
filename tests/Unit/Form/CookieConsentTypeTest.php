@@ -4,9 +4,16 @@ declare(strict_types=1);
 
 namespace Nowo\CookieConsentBundle\Tests\Unit\Form;
 
+use Nowo\CookieConsentBundle\Config\CookieConsentConfigResolver;
+use Nowo\CookieConsentBundle\Config\CookieConsentConfigSelector;
+use Nowo\CookieConsentBundle\Config\CookieConsentRoutePatternMatcher;
+use Nowo\CookieConsentBundle\Config\CookieInventoryProvider;
 use Nowo\CookieConsentBundle\Cookie\CookieChecker;
 use Nowo\CookieConsentBundle\Enum\CookieNameEnum;
 use Nowo\CookieConsentBundle\Form\CookieConsentType;
+use Nowo\CookieConsentBundle\Repository\CookieConsentConfigRepository;
+use Nowo\CookieConsentBundle\Repository\CookieConsentConfigTranslationRepository;
+use Nowo\CookieConsentBundle\Repository\CookieDefinitionRepository;
 use Symfony\Component\Form\Test\TypeTestCase;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\RequestStack;
@@ -81,7 +88,21 @@ final class CookieConsentTypeTest extends TypeTestCase
         $stack->push($request);
 
         return [
-            new CookieConsentType(new CookieChecker($stack), ['analytics', 'marketing'], true),
+            new CookieConsentType(
+                new CookieChecker($stack),
+                new CookieConsentConfigResolver(
+                    new CookieConsentConfigSelector(
+                        $this->createMock(CookieConsentConfigRepository::class),
+                        new CookieConsentRoutePatternMatcher(),
+                    ),
+                    $this->createMock(CookieConsentConfigTranslationRepository::class),
+                    false,
+                ),
+                new CookieInventoryProvider($this->createMock(CookieDefinitionRepository::class), false, []),
+                $stack,
+                ['analytics', 'marketing'],
+                true,
+            ),
         ];
     }
 }

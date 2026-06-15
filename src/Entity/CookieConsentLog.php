@@ -58,6 +58,8 @@ class CookieConsentLog
      * Sets the anonymized IP address.
      *
      * @param string $ipAddress The anonymized client IP address
+     *
+     * @return self Fluent interface
      */
     public function setIpAddress(string $ipAddress): self
     {
@@ -80,6 +82,8 @@ class CookieConsentLog
      * Sets the anonymous consent key.
      *
      * @param string $cookieConsentKey The consent key cookie value
+     *
+     * @return self Fluent interface
      */
     public function setCookieConsentKey(string $cookieConsentKey): self
     {
@@ -102,6 +106,8 @@ class CookieConsentLog
      * Sets the logged cookie category name.
      *
      * @param string $cookieName The consent category name
+     *
+     * @return self Fluent interface
      */
     public function setCookieName(string $cookieName): self
     {
@@ -124,6 +130,8 @@ class CookieConsentLog
      * Sets whether the category was accepted.
      *
      * @param bool $cookieValue True when the category was allowed
+     *
+     * @return self Fluent interface
      */
     public function setCookieValue(bool $cookieValue): self
     {
@@ -146,6 +154,8 @@ class CookieConsentLog
      * Sets the consent log timestamp.
      *
      * @param DateTimeImmutable $timestamp The log creation time
+     *
+     * @return self Fluent interface
      */
     public function setTimestamp(DateTimeImmutable $timestamp): self
     {

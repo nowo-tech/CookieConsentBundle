@@ -117,9 +117,34 @@ Twig helpers:
 
 ## Translations
 
-Override keys in `translations/NowoCookieConsentBundle.{locale}.yaml`.
+Translation domain: **`NowoCookieConsentBundle`** (CamelCase, matching the bundle name).
+
+The bundle ships YAML files for `en`, `es`, `it`, `fr`, `de`, `pt`, `nl`, `pl`, and `ca` under `src/Resources/translations/`. Symfony loads the app translations first; missing keys fall back to the bundle.
+
+### How to override (application)
+
+1. Use the same domain: `NowoCookieConsentBundle`.
+2. Create a file in your application:
+   - `translations/NowoCookieConsentBundle.<locale>.yaml` (or `.xlf` if your project uses XLF).
+3. Override only the keys you need. Keys not defined in the app file use the bundle default.
+
+Example — Spanish override:
+
+```yaml
+# translations/NowoCookieConsentBundle.es.yaml
+nowo_cookie_consent:
+    consent_modal:
+        title: 'Configuración de cookies'
+        description: 'Usamos cookies para mejorar tu experiencia.'
+    category:
+        analytics: 'Analíticas'
+```
+
+4. Clear the Symfony cache in dev if translations do not appear: `php bin/console cache:clear`.
 
 Set `nowo_cookie_consent.privacy_route` to a Symfony route name to link the privacy policy from the modal.
+
+When `use_database_config: true`, per-locale copy can also be stored in `CookieConsentConfigTranslation` entities (admin CRUD); YAML overrides still apply to keys not overridden in the database layer.
 
 ## Database configuration
 
@@ -290,10 +315,44 @@ The frontend script reads `data-nowo-config-url` on the modal, performs a `GET`,
 
 ## Twig overrides
 
-| Template | Override path |
+Application templates under `templates/bundles/NowoCookieConsentBundle/` **always win** over the copies inside the package. The bundle registers paths via `TwigPathsPass` so Symfony resolves app overrides first.
+
+### Procedure
+
+1. Identify the `<subpath>` from the table below (path relative to `src/Resources/views/` inside the bundle).
+2. Create in your application: `templates/bundles/NowoCookieConsentBundle/<subpath>.html.twig` (same relative path and filename).
+3. Clear the cache in dev if needed: `php bin/console cache:clear`.
+
+Example — override the Bootstrap modal shell:
+
+```
+templates/bundles/NowoCookieConsentBundle/cookie_consent.html.twig
+```
+
+Controllers and Twig use logical names such as `@NowoCookieConsentBundle/cookie_consent.html.twig`, never absolute filesystem paths.
+
+### Overridable templates
+
+| Subpath | Purpose |
 | --- | --- |
-| Main modal | `templates/bundles/NowoCookieConsentBundle/cookie_consent.html.twig` |
-| Form theme | `templates/bundles/NowoCookieConsentBundle/form/cookie_consent_theme.html.twig` |
+| `cookie_consent.html.twig` | Main consent modal (Bootstrap theme) |
+| `cookie_consent.tailwind.html.twig` | Main consent modal (Tailwind theme) |
+| `form/cookie_consent_theme.html.twig` | Symfony form theme for consent fields (Bootstrap) |
+| `form/cookie_consent_theme.tailwind.html.twig` | Form theme (Tailwind) |
+| `cookie_consent_preferences_bubble.html.twig` | Floating “cookie settings” bubble button |
+| `cookie_consent_manage_link.html.twig` | Inline link to reopen preferences |
+| `_category_cookie_table.html.twig` | Per-category cookie inventory table (granular mode) |
+| `_preference_sections.html.twig` | Preferences step category blocks |
+| `_preferences_intro.html.twig` | Intro text on the preferences step |
+| `_diagnostics_script.html.twig` | Optional diagnostics script partial |
+| `admin/cookie_definition/layout.html.twig` | Admin CRUD layout shell |
+| `admin/cookie_definition/index.html.twig` | Cookie definition list |
+| `admin/cookie_definition/form.html.twig` | Create/edit cookie definition form |
+| `admin/cookie_definition/_table.html.twig` | Admin list table partial |
+
+Theme selection follows `ui_theme` (`bootstrap` or `tailwind`); override the modal and form theme rows that match your active theme.
+
+See also [UI theme](#ui-theme) for theme-specific override paths.
 
 ## Twig helpers
 

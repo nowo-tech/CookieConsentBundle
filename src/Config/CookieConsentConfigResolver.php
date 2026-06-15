@@ -13,6 +13,10 @@ final class CookieConsentConfigResolver
 {
     /**
      * Creates a new configuration resolver.
+     *
+     * @param CookieConsentConfigSelector $configSelector Selects the active profile
+     * @param CookieConsentConfigTranslationRepository $translationRepository Loads locale copy
+     * @param bool $useDatabaseConfig Whether database-backed config is enabled
      */
     public function __construct(
         private readonly CookieConsentConfigSelector $configSelector,

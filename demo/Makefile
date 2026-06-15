@@ -61,4 +61,5 @@ clean:
 	rm -rf symfony8-tailwind/vendor symfony8-tailwind/var symfony8-tailwind/.phpunit.cache
 
 BUNDLE_ROOT := $(abspath $(dir $(lastword $(MAKEFILE_LIST)))/..)
+# REQ-MAKE-008: update-deps-all
 include $(BUNDLE_ROOT)/../.scripts/Makefile.demo-aggregate-update-deps.mk

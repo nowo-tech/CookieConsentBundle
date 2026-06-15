@@ -6,7 +6,7 @@ BUNDLE_ROOT := $(abspath $(dir $(lastword $(MAKEFILE_LIST))))
 export DOCKER_CONFIG := $(BUNDLE_ROOT)/.docker
 
 .PHONY: help ensure-up up down build shell install assets assets-test test-ts test test-coverage test-with-db \
-	test-coverage-with-db cs-check cs-fix rector rector-dry phpstan qa release-check \
+	test-coverage-with-db cs-check cs-fix rector rector-dry phpstan validate-phpdoc qa release-check \
 	release-check-demos composer-sync clean update validate validate-translations
 
 help:
@@ -81,6 +81,9 @@ rector-dry: ensure-up
 rector: ensure-up
 	@$(COMPOSE) exec -T $(SERVICE_PHP) composer rector
 
+validate-phpdoc: ensure-up
+	@$(COMPOSE) exec -T $(SERVICE_PHP) php .scripts/complete-public-phpdoc.php
+
 phpstan: ensure-up
 	@$(COMPOSE) exec -T $(SERVICE_PHP) composer phpstan
 
@@ -90,7 +93,7 @@ validate-translations: ensure-up
 
 qa: cs-check test test-ts
 
-release-check: ensure-up assets composer-sync cs-fix cs-check rector-dry phpstan test-coverage test-ts release-check-demos
+release-check: ensure-up assets composer-sync cs-fix cs-check rector-dry phpstan validate-phpdoc test-coverage test-ts release-check-demos
 
 release-check-demos:
 	@if [ -f demo/Makefile ]; then $(MAKE) -C demo release-check 2>/dev/null || true; else true; fi
@@ -108,4 +111,5 @@ update: ensure-up
 validate: ensure-up
 	@$(COMPOSE) exec -T $(SERVICE_PHP) composer validate --strict
 
+# REQ-MAKE-008: update-deps (REQ-MAKE-008)
 include $(BUNDLE_ROOT)/../.scripts/Makefile.update-deps.mk

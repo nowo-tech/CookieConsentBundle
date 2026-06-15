@@ -17,6 +17,9 @@ final class CookieConsentConfigApiController
 {
     /**
      * Creates a new config API controller.
+     *
+     * @param CookieConsentConfigPayloadFactory $payloadFactory Builds JSON payloads
+     * @param LocaleResolver $localeResolver Resolves request locales
      */
     public function __construct(
         private readonly CookieConsentConfigPayloadFactory $payloadFactory,

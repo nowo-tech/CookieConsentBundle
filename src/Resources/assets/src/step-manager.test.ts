@@ -1,6 +1,13 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 
-import { bindStepNavigation } from './step-manager';
+import {
+  activateCookieConsentStep,
+  bindStepNavigation,
+  openBannerStep,
+  openPreferencesStep,
+  shouldBlockPageInteraction,
+  syncTwoStepModalState,
+} from './step-manager';
 
 describe('bindStepNavigation', () => {
   beforeEach(() => {
@@ -60,5 +67,42 @@ describe('bindStepNavigation', () => {
     expect(modal.dataset.nowoTwoStep).toBe('true');
     expect(modal.classList.contains('nowo-cookie-consent--two-step')).toBe(true);
     expect(modal.querySelector('[data-nowo-step="preferences"]')?.classList.contains('nowo-cookie-consent__step--active')).toBe(true);
+  });
+
+  it('opens preferences on bind when data-nowo-open-preferences is true', () => {
+    const modal = document.getElementById('cookieconsent')!;
+    modal.dataset.nowoOpenPreferences = 'true';
+
+    bindStepNavigation(modal);
+
+    expect(modal.querySelector('[data-nowo-step="preferences"]')?.classList.contains('nowo-cookie-consent__step--active')).toBe(true);
+  });
+});
+
+describe('step-manager helpers', () => {
+  it('returns false when activating steps on a modal without step markup', () => {
+    const modal = document.createElement('div');
+
+    expect(activateCookieConsentStep(modal, 'banner')).toBe(false);
+    expect(openPreferencesStep(modal)).toBe(false);
+    expect(openBannerStep(modal)).toBe(false);
+  });
+
+  it('detects two-step mode from data-nowo-two-step when step markup is missing', () => {
+    const modal = document.createElement('div');
+    modal.dataset.nowoTwoStep = 'true';
+
+    syncTwoStepModalState(modal);
+
+    expect(modal.dataset.nowoTwoStep).toBe('true');
+    expect(modal.classList.contains('nowo-cookie-consent--two-step')).toBe(true);
+  });
+
+  it('reports page interaction blocking from data attributes', () => {
+    const modal = document.createElement('div');
+    modal.dataset.nowoDisablePageInteraction = 'true';
+
+    expect(shouldBlockPageInteraction(modal)).toBe(true);
+    expect(shouldBlockPageInteraction(document.createElement('div'))).toBe(false);
   });
 });

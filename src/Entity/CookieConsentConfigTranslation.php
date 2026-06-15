@@ -96,6 +96,8 @@ class CookieConsentConfigTranslation
      * Sets the translation locale.
      *
      * @param string $locale The locale code
+     *
+     * @return self Fluent interface
      */
     public function setLocale(string $locale): self
     {
@@ -118,6 +120,8 @@ class CookieConsentConfigTranslation
      * Sets the consent modal label.
      *
      * @param string|null $consentModalLabel The optional modal label
+     *
+     * @return self Fluent interface
      */
     public function setConsentModalLabel(?string $consentModalLabel): self
     {
@@ -140,6 +144,8 @@ class CookieConsentConfigTranslation
      * Sets the consent modal title.
      *
      * @param string $consentModalTitle The modal title
+     *
+     * @return self Fluent interface
      */
     public function setConsentModalTitle(string $consentModalTitle): self
     {
@@ -162,6 +168,8 @@ class CookieConsentConfigTranslation
      * Sets the consent modal description.
      *
      * @param string $consentModalDescription The modal description
+     *
+     * @return self Fluent interface
      */
     public function setConsentModalDescription(string $consentModalDescription): self
     {
@@ -184,6 +192,8 @@ class CookieConsentConfigTranslation
      * Sets the accept-all button label.
      *
      * @param string $consentModalAcceptAllBtn The accept-all button text
+     *
+     * @return self Fluent interface
      */
     public function setConsentModalAcceptAllBtn(string $consentModalAcceptAllBtn): self
     {
@@ -206,6 +216,8 @@ class CookieConsentConfigTranslation
      * Sets the accept-necessary button label.
      *
      * @param string $consentModalAcceptNecessaryBtn The accept-necessary button text
+     *
+     * @return self Fluent interface
      */
     public function setConsentModalAcceptNecessaryBtn(string $consentModalAcceptNecessaryBtn): self
     {
@@ -228,6 +240,8 @@ class CookieConsentConfigTranslation
      * Sets the show-preferences button label.
      *
      * @param string|null $consentModalShowPreferencesBtn The show-preferences button text
+     *
+     * @return self Fluent interface
      */
     public function setConsentModalShowPreferencesBtn(?string $consentModalShowPreferencesBtn): self
     {
@@ -250,6 +264,8 @@ class CookieConsentConfigTranslation
      * Sets the consent modal footer text.
      *
      * @param string|null $consentModalFooter The modal footer text
+     *
+     * @return self Fluent interface
      */
     public function setConsentModalFooter(?string $consentModalFooter): self
     {
@@ -272,6 +288,8 @@ class CookieConsentConfigTranslation
      * Sets the preferences modal title.
      *
      * @param string|null $preferencesModalTitle The preferences modal title
+     *
+     * @return self Fluent interface
      */
     public function setPreferencesModalTitle(?string $preferencesModalTitle): self
     {
@@ -294,6 +312,8 @@ class CookieConsentConfigTranslation
      * Sets the preferences accept-all button label.
      *
      * @param string|null $preferencesModalAcceptAllBtn The accept-all button text
+     *
+     * @return self Fluent interface
      */
     public function setPreferencesModalAcceptAllBtn(?string $preferencesModalAcceptAllBtn): self
     {
@@ -316,6 +336,8 @@ class CookieConsentConfigTranslation
      * Sets the preferences accept-necessary button label.
      *
      * @param string|null $preferencesModalAcceptNecessaryBtn The accept-necessary button text
+     *
+     * @return self Fluent interface
      */
     public function setPreferencesModalAcceptNecessaryBtn(?string $preferencesModalAcceptNecessaryBtn): self
     {
@@ -338,6 +360,8 @@ class CookieConsentConfigTranslation
      * Sets the save-preferences button label.
      *
      * @param string|null $preferencesModalSavePreferencesBtn The save-preferences button text
+     *
+     * @return self Fluent interface
      */
     public function setPreferencesModalSavePreferencesBtn(?string $preferencesModalSavePreferencesBtn): self
     {
@@ -360,6 +384,8 @@ class CookieConsentConfigTranslation
      * Sets the preferences close icon label.
      *
      * @param string|null $preferencesModalCloseIconLabel The close icon label
+     *
+     * @return self Fluent interface
      */
     public function setPreferencesModalCloseIconLabel(?string $preferencesModalCloseIconLabel): self
     {
@@ -382,6 +408,8 @@ class CookieConsentConfigTranslation
      * Sets the privacy policy route name.
      *
      * @param string|null $privacyRoute The privacy route name
+     *
+     * @return self Fluent interface
      */
     public function setPrivacyRoute(?string $privacyRoute): self
     {
@@ -391,7 +419,9 @@ class CookieConsentConfigTranslation
     }
 
     /**
-     * @return list<array<string, mixed>>|null
+     * Returns grouped preference sections stored on this translation.
+     *
+     * @return list<array<string, mixed>>|null Preference sections or null when unset
      */
     public function getPreferenceSections(): ?array
     {
@@ -399,7 +429,11 @@ class CookieConsentConfigTranslation
     }
 
     /**
-     * @param list<array<string, mixed>>|null $preferenceSections
+     * Sets grouped preference sections for this translation.
+     *
+     * @param list<array<string, mixed>>|null $preferenceSections Preference sections or null
+     *
+     * @return self Fluent interface
      */
     public function setPreferenceSections(?array $preferenceSections): self
     {
@@ -422,6 +456,8 @@ class CookieConsentConfigTranslation
      * Sets the parent consent configuration.
      *
      * @param CookieConsentConfig|null $config The parent configuration
+     *
+     * @return self Fluent interface
      */
     public function setConfig(?CookieConsentConfig $config): self
     {

@@ -1,6 +1,6 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 
-import { applyRemoteConfig } from './apply-config';
+import { applyRemoteConfig, fetchRemoteConfig } from './apply-config';
 
 describe('applyRemoteConfig', () => {
   it('applies modal copy, gui options, and category labels from API data', () => {
@@ -87,5 +87,92 @@ describe('applyRemoteConfig', () => {
     expect(modal.querySelector('[name="use_all_cookies"]')?.textContent).toBe('API all');
     expect(modal.querySelector('[name="save"]')?.textContent).toBe('API save');
     expect(modal.querySelector('[data-nowo-category="analytics"] .nowo-cookie-consent__category-title')?.textContent).toBe('API analytics');
+  });
+
+  it('opens the preferences step and applies optional flags from API data', () => {
+    document.body.innerHTML = `
+      <div id="cookieconsent" data-nowo-open="true">
+        <div data-nowo-step="banner" class="nowo-cookie-consent__step nowo-cookie-consent__step--active"></div>
+        <div data-nowo-step="preferences" class="nowo-cookie-consent__step"></div>
+        <h5 class="nowo-cookie-consent__preferences-intro-title">Old usage title</h5>
+        <p class="nowo-cookie-consent__preferences-intro-description">Old usage description</p>
+        <div data-nowo-step="preferences" class="nowo-cookie-consent__step">
+          <h5 class="nowo-cookie-consent__title">Old preferences title</h5>
+        </div>
+      </div>
+    `;
+
+    const modal = document.getElementById('cookieconsent')!;
+
+    applyRemoteConfig(modal, {
+      twoStepModal: true,
+      openPreferencesModal: true,
+      manageIframePlaceholders: true,
+      colorTheme: 'dark',
+      darkModeEnabled: false,
+      disableTransitions: false,
+      language: {
+        default: 'es',
+        translations: {
+          en: {
+            preferencesModal: {
+              title: 'English preferences',
+              usageTitle: 'English usage',
+              usageDescription: 'English usage description',
+            },
+          },
+        },
+      },
+    }, 'en');
+
+    expect(modal.dataset.nowoTwoStep).toBe('true');
+    expect(modal.dataset.nowoOpenPreferences).toBe('true');
+    expect(modal.dataset.nowoManageIframePlaceholders).toBe('true');
+    expect(modal.classList.contains('nowo-cookie-consent--theme-dark')).toBe(true);
+    expect(modal.querySelector('.nowo-cookie-consent__preferences-intro-title')?.textContent).toBe('English usage');
+    expect(modal.querySelector('.nowo-cookie-consent__preferences-intro-description')?.textContent).toBe('English usage description');
+    expect(modal.querySelector('[data-nowo-step="preferences"] .nowo-cookie-consent__title')?.textContent).toBe('English preferences');
+    expect(modal.querySelector('[data-nowo-step="preferences"]')?.classList.contains('nowo-cookie-consent__step--active')).toBe(true);
+  });
+});
+
+describe('fetchRemoteConfig', () => {
+  it('returns config data from a successful JSON response', async () => {
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({ code: 200, data: { autoShow: false, revision: 2 } }),
+    });
+    vi.stubGlobal('fetch', fetchMock);
+
+    const data = await fetchRemoteConfig('/cookie-consent/config?locale=en');
+
+    expect(fetchMock).toHaveBeenCalledWith('/cookie-consent/config?locale=en', {
+      method: 'GET',
+      headers: { Accept: 'application/json' },
+    });
+    expect(data).toEqual({ autoShow: false, revision: 2 });
+
+    vi.unstubAllGlobals();
+  });
+
+  it('throws when the config request is not successful', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: false, status: 503 }));
+
+    await expect(fetchRemoteConfig('/cookie-consent/config')).rejects.toThrow(
+      'Cookie consent config request failed with status 503',
+    );
+
+    vi.unstubAllGlobals();
+  });
+
+  it('returns null when the API response has no data payload', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({ code: 200 }),
+    }));
+
+    await expect(fetchRemoteConfig('/cookie-consent/config')).resolves.toBeNull();
+
+    vi.unstubAllGlobals();
   });
 });

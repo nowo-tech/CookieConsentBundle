@@ -46,6 +46,8 @@ class CookieConsentType extends AbstractType
      *
      * @param FormBuilderInterface<array<string, mixed>|null> $builder The form builder
      * @param array<string, mixed> $options The form options
+     *
+     * @return void
      */
     public function buildForm(FormBuilderInterface $builder, array $options): void
     {
@@ -260,6 +262,8 @@ class CookieConsentType extends AbstractType
      * Configures default options for the consent form type.
      *
      * @param OptionsResolver $resolver The options resolver
+     *
+     * @return void
      */
     public function configureOptions(OptionsResolver $resolver): void
     {

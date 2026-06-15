@@ -43,3 +43,9 @@ if [ -z "${VALUE:-}" ]; then
 fi
 
 echo "Global TS coverage (min of Statements/Branches/Functions/Lines): ${VALUE}%"
+
+MIN_THRESHOLD="${TS_COVERAGE_MIN:-90}"
+if awk "BEGIN { exit !(${VALUE} < ${MIN_THRESHOLD}) }"; then
+  echo "ERROR: TS coverage ${VALUE}% is below minimum ${MIN_THRESHOLD}%" >&2
+  exit 1
+fi

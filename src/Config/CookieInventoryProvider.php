@@ -17,7 +17,11 @@ use Nowo\CookieConsentBundle\Repository\CookieDefinitionRepository;
 final class CookieInventoryProvider
 {
     /**
-     * @param list<array<string, mixed>> $yamlCookieInventory
+     * Creates a new cookie inventory provider.
+     *
+     * @param CookieDefinitionRepository $definitionRepository Repository for database definitions
+     * @param bool $useCookieInventory Whether the inventory feature is enabled
+     * @param list<array<string, mixed>> $yamlCookieInventory Static YAML inventory entries
      */
     public function __construct(
         private readonly CookieDefinitionRepository $definitionRepository,
@@ -26,12 +30,22 @@ final class CookieInventoryProvider
     ) {
     }
 
+    /**
+     * Returns whether the cookie inventory feature is enabled.
+     *
+     * @return bool True when inventory tables may be rendered
+     */
     public function isEnabled(): bool
     {
         return $this->useCookieInventory;
     }
 
     /**
+     * Returns cookie inventory rows for the given profile and locale.
+     *
+     * @param CookieConsentConfig|null $config The active consent profile
+     * @param string $locale The requested locale code
+     *
      * @return list<array{
      *     name: string,
      *     provider: string,
@@ -40,7 +54,7 @@ final class CookieInventoryProvider
      *     category: string,
      *     type: string,
      *     allowed_by_default: bool
-     * }>
+     * }> Cookie inventory rows
      */
     public function listForLocale(?CookieConsentConfig $config, string $locale): array
     {
@@ -56,7 +70,13 @@ final class CookieInventoryProvider
     }
 
     /**
-     * @return list<array{name: string, domain: string, desc: string}>
+     * Builds table rows for a single inventory category.
+     *
+     * @param CookieConsentConfig|null $config The active consent profile
+     * @param string $locale The requested locale code
+     * @param string $category The consent category slug
+     *
+     * @return list<array{name: string, domain: string, desc: string}> Table rows
      */
     public function buildCookieTableBody(?CookieConsentConfig $config, string $locale, string $category): array
     {
@@ -77,6 +97,13 @@ final class CookieInventoryProvider
         return $rows;
     }
 
+    /**
+     * Returns whether inventory data exists for the given profile or YAML config.
+     *
+     * @param CookieConsentConfig|null $config The active consent profile
+     *
+     * @return bool True when at least one definition is available
+     */
     public function hasDefinitions(?CookieConsentConfig $config = null): bool
     {
         if (!$this->useCookieInventory) {

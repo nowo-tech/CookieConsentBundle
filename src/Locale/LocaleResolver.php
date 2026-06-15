@@ -18,7 +18,10 @@ final class LocaleResolver
     /**
      * Creates a new locale resolver.
      *
-     * @param list<string> $enabledLocales
+     * @param list<string> $enabledLocales Supported locale codes
+     * @param string $defaultLocale Fallback locale code
+     * @param bool $detectLocaleFromAcceptLanguage Whether to parse Accept-Language
+     * @param RequestStack $requestStack The HTTP request stack
      */
     public function __construct(
         private readonly array $enabledLocales,

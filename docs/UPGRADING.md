@@ -23,6 +23,20 @@ If you switch `ui_theme` from `bootstrap` to `tailwind` (or vice versa):
 2. Load the matching CSS framework in your layout (Bootstrap 5 or Tailwind)
 3. Override the correct Twig templates (see the theme table in [CONFIGURATION.md](CONFIGURATION.md))
 
+## To 1.1.1
+
+```bash
+composer update nowo-tech/cookie-consent-bundle
+php bin/console cache:clear
+php bin/console assets:install
+```
+
+Patch release: documentation, security write-up, Nowo bundle standards compliance, and PHPDoc/test tooling. **No configuration or API changes** for consumers.
+
+### Breaking changes
+
+None.
+
 ## To 1.1.0
 
 ```bash

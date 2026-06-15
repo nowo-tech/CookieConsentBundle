@@ -14,6 +14,9 @@ final class ResolvedCookieConsentConfig
 {
     /**
      * Creates a resolved configuration wrapper.
+     *
+     * @param CookieConsentConfig $config The resolved configuration entity
+     * @param CookieConsentConfigTranslation|null $translation The locale translation, if any
      */
     public function __construct(
         private readonly CookieConsentConfig $config,

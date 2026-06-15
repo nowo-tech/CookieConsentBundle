@@ -19,6 +19,9 @@ final class CookieConsentConfigTranslationSubscriber implements EventSubscriberI
 {
     /**
      * Creates a new config translation subscriber.
+     *
+     * @param CookieConsentConfigResolver $configResolver Resolves database-backed config
+     * @param TranslatorInterface $translator Registers runtime translation messages
      */
     public function __construct(
         private readonly CookieConsentConfigResolver $configResolver,
@@ -42,6 +45,8 @@ final class CookieConsentConfigTranslationSubscriber implements EventSubscriberI
      * Resolves and registers consent translations for the current request.
      *
      * @param RequestEvent $event The kernel request event
+     *
+     * @return void
      */
     public function onKernelRequest(RequestEvent $event): void
     {

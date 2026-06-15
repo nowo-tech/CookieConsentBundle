@@ -23,6 +23,11 @@ class CookieConsentFormSubscriber implements EventSubscriberInterface
 {
     /**
      * Creates a new cookie consent form subscriber.
+     *
+     * @param FormFactoryInterface $formFactory Creates consent forms
+     * @param CookieLogger $cookieLogger Persists optional consent logs
+     * @param CookieHandler $cookieHandler Writes consent cookies
+     * @param bool $useLogger Whether consent logging is enabled
      */
     public function __construct(
         private readonly FormFactoryInterface $formFactory,
@@ -48,6 +53,8 @@ class CookieConsentFormSubscriber implements EventSubscriberInterface
      * Processes a submitted consent form and persists cookies when valid.
      *
      * @param ResponseEvent $event The kernel response event
+     *
+     * @return void
      */
     public function onResponse(ResponseEvent $event): void
     {

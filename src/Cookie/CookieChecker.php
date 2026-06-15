@@ -60,6 +60,11 @@ class CookieChecker
 
     /**
      * Returns whether a specific optional cookie is allowed for the current user.
+     *
+     * @param string $cookieName The cookie identifier
+     * @param string $category The consent category slug
+     *
+     * @return bool True when the cookie is allowed
      */
     public function isCookieAllowedByUser(string $cookieName, string $category): bool
     {
@@ -77,7 +82,9 @@ class CookieChecker
     }
 
     /**
-     * @return array<string, bool>|null
+     * Returns the decoded per-cookie consent map from the request cookie.
+     *
+     * @return array<string, bool>|null The granular preferences or null when absent
      */
     public function getGranularPreferences(): ?array
     {
