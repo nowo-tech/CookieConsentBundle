@@ -18,10 +18,10 @@ final class CookieInventoryProviderTest extends TestCase
     {
         $entries = CookieInventoryNormalizer::normalize([
             [
-                'name'      => '_ga',
-                'duration'  => '2 years',
-                'category'  => 'analytics',
-                'sortOrder' => 20,
+                'name'         => '_ga',
+                'duration'     => '2 years',
+                'category'     => 'analytics',
+                'sortOrder'    => 20,
                 'translations' => [
                     'en' => ['provider' => 'Google', 'purpose' => 'Analytics'],
                 ],
@@ -92,7 +92,7 @@ final class CookieInventoryProviderTest extends TestCase
 
     public function testPrefersDatabaseDefinitionsOverYaml(): void
     {
-        $config = new CookieConsentConfig();
+        $config     = new CookieConsentConfig();
         $definition = (new CookieDefinition())
             ->setName('_pk_id')
             ->setDuration('13 months')

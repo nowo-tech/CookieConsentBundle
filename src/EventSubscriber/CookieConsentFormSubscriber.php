@@ -16,6 +16,9 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Event\ResponseEvent;
 use Symfony\Component\HttpKernel\KernelEvents;
 
+use function is_array;
+use function is_string;
+
 /**
  * Handles cookie consent form submission on the HTTP response event.
  */
@@ -84,7 +87,7 @@ class CookieConsentFormSubscriber implements EventSubscriberInterface
     }
 
     /**
-     * @param array<string, bool|string|array<string, bool|string>> $data
+     * @param array<string, array<string, bool|string>|bool|string> $data
      *
      * @return array<string, bool>
      */

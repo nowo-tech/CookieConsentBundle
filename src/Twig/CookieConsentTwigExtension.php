@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace Nowo\CookieConsentBundle\Twig;
 
-use Nowo\CookieConsentBundle\Config\CookieInventoryProvider;
 use Nowo\CookieConsentBundle\Config\CmpUxOptionsResolver;
 use Nowo\CookieConsentBundle\Config\CookieConsentRouteTargeting;
+use Nowo\CookieConsentBundle\Config\CookieInventoryProvider;
 use Nowo\CookieConsentBundle\Config\ResolvedCookieConsentConfig;
 use Nowo\CookieConsentBundle\Cookie\CookieChecker;
 use Nowo\CookieConsentBundle\Entity\CookieConsentConfig;
@@ -146,16 +146,16 @@ class CookieConsentTwigExtension extends AbstractExtension
 
         return [
             'server' => [
-                'consent_saved'       => $consentSaved,
-                'will_embed_modal'    => !$consentSaved,
-                'current_route'       => $route,
-                'locale'              => $this->getResolvedLocale(),
-                'open_by_default'     => $openByDefault,
-                'open_blockers'       => $openBlockers,
-                'disabled_routes'     => $this->cookieConsentDisabledRoutes,
-                'use_database_config' => $this->useDatabaseConfig,
-                'fetch_config_via_api'=> $this->fetchConfigViaApi,
-                'resolved_config'     => $this->buildResolvedConfigSnapshot($resolved),
+                'consent_saved'        => $consentSaved,
+                'will_embed_modal'     => !$consentSaved,
+                'current_route'        => $route,
+                'locale'               => $this->getResolvedLocale(),
+                'open_by_default'      => $openByDefault,
+                'open_blockers'        => $openBlockers,
+                'disabled_routes'      => $this->cookieConsentDisabledRoutes,
+                'use_database_config'  => $this->useDatabaseConfig,
+                'fetch_config_via_api' => $this->fetchConfigViaApi,
+                'resolved_config'      => $this->buildResolvedConfigSnapshot($resolved),
             ],
         ];
     }

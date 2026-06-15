@@ -4,9 +4,15 @@ declare(strict_types=1);
 
 namespace Nowo\CookieConsentBundle\Cookie;
 
+use DateInterval;
+use DateTime;
 use Nowo\CookieConsentBundle\Enum\CookieNameEnum;
 use Symfony\Component\HttpFoundation\Cookie;
 use Symfony\Component\HttpFoundation\Response;
+
+use function is_string;
+
+use const JSON_THROW_ON_ERROR;
 
 /**
  * Writes cookie consent and category cookies onto the HTTP response.
@@ -73,8 +79,8 @@ class CookieHandler
 
     protected function saveCookie(string $name, string $value, Response $response): void
     {
-        $expirationDate = new \DateTime();
-        $expirationDate->add(new \DateInterval('P1Y'));
+        $expirationDate = new DateTime();
+        $expirationDate->add(new DateInterval('P1Y'));
 
         $response->headers->setCookie(
             new Cookie($name, $value, $expirationDate, '/', null, null, $this->httpOnly, true),

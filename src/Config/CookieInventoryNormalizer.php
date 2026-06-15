@@ -6,6 +6,14 @@ namespace Nowo\CookieConsentBundle\Config;
 
 use Nowo\CookieConsentBundle\Entity\CookieDefinition;
 
+use function in_array;
+use function is_array;
+use function is_bool;
+use function is_string;
+
+use const FILTER_NULL_ON_FAILURE;
+use const FILTER_VALIDATE_BOOL;
+
 /**
  * Normalizes cookie inventory entries from bundle YAML configuration.
  */

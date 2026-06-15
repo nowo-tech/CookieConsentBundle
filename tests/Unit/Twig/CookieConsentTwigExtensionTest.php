@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace Nowo\CookieConsentBundle\Tests\Unit\Twig;
 
+use Nowo\CookieConsentBundle\Config\CmpUxOptionsResolver;
 use Nowo\CookieConsentBundle\Config\CookieConsentRoutePatternMatcher;
 use Nowo\CookieConsentBundle\Config\CookieConsentRouteTargeting;
-use Nowo\CookieConsentBundle\Config\CmpUxOptionsResolver;
 use Nowo\CookieConsentBundle\Config\CookieInventoryProvider;
 use Nowo\CookieConsentBundle\Config\ResolvedCookieConsentConfig;
 use Nowo\CookieConsentBundle\Cookie\CookieChecker;
