@@ -137,12 +137,12 @@ final class CookieInventoryProvider
                 ?? $definition->findTranslation('en');
 
             $inventory[] = [
-                'name'     => $definition->getName(),
-                'provider' => $translation?->getProvider() ?? '',
-                'purpose'  => $translation?->getPurpose() ?? '',
-                'duration' => $definition->getDuration(),
-                'category' => $definition->getCategory(),
-                'type'     => $definition->getType(),
+                'name'               => $definition->getName(),
+                'provider'           => $translation?->getProvider() ?? '',
+                'purpose'            => $translation?->getPurpose() ?? '',
+                'duration'           => $definition->getDuration(),
+                'category'           => $definition->getCategory(),
+                'type'               => $definition->getType(),
                 'allowed_by_default' => $definition->isAllowedByDefault(),
             ];
         }
@@ -171,12 +171,12 @@ final class CookieInventoryProvider
                 ?? ['provider' => '', 'purpose' => ''];
 
             $inventory[] = [
-                'name'     => $entry['name'],
-                'provider' => $translation['provider'] ?? '',
-                'purpose'  => $translation['purpose'] ?? '',
-                'duration' => $entry['duration'],
-                'category' => $entry['category'],
-                'type'     => $entry['type'],
+                'name'               => $entry['name'],
+                'provider'           => $translation['provider'] ?? '',
+                'purpose'            => $translation['purpose'] ?? '',
+                'duration'           => $entry['duration'],
+                'category'           => $entry['category'],
+                'type'               => $entry['type'],
                 'allowed_by_default' => $entry['allowed_by_default'] ?? true,
             ];
         }

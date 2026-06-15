@@ -47,23 +47,23 @@ final class CookieConsentConfigPayloadFactory
         return [
             'code' => 200,
             'data' => [
-                'autoShow'               => $config?->isAutoShow() ?? true,
-                'revision'               => $config?->getRevision() ?? 0,
-                'manageScriptTags'       => $config?->isManageScriptTags() ?? false,
-                'autoClearCookies'       => $config?->isAutoClearCookies() ?? false,
-                'hideFromBots'           => $config?->isHideFromBots() ?? true,
-                'disablePageInteraction' => $config?->isDisablePageInteraction() ?? false,
-                'lazyHtmlGeneration'     => $config?->isLazyHtmlGeneration() ?? false,
-                'colorTheme'               => $config?->getColorTheme() ?? 'light',
-                'darkModeEnabled'          => $config?->isDarkModeEnabled() ?? false,
-                'disableTransitions'       => $config?->isDisableTransitions() ?? false,
-                'twoStepModal'             => $config?->isTwoStepModal() ?? false,
-                'openPreferencesModal'     => $config?->isOpenPreferencesModal() ?? false,
-                'manageIframePlaceholders' => $config?->isManageIframePlaceholders() ?? false,
-                'granularCookieSelection'  => $config?->isGranularCookieSelection() ?? false,
-                'preferencesBubbleEnabled' => $config?->isPreferencesBubbleEnabled() ?? false,
-                'preferencesBubblePosition'=> $config?->getPreferencesBubblePosition() ?? CookieConsentConfig::PREFERENCES_BUBBLE_POSITION_BOTTOM_RIGHT,
-                'routeTargeting'         => [
+                'autoShow'                  => $config?->isAutoShow() ?? true,
+                'revision'                  => $config?->getRevision() ?? 0,
+                'manageScriptTags'          => $config?->isManageScriptTags() ?? false,
+                'autoClearCookies'          => $config?->isAutoClearCookies() ?? false,
+                'hideFromBots'              => $config?->isHideFromBots() ?? true,
+                'disablePageInteraction'    => $config?->isDisablePageInteraction() ?? false,
+                'lazyHtmlGeneration'        => $config?->isLazyHtmlGeneration() ?? false,
+                'colorTheme'                => $config?->getColorTheme() ?? 'light',
+                'darkModeEnabled'           => $config?->isDarkModeEnabled() ?? false,
+                'disableTransitions'        => $config?->isDisableTransitions() ?? false,
+                'twoStepModal'              => $config?->isTwoStepModal() ?? false,
+                'openPreferencesModal'      => $config?->isOpenPreferencesModal() ?? false,
+                'manageIframePlaceholders'  => $config?->isManageIframePlaceholders() ?? false,
+                'granularCookieSelection'   => $config?->isGranularCookieSelection() ?? false,
+                'preferencesBubbleEnabled'  => $config?->isPreferencesBubbleEnabled() ?? false,
+                'preferencesBubblePosition' => $config?->getPreferencesBubblePosition() ?? CookieConsentConfig::PREFERENCES_BUBBLE_POSITION_BOTTOM_RIGHT,
+                'routeTargeting'            => [
                     'mode'   => $config?->getAutoShowRouteMode() ?? CookieConsentConfig::AUTO_SHOW_ROUTE_MODE_ALL,
                     'routes' => $config?->getAutoShowRoutes() ?? [],
                 ],
@@ -143,7 +143,7 @@ final class CookieConsentConfigPayloadFactory
         ?CookieConsentConfig $config,
     ): array {
         return [
-            'title'              => $translation?->getPreferencesModalTitle()
+            'title' => $translation?->getPreferencesModalTitle()
                 ?? $this->trans('nowo_cookie_consent.preferences.title', $locale),
             'usageTitle'         => $this->trans('nowo_cookie_consent.preferences.usage_title', $locale),
             'usageDescription'   => $this->trans('nowo_cookie_consent.preferences.usage_description', $locale),

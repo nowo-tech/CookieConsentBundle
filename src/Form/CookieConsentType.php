@@ -19,6 +19,9 @@ use Symfony\Component\Form\FormEvents;
 use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 
+use function is_array;
+use function is_string;
+
 /**
  * Symfony form type for the cookie consent modal.
  *
@@ -125,7 +128,7 @@ class CookieConsentType extends AbstractType
                 $cookieValues = is_array($data['cookies'] ?? null) ? $data['cookies'] : [];
 
                 foreach ($cookieNames as $cookieName) {
-                    $value = $cookieValues[$cookieName] ?? false;
+                    $value                        = $cookieValues[$cookieName] ?? false;
                     $data['cookies'][$cookieName] = $value === true || $value === 'true' || $value === '1' || $value === 1;
                 }
 
@@ -159,7 +162,7 @@ class CookieConsentType extends AbstractType
                     continue;
                 }
 
-                $value = $cookieValues[$row['name']] ?? false;
+                $value   = $cookieValues[$row['name']] ?? false;
                 $allowed = $value === true || $value === 'true' || $value === '1' || $value === 1;
 
                 if ($allowed) {
@@ -183,7 +186,7 @@ class CookieConsentType extends AbstractType
             return [];
         }
 
-        $locale = $this->requestStack->getMainRequest()?->getLocale() ?? 'en';
+        $locale    = $this->requestStack->getMainRequest()?->getLocale() ?? 'en';
         $inventory = [];
 
         foreach ($this->inventoryProvider->listForLocale($config, $locale) as $row) {

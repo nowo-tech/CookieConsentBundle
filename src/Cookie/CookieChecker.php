@@ -4,9 +4,16 @@ declare(strict_types=1);
 
 namespace Nowo\CookieConsentBundle\Cookie;
 
+use JsonException;
 use Nowo\CookieConsentBundle\Enum\CookieNameEnum;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\RequestStack;
+
+use function array_key_exists;
+use function is_array;
+use function is_string;
+
+use const JSON_THROW_ON_ERROR;
 
 /**
  * Reads cookie consent state from the current HTTP request.
@@ -104,7 +111,7 @@ class CookieChecker
 
         try {
             $decoded = json_decode($raw, true, 512, JSON_THROW_ON_ERROR);
-        } catch (\JsonException) {
+        } catch (JsonException) {
             return null;
         }
 

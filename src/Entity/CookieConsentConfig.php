@@ -199,7 +199,7 @@ class CookieConsentConfig
      */
     public function __construct()
     {
-        $this->translations = new ArrayCollection();
+        $this->translations      = new ArrayCollection();
         $this->cookieDefinitions = new ArrayCollection();
     }
 

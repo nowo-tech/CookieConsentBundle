@@ -68,12 +68,12 @@ class CookieDefinitionType extends AbstractType
                 'required' => false,
             ])
             ->add('translations', CollectionType::class, [
-                'entry_type'   => CookieDefinitionTranslationType::class,
-                'allow_add'    => true,
-                'allow_delete' => true,
-                'by_reference' => false,
-                'label'        => $options['label_prefix'] . 'translations',
-                'entry_options'=> [
+                'entry_type'    => CookieDefinitionTranslationType::class,
+                'allow_add'     => true,
+                'allow_delete'  => true,
+                'by_reference'  => false,
+                'label'         => $options['label_prefix'] . 'translations',
+                'entry_options' => [
                     'label_prefix'       => $options['label_prefix'],
                     'translation_domain' => $options['translation_domain'],
                 ],
@@ -90,11 +90,11 @@ class CookieDefinitionType extends AbstractType
     public function configureOptions(OptionsResolver $resolver): void
     {
         $resolver->setDefaults([
-            'data_class'           => CookieDefinition::class,
-            'translation_domain'   => 'NowoCookieConsentBundle',
-            'label_prefix'         => 'nowo_cookie_consent.admin.cookie_definition.fields.',
-            'category_label_prefix'=> 'nowo_cookie_consent.admin.cookie_definition.category.',
-            'type_label_prefix'    => 'nowo_cookie_consent.admin.cookie_definition.type.',
+            'data_class'            => CookieDefinition::class,
+            'translation_domain'    => 'NowoCookieConsentBundle',
+            'label_prefix'          => 'nowo_cookie_consent.admin.cookie_definition.fields.',
+            'category_label_prefix' => 'nowo_cookie_consent.admin.cookie_definition.category.',
+            'type_label_prefix'     => 'nowo_cookie_consent.admin.cookie_definition.type.',
         ]);
     }
 }
