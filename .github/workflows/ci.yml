@@ -1,4 +1,4 @@
-# CI: tests on PHP 8.1–8.5 × Symfony 6.4, 7.0, 7.4, 8.0, 8.1 (exclusions for incompatible pairs).
+# CI: tests on PHP 8.2–8.5 × Symfony 7.0, 7.4, 8.0, 8.1 (exclusions for incompatible pairs).
 # Coverage with PCOV; release updated via release.yml on tag push.
 name: CI
 
@@ -18,17 +18,9 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        php: ['8.1', '8.2', '8.3', '8.4', '8.5']
-        symfony: ['6.4', '7.0', '7.4', '8.0', '8.1']
+        php: ['8.2', '8.3', '8.4', '8.5']
+        symfony: ['7.0', '7.4', '8.0', '8.1']
         exclude:
-          - php: '8.1'
-            symfony: '7.0'
-          - php: '8.1'
-            symfony: '7.4'
-          - php: '8.1'
-            symfony: '8.0'
-          - php: '8.1'
-            symfony: '8.1'
           - php: '8.2'
             symfony: '8.0'
           - php: '8.2'
@@ -69,7 +61,13 @@ jobs:
       - name: Install dependencies with Symfony ${{ matrix.symfony }}
         run: |
           composer require symfony/framework-bundle:^${{ matrix.symfony }} symfony/form:^${{ matrix.symfony }} symfony/http-kernel:^${{ matrix.symfony }} symfony/routing:^${{ matrix.symfony }} symfony/translation:^${{ matrix.symfony }} symfony/twig-bundle:^${{ matrix.symfony }} --no-interaction --no-update
-          composer update symfony/* --with-all-dependencies --no-interaction --prefer-dist --no-progress
+          UPDATE_PACKAGES="symfony/*"
+          if [[ "${{ matrix.symfony }}" == 8.* ]]; then
+            # doctrine/doctrine-bundle 2.x supports Symfony only up to 7.x; Symfony 8 needs 3.2+ (PHP 8.4+).
+            composer require doctrine/doctrine-bundle:^3.2 doctrine/orm:^3.0 --no-interaction --no-update
+            UPDATE_PACKAGES="symfony/* doctrine/doctrine-bundle doctrine/orm"
+          fi
+          composer update ${UPDATE_PACKAGES} --with-all-dependencies --no-interaction --prefer-dist --no-progress
 
       - name: Run tests
         run: |
@@ -213,8 +211,6 @@ jobs:
 
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
-        with:
-          version: 9
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
