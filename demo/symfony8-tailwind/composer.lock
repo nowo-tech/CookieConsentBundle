@@ -1205,7 +1205,7 @@
                 }
             ],
             "description": "Symfony bundle providing a GDPR cookie consent modal with category toggles and optional consent logging",
-            "homepage": "https://github.com/nowo-tech/cookie-consent-bundle",
+            "homepage": "https://github.com/nowo-tech/CookieConsentBundle",
             "keywords": [
                 "bundle",
                 "consent",
@@ -1216,8 +1216,8 @@
                 "symfony"
             ],
             "support": {
-                "issues": "https://github.com/nowo-tech/cookie-consent-bundle/issues",
-                "source": "https://github.com/nowo-tech/cookie-consent-bundle"
+                "issues": "https://github.com/nowo-tech/CookieConsentBundle/issues",
+                "source": "https://github.com/nowo-tech/CookieConsentBundle"
             },
             "transport-options": {
                 "symlink": true,

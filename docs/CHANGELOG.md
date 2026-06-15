@@ -30,7 +30,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - [CONFIGURATION.md](CONFIGURATION.md) — Twig override procedure and full template table; translation override procedure with YAML example
 - [UPGRADING.md](UPGRADING.md) — upgrade path from 1.1.0
 
-[1.1.1]: https://github.com/nowo-tech/cookie-consent-bundle/releases/tag/v1.1.1
+[1.1.1]: https://github.com/nowo-tech/CookieConsentBundle/releases/tag/v1.1.1
 
 ## [1.1.0] - 2026-06-15
 
@@ -60,7 +60,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - [USAGE.md](USAGE.md) — embed modal with bubble, per-cookie checks, inventory admin
 - [UPGRADING.md](UPGRADING.md) — upgrade path from 1.0.0
 
-[1.1.0]: https://github.com/nowo-tech/cookie-consent-bundle/releases/tag/v1.1.0
+[1.1.0]: https://github.com/nowo-tech/CookieConsentBundle/releases/tag/v1.1.0
 
 ## [1.0.0] - 2026-06-15
 
@@ -91,4 +91,4 @@ First stable release of the modernized Nowo Cookie Consent Bundle.
 - README: canonical badges, `## Documentation`, `## Tests and coverage` with percentages
 - `docs/CONFIGURATION.md` table of contents; Twig override and translation procedures documented
 
-[1.0.0]: https://github.com/nowo-tech/cookie-consent-bundle/releases/tag/v1.0.0
+[1.0.0]: https://github.com/nowo-tech/CookieConsentBundle/releases/tag/v1.0.0

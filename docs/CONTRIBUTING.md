@@ -10,7 +10,7 @@ This project adheres to a code of conduct. By participating, you are expected to
 
 ### Reporting Bugs
 
-1. **Check existing issues** at [GitHub Issues](https://github.com/nowo-tech/cookie-consent-bundle/issues)
+1. **Check existing issues** at [GitHub Issues](https://github.com/nowo-tech/CookieConsentBundle/issues)
 2. **Create a new issue** with steps to reproduce, expected vs. actual behavior, and PHP/Symfony versions
 
 ### Suggesting Enhancements
@@ -23,7 +23,7 @@ This project adheres to a code of conduct. By participating, you are expected to
 #### Development environment
 
 ```bash
-git clone https://github.com/nowo-tech/cookie-consent-bundle.git
+git clone https://github.com/nowo-tech/CookieConsentBundle.git
 cd cookie-consent-bundle
 make up
 make install

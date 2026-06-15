@@ -1,4 +1,4 @@
-# Cookie Consent Bundle — Symfony 8 demo
+# Cookie Consent Bundle — Symfony 8.1 demo
 
 FrankenPHP demo with SQLite, cookie consent modal, optional consent logging (`demo_nowo_cookie_consent_log`), and a configuration CRUD per locale.
 

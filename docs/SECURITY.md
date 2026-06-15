@@ -111,7 +111,7 @@ Document imported admin routes in your application runbook and assign least-priv
 Report security issues **privately**:
 
 1. Do **not** open a public GitHub issue for security-sensitive bugs.
-2. Use [GitHub Security Advisories](https://github.com/nowo-tech/cookie-consent-bundle/security/advisories) or email **hectorfranco@nowo.tech**.
+2. Use [GitHub Security Advisories](https://github.com/nowo-tech/CookieConsentBundle/security/advisories) or email **hectorfranco@nowo.tech**.
 3. Include steps to reproduce, affected versions, and impact.
 4. We will acknowledge and coordinate disclosure after a fix is available.
 

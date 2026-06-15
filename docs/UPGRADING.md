@@ -129,4 +129,4 @@ For upgrade instructions between versions, see the [Changelog](CHANGELOG.md).
 
 - [Usage](USAGE.md) — integration examples
 - [Configuration](CONFIGURATION.md) — all options
-- [GitHub Issues](https://github.com/nowo-tech/cookie-consent-bundle/issues)
+- [GitHub Issues](https://github.com/nowo-tech/CookieConsentBundle/issues)
