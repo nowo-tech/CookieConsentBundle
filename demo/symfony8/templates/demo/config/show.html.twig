@@ -21,6 +21,7 @@
             <div class="d-flex gap-2">
                 <a class="btn btn-outline-secondary" href="{{ demo_route.path('demo_cookie_consent_config_index') }}">{{ 'demo.config.back_to_profiles'|trans }}</a>
                 <a class="btn btn-outline-secondary" href="{{ demo_route.path('demo_cookie_consent_config_profile_settings', { configId: config.id }) }}">{{ 'demo.config.display_settings'|trans }}</a>
+                <a class="btn btn-outline-secondary" href="{{ demo_route.path('demo_cookie_consent_cookies_index', { configId: config.id }) }}">{{ 'demo.cookies.manage'|trans }}</a>
                 <a class="btn btn-primary" href="{{ demo_route.path('demo_cookie_consent_config_new', { configId: config.id }) }}">{{ 'demo.config.new_translation'|trans }}</a>
             </div>
         </div>

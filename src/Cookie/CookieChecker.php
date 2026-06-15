@@ -15,6 +15,9 @@ class CookieChecker
 {
     private readonly ?Request $request;
 
+    /** @var array<string, bool>|null */
+    private ?array $granularPreferences = null;
+
     /**
      * Creates a new cookie consent checker.
      *
@@ -53,5 +56,67 @@ class CookieChecker
         }
 
         return $this->request->cookies->get(CookieNameEnum::getCookieCategoryName($category)) === 'true';
+    }
+
+    /**
+     * Returns whether a specific optional cookie is allowed for the current user.
+     */
+    public function isCookieAllowedByUser(string $cookieName, string $category): bool
+    {
+        if ($category === 'required') {
+            return true;
+        }
+
+        $granular = $this->getGranularPreferences();
+
+        if ($granular !== null && array_key_exists($cookieName, $granular)) {
+            return $granular[$cookieName];
+        }
+
+        return $this->isCategoryAllowedByUser($category);
+    }
+
+    /**
+     * @return array<string, bool>|null
+     */
+    public function getGranularPreferences(): ?array
+    {
+        if ($this->granularPreferences !== null) {
+            return $this->granularPreferences;
+        }
+
+        if (!$this->request instanceof Request) {
+            return null;
+        }
+
+        $raw = $this->request->cookies->get(CookieNameEnum::COOKIE_CONSENT_GRANULAR_NAME);
+
+        if (!is_string($raw) || $raw === '') {
+            return null;
+        }
+
+        try {
+            $decoded = json_decode($raw, true, 512, JSON_THROW_ON_ERROR);
+        } catch (\JsonException) {
+            return null;
+        }
+
+        if (!is_array($decoded)) {
+            return null;
+        }
+
+        $preferences = [];
+
+        foreach ($decoded as $name => $allowed) {
+            if (!is_string($name)) {
+                continue;
+            }
+
+            $preferences[$name] = $allowed === true || $allowed === 'true';
+        }
+
+        $this->granularPreferences = $preferences;
+
+        return $this->granularPreferences;
     }
 }

@@ -11,9 +11,11 @@
     <body class="min-h-screen bg-slate-50 text-slate-900 antialiased">
         {% block body %}{% endblock %}
 
-        {% if not nowo_cookie_consent_is_saved() %}
+        {% if nowo_cookie_consent_should_embed_modal() %}
             {{ render(path('nowo_cookie_consent.show_if_not_set')) }}
         {% endif %}
+
+        {% include '@NowoCookieConsentBundle/_diagnostics_script.html.twig' %}
 
         {% block javascripts %}{% endblock %}
     </body>

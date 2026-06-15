@@ -31,6 +31,13 @@ describe('applyRemoteConfig', () => {
           variant: 'inline',
           position: 'top right',
         },
+        preferencesModal: {
+          layout: 'bar',
+          variant: 'wide',
+          position: 'middle left',
+          equalWeightButtons: true,
+          flipButtons: true,
+        },
       },
       language: {
         default: 'en',
@@ -68,6 +75,12 @@ describe('applyRemoteConfig', () => {
     expect(modal.classList.contains('nowo-cookie-consent--pos-y-top')).toBe(true);
     expect(modal.classList.contains('nowo-cookie-consent--pos-x-right')).toBe(true);
     expect(modal.classList.contains('nowo-cookie-consent--disable-page-interaction')).toBe(true);
+    expect(modal.dataset.nowoPreferencesLayout).toBe('bar');
+    expect(modal.dataset.nowoPreferencesVariant).toBe('wide');
+    expect(modal.dataset.nowoPreferencesPositionY).toBe('middle');
+    expect(modal.dataset.nowoPreferencesPositionX).toBe('left');
+    expect(modal.dataset.nowoPreferencesEqualWeightButtons).toBe('true');
+    expect(modal.dataset.nowoPreferencesFlipButtons).toBe('true');
     expect(modal.querySelector('.nowo-cookie-consent__title')?.textContent).toBe('API title');
     expect(modal.querySelector('.nowo-cookie-consent__intro')?.textContent).toBe('API intro');
     expect(modal.querySelector('.nowo-cookie-consent__read-more')?.textContent).toBe('API read more');

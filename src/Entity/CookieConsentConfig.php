@@ -23,6 +23,8 @@ class CookieConsentConfig
 {
     public const CONSENT_MODAL_LAYOUT_TYPES = ['box', 'cloud', 'bar'];
 
+    public const COLOR_THEMES = ['light', 'dark', 'dark-turquoise', 'light-funky', 'elegant-black'];
+
     public const AUTO_SHOW_ROUTE_MODE_ALL = 'all';
 
     public const AUTO_SHOW_ROUTE_MODE_ONLY = 'only';
@@ -33,6 +35,21 @@ class CookieConsentConfig
         self::AUTO_SHOW_ROUTE_MODE_ALL,
         self::AUTO_SHOW_ROUTE_MODE_ONLY,
         self::AUTO_SHOW_ROUTE_MODE_EXCEPT,
+    ];
+
+    public const PREFERENCES_BUBBLE_POSITION_BOTTOM_RIGHT = 'bottom-right';
+
+    public const PREFERENCES_BUBBLE_POSITION_BOTTOM_LEFT = 'bottom-left';
+
+    public const PREFERENCES_BUBBLE_POSITION_TOP_RIGHT = 'top-right';
+
+    public const PREFERENCES_BUBBLE_POSITION_TOP_LEFT = 'top-left';
+
+    public const PREFERENCES_BUBBLE_POSITIONS = [
+        self::PREFERENCES_BUBBLE_POSITION_BOTTOM_RIGHT,
+        self::PREFERENCES_BUBBLE_POSITION_BOTTOM_LEFT,
+        self::PREFERENCES_BUBBLE_POSITION_TOP_RIGHT,
+        self::PREFERENCES_BUBBLE_POSITION_TOP_LEFT,
     ];
 
     /** @var array<string, list<string>> */
@@ -142,9 +159,40 @@ class CookieConsentConfig
     #[ORM\Column(name: 'preferences_modal_flip_buttons', options: ['default' => false])]
     private bool $preferencesModalFlipButtons = false;
 
+    #[ORM\Column(name: 'color_theme', length: 30, options: ['default' => 'light'])]
+    private string $colorTheme = self::COLOR_THEMES[0];
+
+    #[ORM\Column(name: 'dark_mode_enabled', options: ['default' => false])]
+    private bool $darkModeEnabled = false;
+
+    #[ORM\Column(name: 'disable_transitions', options: ['default' => false])]
+    private bool $disableTransitions = false;
+
+    #[ORM\Column(name: 'two_step_modal', options: ['default' => false])]
+    private bool $twoStepModal = false;
+
+    #[ORM\Column(name: 'open_preferences_modal', options: ['default' => false])]
+    private bool $openPreferencesModal = false;
+
+    #[ORM\Column(name: 'manage_iframe_placeholders', options: ['default' => false])]
+    private bool $manageIframePlaceholders = false;
+
+    #[ORM\Column(name: 'granular_cookie_selection', options: ['default' => false])]
+    private bool $granularCookieSelection = false;
+
+    #[ORM\Column(name: 'preferences_bubble_enabled', options: ['default' => false])]
+    private bool $preferencesBubbleEnabled = false;
+
+    #[ORM\Column(name: 'preferences_bubble_position', length: 20, options: ['default' => 'bottom-right'])]
+    private string $preferencesBubblePosition = self::PREFERENCES_BUBBLE_POSITION_BOTTOM_RIGHT;
+
     /** @var Collection<int, CookieConsentConfigTranslation> */
     #[ORM\OneToMany(targetEntity: CookieConsentConfigTranslation::class, mappedBy: 'config', cascade: ['persist', 'remove'], orphanRemoval: true)]
     private Collection $translations;
+
+    /** @var Collection<int, CookieDefinition> */
+    #[ORM\OneToMany(targetEntity: CookieDefinition::class, mappedBy: 'config', cascade: ['persist', 'remove'], orphanRemoval: true)]
+    private Collection $cookieDefinitions;
 
     /**
      * Initializes the translation collection.
@@ -152,6 +200,7 @@ class CookieConsentConfig
     public function __construct()
     {
         $this->translations = new ArrayCollection();
+        $this->cookieDefinitions = new ArrayCollection();
     }
 
     /**
@@ -904,5 +953,137 @@ class CookieConsentConfig
         }
 
         return null;
+    }
+
+    public function getColorTheme(): string
+    {
+        return $this->colorTheme;
+    }
+
+    public function setColorTheme(string $colorTheme): self
+    {
+        if (!in_array($colorTheme, self::COLOR_THEMES, true)) {
+            throw new InvalidArgumentException(sprintf('Invalid color theme "%s".', $colorTheme));
+        }
+
+        $this->colorTheme = $colorTheme;
+
+        return $this;
+    }
+
+    public function isDarkModeEnabled(): bool
+    {
+        return $this->darkModeEnabled;
+    }
+
+    public function setDarkModeEnabled(bool $darkModeEnabled): self
+    {
+        $this->darkModeEnabled = $darkModeEnabled;
+
+        return $this;
+    }
+
+    public function isDisableTransitions(): bool
+    {
+        return $this->disableTransitions;
+    }
+
+    public function setDisableTransitions(bool $disableTransitions): self
+    {
+        $this->disableTransitions = $disableTransitions;
+
+        return $this;
+    }
+
+    public function isTwoStepModal(): bool
+    {
+        return $this->twoStepModal;
+    }
+
+    public function setTwoStepModal(bool $twoStepModal): self
+    {
+        $this->twoStepModal = $twoStepModal;
+
+        return $this;
+    }
+
+    public function isOpenPreferencesModal(): bool
+    {
+        return $this->openPreferencesModal;
+    }
+
+    public function setOpenPreferencesModal(bool $openPreferencesModal): self
+    {
+        $this->openPreferencesModal = $openPreferencesModal;
+
+        return $this;
+    }
+
+    public function isManageIframePlaceholders(): bool
+    {
+        return $this->manageIframePlaceholders;
+    }
+
+    public function setManageIframePlaceholders(bool $manageIframePlaceholders): self
+    {
+        $this->manageIframePlaceholders = $manageIframePlaceholders;
+
+        return $this;
+    }
+
+    public function isGranularCookieSelection(): bool
+    {
+        return $this->granularCookieSelection;
+    }
+
+    public function setGranularCookieSelection(bool $granularCookieSelection): self
+    {
+        $this->granularCookieSelection = $granularCookieSelection;
+
+        return $this;
+    }
+
+    public function isPreferencesBubbleEnabled(): bool
+    {
+        return $this->preferencesBubbleEnabled;
+    }
+
+    public function setPreferencesBubbleEnabled(bool $preferencesBubbleEnabled): self
+    {
+        $this->preferencesBubbleEnabled = $preferencesBubbleEnabled;
+
+        return $this;
+    }
+
+    public function getPreferencesBubblePosition(): string
+    {
+        return $this->preferencesBubblePosition;
+    }
+
+    public function setPreferencesBubblePosition(string $preferencesBubblePosition): self
+    {
+        if (!in_array($preferencesBubblePosition, self::PREFERENCES_BUBBLE_POSITIONS, true)) {
+            throw new InvalidArgumentException(sprintf('Invalid preferences bubble position "%s".', $preferencesBubblePosition));
+        }
+
+        $this->preferencesBubblePosition = $preferencesBubblePosition;
+
+        return $this;
+    }
+
+    /** @return Collection<int, CookieDefinition> */
+    public function getCookieDefinitions(): Collection
+    {
+        return $this->cookieDefinitions;
+    }
+
+    public function addCookieDefinition(CookieDefinition $definition): self
+    {
+        if (!$this->cookieDefinitions->contains($definition)) {
+            $this->cookieDefinitions->add($definition);
+            $definition->setConfig($this);
+        }
+
+        return $this;
     }
 }

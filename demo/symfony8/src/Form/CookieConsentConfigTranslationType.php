@@ -23,23 +23,29 @@ class CookieConsentConfigTranslationType extends AbstractType
             ])
             ->add('consentModalTitle', TextType::class, [
                 'label' => 'demo.config.form.fields.modal_title',
+                'help' => 'demo.config.form.fields.modal_title_help',
             ])
             ->add('consentModalDescription', TextareaType::class, [
                 'label' => 'demo.config.form.fields.intro',
+                'help' => 'demo.config.form.fields.intro_help',
                 'attr' => ['rows' => 4],
             ])
             ->add('consentModalFooter', TextType::class, [
                 'label' => 'demo.config.form.fields.read_more',
+                'help' => 'demo.config.form.fields.read_more_help',
                 'required' => false,
             ])
             ->add('consentModalAcceptAllBtn', TextType::class, [
                 'label' => 'demo.config.form.fields.accept_all',
+                'help' => 'demo.config.form.fields.accept_all_help',
             ])
             ->add('consentModalAcceptNecessaryBtn', TextType::class, [
                 'label' => 'demo.config.form.fields.accept_necessary',
+                'help' => 'demo.config.form.fields.accept_necessary_help',
             ])
             ->add('preferencesModalSavePreferencesBtn', TextType::class, [
                 'label' => 'demo.config.form.fields.save',
+                'help' => 'demo.config.form.fields.save_help',
                 'required' => false,
             ])
             ->add('privacyRoute', TextType::class, [

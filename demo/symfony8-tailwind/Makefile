@@ -46,7 +46,8 @@ install: ensure-up
 
 setup-db: ensure-up
 	docker-compose exec -T php php bin/console doctrine:migrations:migrate --no-interaction --allow-no-migration || true
-	docker-compose exec -T php php bin/console demo:seed-cookie-consent-config --if-empty
+	docker-compose exec -T php php bin/console demo:seed-cookie-consent-config --if-empty --apply-playground
+	docker-compose exec -T php php bin/console demo:seed-cookie-definitions
 
 shell: ensure-up
 	docker-compose exec php sh

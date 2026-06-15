@@ -1,0 +1,73 @@
+{% extends 'base.html.twig' %}
+{% import 'demo/_routes.html.twig' as demo_route %}
+
+{% block title %}{{ 'demo.cookies.title'|trans({'%profile%': config.displayName}) }}{% endblock %}
+
+{% block body %}
+    {% include 'demo/_nav.html.twig' %}
+
+    <main class="mx-auto max-w-6xl px-4 pb-10">
+        <div class="mb-6 flex flex-wrap items-center justify-between gap-4">
+            <div>
+                <h1 class="text-2xl font-semibold text-slate-900">{{ 'demo.cookies.title'|trans({'%profile%': config.displayName}) }}</h1>
+                <p class="mt-1 text-sm text-slate-600">{{ 'demo.cookies.lead'|trans }}</p>
+            </div>
+            <div class="flex flex-wrap gap-2">
+                <a class="inline-flex rounded-md border border-slate-300 px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50" href="{{ demo_route.path('demo_cookie_consent_config_show', { configId: config.id }) }}">{{ 'demo.cookies.back_to_profile'|trans }}</a>
+                <a class="inline-flex rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white hover:bg-indigo-500" href="{{ demo_route.path('demo_cookie_consent_cookies_new', { configId: config.id }) }}">{{ 'demo.cookies.new'|trans }}</a>
+            </div>
+        </div>
+
+        {% for label, messages in app.flashes %}
+            {% for message in messages %}
+                <div class="mb-4 rounded-lg border px-4 py-3 text-sm {{ label == 'success' ? 'border-emerald-200 bg-emerald-50 text-emerald-800' : 'border-slate-200 bg-slate-50 text-slate-700' }}" role="alert">
+                    {{ message }}
+                </div>
+            {% endfor %}
+        {% endfor %}
+
+        <div class="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-slate-200 text-sm">
+                    <thead class="bg-slate-50">
+                        <tr>
+                            <th class="px-4 py-3 text-left font-semibold text-slate-700">{{ 'demo.cookies.table.name'|trans }}</th>
+                            <th class="px-4 py-3 text-left font-semibold text-slate-700">{{ 'demo.cookies.table.provider'|trans }}</th>
+                            <th class="px-4 py-3 text-left font-semibold text-slate-700">{{ 'demo.cookies.table.purpose'|trans }}</th>
+                            <th class="px-4 py-3 text-left font-semibold text-slate-700">{{ 'demo.cookies.table.category'|trans }}</th>
+                            <th class="px-4 py-3 text-left font-semibold text-slate-700">{{ 'demo.cookies.table.duration'|trans }}</th>
+                            <th class="px-4 py-3 text-left font-semibold text-slate-700">{{ 'demo.cookies.table.allowed_by_default'|trans }}</th>
+                            <th class="px-4 py-3 text-right font-semibold text-slate-700">{{ 'demo.cookies.table.actions'|trans }}</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-200">
+                        {% for definition in definitions %}
+                            {% set translation = definition.findTranslation(app.request.locale) ?? definition.findTranslation('en') %}
+                            <tr>
+                                <td class="px-4 py-3"><code class="rounded bg-slate-100 px-1.5 py-0.5 text-xs">{{ definition.name }}</code></td>
+                                <td class="px-4 py-3">{{ translation ? translation.provider : '' }}</td>
+                                <td class="max-w-md px-4 py-3 text-xs text-slate-600">{{ translation ? translation.purpose : '' }}</td>
+                                <td class="px-4 py-3"><span class="rounded-full bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-700">{{ ('demo.cookies.category.' ~ definition.category)|trans }}</span></td>
+                                <td class="px-4 py-3">{{ definition.duration }}</td>
+                                <td class="px-4 py-3">{{ definition.allowedByDefault ? 'demo.cookies.yes'|trans : 'demo.cookies.no'|trans }}</td>
+                                <td class="px-4 py-3 text-right">
+                                    <a class="mr-2 inline-flex rounded-md border border-slate-300 px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50" href="{{ demo_route.path('demo_cookie_consent_cookies_edit', { configId: config.id, id: definition.id }) }}">{{ 'demo.cookies.edit'|trans }}</a>
+                                    <form method="post" action="{{ demo_route.path('demo_cookie_consent_cookies_delete', { configId: config.id, id: definition.id }) }}" class="inline" onsubmit="return confirm('{{ 'demo.cookies.delete_confirm'|trans({'%name%': definition.name})|e('js') }}');">
+                                        <input type="hidden" name="_token" value="{{ csrf_token('delete-cookie-definition-' ~ definition.id) }}">
+                                        <button type="submit" class="inline-flex rounded-md border border-rose-300 px-3 py-1.5 text-xs font-medium text-rose-700 hover:bg-rose-50">{{ 'demo.cookies.delete'|trans }}</button>
+                                    </form>
+                                </td>
+                            </tr>
+                        {% else %}
+                            <tr>
+                                <td colspan="7" class="px-4 py-8 text-center text-slate-500">
+                                    {{ 'demo.cookies.empty'|trans }}
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+{% endblock %}

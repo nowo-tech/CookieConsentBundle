@@ -8,6 +8,7 @@ use Nowo\CookieConsentBundle\Entity\CookieConsentConfig;
 use Nowo\CookieConsentBundle\Entity\CookieConsentConfigTranslation;
 use Symfony\Contracts\Translation\TranslatorInterface;
 
+use function is_array;
 use function sprintf;
 
 /**
@@ -23,7 +24,9 @@ final class CookieConsentConfigPayloadFactory
     public function __construct(
         private readonly CookieConsentConfigResolver $configResolver,
         private readonly TranslatorInterface $translator,
+        private readonly CookieInventoryProvider $inventoryProvider,
         private readonly array $categories,
+        private readonly array $yamlPreferenceSections = [],
     ) {
     }
 
@@ -51,6 +54,15 @@ final class CookieConsentConfigPayloadFactory
                 'hideFromBots'           => $config?->isHideFromBots() ?? true,
                 'disablePageInteraction' => $config?->isDisablePageInteraction() ?? false,
                 'lazyHtmlGeneration'     => $config?->isLazyHtmlGeneration() ?? false,
+                'colorTheme'               => $config?->getColorTheme() ?? 'light',
+                'darkModeEnabled'          => $config?->isDarkModeEnabled() ?? false,
+                'disableTransitions'       => $config?->isDisableTransitions() ?? false,
+                'twoStepModal'             => $config?->isTwoStepModal() ?? false,
+                'openPreferencesModal'     => $config?->isOpenPreferencesModal() ?? false,
+                'manageIframePlaceholders' => $config?->isManageIframePlaceholders() ?? false,
+                'granularCookieSelection'  => $config?->isGranularCookieSelection() ?? false,
+                'preferencesBubbleEnabled' => $config?->isPreferencesBubbleEnabled() ?? false,
+                'preferencesBubblePosition'=> $config?->getPreferencesBubblePosition() ?? CookieConsentConfig::PREFERENCES_BUBBLE_POSITION_BOTTOM_RIGHT,
                 'routeTargeting'         => [
                     'mode'   => $config?->getAutoShowRouteMode() ?? CookieConsentConfig::AUTO_SHOW_ROUTE_MODE_ALL,
                     'routes' => $config?->getAutoShowRoutes() ?? [],
@@ -78,7 +90,7 @@ final class CookieConsentConfigPayloadFactory
                     'translations' => [
                         $locale => [
                             'consentModal'     => $this->buildConsentModalTranslation($locale, $translation),
-                            'preferencesModal' => $this->buildPreferencesModalTranslation($locale, $translation),
+                            'preferencesModal' => $this->buildPreferencesModalTranslation($locale, $translation, $config),
                             'categories'       => $this->buildCategoryTranslations($locale),
                         ],
                     ],
@@ -123,17 +135,129 @@ final class CookieConsentConfigPayloadFactory
     }
 
     /**
-     * @return array<string, string|null>
+     * @return array<string, mixed>
      */
-    private function buildPreferencesModalTranslation(string $locale, ?CookieConsentConfigTranslation $translation): array
-    {
+    private function buildPreferencesModalTranslation(
+        string $locale,
+        ?CookieConsentConfigTranslation $translation,
+        ?CookieConsentConfig $config,
+    ): array {
         return [
-            'title'              => $translation?->getPreferencesModalTitle(),
+            'title'              => $translation?->getPreferencesModalTitle()
+                ?? $this->trans('nowo_cookie_consent.preferences.title', $locale),
+            'usageTitle'         => $this->trans('nowo_cookie_consent.preferences.usage_title', $locale),
+            'usageDescription'   => $this->trans('nowo_cookie_consent.preferences.usage_description', $locale),
             'acceptAllBtn'       => $translation?->getPreferencesModalAcceptAllBtn(),
             'acceptNecessaryBtn' => $translation?->getPreferencesModalAcceptNecessaryBtn(),
             'savePreferencesBtn' => $translation?->getPreferencesModalSavePreferencesBtn() ?? $this->trans('nowo_cookie_consent.save', $locale),
             'closeIconLabel'     => $translation?->getPreferencesModalCloseIconLabel(),
+            'sections'           => $this->buildPreferenceSections($locale, $translation, $config),
         ];
+    }
+
+    /**
+     * @return list<array<string, mixed>>
+     */
+    private function buildPreferenceSections(
+        string $locale,
+        ?CookieConsentConfigTranslation $translation,
+        ?CookieConsentConfig $config,
+    ): array {
+        $configured = $translation?->getPreferenceSections() ?? $this->yamlPreferenceSections;
+        $sections   = [];
+
+        foreach ($configured as $section) {
+            if (!is_array($section)) {
+                continue;
+            }
+
+            $title       = isset($section['title']) ? (string) $section['title'] : '';
+            $description = isset($section['description']) ? (string) $section['description'] : '';
+            $categories  = $section['categories'] ?? [];
+
+            if (!is_array($categories) || $categories === []) {
+                $sections[] = ['title' => $title, 'description' => $description];
+
+                continue;
+            }
+
+            foreach ($categories as $category) {
+                $sections[] = $this->enrichSectionWithInventory(
+                    [
+                        'title'          => $title,
+                        'description'    => $description,
+                        'linkedCategory' => (string) $category,
+                    ],
+                    $config,
+                    $locale,
+                    (string) $category,
+                );
+            }
+        }
+
+        if ($sections !== []) {
+            return $sections;
+        }
+
+        return $this->buildDefaultPreferenceSections($locale, $config);
+    }
+
+    /**
+     * @return list<array<string, mixed>>
+     */
+    private function buildDefaultPreferenceSections(string $locale, ?CookieConsentConfig $config): array
+    {
+        $sections = [
+            $this->enrichSectionWithInventory([
+                'title'          => $this->trans('nowo_cookie_consent.required.title', $locale),
+                'description'    => $this->trans('nowo_cookie_consent.required.description', $locale),
+                'linkedCategory' => 'required',
+            ], $config, $locale, 'required'),
+        ];
+
+        foreach ($this->categories as $category) {
+            $sections[] = $this->enrichSectionWithInventory([
+                'title'          => $this->trans(sprintf('nowo_cookie_consent.%s.title', $category), $locale),
+                'description'    => $this->trans(sprintf('nowo_cookie_consent.%s.description', $category), $locale),
+                'linkedCategory' => $category,
+            ], $config, $locale, $category);
+        }
+
+        return $sections;
+    }
+
+    /**
+     * @param array<string, mixed> $section
+     *
+     * @return array<string, mixed>
+     */
+    private function enrichSectionWithInventory(
+        array $section,
+        ?CookieConsentConfig $config,
+        string $locale,
+        string $category,
+    ): array {
+        if (!$this->inventoryProvider->isEnabled()) {
+            return $section;
+        }
+
+        $body = $this->inventoryProvider->buildCookieTableBody($config, $locale, $category);
+
+        if ($body === []) {
+            return $section;
+        }
+
+        $section['cookieTable'] = [
+            'caption' => $this->trans('nowo_cookie_consent.inventory.caption', $locale),
+            'headers' => [
+                'name'   => $this->trans('nowo_cookie_consent.inventory.name', $locale),
+                'domain' => $this->trans('nowo_cookie_consent.inventory.provider', $locale),
+                'desc'   => $this->trans('nowo_cookie_consent.inventory.purpose', $locale),
+            ],
+            'body' => $body,
+        ];
+
+        return $section;
     }
 
     /**

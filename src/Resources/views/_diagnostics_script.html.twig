@@ -1,0 +1,22 @@
+{# Prints a copy-pasteable diagnostic report to the browser console. #}
+<script>
+(function () {
+    const report = {{ nowo_cookie_consent_diagnostic_report(app.request.attributes.get('_route'))|json_encode(constant('JSON_UNESCAPED_UNICODE') b-or constant('JSON_HEX_TAG') b-or constant('JSON_HEX_AMP') b-or constant('JSON_HEX_APOS') b-or constant('JSON_HEX_QUOT'))|raw }};
+    const modal = document.getElementById('cookieconsent');
+
+    report.client = {
+        modal_in_dom: modal !== null,
+        data_nowo_open: modal?.dataset.nowoOpen ?? null,
+        config_api_url: modal?.dataset.nowoConfigUrl ?? null,
+        bootstrap_available: typeof window.bootstrap !== 'undefined' && typeof window.bootstrap.Modal !== 'undefined',
+        manage_link_count: document.querySelectorAll('[data-nowo-open-consent]').length,
+    };
+
+    window.__NOWO_COOKIE_CONSENT_DIAGNOSTIC__ = report;
+
+    console.group('[nowo-cookie-consent] Diagnostic report');
+    console.log(report);
+    console.log('Copy JSON:\n' + JSON.stringify(report, null, 2));
+    console.groupEnd();
+})();
+</script>

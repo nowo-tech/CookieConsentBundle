@@ -23,6 +23,11 @@
 /.phpunit.cache
 /.phpunit.result.cache
 
+# Python (demo scripts, translation tooling)
+__pycache__/
+*.py[cod]
+*$py.class
+
 # Archives / compressed
 *.zip
 *.tar

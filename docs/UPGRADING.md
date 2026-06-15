@@ -23,6 +23,63 @@ If you switch `ui_theme` from `bootstrap` to `tailwind` (or vice versa):
 2. Load the matching CSS framework in your layout (Bootstrap 5 or Tailwind)
 3. Override the correct Twig templates (see the theme table in [CONFIGURATION.md](CONFIGURATION.md))
 
+## To 1.1.0
+
+```bash
+composer update nowo-tech/cookie-consent-bundle
+php bin/console cache:clear
+php bin/console assets:install
+```
+
+### New optional configuration
+
+All new options default to off or safe values — existing integrations keep working without YAML changes.
+
+| Option | Default | Purpose |
+| --- | --- | --- |
+| `use_cookie_inventory` | `false` | Show cookie table in preferences modal |
+| `cookie_inventory` | `[]` | Static YAML fallback when DB has no rows |
+| `preferences_bubble_enabled` | `false` | Floating button to reopen preferences |
+| `preferences_bubble_position` | `bottom-right` | Bubble corner |
+| `granular_cookie_selection` | `false` | Per-cookie toggles (profile flag when using DB config) |
+
+When `use_database_config: true`, new columns on `CookieConsentConfig` include `granular_cookie_selection`, `preferences_bubble_enabled`, and `preferences_bubble_position`. Apply Doctrine migrations or `schema:update`.
+
+### Cookie inventory entities
+
+If you store definitions in the database, create:
+
+- `{prefix}nowo_cookie_consent_cookie_definition` (includes `allowed_by_default`)
+- `{prefix}nowo_cookie_consent_cookie_definition_translation`
+
+Register admin routes for `CookieDefinitionAdminController` in your application, or implement your own CRUD using `CookieDefinitionType`.
+
+### Frontend assets
+
+Rebuild or reinstall public assets after upgrading — granular toggles and the preferences close button require the updated `nowo-consent-modal.js`:
+
+```bash
+# Consumers
+php bin/console assets:install
+
+# Bundle maintainers
+make assets
+```
+
+### Twig embed change (recommended)
+
+When the preferences bubble is enabled, keep the modal in the DOM after consent:
+
+```twig
+{% if nowo_cookie_consent_should_embed_modal() %}
+    {{ render(path('nowo_cookie_consent.show_if_not_set')) }}
+{% endif %}
+```
+
+### Breaking changes
+
+None.
+
 ## To 1.0.0 (initial release)
 
 This is the first stable release. Install or require the package:

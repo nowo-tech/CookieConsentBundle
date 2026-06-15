@@ -1,21 +1,8 @@
 {% use 'form_div_layout.html.twig' %}
 
-{% block choice_row %}
-    {% if form.parent is not null and form.parent.vars.name == 'cookie_consent' %}
-        <div class="nowo-cookie-consent__category" data-nowo-category="{{ name }}">
-            <div class="nowo-cookie-consent__category-toggle">
-                {% for child in form %}
-                    {% if not child.rendered %}
-                        {{- form_widget(child) -}}
-                        {{- form_label(child, null, {translation_domain: choice_translation_domain}) -}}
-                    {% endif %}
-                {% endfor %}
-            </div>
-            <div class="nowo-cookie-consent__category-information">
-                <h4 class="nowo-cookie-consent__category-title">{{ ('nowo_cookie_consent.' ~ name ~ '.title')|trans({}, 'NowoCookieConsentBundle') }}</h4>
-                <p class="nowo-cookie-consent__category-description">{{ ('nowo_cookie_consent.' ~ name ~ '.description')|trans({}, 'NowoCookieConsentBundle') }}</p>
-            </div>
-        </div>
+{% block checkbox_widget %}
+    {% if form.parent is not null and (form.parent.vars.name == 'cookie_consent' or form.parent.vars.name == 'cookies') %}
+        <input type="checkbox" {{ block('widget_attributes') }}{% if value is defined %} value="{{ value }}"{% endif %}{% if checked %} checked="checked"{% endif %} />
     {% else %}
         {{ parent() }}
     {% endif %}
@@ -23,28 +10,49 @@
 
 {% block checkbox_row %}
     {% if form.parent is not null and form.parent.vars.name == 'cookie_consent' %}
-        <div class="nowo-cookie-consent__category col-3 py-3" data-nowo-category="{{ name }}">
-            <div{% with {attr: row_attr|merge({class: (row_attr.class|default('mb-3') ~ ' text-center')|trim})} %}{{ block('attributes') }}{% endwith %}>
-                <label class="nowo-cookie-consent__category-title fs-4" for="cookie_consent_{{ name }}">{{ ('nowo_cookie_consent.' ~ name ~ '.title')|trans({}, 'NowoCookieConsentBundle') }}</label>
-                <div class="d-flex justify-content-center">
-                    <div></div>
-                    <div>
-                        {{- form_row(form, {
-                            attr: {
-                                class: 'mt-1 fs-4',
-                            },
-                            row_attr: {
-                                class: 'form-switch',
-                            },
-                        }) -}}
-                    </div>
-                    <div></div>
+        {% set is_required = name == 'required' %}
+        {% set granular = nowo_cookie_consent_granular_cookie_selection() and not is_required %}
+        {% set consent_form = form.parent %}
+        <div class="nowo-cookie-consent__category nowo-cookie-consent__category--toggle{% if is_required %} nowo-cookie-consent__category--required{% endif %}{% if granular %} nowo-cookie-consent__category--granular{% endif %}" data-nowo-category="{{ name }}">
+            <details class="nowo-cookie-consent__category-details">
+                <summary class="nowo-cookie-consent__category-title-row">
+                    <span class="nowo-cookie-consent__category-arrow" aria-hidden="true"></span>
+                    <span class="nowo-cookie-consent__category-title">{{ ('nowo_cookie_consent.' ~ name ~ '.title')|trans({}, 'NowoCookieConsentBundle') }}</span>
+                    {% if is_required %}
+                        <span class="nowo-cookie-consent__category-badge">{{ 'nowo_cookie_consent.required.always_on'|trans({}, 'NowoCookieConsentBundle') }}</span>
+                    {% endif %}
+                    <span class="nowo-cookie-consent__toggle-wrapper" data-nowo-toggle data-nowo-category-toggle>
+                        {{- form_widget(form, {attr: {class: 'nowo-cookie-consent__toggle-input'}}) -}}
+                        <span class="nowo-cookie-consent__toggle-track" aria-hidden="true">
+                            <span class="nowo-cookie-consent__toggle-knob">
+                                <span class="nowo-cookie-consent__toggle-icon nowo-cookie-consent__toggle-icon--on">✓</span>
+                                <span class="nowo-cookie-consent__toggle-icon nowo-cookie-consent__toggle-icon--off">✕</span>
+                            </span>
+                        </span>
+                    </span>
+                </summary>
+                <div class="nowo-cookie-consent__category-desc-wrapper">
+                    <p class="nowo-cookie-consent__category-description">{{ ('nowo_cookie_consent.' ~ name ~ '.description')|trans({}, 'NowoCookieConsentBundle') }}</p>
+                    {% if granular %}
+                        <p class="nowo-cookie-consent__granular-help">{{ 'nowo_cookie_consent.granular.help'|trans({}, 'NowoCookieConsentBundle') }}</p>
+                    {% endif %}
+                    {% set cookie_rows = nowo_cookie_consent_cookie_inventory()|filter(row => row.category == name) %}
+                    {% include '@NowoCookieConsentBundle/_category_cookie_table.html.twig' with {
+                        rows: cookie_rows,
+                        consent_form: consent_form,
+                        granular: granular,
+                    } %}
                 </div>
-            </div>
-            <div class="nowo-cookie-consent__category-information px-1">
-                <small class="nowo-cookie-consent__category-description"><label for="cookie_consent_{{ name }}">{{ ('nowo_cookie_consent.' ~ name ~ '.description')|trans({}, 'NowoCookieConsentBundle') }}</label></small>
-            </div>
+            </details>
         </div>
+    {% else %}
+        {{ parent() }}
+    {% endif %}
+{% endblock %}
+
+{% block choice_row %}
+    {% if form.parent is not null and form.parent.vars.name == 'cookie_consent' %}
+        {{ block('checkbox_row') }}
     {% else %}
         {{ parent() }}
     {% endif %}
@@ -52,11 +60,6 @@
 
 {% block submit_row %}
     {% if form.parent is not null and form.parent.vars.name == 'cookie_consent' %}
-        {% if 'nowo-cookie-consent__btn--secondary' in attr.class %}
-            {%- set attr = attr|merge({class: (attr.class|default('btn') ~ ' btn-primary me-2')|trim}) -%}
-        {% else %}
-            {%- set attr = attr|merge({class: (attr.class|default('btn') ~ ' btn-secondary me-2')|trim}) -%}
-        {% endif %}
         {{ block('button_widget') }}
     {% else %}
         {{ parent() }}

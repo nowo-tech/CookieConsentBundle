@@ -1,0 +1,16 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}{{ 'demo.legal.consent.title'|trans }}{% endblock %}
+
+{% block body %}
+    {% include 'demo/legal/_layout.html.twig' with {
+        title: 'demo.legal.consent.title',
+        sections: [
+            { title: 'demo.legal.consent.s1.title', body: 'demo.legal.consent.s1.body' },
+            { title: 'demo.legal.consent.s2.title', body: 'demo.legal.consent.s2.body' },
+            { title: 'demo.legal.consent.s3.title', body: 'demo.legal.consent.s3.body' },
+            { title: 'demo.legal.consent.s4.title', body: 'demo.legal.consent.s4.body' },
+            { title: 'demo.legal.consent.s5.title', body: 'demo.legal.consent.s5.body' },
+        ],
+    } only %}
+{% endblock %}

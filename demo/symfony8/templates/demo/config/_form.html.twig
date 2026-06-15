@@ -1,6 +1,7 @@
 {% import 'demo/_routes.html.twig' as demo_route %}
 {% form_theme form with ['bootstrap_5_layout.html.twig'] %}
 {{ form_start(form) }}
+    <p class="text-muted small mb-4">{{ 'demo.config.form.lead'|trans }}</p>
     {{ form_row(form.locale) }}
     {{ form_row(form.consentModalTitle) }}
     {{ form_row(form.consentModalDescription) }}

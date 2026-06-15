@@ -86,11 +86,7 @@ class CookieConsentController
     #[Route('/cookie_consent_alt', name: 'nowo_cookie_consent.show_if_not_set')]
     public function showIfCookieConsentNotSet(Request $request): Response
     {
-        if (!$this->cookieChecker->isCookieConsentSavedByUser()) {
-            return $this->show($request);
-        }
-
-        return new Response();
+        return $this->show($request);
     }
 
     /**

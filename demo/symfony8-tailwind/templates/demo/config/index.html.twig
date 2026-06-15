@@ -31,7 +31,8 @@
                             <th class="px-4 py-3 text-left font-semibold text-slate-700">{{ 'demo.config.table.profile'|trans }}</th>
                             <th class="px-4 py-3 text-left font-semibold text-slate-700">{{ 'demo.config.table.route_patterns'|trans }}</th>
                             <th class="px-4 py-3 text-left font-semibold text-slate-700">{{ 'demo.config.table.priority'|trans }}</th>
-                            <th class="px-4 py-3 text-left font-semibold text-slate-700">{{ 'demo.config.table.layout'|trans }}</th>
+                            <th class="px-4 py-3 text-left font-semibold text-slate-700">{{ 'demo.config.table.consent_modal'|trans }}</th>
+                            <th class="px-4 py-3 text-left font-semibold text-slate-700">{{ 'demo.config.table.preferences_modal'|trans }}</th>
                             <th class="px-4 py-3 text-right font-semibold text-slate-700">{{ 'demo.config.table.actions'|trans }}</th>
                         </tr>
                     </thead>
@@ -52,15 +53,21 @@
                                     {% endif %}
                                 </td>
                                 <td class="px-4 py-3">{{ config.priority }}</td>
-                                <td class="px-4 py-3">{{ config.consentModalLayout }}</td>
+                                <td class="px-4 py-3">
+                                    <code class="rounded bg-slate-100 px-1.5 py-0.5 text-xs">{{ config.consentModalLayout }} · {{ config.consentModalVariant }} · {{ config.consentModalPosition }}</code>
+                                </td>
+                                <td class="px-4 py-3">
+                                    <code class="rounded bg-slate-100 px-1.5 py-0.5 text-xs">{{ config.preferencesModalLayout }} · {{ config.preferencesModalVariant }} · {{ config.preferencesModalPosition }}</code>
+                                </td>
                                 <td class="px-4 py-3 text-right">
                                     <a class="mr-2 inline-flex rounded-md border border-indigo-200 px-3 py-1.5 text-xs font-medium text-indigo-700 hover:bg-indigo-50" href="{{ demo_route.path('demo_cookie_consent_config_show', { configId: config.id }) }}">{{ 'demo.config.view'|trans }}</a>
-                                    <a class="inline-flex rounded-md border border-slate-300 px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50" href="{{ demo_route.path('demo_cookie_consent_config_profile_settings', { configId: config.id }) }}">{{ 'demo.config.display_settings'|trans }}</a>
+                                    <a class="mr-2 inline-flex rounded-md border border-slate-300 px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50" href="{{ demo_route.path('demo_cookie_consent_config_profile_settings', { configId: config.id }) }}">{{ 'demo.config.display_settings'|trans }}</a>
+                                    <a class="inline-flex rounded-md border border-slate-300 px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50" href="{{ demo_route.path('demo_cookie_consent_cookies_index', { configId: config.id }) }}">{{ 'demo.cookies.manage'|trans }}</a>
                                 </td>
                             </tr>
                         {% else %}
                             <tr>
-                                <td colspan="5" class="px-4 py-8 text-center text-slate-500">
+                                <td colspan="6" class="px-4 py-8 text-center text-slate-500">
                                     {{ 'demo.config.empty_profiles'|trans }}
                                 </td>
                             </tr>

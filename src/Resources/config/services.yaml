@@ -12,18 +12,9 @@ services:
       $formAction: '%nowo_cookie_consent.form_action%'
       $csrfProtection: '%nowo_cookie_consent.csrf_protection%'
       $cookieConsentDisabledRoutes: '%nowo_cookie_consent.disabled_routes%'
-      $enabledLocales: '%nowo_cookie_consent.enabled_locales%'
-      $defaultLocale: '%nowo_cookie_consent.default_locale%'
-      $detectLocaleFromAcceptLanguage: '%nowo_cookie_consent.detect_locale_from_accept_language%'
       $useDatabaseConfig: '%nowo_cookie_consent.use_database_config%'
       $fetchConfigViaApi: '%nowo_cookie_consent.fetch_config_via_api%'
       $uiTheme: '%nowo_cookie_consent.ui_theme%'
-
-  Nowo\CookieConsentBundle\Locale\LocaleResolver:
-    arguments:
-      $enabledLocales: '%nowo_cookie_consent.enabled_locales%'
-      $defaultLocale: '%nowo_cookie_consent.default_locale%'
-      $detectLocaleFromAcceptLanguage: '%nowo_cookie_consent.detect_locale_from_accept_language%'
 
   Nowo\CookieConsentBundle\:
     resource: '../../'
@@ -32,15 +23,45 @@ services:
       - '../../Entity/'
       - '../../NowoCookieConsentBundle.php'
 
+  Nowo\CookieConsentBundle\Locale\LocaleResolver:
+    arguments:
+      $enabledLocales: '%nowo_cookie_consent.enabled_locales%'
+      $defaultLocale: '%nowo_cookie_consent.default_locale%'
+      $detectLocaleFromAcceptLanguage: '%nowo_cookie_consent.detect_locale_from_accept_language%'
+
+  Nowo\CookieConsentBundle\Config\CmpUxOptionsResolver:
+    arguments:
+      $colorTheme: '%nowo_cookie_consent.color_theme%'
+      $darkModeEnabled: '%nowo_cookie_consent.dark_mode_enabled%'
+      $disableTransitions: '%nowo_cookie_consent.disable_transitions%'
+      $twoStepModal: '%nowo_cookie_consent.two_step_modal%'
+      $openPreferencesModal: '%nowo_cookie_consent.open_preferences_modal%'
+      $manageIframePlaceholders: '%nowo_cookie_consent.manage_iframe_placeholders%'
+      $granularCookieSelection: '%nowo_cookie_consent.granular_cookie_selection%'
+      $preferencesBubbleEnabled: '%nowo_cookie_consent.preferences_bubble_enabled%'
+      $preferencesBubblePosition: '%nowo_cookie_consent.preferences_bubble_position%'
+      $yamlPreferenceSections: '%nowo_cookie_consent.preference_sections%'
+      $useDatabaseConfig: '%nowo_cookie_consent.use_database_config%'
+
+  Nowo\CookieConsentBundle\Config\CookieInventoryProvider:
+    arguments:
+      $useCookieInventory: '%nowo_cookie_consent.use_cookie_inventory%'
+      $yamlCookieInventory: '%nowo_cookie_consent.cookie_inventory%'
+
   Nowo\CookieConsentBundle\Twig\CookieConsentTwigExtension:
     arguments:
       $yamlRouteTargetingMode: '%nowo_cookie_consent.route_targeting_mode%'
       $yamlTargetRoutes: '%nowo_cookie_consent.target_routes%'
       $useDatabaseConfig: '%nowo_cookie_consent.use_database_config%'
+      $fetchConfigViaApi: '%nowo_cookie_consent.fetch_config_via_api%'
+      $cookieConsentDisabledRoutes: '%nowo_cookie_consent.disabled_routes%'
+      $cmpUxOptionsResolver: '@Nowo\CookieConsentBundle\Config\CmpUxOptionsResolver'
+      $inventoryProvider: '@Nowo\CookieConsentBundle\Config\CookieInventoryProvider'
 
   Nowo\CookieConsentBundle\Config\CookieConsentConfigPayloadFactory:
     arguments:
       $categories: '%nowo_cookie_consent.categories%'
+      $yamlPreferenceSections: '%nowo_cookie_consent.preference_sections%'
 
   Nowo\CookieConsentBundle\Controller\:
     resource: '../../Controller/'

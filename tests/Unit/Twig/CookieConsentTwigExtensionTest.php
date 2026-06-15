@@ -6,11 +6,14 @@ namespace Nowo\CookieConsentBundle\Tests\Unit\Twig;
 
 use Nowo\CookieConsentBundle\Config\CookieConsentRoutePatternMatcher;
 use Nowo\CookieConsentBundle\Config\CookieConsentRouteTargeting;
+use Nowo\CookieConsentBundle\Config\CmpUxOptionsResolver;
+use Nowo\CookieConsentBundle\Config\CookieInventoryProvider;
 use Nowo\CookieConsentBundle\Config\ResolvedCookieConsentConfig;
 use Nowo\CookieConsentBundle\Cookie\CookieChecker;
 use Nowo\CookieConsentBundle\Entity\CookieConsentConfig;
 use Nowo\CookieConsentBundle\Enum\CookieNameEnum;
 use Nowo\CookieConsentBundle\Locale\LocaleResolver;
+use Nowo\CookieConsentBundle\Repository\CookieDefinitionRepository;
 use Nowo\CookieConsentBundle\Twig\CookieConsentTwigExtension;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\HttpFoundation\Request;
@@ -153,6 +156,29 @@ final class CookieConsentTwigExtensionTest extends TestCase
 
         self::assertContains('nowo_cookie_consent_is_saved', $names);
         self::assertContains('nowo_cookie_consent_locale', $names);
+        self::assertContains('nowo_cookie_consent_diagnostic_report', $names);
+    }
+
+    public function testDiagnosticReportExplainsSavedConsent(): void
+    {
+        $extension = $this->createExtension($this->createChecker(true));
+
+        $report = $extension->getDiagnosticReport('demo_home');
+
+        self::assertFalse($report['server']['will_embed_modal']);
+        self::assertSame('false', $report['server']['open_by_default']);
+        self::assertContains('consent_already_saved', $report['server']['open_blockers']);
+    }
+
+    public function testDiagnosticReportIsOpenOnHomeWhenConsentMissing(): void
+    {
+        $extension = $this->createExtension($this->createChecker(false));
+
+        $report = $extension->getDiagnosticReport('demo_home');
+
+        self::assertTrue($report['server']['will_embed_modal']);
+        self::assertSame('true', $report['server']['open_by_default']);
+        self::assertSame([], $report['server']['open_blockers']);
     }
 
     /**
@@ -164,6 +190,8 @@ final class CookieConsentTwigExtensionTest extends TestCase
         bool $useDatabaseConfig = false,
         string $yamlMode = CookieConsentConfig::AUTO_SHOW_ROUTE_MODE_ALL,
         array $yamlRoutes = [],
+        bool $fetchConfigViaApi = false,
+        array $disabledRoutes = ['privacy'],
     ): CookieConsentTwigExtension {
         $stack ??= new RequestStack();
 
@@ -175,6 +203,10 @@ final class CookieConsentTwigExtensionTest extends TestCase
             $yamlMode,
             $yamlRoutes,
             $useDatabaseConfig,
+            $fetchConfigViaApi,
+            $disabledRoutes,
+            new CmpUxOptionsResolver($stack, 'light', false, false, false, false, false, false, false, 'bottom-right', [], $useDatabaseConfig),
+            new CookieInventoryProvider($this->createMock(CookieDefinitionRepository::class)),
         );
     }
 

@@ -11,9 +11,11 @@
     <body class="bg-light">
         {% block body %}{% endblock %}
 
-        {% if not nowo_cookie_consent_is_saved() %}
+        {% if nowo_cookie_consent_should_embed_modal() %}
             {{ render(path('nowo_cookie_consent.show_if_not_set')) }}
         {% endif %}
+
+        {% include '@NowoCookieConsentBundle/_diagnostics_script.html.twig' %}
 
         <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
         {% block javascripts %}{% endblock %}

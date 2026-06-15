@@ -943,6 +943,20 @@ use Symfony\Component\Config\Loader\ParamConfigurator as Param;
  *     categories?: mixed, // Cookie categories shown in the consent modal (excluding "required"). // Default: ["analytics","marketing","preferences"]
  *     use_logger?: bool|Param, // Persist consent choices to the database when true. // Default: true
  *     use_database_config?: bool|Param, // Load modal copy and display settings from CookieConsentConfig entities when true. // Default: false
+ *     use_cookie_inventory?: bool|Param, // Expose cookie definitions (name, category/block, duration, provider, purpose) in the preferences modal and legal pages. // Default: false
+ *     cookie_inventory?: list<array{ // Default: []
+ *         name?: scalar|Param|null,
+ *         duration?: scalar|Param|null, // Default: ""
+ *         category?: scalar|Param|null, // Default: "required"
+ *         type?: scalar|Param|null, // Default: "first_party"
+ *         sort_order?: int|Param, // Default: 0
+ *         provider?: scalar|Param|null, // Default: null
+ *         purpose?: scalar|Param|null, // Default: null
+ *         translations?: list<array{ // Default: []
+ *             provider?: scalar|Param|null, // Default: ""
+ *             purpose?: scalar|Param|null, // Default: ""
+ *         }>,
+ *     }>,
  *     fetch_config_via_api?: bool|Param, // Expose GET /cookie-consent/config and let the frontend script load settings via fetch(). // Default: false
  *     http_only?: bool|Param, // Set HttpOnly flag on consent cookies. // Default: true
  *     form_action?: scalar|Param|null, // Optional route name used as the form action URL. // Default: null
@@ -954,6 +968,16 @@ use Symfony\Component\Config\Loader\ParamConfigurator as Param;
  *     enabled_locales?: mixed, // Locales supported by the cookie consent UI and locale detection. // Default: ["en","es","it","fr","de","pt","nl","pl","ca"]
  *     detect_locale_from_accept_language?: bool|Param, // Use the Accept-Language request header when no explicit locale is available. // Default: true
  *     ui_theme?: "bootstrap"|"tailwind"|Param, // UI framework used by the bundled cookie consent modal templates. // Default: "bootstrap"
+ *     color_theme?: "light"|"dark"|"dark-turquoise"|"light-funky"|"elegant-black"|Param, // Default: "light"
+ *     dark_mode_enabled?: bool|Param, // Default: false
+ *     disable_transitions?: bool|Param, // Default: false
+ *     two_step_modal?: bool|Param, // Default: false
+ *     open_preferences_modal?: bool|Param, // Default: false
+ *     manage_iframe_placeholders?: bool|Param, // Default: false
+ *     granular_cookie_selection?: bool|Param, // When true, optional cookies can be toggled individually inside each category block. // Default: false
+ *     preferences_bubble_enabled?: bool|Param, // Shows a floating cookie icon button to reopen the preferences modal after consent is saved. // Default: false
+ *     preferences_bubble_position?: "bottom-right"|"bottom-left"|"top-right"|"top-left"|Param, // Screen corner for the floating preferences bubble. // Default: "bottom-right"
+ *     preference_sections?: mixed, // Default: []
  * }
  * @psalm-type NowoTwigInspectorConfig = array{
  *     enabled_extensions?: list<scalar|Param|null>,

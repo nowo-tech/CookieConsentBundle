@@ -67,3 +67,10 @@ php bin/console doctrine:schema:update --force
 Or generate a migration in your application.
 
 Default table name: `nowo_cookie_consent_log`. Use `table_prefix` in configuration to namespace tables per application.
+
+When `use_database_config` and `use_cookie_inventory` are enabled, also create:
+
+- `{prefix}nowo_cookie_consent_config`
+- `{prefix}nowo_cookie_consent_config_translation`
+- `{prefix}nowo_cookie_consent_cookie_definition`
+- `{prefix}nowo_cookie_consent_cookie_definition_translation`

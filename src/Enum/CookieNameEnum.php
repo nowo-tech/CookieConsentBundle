@@ -13,6 +13,8 @@ final class CookieNameEnum
 
     public const COOKIE_CONSENT_KEY_NAME = 'Cookie_Consent_Key';
 
+    public const COOKIE_CONSENT_GRANULAR_NAME = 'Cookie_Consent_Granular';
+
     public const COOKIE_CATEGORY_NAME_PREFIX = 'Cookie_Category_';
 
     /**

@@ -11,9 +11,13 @@
                 <a class="{{ app.request.attributes.get('_route') starts with 'demo_cookie_consent_config_' ? 'text-white' : 'text-slate-300 hover:text-white' }}" href="{{ demo_route.path('demo_cookie_consent_config_index') }}">
                     {{ 'demo.nav.config'|trans }}
                 </a>
+                <a class="{{ app.request.attributes.get('_route') in ['demo_privacy_policy', 'demo_cookie_policy', 'demo_consent_information'] ? 'text-white' : 'text-slate-300 hover:text-white' }}" href="{{ demo_route.path('demo_cookie_policy') }}">
+                    {{ 'demo.nav.cookies'|trans }}
+                </a>
             </div>
         </div>
-        <div class="flex flex-wrap gap-1" id="demoLocaleDropdown">
+        <div class="flex flex-wrap items-center gap-3" id="demoLocaleDropdown">
+            {% include '@NowoCookieConsentBundle/cookie_consent_manage_link.html.twig' with { class: 'rounded px-2 py-1 text-xs font-medium bg-slate-800 text-slate-300 hover:bg-slate-700' } %}
             {% for locale in nowo_cookie_consent_enabled_locales() %}
                 <a class="rounded px-2 py-1 text-xs font-medium {{ app.request.locale == locale ? 'bg-indigo-600 text-white' : 'bg-slate-800 text-slate-300 hover:bg-slate-700' }}" href="{{ demo_route.switch_locale(locale) }}">
                     {{ locale|upper }}

@@ -2,6 +2,7 @@ nowo_cookie_consent:
     table_prefix: 'demo_'
     use_logger: true
     use_database_config: true
+    use_cookie_inventory: true
     fetch_config_via_api: true
     default_locale: en
     enabled_locales:
@@ -16,6 +17,7 @@ nowo_cookie_consent:
         - ca
     detect_locale_from_accept_language: false
     categories:
+        - functionality
         - analytics
         - marketing
         - preferences

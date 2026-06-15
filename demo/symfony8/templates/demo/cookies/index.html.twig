@@ -1,0 +1,73 @@
+{% extends 'base.html.twig' %}
+{% import 'demo/_routes.html.twig' as demo_route %}
+
+{% block title %}{{ 'demo.cookies.title'|trans({'%profile%': config.displayName}) }}{% endblock %}
+
+{% block body %}
+    {% include 'demo/_nav.html.twig' %}
+
+    <main class="container pb-5">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h1 class="h3 mb-1">{{ 'demo.cookies.title'|trans({'%profile%': config.displayName}) }}</h1>
+                <p class="text-muted mb-0">{{ 'demo.cookies.lead'|trans }}</p>
+            </div>
+            <div class="d-flex gap-2">
+                <a class="btn btn-outline-secondary" href="{{ demo_route.path('demo_cookie_consent_config_show', { configId: config.id }) }}">{{ 'demo.cookies.back_to_profile'|trans }}</a>
+                <a class="btn btn-primary" href="{{ demo_route.path('demo_cookie_consent_cookies_new', { configId: config.id }) }}">{{ 'demo.cookies.new'|trans }}</a>
+            </div>
+        </div>
+
+        {% for label, messages in app.flashes %}
+            {% for message in messages %}
+                <div class="alert alert-{{ label == 'success' ? 'success' : label }} mb-3" role="alert">
+                    {{ message }}
+                </div>
+            {% endfor %}
+        {% endfor %}
+
+        <div class="card shadow-sm">
+            <div class="table-responsive">
+                <table class="table table-striped mb-0 align-middle">
+                    <thead>
+                        <tr>
+                            <th>{{ 'demo.cookies.table.name'|trans }}</th>
+                            <th>{{ 'demo.cookies.table.provider'|trans }}</th>
+                            <th>{{ 'demo.cookies.table.purpose'|trans }}</th>
+                            <th>{{ 'demo.cookies.table.category'|trans }}</th>
+                            <th>{{ 'demo.cookies.table.duration'|trans }}</th>
+                            <th>{{ 'demo.cookies.table.allowed_by_default'|trans }}</th>
+                            <th class="text-end">{{ 'demo.cookies.table.actions'|trans }}</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for definition in definitions %}
+                            {% set translation = definition.findTranslation(app.request.locale) ?? definition.findTranslation('en') %}
+                            <tr>
+                                <td><code>{{ definition.name }}</code></td>
+                                <td>{{ translation ? translation.provider : '' }}</td>
+                                <td class="small text-secondary">{{ translation ? translation.purpose : '' }}</td>
+                                <td><span class="badge bg-secondary">{{ ('demo.cookies.category.' ~ definition.category)|trans }}</span></td>
+                                <td>{{ definition.duration }}</td>
+                                <td>{{ definition.allowedByDefault ? 'demo.cookies.yes'|trans : 'demo.cookies.no'|trans }}</td>
+                                <td class="text-end">
+                                    <a class="btn btn-sm btn-outline-secondary" href="{{ demo_route.path('demo_cookie_consent_cookies_edit', { configId: config.id, id: definition.id }) }}">{{ 'demo.cookies.edit'|trans }}</a>
+                                    <form method="post" action="{{ demo_route.path('demo_cookie_consent_cookies_delete', { configId: config.id, id: definition.id }) }}" class="d-inline" onsubmit="return confirm('{{ 'demo.cookies.delete_confirm'|trans({'%name%': definition.name})|e('js') }}');">
+                                        <input type="hidden" name="_token" value="{{ csrf_token('delete-cookie-definition-' ~ definition.id) }}">
+                                        <button type="submit" class="btn btn-sm btn-outline-danger">{{ 'demo.cookies.delete'|trans }}</button>
+                                    </form>
+                                </td>
+                            </tr>
+                        {% else %}
+                            <tr>
+                                <td colspan="7" class="text-center text-muted py-4">
+                                    {{ 'demo.cookies.empty'|trans }}
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+{% endblock %}

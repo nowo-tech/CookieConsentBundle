@@ -1,0 +1,48 @@
+{% if rows is not empty %}
+    <div class="nowo-cookie-consent__cookie-table-wrapper">
+        <table class="nowo-cookie-consent__cookie-table{% if granular|default(false) %} nowo-cookie-consent__cookie-table--granular{% endif %}">
+            <caption class="nowo-cookie-consent__cookie-table-caption">{{ 'nowo_cookie_consent.inventory.caption'|trans({}, 'NowoCookieConsentBundle') }}</caption>
+            <thead>
+                <tr>
+                    <th scope="col">{{ 'nowo_cookie_consent.inventory.name'|trans({}, 'NowoCookieConsentBundle') }}</th>
+                    <th scope="col">{{ 'nowo_cookie_consent.inventory.provider'|trans({}, 'NowoCookieConsentBundle') }}</th>
+                    <th scope="col">{{ 'nowo_cookie_consent.inventory.purpose'|trans({}, 'NowoCookieConsentBundle') }}</th>
+                    <th scope="col">{{ 'nowo_cookie_consent.inventory.duration'|trans({}, 'NowoCookieConsentBundle') }}</th>
+                    {% if granular|default(false) %}
+                        <th scope="col">{{ 'nowo_cookie_consent.inventory.allow'|trans({}, 'NowoCookieConsentBundle') }}</th>
+                    {% endif %}
+                </tr>
+            </thead>
+            <tbody>
+                {% for row in rows %}
+                    <tr data-nowo-cookie-row="{{ row.name }}">
+                        <td><code>{{ row.name }}</code></td>
+                        <td>{{ row.provider }}</td>
+                        <td>{{ row.purpose }}</td>
+                        <td>{{ row.duration }}</td>
+                        {% if granular|default(false) and consent_form is defined and consent_form.cookies is defined and consent_form.cookies[row.name] is defined %}
+                            <td class="nowo-cookie-consent__cookie-toggle-cell">
+                                <span class="nowo-cookie-consent__toggle-wrapper nowo-cookie-consent__toggle-wrapper--cookie" data-nowo-cookie-toggle>
+                                    {{- form_widget(consent_form.cookies[row.name], {
+                                        attr: {
+                                            class: 'nowo-cookie-consent__toggle-input nowo-cookie-consent__cookie-toggle-input',
+                                            'data-nowo-cookie-name': row.name,
+                                        },
+                                    }) -}}
+                                    <span class="nowo-cookie-consent__toggle-track nowo-cookie-consent__toggle-track--compact" aria-hidden="true">
+                                        <span class="nowo-cookie-consent__toggle-knob">
+                                            <span class="nowo-cookie-consent__toggle-icon nowo-cookie-consent__toggle-icon--on">✓</span>
+                                            <span class="nowo-cookie-consent__toggle-icon nowo-cookie-consent__toggle-icon--off">✕</span>
+                                        </span>
+                                    </span>
+                                </span>
+                            </td>
+                        {% elseif granular|default(false) %}
+                            <td></td>
+                        {% endif %}
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+{% endif %}

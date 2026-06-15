@@ -1,0 +1,17 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}{{ 'demo.legal.privacy.title'|trans }}{% endblock %}
+
+{% block body %}
+    {% include 'demo/legal/_layout.html.twig' with {
+        title: 'demo.legal.privacy.title',
+        sections: [
+            { title: 'demo.legal.privacy.s1.title', body: 'demo.legal.privacy.s1.body' },
+            { title: 'demo.legal.privacy.s2.title', body: 'demo.legal.privacy.s2.body' },
+            { title: 'demo.legal.privacy.s3.title', body: 'demo.legal.privacy.s3.body' },
+            { title: 'demo.legal.privacy.s4.title', body: 'demo.legal.privacy.s4.body' },
+            { title: 'demo.legal.privacy.s5.title', body: 'demo.legal.privacy.s5.body' },
+            { title: 'demo.legal.privacy.s6.title', body: 'demo.legal.privacy.s6.body' },
+        ],
+    } only %}
+{% endblock %}

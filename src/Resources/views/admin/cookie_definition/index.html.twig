@@ -1,0 +1,23 @@
+{% extends '@NowoCookieConsentBundle/admin/cookie_definition/layout.html.twig' %}
+
+{% block title %}{{ 'nowo_cookie_consent.admin.cookie_definition.title'|trans({'%profile%': config.displayName}, 'NowoCookieConsentBundle') }}{% endblock %}
+
+{% block body %}
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h3 mb-1">{{ 'nowo_cookie_consent.admin.cookie_definition.title'|trans({'%profile%': config.displayName}, 'NowoCookieConsentBundle') }}</h1>
+            <p class="text-muted mb-0">{{ 'nowo_cookie_consent.admin.cookie_definition.lead'|trans({}, 'NowoCookieConsentBundle') }}</p>
+        </div>
+        <a class="btn btn-primary" href="{{ path('nowo_cookie_consent_cookie_definitions_new', { configId: config.id }) }}">{{ 'nowo_cookie_consent.admin.cookie_definition.new'|trans({}, 'NowoCookieConsentBundle') }}</a>
+    </div>
+
+    {% for label, messages in app.flashes %}
+        {% for message in messages %}
+            <div class="alert alert-{{ label == 'success' ? 'success' : label }} mb-3" role="alert">{{ message }}</div>
+        {% endfor %}
+    {% endfor %}
+
+    <div class="card shadow-sm">
+        {% include '@NowoCookieConsentBundle/admin/cookie_definition/_table.html.twig' %}
+    </div>
+{% endblock %}

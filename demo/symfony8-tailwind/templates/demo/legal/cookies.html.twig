@@ -1,0 +1,18 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}{{ 'demo.legal.cookies.title'|trans }}{% endblock %}
+
+{% block body %}
+    {% include 'demo/legal/_layout.html.twig' with {
+        title: 'demo.legal.cookies.title',
+        sections: [
+            { title: 'demo.legal.cookies.s1.title', body: 'demo.legal.cookies.s1.body' },
+            { title: 'demo.legal.cookies.s2.title', body: 'demo.legal.cookies.s2.body' },
+            { title: 'demo.legal.cookies.s3.title', body: 'demo.legal.cookies.s3.body' },
+            { title: 'demo.legal.cookies.s4.title', body: 'demo.legal.cookies.s4.body' },
+            { title: 'demo.legal.cookies.s5.title', body: 'demo.legal.cookies.s5.body' },
+            { title: 'demo.legal.cookies.s6.title', body: 'demo.legal.cookies.s6.body' },
+        ],
+        show_inventory: true,
+    } only %}
+{% endblock %}

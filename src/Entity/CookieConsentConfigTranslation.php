@@ -64,6 +64,10 @@ class CookieConsentConfigTranslation
     #[ORM\Column(name: 'privacy_route', length: 255, nullable: true)]
     private ?string $privacyRoute = null;
 
+    /** @var list<array<string, mixed>>|null */
+    #[ORM\Column(name: 'preference_sections', type: Types::JSON, nullable: true)]
+    private ?array $preferenceSections = null;
+
     #[ORM\ManyToOne(targetEntity: CookieConsentConfig::class, inversedBy: 'translations')]
     #[ORM\JoinColumn(nullable: false, onDelete: 'CASCADE')]
     private ?CookieConsentConfig $config = null;
@@ -382,6 +386,24 @@ class CookieConsentConfigTranslation
     public function setPrivacyRoute(?string $privacyRoute): self
     {
         $this->privacyRoute = $privacyRoute;
+
+        return $this;
+    }
+
+    /**
+     * @return list<array<string, mixed>>|null
+     */
+    public function getPreferenceSections(): ?array
+    {
+        return $this->preferenceSections;
+    }
+
+    /**
+     * @param list<array<string, mixed>>|null $preferenceSections
+     */
+    public function setPreferenceSections(?array $preferenceSections): self
+    {
+        $this->preferenceSections = $preferenceSections;
 
         return $this;
     }

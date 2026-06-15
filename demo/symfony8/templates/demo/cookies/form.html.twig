@@ -1,0 +1,42 @@
+{% extends 'base.html.twig' %}
+{% import 'demo/_routes.html.twig' as demo_route %}
+{% form_theme form with ['bootstrap_5_layout.html.twig'] %}
+
+{% block title %}{{ isNew ? 'demo.cookies.new_title'|trans : 'demo.cookies.edit_title'|trans({'%name%': definition.name}) }}{% endblock %}
+
+{% block body %}
+    {% include 'demo/_nav.html.twig' %}
+
+    <main class="container pb-5">
+        <div class="mb-4">
+            <h1 class="h3 mb-1">{{ isNew ? 'demo.cookies.new_title'|trans : 'demo.cookies.edit_title'|trans({'%name%': definition.name}) }}</h1>
+            <p class="text-muted mb-0">{{ 'demo.cookies.form_lead'|trans({'%profile%': config.displayName}) }}</p>
+        </div>
+
+        <div class="card shadow-sm">
+            <div class="card-body">
+                {{ form_start(form) }}
+                    <div class="row">
+                        <div class="col-md-6">{{ form_row(form.name) }}</div>
+                        <div class="col-md-6">{{ form_row(form.duration) }}</div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-4">{{ form_row(form.category) }}</div>
+                        <div class="col-md-4">{{ form_row(form.type) }}</div>
+                        <div class="col-md-4">{{ form_row(form.sortOrder) }}</div>
+                    </div>
+                    {{ form_row(form.allowedByDefault) }}
+
+                    <h2 class="h6 text-uppercase text-muted mt-4 mb-2">{{ 'demo.cookies.fields.translations'|trans }}</h2>
+                    <p class="small text-muted">{{ 'demo.cookies.translations_lead'|trans }}</p>
+                    {% include 'demo/cookies/_translation_tabs.html.twig' %}
+
+                    <div class="d-flex gap-2 mt-3">
+                        <button type="submit" class="btn btn-primary">{{ 'demo.cookies.save'|trans }}</button>
+                        <a class="btn btn-outline-secondary" href="{{ demo_route.path('demo_cookie_consent_cookies_index', { configId: config.id }) }}">{{ 'demo.config.form.cancel'|trans }}</a>
+                    </div>
+                {{ form_end(form) }}
+            </div>
+        </div>
+    </main>
+{% endblock %}

@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import {
   applyVisualConfig,
+  applyVisualConfigForStep,
   applyVisualConfigFromElement,
   setPageInteractionBlocked,
 } from './apply-visual-config';
@@ -35,10 +36,33 @@ describe('applyVisualConfig', () => {
     expect(modal.classList.contains('nowo-cookie-consent--flip-buttons')).toBe(true);
     expect(modal.classList.contains('nowo-cookie-consent--disable-page-interaction')).toBe(true);
     expect(dialog.classList.contains('nowo-cookie-consent--dialog-bar')).toBe(true);
-    expect(modal.dataset.nowoLayout).toBe('bar');
-    expect(modal.dataset.nowoEqualWeightButtons).toBe('true');
-    expect(modal.dataset.nowoFlipButtons).toBe('true');
-    expect(modal.dataset.nowoDisablePageInteraction).toBe('true');
+  });
+
+  it('stores and applies preferences modal options from data attributes', () => {
+    document.body.innerHTML = `
+      <div id="cookieconsent"
+           class="modal nowo-cookie-consent"
+           data-nowo-layout="box"
+           data-nowo-preferences-layout="bar"
+           data-nowo-preferences-variant="wide"
+           data-nowo-preferences-position-y="middle"
+           data-nowo-preferences-position-x="right"
+           data-nowo-preferences-equal-weight-buttons="true"
+           data-nowo-preferences-flip-buttons="true">
+        <div class="modal-dialog modal-xl"></div>
+      </div>
+    `;
+
+    const modal = document.getElementById('cookieconsent')!;
+
+    applyVisualConfigForStep(modal, 'preferences');
+
+    expect(modal.classList.contains('nowo-cookie-consent--layout-bar')).toBe(true);
+    expect(modal.classList.contains('nowo-cookie-consent--variant-wide')).toBe(true);
+    expect(modal.classList.contains('nowo-cookie-consent--pos-y-middle')).toBe(true);
+    expect(modal.classList.contains('nowo-cookie-consent--pos-x-right')).toBe(true);
+    expect(modal.classList.contains('nowo-cookie-consent--equal-weight-buttons')).toBe(true);
+    expect(modal.classList.contains('nowo-cookie-consent--flip-buttons')).toBe(true);
   });
 
   it('replaces previous visual modifiers when config changes', () => {

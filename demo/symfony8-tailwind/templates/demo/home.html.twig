@@ -17,26 +17,9 @@
                     }) }}
                 </p>
 
-                <ul class="mt-6 divide-y divide-slate-200 rounded-lg border border-slate-200">
-                    <li class="flex items-center justify-between px-4 py-3 text-sm">
-                        <span>{{ 'demo.home.consent_saved'|trans }}</span>
-                        <span class="rounded-full px-2.5 py-0.5 text-xs font-medium {{ nowo_cookie_consent_is_saved() ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800' }}">
-                            {{ nowo_cookie_consent_is_saved() ? 'demo.home.yes'|trans : 'demo.home.no'|trans }}
-                        </span>
-                    </li>
-                    <li class="flex items-center justify-between px-4 py-3 text-sm">
-                        <span>{{ 'demo.home.analytics_allowed'|trans }}</span>
-                        <span class="rounded-full px-2.5 py-0.5 text-xs font-medium {{ nowo_cookie_consent_is_category_allowed('analytics') ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-100 text-slate-600' }}">
-                            {{ nowo_cookie_consent_is_category_allowed('analytics') ? 'demo.home.yes'|trans : 'demo.home.no'|trans }}
-                        </span>
-                    </li>
-                    <li class="flex items-center justify-between px-4 py-3 text-sm">
-                        <span>{{ 'demo.home.marketing_allowed'|trans }}</span>
-                        <span class="rounded-full px-2.5 py-0.5 text-xs font-medium {{ nowo_cookie_consent_is_category_allowed('marketing') ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-100 text-slate-600' }}">
-                            {{ nowo_cookie_consent_is_category_allowed('marketing') ? 'demo.home.yes'|trans : 'demo.home.no'|trans }}
-                        </span>
-                    </li>
-                </ul>
+                <div class="mt-6">
+                    {% include 'demo/_home_content.html.twig' %}
+                </div>
 
                 {% for label, messages in app.flashes %}
                     {% for message in messages %}

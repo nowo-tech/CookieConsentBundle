@@ -1,0 +1,22 @@
+{# Demo placeholders blocked until analytics consent (manage_script_tags). #}
+<script type="text/plain" data-cookie-category="analytics" id="demo-analytics-script">
+    window.__demoAnalyticsLoaded = true;
+    (function () {
+        const status = document.getElementById('demo-analytics-status');
+        if (!status) return;
+        status.textContent = status.dataset.loadedLabel || 'loaded';
+        status.classList.remove('text-bg-secondary', 'bg-slate-100', 'text-slate-600');
+        status.classList.add('text-bg-success', 'bg-emerald-100', 'text-emerald-800');
+    })();
+</script>
+
+<script type="text/plain" data-cookie-category="marketing" id="demo-marketing-script">
+    window.__demoMarketingLoaded = true;
+    (function () {
+        const status = document.getElementById('demo-marketing-status');
+        if (!status) return;
+        status.textContent = status.dataset.loadedLabel || 'loaded';
+        status.classList.remove('text-bg-secondary', 'bg-slate-100', 'text-slate-600');
+        status.classList.add('text-bg-success', 'bg-emerald-100', 'text-emerald-800');
+    })();
+</script>

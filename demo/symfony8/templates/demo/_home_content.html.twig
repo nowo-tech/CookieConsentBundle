@@ -1,0 +1,89 @@
+{% import 'demo/_routes.html.twig' as demo_route %}
+
+{% macro category_badge(allowed) %}
+    <span class="badge {{ allowed ? 'text-bg-success' : 'text-bg-secondary' }}">
+        {{ allowed ? 'demo.home.loaded'|trans : 'demo.home.blocked'|trans }}
+    </span>
+{% endmacro %}
+
+<section class="alert alert-info small mb-4" role="note">
+    {{ 'demo.home.playground_hint'|trans }}
+</section>
+
+<ul class="list-group list-group-flush mb-4">
+    <li class="list-group-item d-flex justify-content-between">
+        <span>{{ 'demo.home.consent_saved'|trans }}</span>
+        <span class="badge {{ nowo_cookie_consent_is_saved() ? 'text-bg-success' : 'text-bg-warning' }}">
+            {{ nowo_cookie_consent_is_saved() ? 'demo.home.yes'|trans : 'demo.home.no'|trans }}
+        </span>
+    </li>
+    <li class="list-group-item d-flex justify-content-between">
+        <span>{{ 'demo.home.functionality_allowed'|trans }}</span>
+        <span class="badge {{ nowo_cookie_consent_is_category_allowed('functionality') ? 'text-bg-success' : 'text-bg-secondary' }}">
+            {{ nowo_cookie_consent_is_category_allowed('functionality') ? 'demo.home.yes'|trans : 'demo.home.no'|trans }}
+        </span>
+    </li>
+    <li class="list-group-item d-flex justify-content-between">
+        <span>{{ 'demo.home.preferences_allowed'|trans }}</span>
+        <span class="badge {{ nowo_cookie_consent_is_category_allowed('preferences') ? 'text-bg-success' : 'text-bg-secondary' }}">
+            {{ nowo_cookie_consent_is_category_allowed('preferences') ? 'demo.home.yes'|trans : 'demo.home.no'|trans }}
+        </span>
+    </li>
+    <li class="list-group-item d-flex justify-content-between">
+        <span>{{ 'demo.home.analytics_allowed'|trans }}</span>
+        <span class="badge {{ nowo_cookie_consent_is_category_allowed('analytics') ? 'text-bg-success' : 'text-bg-secondary' }}">
+            {{ nowo_cookie_consent_is_category_allowed('analytics') ? 'demo.home.yes'|trans : 'demo.home.no'|trans }}
+        </span>
+    </li>
+    <li class="list-group-item d-flex justify-content-between">
+        <span>{{ 'demo.home.marketing_allowed'|trans }}</span>
+        <span class="badge {{ nowo_cookie_consent_is_category_allowed('marketing') ? 'text-bg-success' : 'text-bg-secondary' }}">
+            {{ nowo_cookie_consent_is_category_allowed('marketing') ? 'demo.home.yes'|trans : 'demo.home.no'|trans }}
+        </span>
+    </li>
+</ul>
+
+<section class="mb-4">
+    <h2 class="h6 mb-2">{{ 'demo.home.blocking_title'|trans }}</h2>
+    <p class="text-muted small mb-3">{{ 'demo.home.blocking_lead'|trans }}</p>
+    <ul class="list-group list-group-flush mb-3">
+        <li class="list-group-item d-flex justify-content-between align-items-center">
+            <span>{{ 'demo.home.functionality_widget'|trans }}</span>
+            {{ _self.category_badge(nowo_cookie_consent_is_category_allowed('functionality')) }}
+        </li>
+        <li class="list-group-item d-flex justify-content-between align-items-center">
+            <span>{{ 'demo.home.preferences_storage'|trans }}</span>
+            {{ _self.category_badge(nowo_cookie_consent_is_category_allowed('preferences')) }}
+        </li>
+        <li class="list-group-item d-flex justify-content-between align-items-center">
+            <span>{{ 'demo.home.analytics_script'|trans }}</span>
+            {{ _self.category_badge(nowo_cookie_consent_is_category_allowed('analytics')) }}
+        </li>
+        <li class="list-group-item d-flex justify-content-between align-items-center">
+            <span>{{ 'demo.home.marketing_script'|trans }}</span>
+            {{ _self.category_badge(nowo_cookie_consent_is_category_allowed('marketing')) }}
+        </li>
+    </ul>
+
+    <script type="text/plain" data-cookie-category="functionality">
+        window.__demoFunctionalityLoaded = true;
+    </script>
+    <script type="text/plain" data-cookie-category="preferences">
+        window.__demoPreferencesLoaded = true;
+    </script>
+    <script type="text/plain" data-cookie-category="analytics">
+        window.__demoAnalyticsLoaded = true;
+    </script>
+
+    <div class="ratio ratio-16x9 bg-dark-subtle rounded border mb-3 d-flex align-items-center justify-content-center"
+         data-nowo-iframe-category="marketing"
+         data-nowo-iframe-src="https://www.youtube-nocookie.com/embed/dQw4w9WgXcQ"
+         data-nowo-iframe-title="Demo marketing video placeholder"
+         data-nowo-iframe-allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture">
+        <p class="text-muted small m-0 px-3 text-center">{{ 'demo.home.blocked'|trans }} — {{ 'demo.home.marketing_script'|trans }}</p>
+    </div>
+</section>
+
+<p class="small mb-0">
+    <a href="{{ demo_route.path('demo_cookie_policy') }}">{{ 'demo.home.inventory_link'|trans }}</a>
+</p>

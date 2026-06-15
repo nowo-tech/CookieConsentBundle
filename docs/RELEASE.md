@@ -54,4 +54,5 @@ Update README **Tests and coverage** percentages after each release when coverag
 
 | Version | Date | Notes |
 | --- | --- | --- |
+| [1.1.0](CHANGELOG.md#110---2026-06-15) | 2026-06-15 | Cookie inventory, granular selection, preferences bubble |
 | [1.0.0](CHANGELOG.md#100---2026-06-15) | 2026-06-15 | First stable release |

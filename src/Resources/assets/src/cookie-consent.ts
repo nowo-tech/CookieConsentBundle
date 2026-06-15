@@ -5,10 +5,16 @@
 
 import './cookie-consent.css';
 import { applyRemoteConfig, fetchRemoteConfig } from './apply-config';
+import { applyThemeOptionsFromElement } from './apply-theme';
 import { applyVisualConfigFromElement, setPageInteractionBlocked } from './apply-visual-config';
+import { collectClientDiagnostics, publishClientDiagnostics } from './diagnostics';
 import { installCustomEventPolyfill } from './custom-event-polyfill';
 import { serializeForm } from './form-serializer';
+import { activateIframesForConsent, readAllowedCategoriesFromModal } from './iframe-manager';
 import { createBundleLogger, setBundleLogger } from './logger';
+import { bindCategoryToggles } from './category-toggles';
+import { bindGranularCookieToggles } from './granular-cookie-toggles';
+import { bindStepNavigation, openPreferencesStep, shouldBlockPageInteraction } from './step-manager';
 
 declare const __COOKIE_CONSENT_BUILD_TIME__: string;
 
@@ -51,16 +57,28 @@ export function initCookieConsent(): void {
   installCustomEventPolyfill();
 
   const modalElement = document.getElementById('cookieconsent');
-  const cookieConsentForm = document.querySelector<HTMLFormElement>('.nowo-cookie-consent__form');
-  const cookieConsentButtons = document.querySelectorAll<HTMLButtonElement>('.nowo-cookie-consent__btn');
-  let bootstrapModal: BootstrapModal | null = null;
 
   if (!modalElement) {
-    log.debug('Modal element not found, skipping Cookie Consent init');
+    log.debug('Modal element not found, skipping Cookie Consent init', collectClientDiagnostics(null));
+    publishClientDiagnostics(null);
     return;
   }
 
+  const cookieConsentForm = modalElement.querySelector<HTMLFormElement>('.nowo-cookie-consent__form');
+  const cookieConsentButtons = modalElement.querySelectorAll<HTMLButtonElement>(
+    '.nowo-cookie-consent__btn[name]',
+  );
+  let bootstrapModal: BootstrapModal | null = null;
+
   applyVisualConfigFromElement(modalElement);
+  applyThemeOptionsFromElement(modalElement);
+  bindStepNavigation(modalElement);
+  bindCategoryToggles(modalElement);
+  bindGranularCookieToggles(modalElement);
+
+  if (modalElement.dataset.nowoManageIframePlaceholders === 'true') {
+    activateIframesForConsent(readAllowedCategoriesFromModal(modalElement));
+  }
 
   const hasBootstrap = typeof window.bootstrap !== 'undefined' && window.bootstrap.Modal !== undefined;
 
@@ -82,9 +100,11 @@ export function initCookieConsent(): void {
   }
 
   const showModal = (): void => {
+    const blockInteraction = shouldBlockPageInteraction(modalElement);
+
     if (bootstrapModal) {
       bootstrapModal.show();
-      setPageInteractionBlocked(modalElement, true);
+      setPageInteractionBlocked(modalElement, blockInteraction);
       return;
     }
 
@@ -92,7 +112,7 @@ export function initCookieConsent(): void {
     modalElement.classList.remove('hidden');
     modalElement.style.display = 'block';
     modalElement.removeAttribute('aria-hidden');
-    setPageInteractionBlocked(modalElement, true);
+    setPageInteractionBlocked(modalElement, blockInteraction);
   };
 
   const hideModal = (): void => {
@@ -117,6 +137,18 @@ export function initCookieConsent(): void {
     showModal();
   }
 
+  document.addEventListener('click', (event) => {
+    const target = (event.target as Element | null)?.closest('[data-nowo-open-consent]');
+
+    if (!target) {
+      return;
+    }
+
+    event.preventDefault();
+    openPreferencesStep(modalElement);
+    showModal();
+  });
+
   if (!cookieConsentForm) {
     log.warn('Cookie consent form not found');
     return;
@@ -132,6 +164,9 @@ export function initCookieConsent(): void {
       xhr.onload = () => {
         if (xhr.status >= 200 && xhr.status < 300) {
           log.debug('Consent saved successfully');
+          if (modalElement.dataset.nowoManageIframePlaceholders === 'true') {
+            activateIframesForConsent(readAllowedCategoriesFromModal(modalElement));
+          }
           document.dispatchEvent(
             new CustomEvent(SUCCESS_EVENT, {
               detail: event.target,
@@ -151,6 +186,7 @@ export function initCookieConsent(): void {
   });
 
   log.info('Cookie Consent ready');
+  publishClientDiagnostics(modalElement);
 }
 
 async function loadRemoteConfig(modalElement: HTMLElement): Promise<void> {

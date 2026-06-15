@@ -2,7 +2,7 @@
 
 [![CI](https://github.com/nowo-tech/cookie-consent-bundle/actions/workflows/ci.yml/badge.svg)](https://github.com/nowo-tech/cookie-consent-bundle/actions/workflows/ci.yml) [![Packagist Version](https://img.shields.io/packagist/v/nowo-tech/cookie-consent-bundle.svg?style=flat)](https://packagist.org/packages/nowo-tech/cookie-consent-bundle) [![Packagist Downloads](https://img.shields.io/packagist/dt/nowo-tech/cookie-consent-bundle.svg)](https://packagist.org/packages/nowo-tech/cookie-consent-bundle) [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE) [![PHP](https://img.shields.io/badge/PHP-8.1%2B-777BB4?logo=php)](https://php.net) [![Symfony](https://img.shields.io/badge/Symfony-6%2B%20%7C%207.4%20%7C%208.0%20%7C%208.1%2B-000000?logo=symfony)](https://symfony.com) [![GitHub stars](https://img.shields.io/github/stars/nowo-tech/cookie-consent-bundle.svg?style=social&label=Star)](https://github.com/nowo-tech/cookie-consent-bundle) [![Coverage](https://img.shields.io/badge/Coverage-100%25-brightgreen)](#tests-and-coverage)
 
-Symfony bundle that renders a GDPR cookie consent modal with category toggles, AJAX form submission, optional consent logging, and configurable Doctrine table prefix.
+Symfony bundle that renders a GDPR cookie consent modal with category toggles, optional per-cookie selection, cookie inventory, AJAX form submission, optional consent logging, and configurable Doctrine table prefix.
 
 Frontend behavior is implemented in TypeScript and built with Vite (`make assets` → `src/Resources/public/nowo-consent-modal.js`).
 
@@ -40,7 +40,7 @@ nowo_cookie_consent:
 
 ```twig
 {# templates/base.html.twig #}
-{% if not nowo_cookie_consent_is_saved() %}
+{% if nowo_cookie_consent_should_embed_modal() %}
     {{ render(path('nowo_cookie_consent.show_if_not_set')) }}
 {% endif %}
 ```

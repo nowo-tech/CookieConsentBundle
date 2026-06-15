@@ -12,3 +12,5 @@ services:
             - '../src/Entity/'
             - '../src/Kernel.php'
 
+    App\Command\:
+        resource: '../shared/Command/'

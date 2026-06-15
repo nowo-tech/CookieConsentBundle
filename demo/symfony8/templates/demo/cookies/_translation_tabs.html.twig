@@ -1,0 +1,49 @@
+{% set tabsId = 'cookie-definition-translations-' ~ (definition.id ?? 'new') %}
+{% set tabActiveLocale = translationTabLocale|default(constant('App\\Demo\\DemoLocale::DEFAULT')) %}
+
+<ul class="nav nav-tabs" id="{{ tabsId }}-tabs" role="tablist">
+    {% for locale in constant('App\\Demo\\DemoLocale::ALL') %}
+        {% for translationForm in form.translations %}
+            {% set entryLocale = translationForm.vars.value.locale|default(translationForm.locale.vars.value)|default('') %}
+            {% if entryLocale == locale %}
+                {% set isActive = locale == tabActiveLocale %}
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link{% if isActive %} active{% endif %}"
+                            id="{{ tabsId }}-{{ locale }}-tab"
+                            data-bs-toggle="tab"
+                            data-bs-target="#{{ tabsId }}-{{ locale }}"
+                            type="button"
+                            role="tab"
+                            aria-controls="{{ tabsId }}-{{ locale }}"
+                            aria-selected="{{ isActive ? 'true' : 'false' }}">
+                        {{ locale|upper }}
+                    </button>
+                </li>
+            {% endif %}
+        {% endfor %}
+    {% endfor %}
+</ul>
+
+<div class="tab-content border border-top-0 rounded-bottom p-3 bg-white" id="{{ tabsId }}-content">
+    {% for locale in constant('App\\Demo\\DemoLocale::ALL') %}
+        {% for translationForm in form.translations %}
+            {% set entryLocale = translationForm.vars.value.locale|default(translationForm.locale.vars.value)|default('') %}
+            {% if entryLocale == locale %}
+                {% set isActive = locale == tabActiveLocale %}
+                <div class="tab-pane fade{% if isActive %} show active{% endif %}"
+                     id="{{ tabsId }}-{{ locale }}"
+                     role="tabpanel"
+                     aria-labelledby="{{ tabsId }}-{{ locale }}-tab"
+                     tabindex="0">
+                    <div class="d-none">
+                        {{ form_widget(translationForm.locale) }}
+                    </div>
+                    {{ form_row(translationForm.provider) }}
+                    {{ form_row(translationForm.purpose) }}
+                </div>
+            {% endif %}
+        {% endfor %}
+    {% endfor %}
+</div>
+
+{{ form_errors(form.translations) }}

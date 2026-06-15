@@ -104,28 +104,14 @@ final class CookieConsentConfigControllerTest extends WebTestCase
         $client->request('GET', sprintf('/en/demo/admin/cookie-consent-config/%d/settings', $configId));
         self::assertResponseIsSuccessful();
 
-        $client->submitForm('Save settings', [
-            'cookie_consent_config_settings[enabled]' => '1',
-            'cookie_consent_config_settings[name]' => 'Default',
-            'cookie_consent_config_settings[routePatternsText]' => '',
-            'cookie_consent_config_settings[priority]' => '0',
-            'cookie_consent_config_settings[default]' => '1',
-            'cookie_consent_config_settings[autoShow]' => '1',
-            'cookie_consent_config_settings[revision]' => '0',
-            'cookie_consent_config_settings[manageScriptTags]' => '',
-            'cookie_consent_config_settings[autoClearCookies]' => '',
-            'cookie_consent_config_settings[hideFromBots]' => '1',
-            'cookie_consent_config_settings[disablePageInteraction]' => '',
-            'cookie_consent_config_settings[lazyHtmlGeneration]' => '',
+        $client->submitForm('Save settings', $this->buildSettingsFormData([
             'cookie_consent_config_settings[consentModalLayout]' => 'box',
             'cookie_consent_config_settings[consentModalVariant]' => 'wide',
             'cookie_consent_config_settings[consentModalPositionY]' => 'bottom',
             'cookie_consent_config_settings[consentModalPositionX]' => 'center',
-            'cookie_consent_config_settings[consentModalEqualWeightButtons]' => '',
-            'cookie_consent_config_settings[consentModalFlipButtons]' => '',
             'cookie_consent_config_settings[autoShowRouteMode]' => 'except',
-            'cookie_consent_config_settings[autoShowRoutesText]' => "demo_cookie_consent_config_*",
-        ]);
+            'cookie_consent_config_settings[autoShowRoutesText]' => 'demo_cookie_consent_config_*',
+        ]));
 
         self::assertResponseRedirects(sprintf('/en/demo/admin/cookie-consent-config/%d', $configId));
 
@@ -147,28 +133,14 @@ final class CookieConsentConfigControllerTest extends WebTestCase
         $client->request('GET', '/en/demo/admin/cookie-consent-config/new-profile');
         self::assertResponseIsSuccessful();
 
-        $client->submitForm('Save settings', [
-            'cookie_consent_config_settings[enabled]' => '1',
+        $client->submitForm('Save settings', $this->buildSettingsFormData([
             'cookie_consent_config_settings[name]' => 'Admin profile',
             'cookie_consent_config_settings[routePatternsText]' => 'demo_cookie_consent_config_*',
             'cookie_consent_config_settings[priority]' => '10',
             'cookie_consent_config_settings[default]' => '',
-            'cookie_consent_config_settings[autoShow]' => '1',
-            'cookie_consent_config_settings[revision]' => '0',
-            'cookie_consent_config_settings[manageScriptTags]' => '',
-            'cookie_consent_config_settings[autoClearCookies]' => '',
-            'cookie_consent_config_settings[hideFromBots]' => '1',
-            'cookie_consent_config_settings[disablePageInteraction]' => '',
-            'cookie_consent_config_settings[lazyHtmlGeneration]' => '',
             'cookie_consent_config_settings[consentModalLayout]' => 'bar',
-            'cookie_consent_config_settings[consentModalVariant]' => 'wide',
             'cookie_consent_config_settings[consentModalPositionY]' => 'bottom',
-            'cookie_consent_config_settings[consentModalPositionX]' => 'center',
-            'cookie_consent_config_settings[consentModalEqualWeightButtons]' => '',
-            'cookie_consent_config_settings[consentModalFlipButtons]' => '',
-            'cookie_consent_config_settings[autoShowRouteMode]' => 'all',
-            'cookie_consent_config_settings[autoShowRoutesText]' => '',
-        ]);
+        ]));
 
         self::assertResponseIsSuccessful();
 
@@ -193,6 +165,74 @@ final class CookieConsentConfigControllerTest extends WebTestCase
         self::assertSelectorTextContains('h1', 'Impostazioni di visualizzazione');
         self::assertSelectorTextContains('label', 'Attivo');
         self::assertSelectorTextNotContains('body', 'nowo_cookie_consent.enabled.title');
+    }
+
+    public function testColorThemeCanBeChangedToLight(): void
+    {
+        $client = static::createClient();
+        $this->ensureDatabaseSchema($client);
+        $configId = $this->getDefaultConfigId($client);
+
+        $client->request('GET', sprintf('/en/demo/admin/cookie-consent-config/%d/settings', $configId));
+        self::assertResponseIsSuccessful();
+
+        $client->submitForm('Save settings', $this->buildSettingsFormData([
+            'cookie_consent_config_settings[colorTheme]' => 'light',
+            'cookie_consent_config_settings[darkModeEnabled]' => '',
+            'cookie_consent_config_settings[twoStepModal]' => '1',
+        ]));
+
+        self::assertResponseRedirects(sprintf('/en/demo/admin/cookie-consent-config/%d', $configId));
+
+        $client->request('GET', '/en/');
+        self::assertResponseIsSuccessful();
+        self::assertSelectorExists('#cookieconsent[data-nowo-color-theme="light"]');
+    }
+
+    /**
+     * @param array<string, string> $overrides
+     *
+     * @return array<string, string>
+     */
+    private function buildSettingsFormData(array $overrides = []): array
+    {
+        return array_merge([
+            'cookie_consent_config_settings[enabled]' => '1',
+            'cookie_consent_config_settings[name]' => 'Default',
+            'cookie_consent_config_settings[routePatternsText]' => '',
+            'cookie_consent_config_settings[priority]' => '0',
+            'cookie_consent_config_settings[default]' => '1',
+            'cookie_consent_config_settings[autoShow]' => '1',
+            'cookie_consent_config_settings[revision]' => '0',
+            'cookie_consent_config_settings[manageScriptTags]' => '',
+            'cookie_consent_config_settings[autoClearCookies]' => '',
+            'cookie_consent_config_settings[hideFromBots]' => '1',
+            'cookie_consent_config_settings[disablePageInteraction]' => '',
+            'cookie_consent_config_settings[lazyHtmlGeneration]' => '',
+            'cookie_consent_config_settings[colorTheme]' => 'dark-turquoise',
+            'cookie_consent_config_settings[darkModeEnabled]' => '',
+            'cookie_consent_config_settings[disableTransitions]' => '',
+            'cookie_consent_config_settings[twoStepModal]' => '',
+            'cookie_consent_config_settings[openPreferencesModal]' => '',
+            'cookie_consent_config_settings[manageIframePlaceholders]' => '',
+            'cookie_consent_config_settings[granularCookieSelection]' => '',
+            'cookie_consent_config_settings[preferencesBubbleEnabled]' => '1',
+            'cookie_consent_config_settings[preferencesBubblePosition]' => 'bottom-right',
+            'cookie_consent_config_settings[consentModalLayout]' => 'box',
+            'cookie_consent_config_settings[consentModalVariant]' => 'wide',
+            'cookie_consent_config_settings[consentModalPositionY]' => 'bottom',
+            'cookie_consent_config_settings[consentModalPositionX]' => 'center',
+            'cookie_consent_config_settings[consentModalEqualWeightButtons]' => '',
+            'cookie_consent_config_settings[consentModalFlipButtons]' => '',
+            'cookie_consent_config_settings[preferencesModalLayout]' => 'box',
+            'cookie_consent_config_settings[preferencesModalVariant]' => 'wide',
+            'cookie_consent_config_settings[preferencesModalPositionY]' => 'middle',
+            'cookie_consent_config_settings[preferencesModalPositionX]' => 'center',
+            'cookie_consent_config_settings[preferencesModalEqualWeightButtons]' => '',
+            'cookie_consent_config_settings[preferencesModalFlipButtons]' => '',
+            'cookie_consent_config_settings[autoShowRouteMode]' => 'all',
+            'cookie_consent_config_settings[autoShowRoutesText]' => '',
+        ], $overrides);
     }
 
     private function ensureDatabaseSchema(\Symfony\Bundle\FrameworkBundle\KernelBrowser $client): void

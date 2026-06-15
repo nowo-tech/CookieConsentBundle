@@ -8,6 +8,8 @@ export interface VisualConfigOptions {
   disablePageInteraction?: boolean;
 }
 
+export type ModalVisualStep = 'banner' | 'preferences';
+
 const LAYOUTS = ['bar', 'box', 'cloud'] as const;
 const VARIANTS = ['wide', 'inline'] as const;
 const POSITIONS_Y = ['top', 'middle', 'bottom'] as const;
@@ -17,6 +19,105 @@ const MODIFIER_PREFIX = 'nowo-cookie-consent--';
 
 function removeModifiers(element: HTMLElement, suffixes: readonly string[]): void {
   suffixes.forEach((suffix) => element.classList.remove(`${MODIFIER_PREFIX}${suffix}`));
+}
+
+export function parseModalPosition(position?: string): Pick<VisualConfigOptions, 'positionY' | 'positionX'> {
+  if (!position) {
+    return {};
+  }
+
+  const [positionY, positionX] = position.split(/\s+/, 2);
+
+  return { positionY, positionX };
+}
+
+export function readVisualConfigFromElement(
+  modalElement: HTMLElement,
+  step: ModalVisualStep = 'banner',
+): VisualConfigOptions {
+  if (step === 'preferences') {
+    return {
+      layout: modalElement.dataset.nowoPreferencesLayout,
+      variant: modalElement.dataset.nowoPreferencesVariant,
+      positionY: modalElement.dataset.nowoPreferencesPositionY,
+      positionX: modalElement.dataset.nowoPreferencesPositionX,
+      equalWeightButtons: modalElement.dataset.nowoPreferencesEqualWeightButtons === 'true',
+      flipButtons: modalElement.dataset.nowoPreferencesFlipButtons === 'true',
+      disablePageInteraction: modalElement.dataset.nowoDisablePageInteraction === 'true',
+    };
+  }
+
+  return {
+    layout: modalElement.dataset.nowoLayout,
+    variant: modalElement.dataset.nowoVariant,
+    positionY: modalElement.dataset.nowoPositionY,
+    positionX: modalElement.dataset.nowoPositionX,
+    equalWeightButtons: modalElement.dataset.nowoEqualWeightButtons === 'true',
+    flipButtons: modalElement.dataset.nowoFlipButtons === 'true',
+    disablePageInteraction: modalElement.dataset.nowoDisablePageInteraction === 'true',
+  };
+}
+
+export function storeVisualConfigOnElement(
+  modalElement: HTMLElement,
+  step: ModalVisualStep,
+  options: VisualConfigOptions,
+): void {
+  if (step === 'preferences') {
+    if (options.layout) {
+      modalElement.dataset.nowoPreferencesLayout = options.layout;
+    }
+
+    if (options.variant) {
+      modalElement.dataset.nowoPreferencesVariant = options.variant;
+    }
+
+    if (options.positionY) {
+      modalElement.dataset.nowoPreferencesPositionY = options.positionY;
+    }
+
+    if (options.positionX) {
+      modalElement.dataset.nowoPreferencesPositionX = options.positionX;
+    }
+
+    if (typeof options.equalWeightButtons === 'boolean') {
+      modalElement.dataset.nowoPreferencesEqualWeightButtons = options.equalWeightButtons ? 'true' : 'false';
+    }
+
+    if (typeof options.flipButtons === 'boolean') {
+      modalElement.dataset.nowoPreferencesFlipButtons = options.flipButtons ? 'true' : 'false';
+    }
+
+    return;
+  }
+
+  if (options.layout) {
+    modalElement.dataset.nowoLayout = options.layout;
+  }
+
+  if (options.variant) {
+    modalElement.dataset.nowoVariant = options.variant;
+  }
+
+  if (options.positionY) {
+    modalElement.dataset.nowoPositionY = options.positionY;
+  }
+
+  if (options.positionX) {
+    modalElement.dataset.nowoPositionX = options.positionX;
+  }
+
+  if (typeof options.equalWeightButtons === 'boolean') {
+    modalElement.dataset.nowoEqualWeightButtons = options.equalWeightButtons ? 'true' : 'false';
+  }
+
+  if (typeof options.flipButtons === 'boolean') {
+    modalElement.dataset.nowoFlipButtons = options.flipButtons ? 'true' : 'false';
+  }
+
+  if (typeof options.disablePageInteraction === 'boolean') {
+    modalElement.dataset.nowoDisablePageInteraction = options.disablePageInteraction ? 'true' : 'false';
+  }
 }
 
 export function applyVisualConfig(modalElement: HTMLElement, options: VisualConfigOptions): void {
@@ -64,46 +165,25 @@ export function applyVisualConfig(modalElement: HTMLElement, options: VisualConf
   if (options.disablePageInteraction) {
     modalElement.classList.add(`${MODIFIER_PREFIX}disable-page-interaction`);
   }
+}
 
-  if (options.layout) {
-    modalElement.dataset.nowoLayout = options.layout;
+export function applyVisualConfigForStep(modalElement: HTMLElement, step: ModalVisualStep): void {
+  applyVisualConfig(modalElement, readVisualConfigFromElement(modalElement, step));
+}
+
+export function resolveInitialVisualStep(modalElement: HTMLElement): ModalVisualStep {
+  if (
+    modalElement.dataset.nowoTwoStep === 'true'
+    && modalElement.dataset.nowoOpenPreferences === 'true'
+  ) {
+    return 'preferences';
   }
 
-  if (options.variant) {
-    modalElement.dataset.nowoVariant = options.variant;
-  }
-
-  if (options.positionY) {
-    modalElement.dataset.nowoPositionY = options.positionY;
-  }
-
-  if (options.positionX) {
-    modalElement.dataset.nowoPositionX = options.positionX;
-  }
-
-  if (typeof options.equalWeightButtons === 'boolean') {
-    modalElement.dataset.nowoEqualWeightButtons = options.equalWeightButtons ? 'true' : 'false';
-  }
-
-  if (typeof options.flipButtons === 'boolean') {
-    modalElement.dataset.nowoFlipButtons = options.flipButtons ? 'true' : 'false';
-  }
-
-  if (typeof options.disablePageInteraction === 'boolean') {
-    modalElement.dataset.nowoDisablePageInteraction = options.disablePageInteraction ? 'true' : 'false';
-  }
+  return 'banner';
 }
 
 export function applyVisualConfigFromElement(modalElement: HTMLElement): void {
-  applyVisualConfig(modalElement, {
-    layout: modalElement.dataset.nowoLayout,
-    variant: modalElement.dataset.nowoVariant,
-    positionY: modalElement.dataset.nowoPositionY,
-    positionX: modalElement.dataset.nowoPositionX,
-    equalWeightButtons: modalElement.dataset.nowoEqualWeightButtons === 'true',
-    flipButtons: modalElement.dataset.nowoFlipButtons === 'true',
-    disablePageInteraction: modalElement.dataset.nowoDisablePageInteraction === 'true',
-  });
+  applyVisualConfigForStep(modalElement, resolveInitialVisualStep(modalElement));
 }
 
 export function setPageInteractionBlocked(modalElement: HTMLElement, blocked: boolean): void {

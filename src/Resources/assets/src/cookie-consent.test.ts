@@ -104,11 +104,12 @@ describe('cookie-consent entrypoint', () => {
 
   it('submits the form via XHR, dispatches success event, and hides the modal', async () => {
     document.body.innerHTML = `
-      <div id="cookieconsent" class="modal nowo-cookie-consent" data-nowo-open="false" aria-hidden="true"></div>
-      <form class="nowo-cookie-consent__form" action="/consent">
-        <input type="checkbox" name="analytics" value="1" checked />
-        <button type="submit" class="nowo-cookie-consent__btn" name="save">Save</button>
-      </form>
+      <div id="cookieconsent" class="modal nowo-cookie-consent" data-nowo-open="false" aria-hidden="true">
+        <form class="nowo-cookie-consent__form" action="/consent">
+          <input type="checkbox" name="analytics" value="1" checked />
+          <button type="submit" class="nowo-cookie-consent__btn" name="save">Save</button>
+        </form>
+      </div>
     `;
 
     const xhrOpen = vi.spyOn(XMLHttpRequest.prototype, 'open').mockImplementation(() => undefined);
@@ -137,10 +138,11 @@ describe('cookie-consent entrypoint', () => {
 
   it('keeps the modal visible when the XHR response is not successful', async () => {
     document.body.innerHTML = `
-      <div id="cookieconsent" class="modal nowo-cookie-consent show" data-nowo-open="false" aria-hidden="true" style="display:block"></div>
-      <form class="nowo-cookie-consent__form" action="/consent">
-        <button type="submit" class="nowo-cookie-consent__btn" name="save">Save</button>
-      </form>
+      <div id="cookieconsent" class="modal nowo-cookie-consent show" data-nowo-open="false" aria-hidden="true" style="display:block">
+        <form class="nowo-cookie-consent__form" action="/consent">
+          <button type="submit" class="nowo-cookie-consent__btn" name="save">Save</button>
+        </form>
+      </div>
     `;
 
     vi.spyOn(XMLHttpRequest.prototype, 'open').mockImplementation(() => undefined);
@@ -173,5 +175,28 @@ describe('cookie-consent entrypoint', () => {
     document.querySelector<HTMLButtonElement>('.nowo-cookie-consent__btn')?.click();
 
     expect(xhrOpen).not.toHaveBeenCalled();
+  });
+
+  it('does not submit the form when the show-preferences button is clicked', async () => {
+    document.body.innerHTML = `
+      <div id="cookieconsent" class="modal nowo-cookie-consent nowo-cookie-consent--two-step" data-nowo-open="false" data-nowo-two-step="true" aria-hidden="true">
+        <div class="nowo-cookie-consent__step nowo-cookie-consent__step--banner nowo-cookie-consent__step--active" data-nowo-step="banner">
+          <button type="button" data-nowo-show-preferences>Show preferences</button>
+        </div>
+        <div class="nowo-cookie-consent__step nowo-cookie-consent__step--preferences" data-nowo-step="preferences"></div>
+        <form class="nowo-cookie-consent__form" action="/consent">
+          <button type="submit" class="nowo-cookie-consent__btn" name="save">Save</button>
+        </form>
+      </div>
+    `;
+
+    const xhrOpen = vi.spyOn(XMLHttpRequest.prototype, 'open');
+
+    await import('./cookie-consent');
+
+    document.querySelector<HTMLButtonElement>('[data-nowo-show-preferences]')?.click();
+
+    expect(xhrOpen).not.toHaveBeenCalled();
+    expect(document.querySelector('[data-nowo-step="preferences"]')?.classList.contains('nowo-cookie-consent__step--active')).toBe(true);
   });
 });

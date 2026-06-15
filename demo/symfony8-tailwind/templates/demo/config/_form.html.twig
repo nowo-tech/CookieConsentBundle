@@ -1,5 +1,6 @@
 {% import 'demo/_routes.html.twig' as demo_route %}
 {{ form_start(form, {attr: {class: 'space-y-4'}}) }}
+    <p class="text-sm text-slate-600">{{ 'demo.config.form.lead'|trans }}</p>
     {{ form_row(form.locale) }}
     {{ form_row(form.consentModalTitle) }}
     {{ form_row(form.consentModalDescription) }}

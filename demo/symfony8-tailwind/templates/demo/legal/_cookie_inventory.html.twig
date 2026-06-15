@@ -1,0 +1,33 @@
+{% set inventory = nowo_cookie_consent_cookie_inventory() %}
+
+{% if inventory is not empty %}
+    <section class="mb-4">
+        <h2 class="text-lg font-semibold text-slate-900">{{ 'demo.legal.cookies.inventory.title'|trans }}</h2>
+        <p class="mt-1 text-sm text-slate-600">{{ 'demo.legal.cookies.inventory.lead'|trans }}</p>
+        <div class="mt-4 overflow-x-auto rounded-lg border border-slate-200">
+            <table class="min-w-full divide-y divide-slate-200 text-sm">
+                <caption class="px-4 py-2 text-left text-xs text-slate-500">{{ 'nowo_cookie_consent.inventory.caption'|trans({}, 'NowoCookieConsentBundle') }}</caption>
+                <thead class="bg-slate-50">
+                    <tr>
+                        <th class="px-4 py-2 text-left font-semibold text-slate-700">{{ 'nowo_cookie_consent.inventory.name'|trans({}, 'NowoCookieConsentBundle') }}</th>
+                        <th class="px-4 py-2 text-left font-semibold text-slate-700">{{ 'nowo_cookie_consent.inventory.provider'|trans({}, 'NowoCookieConsentBundle') }}</th>
+                        <th class="px-4 py-2 text-left font-semibold text-slate-700">{{ 'nowo_cookie_consent.inventory.purpose'|trans({}, 'NowoCookieConsentBundle') }}</th>
+                        <th class="px-4 py-2 text-left font-semibold text-slate-700">{{ 'demo.cookies.table.category'|trans }}</th>
+                        <th class="px-4 py-2 text-left font-semibold text-slate-700">{{ 'demo.cookies.table.duration'|trans }}</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-200">
+                    {% for row in inventory %}
+                        <tr>
+                            <td class="px-4 py-2"><code class="rounded bg-slate-100 px-1.5 py-0.5 text-xs">{{ row.name }}</code></td>
+                            <td class="px-4 py-2">{{ row.provider }}</td>
+                            <td class="max-w-md px-4 py-2 text-xs text-slate-600">{{ row.purpose }}</td>
+                            <td class="px-4 py-2">{{ ('demo.cookies.category.' ~ row.category)|trans }}</td>
+                            <td class="px-4 py-2">{{ row.duration }}</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </section>
+{% endif %}

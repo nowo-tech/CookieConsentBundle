@@ -31,7 +31,8 @@
                             <th>{{ 'demo.config.table.profile'|trans }}</th>
                             <th>{{ 'demo.config.table.route_patterns'|trans }}</th>
                             <th>{{ 'demo.config.table.priority'|trans }}</th>
-                            <th>{{ 'demo.config.table.layout'|trans }}</th>
+                            <th>{{ 'demo.config.table.consent_modal'|trans }}</th>
+                            <th>{{ 'demo.config.table.preferences_modal'|trans }}</th>
                             <th class="text-end">{{ 'demo.config.table.actions'|trans }}</th>
                         </tr>
                     </thead>
@@ -52,15 +53,29 @@
                                     {% endif %}
                                 </td>
                                 <td>{{ config.priority }}</td>
-                                <td>{{ config.consentModalLayout }}</td>
+                                <td>
+                                    <span class="text-nowrap">{{ config.consentModalLayout }}</span>
+                                    <span class="text-muted">·</span>
+                                    <span class="text-nowrap">{{ config.consentModalVariant }}</span>
+                                    <span class="text-muted">·</span>
+                                    <span class="text-nowrap">{{ config.consentModalPosition }}</span>
+                                </td>
+                                <td>
+                                    <span class="text-nowrap">{{ config.preferencesModalLayout }}</span>
+                                    <span class="text-muted">·</span>
+                                    <span class="text-nowrap">{{ config.preferencesModalVariant }}</span>
+                                    <span class="text-muted">·</span>
+                                    <span class="text-nowrap">{{ config.preferencesModalPosition }}</span>
+                                </td>
                                 <td class="text-end">
                                     <a class="btn btn-sm btn-outline-primary" href="{{ demo_route.path('demo_cookie_consent_config_show', { configId: config.id }) }}">{{ 'demo.config.view'|trans }}</a>
                                     <a class="btn btn-sm btn-outline-secondary" href="{{ demo_route.path('demo_cookie_consent_config_profile_settings', { configId: config.id }) }}">{{ 'demo.config.display_settings'|trans }}</a>
+                                    <a class="btn btn-sm btn-outline-secondary" href="{{ demo_route.path('demo_cookie_consent_cookies_index', { configId: config.id }) }}">{{ 'demo.cookies.manage'|trans }}</a>
                                 </td>
                             </tr>
                         {% else %}
                             <tr>
-                                <td colspan="5" class="text-center text-muted py-4">
+                                <td colspan="6" class="text-center text-muted py-4">
                                     {{ 'demo.config.empty_profiles'|trans }}
                                 </td>
                             </tr>

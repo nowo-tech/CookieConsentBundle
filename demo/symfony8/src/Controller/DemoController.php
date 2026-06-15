@@ -27,6 +27,8 @@ class DemoController extends AbstractController
     public function __construct(
         #[Autowire('%nowo_cookie_consent.categories%')]
         private readonly array $cookieCategories,
+        #[Autowire('%nowo_cookie_consent.http_only%')]
+        private readonly bool $httpOnly,
         private readonly TranslatorInterface $translator,
     ) {
     }
@@ -49,6 +51,8 @@ class DemoController extends AbstractController
                     ->withValue('')
                     ->withExpires($expiredAt)
                     ->withPath('/')
+                    ->withHttpOnly($this->httpOnly)
+                    ->withSameSite(Cookie::SAMESITE_LAX)
             );
         }
 

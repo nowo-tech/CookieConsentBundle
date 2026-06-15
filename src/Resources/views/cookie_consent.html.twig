@@ -1,15 +1,27 @@
 {% form_theme form '@NowoCookieConsentBundle/form/cookie_consent_theme.html.twig' %}
 
 {% set ui = display_config is defined and display_config ? display_config.config : null %}
+{% set translation = display_config is defined and display_config ? display_config.translation : null %}
+{% set two_step = nowo_cookie_consent_two_step_modal() %}
+{% set preference_sections = nowo_cookie_consent_preference_sections() %}
+{% set show_preferences_label = translation and translation.consentModalShowPreferencesBtn ? translation.consentModalShowPreferencesBtn : 'nowo_cookie_consent.show_preferences'|trans({}, 'NowoCookieConsentBundle') %}
+{% set preferences_title = translation and translation.preferencesModalTitle ? translation.preferencesModalTitle : 'nowo_cookie_consent.preferences.title'|trans({}, 'NowoCookieConsentBundle') %}
+{% set preferences_close_label = translation and translation.preferencesModalCloseIconLabel ? translation.preferencesModalCloseIconLabel : 'nowo_cookie_consent.preferences.close'|trans({}, 'NowoCookieConsentBundle') %}
 
 {% block script %}
     <script type="text/javascript" src="{{ asset('bundles/nowocookieconsent/nowo-consent-modal.js') }}"></script>
 {% endblock %}
 
 <div id="cookieconsent"
-     class="modal nowo-cookie-consent"
+     class="modal nowo-cookie-consent{% if two_step %} nowo-cookie-consent--two-step{% endif %}"
      tabindex="-1"
      data-nowo-open="{{ nowo_cookie_consent_is_open_by_default(app.request.attributes.get('_route'), disabled_routes) }}"
+     data-nowo-two-step="{{ two_step ? 'true' : 'false' }}"
+     data-nowo-open-preferences="{{ nowo_cookie_consent_open_preferences_modal() ? 'true' : 'false' }}"
+     data-nowo-color-theme="{{ nowo_cookie_consent_color_theme() }}"
+     data-nowo-dark-mode="{{ nowo_cookie_consent_dark_mode() ? 'true' : 'false' }}"
+     data-nowo-disable-transitions="{{ nowo_cookie_consent_disable_transitions() ? 'true' : 'false' }}"
+     data-nowo-manage-iframe-placeholders="{{ nowo_cookie_consent_manage_iframe_placeholders() ? 'true' : 'false' }}"
      {% if config_api_url %}
          data-nowo-config-url="{{ config_api_url }}"
      {% endif %}
@@ -20,55 +32,101 @@
          data-nowo-position-x="{{ ui.consentModalPositionX ?? '' }}"
          data-nowo-equal-weight-buttons="{{ ui.consentModalEqualWeightButtons ? 'true' : 'false' }}"
          data-nowo-flip-buttons="{{ ui.consentModalFlipButtons ? 'true' : 'false' }}"
+         data-nowo-preferences-layout="{{ ui.preferencesModalLayout }}"
+         data-nowo-preferences-variant="{{ ui.preferencesModalVariant }}"
+         data-nowo-preferences-position-y="{{ ui.preferencesModalPositionY }}"
+         data-nowo-preferences-position-x="{{ ui.preferencesModalPositionX ?? '' }}"
+         data-nowo-preferences-equal-weight-buttons="{{ ui.preferencesModalEqualWeightButtons ? 'true' : 'false' }}"
+         data-nowo-preferences-flip-buttons="{{ ui.preferencesModalFlipButtons ? 'true' : 'false' }}"
          data-nowo-disable-page-interaction="{{ ui.disablePageInteraction ? 'true' : 'false' }}"
          data-nowo-revision="{{ ui.revision }}"
      {% endif %}
      aria-labelledby="nowoCookieConsentTitle"
      aria-hidden="true">
-    <div class="modal-dialog modal-xl{% if ui %} nowo-cookie-consent__dialog--{{ ui.consentModalLayout }}{% endif %}">
+    <div class="modal-dialog modal-dialog-scrollable modal-xl{% if ui %} nowo-cookie-consent__dialog--{{ ui.consentModalLayout }}{% endif %}">
         <div class="modal-content">
-            {% block title %}
-                <div class="modal-header">
-                    <h5 id="nowoCookieConsentTitle" class="modal-title fw-bold nowo-cookie-consent__title">
-                        {{ 'nowo_cookie_consent.title'|trans({}, 'NowoCookieConsentBundle') }}
-                    </h5>
-                </div>
-            {% endblock %}
-            <div class="modal-body">
-                {% block intro %}
-                    <p class="nowo-cookie-consent__intro">{{ 'nowo_cookie_consent.intro'|trans({}, 'NowoCookieConsentBundle') }}</p>
-                {% endblock %}
+            {{ form_start(form, {attr: {class: 'nowo-cookie-consent__form'}}) }}
 
-                {% block read_more %}
-                    {% set privacy_route = 'nowo_cookie_consent.privacy_route'|trans({}, 'NowoCookieConsentBundle') %}
-                    {% if privacy_route %}
-                        <a class="btn btn-link text-decoration-none nowo-cookie-consent__read-more"
-                           href="{% block read_more_link %}{{ path(privacy_route) }}{% endblock %}">
-                            {{ 'nowo_cookie_consent.read_more'|trans({}, 'NowoCookieConsentBundle') }}
-                        </a>
-                    {% else %}
-                        <p>{{ 'nowo_cookie_consent.read_more'|trans({}, 'NowoCookieConsentBundle') }}</p>
-                    {% endif %}
-                {% endblock %}
-
-                {{ form_start(form, {attr: {class: 'mt-4 nowo-cookie-consent__form'}}) }}
-                    <div class="d-flex border-top border-bottom border-dark nowo-cookie-consent__category-group">
-                        <div class="row">
+            {% if two_step %}
+                <div class="nowo-cookie-consent__step nowo-cookie-consent__step--banner nowo-cookie-consent__step--active" data-nowo-step="banner">
+                    <div class="modal-header">
+                        <h5 id="nowoCookieConsentTitle" class="modal-title fw-bold nowo-cookie-consent__title">
+                            {{ 'nowo_cookie_consent.title'|trans({}, 'NowoCookieConsentBundle') }}
+                        </h5>
+                    </div>
+                    <div class="modal-body">
+                        <p class="nowo-cookie-consent__intro">{{ 'nowo_cookie_consent.intro'|trans({}, 'NowoCookieConsentBundle') }}</p>
+                        <div class="d-flex my-3 nowo-cookie-consent__btn-group nowo-cookie-consent__btn-group--banner">
+                            <button type="button" class="btn nowo-cookie-consent__btn nowo-cookie-consent__btn--secondary" data-nowo-show-preferences>
+                                {{ show_preferences_label }}
+                            </button>
                             {% for child in form %}
-                                {% if child.vars.block_prefixes[0] != 'button' %}
+                                {% if child.vars.name == 'use_only_functional_cookies' %}
+                                    {{ form_row(child) }}
+                                {% endif %}
+                            {% endfor %}
+                            {% for child in form %}
+                                {% if child.vars.name == 'use_all_cookies' %}
                                     {{ form_row(child) }}
                                 {% endif %}
                             {% endfor %}
                         </div>
                     </div>
-
-                    <div class="d-flex justify-content-end my-3 nowo-cookie-consent__btn-group">
-                        {{ form_rest(form) }}
+                </div>
+                <div class="nowo-cookie-consent__step nowo-cookie-consent__step--preferences" data-nowo-step="preferences">
+                    <div class="modal-header nowo-cookie-consent__preferences-header">
+                        <h5 class="modal-title fw-bold nowo-cookie-consent__title">{{ preferences_title }}</h5>
+                        <button type="button"
+                                class="nowo-cookie-consent__close-preferences"
+                                data-nowo-hide-preferences
+                                aria-label="{{ preferences_close_label }}">
+                            <span class="nowo-cookie-consent__close-preferences-icon" aria-hidden="true">&times;</span>
+                        </button>
                     </div>
-                {{ form_end(form) }}
-            </div>
+                    <div class="modal-body nowo-cookie-consent__preferences-body">
+                        {% include '@NowoCookieConsentBundle/_preference_sections.html.twig' with {form: form, preference_sections: preference_sections} %}
+                    </div>
+                    <div class="modal-footer nowo-cookie-consent__btn-group">
+                        {% for child in form %}
+                            {% if child.vars.name == 'save' %}
+                                {{ form_row(child) }}
+                            {% endif %}
+                        {% endfor %}
+                    </div>
+                </div>
+            {% else %}
+                <div class="modal-header">
+                    <h5 id="nowoCookieConsentTitle" class="modal-title fw-bold nowo-cookie-consent__title">
+                        {{ 'nowo_cookie_consent.title'|trans({}, 'NowoCookieConsentBundle') }}
+                    </h5>
+                </div>
+                <div class="modal-body">
+                    <p class="nowo-cookie-consent__intro">{{ 'nowo_cookie_consent.intro'|trans({}, 'NowoCookieConsentBundle') }}</p>
+                    {% set privacy_route = 'nowo_cookie_consent.privacy_route'|trans({}, 'NowoCookieConsentBundle') %}
+                    {% if privacy_route %}
+                        <a class="btn btn-link text-decoration-none nowo-cookie-consent__read-more" href="{{ path(privacy_route) }}">
+                            {{ 'nowo_cookie_consent.read_more'|trans({}, 'NowoCookieConsentBundle') }}
+                        </a>
+                    {% endif %}
+                    {% include '@NowoCookieConsentBundle/_preference_sections.html.twig' with {form: form, preference_sections: preference_sections} %}
+                </div>
+                <div class="modal-footer nowo-cookie-consent__btn-group">
+                    {% for child in form %}
+                        {% if child.vars.block_prefixes[0] == 'button' %}
+                            {{ form_row(child) }}
+                        {% endif %}
+                    {% endfor %}
+                </div>
+            {% endif %}
+
+            {{ form_widget(form._token) }}
+            {{ form_end(form, {render_rest: false}) }}
         </div>
     </div>
 </div>
+
+{% if nowo_cookie_consent_preferences_bubble_enabled() %}
+    {% include '@NowoCookieConsentBundle/cookie_consent_preferences_bubble.html.twig' %}
+{% endif %}
 
 {{ block('script') }}

@@ -1,4 +1,10 @@
-import { applyVisualConfig } from './apply-visual-config';
+import {
+  applyVisualConfigForStep,
+  parseModalPosition,
+  storeVisualConfigOnElement,
+} from './apply-visual-config';
+import { openPreferencesStep, syncTwoStepModalState } from './step-manager';
+import { applyThemeOptions } from './apply-theme';
 
 export interface CookieConsentModalTranslation {
   label?: string | null;
@@ -19,7 +25,10 @@ export interface CookieConsentCategoryTranslation {
 export interface CookieConsentLocaleTranslation {
   consentModal?: CookieConsentModalTranslation;
   preferencesModal?: {
+    title?: string | null;
     savePreferencesBtn?: string | null;
+    usageTitle?: string | null;
+    usageDescription?: string | null;
   };
   categories?: Record<string, CookieConsentCategoryTranslation>;
 }
@@ -36,6 +45,13 @@ export interface CookieConsentConfigData {
   autoShow?: boolean;
   revision?: number;
   disablePageInteraction?: boolean;
+  colorTheme?: string;
+  darkModeEnabled?: boolean;
+  disableTransitions?: boolean;
+  twoStepModal?: boolean;
+  openPreferencesModal?: boolean;
+  manageIframePlaceholders?: boolean;
+  preferenceSections?: Array<{ title: string; description: string; categories: string[] }>;
   guiOptions?: {
     consentModal?: CookieConsentGuiModalOptions;
     preferencesModal?: CookieConsentGuiModalOptions;
@@ -59,6 +75,7 @@ export function applyRemoteConfig(
   const localeData = data.language?.translations?.[locale] ?? data.language?.translations?.[data.language?.default ?? ''];
   const consentModal = localeData?.consentModal;
   const consentGui = data.guiOptions?.consentModal;
+  const preferencesGui = data.guiOptions?.preferencesModal;
 
   const titleElement = modalElement.querySelector<HTMLElement>('.nowo-cookie-consent__title');
   if (titleElement && consentModal?.title) {
@@ -94,22 +111,75 @@ export function applyRemoteConfig(
     saveButton.replaceChildren(document.createTextNode(saveLabel));
   }
 
-  let positionY: string | undefined;
-  let positionX: string | undefined;
-
-  if (consentGui?.position) {
-    [positionY, positionX] = consentGui.position.split(/\s+/, 2);
+  const preferencesUsageTitle = modalElement.querySelector<HTMLElement>('.nowo-cookie-consent__preferences-intro-title');
+  if (preferencesUsageTitle && localeData?.preferencesModal?.usageTitle) {
+    preferencesUsageTitle.textContent = localeData.preferencesModal.usageTitle;
   }
 
-  applyVisualConfig(modalElement, {
+  const preferencesUsageDescription = modalElement.querySelector<HTMLElement>(
+    '.nowo-cookie-consent__preferences-intro-description',
+  );
+  if (preferencesUsageDescription && localeData?.preferencesModal?.usageDescription) {
+    preferencesUsageDescription.textContent = localeData.preferencesModal.usageDescription;
+  }
+
+  if (typeof data.twoStepModal === 'boolean') {
+    modalElement.dataset.nowoTwoStep = data.twoStepModal ? 'true' : 'false';
+  }
+
+  if (typeof data.openPreferencesModal === 'boolean') {
+    modalElement.dataset.nowoOpenPreferences = data.openPreferencesModal ? 'true' : 'false';
+  }
+
+  syncTwoStepModalState(modalElement);
+
+  const consentPosition = parseModalPosition(consentGui?.position);
+  const preferencesPosition = parseModalPosition(preferencesGui?.position);
+
+  storeVisualConfigOnElement(modalElement, 'banner', {
     layout: consentGui?.layout,
     variant: consentGui?.variant,
-    positionY,
-    positionX,
+    positionY: consentPosition.positionY,
+    positionX: consentPosition.positionX,
     equalWeightButtons: consentGui?.equalWeightButtons,
     flipButtons: consentGui?.flipButtons,
     disablePageInteraction: data.disablePageInteraction,
   });
+
+  storeVisualConfigOnElement(modalElement, 'preferences', {
+    layout: preferencesGui?.layout,
+    variant: preferencesGui?.variant,
+    positionY: preferencesPosition.positionY,
+    positionX: preferencesPosition.positionX,
+    equalWeightButtons: preferencesGui?.equalWeightButtons,
+    flipButtons: preferencesGui?.flipButtons,
+  });
+
+  const preferencesTitleElement = modalElement.querySelector<HTMLElement>(
+    '[data-nowo-step="preferences"] .nowo-cookie-consent__title',
+  );
+  if (preferencesTitleElement && localeData?.preferencesModal?.title) {
+    preferencesTitleElement.textContent = localeData.preferencesModal.title;
+  }
+
+  applyVisualConfigForStep(
+    modalElement,
+    modalElement.dataset.nowoOpenPreferences === 'true' ? 'preferences' : 'banner',
+  );
+
+  applyThemeOptions(modalElement, {
+    colorTheme: data.colorTheme,
+    darkModeEnabled: data.darkModeEnabled,
+    disableTransitions: data.disableTransitions,
+  });
+
+  if (modalElement.dataset.nowoOpenPreferences === 'true') {
+    openPreferencesStep(modalElement);
+  }
+
+  if (typeof data.manageIframePlaceholders === 'boolean') {
+    modalElement.dataset.nowoManageIframePlaceholders = data.manageIframePlaceholders ? 'true' : 'false';
+  }
 
   if (typeof data.revision === 'number') {
     modalElement.dataset.nowoRevision = String(data.revision);

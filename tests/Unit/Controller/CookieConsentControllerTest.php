@@ -58,7 +58,7 @@ final class CookieConsentControllerTest extends TestCase
         $response   = $controller->showIfCookieConsentNotSet(Request::create('/cookie_consent_alt'));
 
         self::assertSame(200, $response->getStatusCode());
-        self::assertSame('', (string) $response->getContent());
+        self::assertStringContainsString('rendered-bootstrap', (string) $response->getContent());
     }
 
     public function testShowIfNotSetDelegatesToShowWhenConsentMissing(): void

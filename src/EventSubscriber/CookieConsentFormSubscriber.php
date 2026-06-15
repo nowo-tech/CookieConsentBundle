@@ -74,12 +74,39 @@ class CookieConsentFormSubscriber implements EventSubscriberInterface
     protected function handleFormSubmit(array $categories, Request $request, Response $response): void
     {
         $cookieConsentKey = $this->getCookieConsentKey($request);
+        $granularCookies  = $this->extractGranularCookies($categories);
 
-        $this->cookieHandler->save($categories, $cookieConsentKey, $response);
+        $this->cookieHandler->save($categories, $cookieConsentKey, $response, $granularCookies);
 
         if ($this->useLogger) {
             $this->cookieLogger->log($categories, $cookieConsentKey);
         }
+    }
+
+    /**
+     * @param array<string, bool|string|array<string, bool|string>> $data
+     *
+     * @return array<string, bool>
+     */
+    private function extractGranularCookies(array $data): array
+    {
+        $cookies = $data['cookies'] ?? null;
+
+        if (!is_array($cookies)) {
+            return [];
+        }
+
+        $granular = [];
+
+        foreach ($cookies as $name => $allowed) {
+            if (!is_string($name)) {
+                continue;
+            }
+
+            $granular[$name] = $allowed === true || $allowed === 'true' || $allowed === '1' || $allowed === 1;
+        }
+
+        return $granular;
     }
 
     protected function getCookieConsentKey(Request $request): string
