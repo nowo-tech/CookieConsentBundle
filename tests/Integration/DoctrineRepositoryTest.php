@@ -14,8 +14,11 @@ use Nowo\CookieConsentBundle\Entity\CookieConsentConfigTranslation;
 use Nowo\CookieConsentBundle\Repository\CookieConsentConfigRepository;
 use Nowo\CookieConsentBundle\Repository\CookieConsentConfigTranslationRepository;
 use PHPUnit\Framework\TestCase;
+use RuntimeException;
 
 use function dirname;
+
+use const PHP_VERSION_ID;
 
 final class DoctrineRepositoryTest extends TestCase
 {
@@ -52,10 +55,8 @@ final class DoctrineRepositoryTest extends TestCase
             return;
         }
 
-        if (! method_exists($config, 'enableNativeLazyObjects')) {
-            throw new \RuntimeException(
-                'Doctrine ORM 3.4+ is required on PHP 8.4+ for integration tests (missing enableNativeLazyObjects).',
-            );
+        if (!method_exists($config, 'enableNativeLazyObjects')) {
+            throw new RuntimeException('Doctrine ORM 3.4+ is required on PHP 8.4+ for integration tests (missing enableNativeLazyObjects).');
         }
 
         $config->enableNativeLazyObjects(true);
