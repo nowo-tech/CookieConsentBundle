@@ -28,7 +28,7 @@ This document covers security considerations for **nowo-tech/cookie-consent-bund
 | **HTTP POST (consent form)** | Category toggles, optional per-cookie choices, CSRF token when enabled |
 | **HTTP GET (modal render)** | Routes `nowo_cookie_consent.show`, `nowo_cookie_consent.show_if_not_set` |
 | **HTTP GET (config API)** | JSON at `/cookie-consent/config` when `fetch_config_via_api: true` |
-| **HTTP (admin CRUD)** | `CookieDefinitionAdminController` when imported by the consuming app |
+| **HTTP (admin CRUD)** | `CookieDefinitionAdminController`, `CookieConsentConfigSettingsAdminController` when imported by the consuming app |
 | **Configuration** | YAML under `nowo_cookie_consent`, env vars, Doctrine-backed profiles |
 | **Cookies** | Consent preference cookies written by `CookieHandler` |
 | **Database** | Optional tables for logs, config, translations, cookie definitions |
@@ -58,7 +58,8 @@ The bundle does **not** expose a CLI that mutates production data, outbound HTTP
 | **CSRF on admin delete** | `isCsrfTokenValid()` on delete action in `CookieDefinitionAdminController` |
 | **Cookie flags** | `Secure` and configurable `HttpOnly` on consent cookies |
 | **PII in logs** | IP addresses anonymized (last octet masked) in `CookieConsentLog` |
-| **Invalid config IDs** | Admin controller returns 404 when config or definition does not belong to the profile |
+| **Invalid config IDs** | Admin controllers return 404 when config or definition does not belong to the profile |
+| **Custom bubble icon HTML** | `PreferencesBubbleIconSanitizer` rejects `<script>`, event handlers, and dangerous tags before persisting `preferences_bubble_icon` |
 | **Required cookies** | Category `required` cannot be disabled; granular toggles exclude required cookies |
 | **Config API** | Read-only GET; returns display copy and GUI options, not secrets |
 
@@ -111,7 +112,7 @@ Document imported admin routes in your application runbook and assign least-priv
 Report security issues **privately**:
 
 1. Do **not** open a public GitHub issue for security-sensitive bugs.
-2. Use [GitHub Security Advisories](https://github.com/nowo-tech/cookie-consent-bundle/security/advisories) or email **hectorfranco@nowo.tech**.
+2. Use [GitHub Security Advisories](https://github.com/nowo-tech/CookieConsentBundle/security/advisories) or email **hectorfranco@nowo.tech**.
 3. Include steps to reproduce, affected versions, and impact.
 4. We will acknowledge and coordinate disclosure after a fix is available.
 

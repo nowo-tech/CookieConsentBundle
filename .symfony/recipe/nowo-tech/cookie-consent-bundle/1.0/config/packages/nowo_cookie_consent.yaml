@@ -3,3 +3,4 @@
 
 nowo_cookie_consent:
     use_logger: true
+    # disable_page_interaction: false   # full-page overlay until consent (see docs/CONFIGURATION.md)

@@ -8,7 +8,6 @@ use Nowo\CookieConsentBundle\Config\CookieConsentConfigResolver;
 use Nowo\CookieConsentBundle\Config\CookieConsentConfigSelector;
 use Nowo\CookieConsentBundle\Config\CookieConsentRoutePatternMatcher;
 use Nowo\CookieConsentBundle\Controller\CookieConsentController;
-use Nowo\CookieConsentBundle\Cookie\CookieChecker;
 use Nowo\CookieConsentBundle\Entity\CookieConsentConfig;
 use Nowo\CookieConsentBundle\Entity\CookieConsentConfigTranslation;
 use Nowo\CookieConsentBundle\Form\CookieConsentType;
@@ -49,12 +48,9 @@ final class CookieConsentControllerTest extends TestCase
         self::assertStringContainsString('rendered-tailwind', (string) $response->getContent());
     }
 
-    public function testShowIfNotSetReturnsEmptyWhenConsentSaved(): void
+    public function testShowIfNotSetDelegatesToShow(): void
     {
-        $checker = $this->createMock(CookieChecker::class);
-        $checker->method('isCookieConsentSavedByUser')->willReturn(true);
-
-        $controller = $this->createController(cookieChecker: $checker);
+        $controller = $this->createController();
         $response   = $controller->showIfCookieConsentNotSet(Request::create('/cookie_consent_alt'));
 
         self::assertSame(200, $response->getStatusCode());
@@ -168,7 +164,6 @@ final class CookieConsentControllerTest extends TestCase
     private function createController(
         ?Environment $twig = null,
         ?FormFactoryInterface $formFactory = null,
-        ?CookieChecker $cookieChecker = null,
         ?RouterInterface $router = null,
         ?RequestStack $requestStack = null,
         ?CookieConsentConfigResolver $configResolver = null,
@@ -179,7 +174,6 @@ final class CookieConsentControllerTest extends TestCase
     ): CookieConsentController {
         $twig ??= $this->createTwig();
         $formFactory ??= $this->createFormFactory();
-        $cookieChecker ??= $this->createCookieChecker(false);
         $router ??= $this->createMock(RouterInterface::class);
         $requestStack ??= new RequestStack();
         $configResolver ??= new CookieConsentConfigResolver(
@@ -195,7 +189,6 @@ final class CookieConsentControllerTest extends TestCase
         return new CookieConsentController(
             $twig,
             $formFactory,
-            $cookieChecker,
             $router,
             new LocaleResolver(['en', 'es'], 'en', true, $requestStack),
             $requestStack,
@@ -229,18 +222,5 @@ final class CookieConsentControllerTest extends TestCase
         $formFactory->method('create')->willReturn($form);
 
         return $formFactory;
-    }
-
-    private function createCookieChecker(bool $saved): CookieChecker
-    {
-        $request = Request::create('/');
-        if ($saved) {
-            $request->cookies->set('Cookie_Consent', date('r'));
-        }
-
-        $stack = new RequestStack();
-        $stack->push($request);
-
-        return new CookieChecker($stack);
     }
 }

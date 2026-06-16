@@ -7,6 +7,39 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.2.0] - 2026-06-15
+
+### Added
+
+- **`disable_page_interaction`** — global YAML option, Twig helper `nowo_cookie_consent_disable_page_interaction()`, and per-profile admin field for full-page overlay and scroll lock until consent
+- **Profile settings admin in the bundle** — `CookieConsentConfigSettingsType`, `CookieConsentConfigSettingsAdminController`, and Bootstrap templates at `/cookie-consent-config/{id}/settings` (route `nowo_cookie_consent_config_settings_edit`)
+- **Preferences bubble customization** — `preferences_bubble_border_color` (hex outline/icon color) and `preferences_bubble_icon` (custom HTML or SVG) via YAML or `CookieConsentConfig` when `use_database_config: true`
+- **`PreferencesBubbleIconSanitizer`** — rejects dangerous markup (`<script>`, event handlers, etc.) before persisting custom bubble icons
+- Twig helpers `nowo_cookie_consent_preferences_bubble_border_color()` and `nowo_cookie_consent_preferences_bubble_icon()`
+- Default bubble SVG partial `_preferences_bubble_icon_default.html.twig`
+- Symfony **8.1** and PHP **8.2–8.5** in CI; broader Symfony and Doctrine `composer.json` constraints
+
+### Changed
+
+- Preferences bubble: transparent background, configurable border color, larger icon area, flex-centered custom content
+- Modal **vertical position** (`consent_modal_position_y: bottom`) fixed for box and cloud layouts (CSS flex column + Tailwind wrapper cleanup)
+- Demo settings UI reuses bundle `CookieConsentConfigSettingsType` (removed duplicate demo form class)
+- PHP test suite: **130 tests**
+- Flex recipe documents commented `disable_page_interaction` example
+
+### Fixed
+
+- Tailwind consent modal no longer forces `items-center justify-center` on the overlay, which prevented bottom-aligned box modals from sitting at the viewport edge
+
+### Documentation
+
+- [CONFIGURATION.md](CONFIGURATION.md) — page overlay per profile, bubble border/icon, settings admin, Twig helpers
+- [USAGE.md](USAGE.md) — profile settings admin and custom bubble icon
+- [SECURITY.md](SECURITY.md) — settings admin surface and bubble icon sanitization
+- [UPGRADING.md](UPGRADING.md) — upgrade path from 1.1.1
+
+[1.2.0]: https://github.com/nowo-tech/CookieConsentBundle/releases/tag/v1.2.0
+
 ## [1.1.1] - 2026-06-15
 
 ### Added
@@ -30,7 +63,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - [CONFIGURATION.md](CONFIGURATION.md) — Twig override procedure and full template table; translation override procedure with YAML example
 - [UPGRADING.md](UPGRADING.md) — upgrade path from 1.1.0
 
-[1.1.1]: https://github.com/nowo-tech/cookie-consent-bundle/releases/tag/v1.1.1
+[1.1.1]: https://github.com/nowo-tech/CookieConsentBundle/releases/tag/v1.1.1
 
 ## [1.1.0] - 2026-06-15
 
@@ -60,7 +93,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - [USAGE.md](USAGE.md) — embed modal with bubble, per-cookie checks, inventory admin
 - [UPGRADING.md](UPGRADING.md) — upgrade path from 1.0.0
 
-[1.1.0]: https://github.com/nowo-tech/cookie-consent-bundle/releases/tag/v1.1.0
+[1.1.0]: https://github.com/nowo-tech/CookieConsentBundle/releases/tag/v1.1.0
 
 ## [1.0.0] - 2026-06-15
 
@@ -91,4 +124,4 @@ First stable release of the modernized Nowo Cookie Consent Bundle.
 - README: canonical badges, `## Documentation`, `## Tests and coverage` with percentages
 - `docs/CONFIGURATION.md` table of contents; Twig override and translation procedures documented
 
-[1.0.0]: https://github.com/nowo-tech/cookie-consent-bundle/releases/tag/v1.0.0
+[1.0.0]: https://github.com/nowo-tech/CookieConsentBundle/releases/tag/v1.0.0

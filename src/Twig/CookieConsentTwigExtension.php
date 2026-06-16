@@ -59,6 +59,7 @@ class CookieConsentTwigExtension extends AbstractExtension
             new TwigFunction('nowo_cookie_consent_color_theme', $this->getColorTheme(...)),
             new TwigFunction('nowo_cookie_consent_dark_mode', $this->isDarkModeEnabled(...)),
             new TwigFunction('nowo_cookie_consent_disable_transitions', $this->isDisableTransitions(...)),
+            new TwigFunction('nowo_cookie_consent_disable_page_interaction', $this->isDisablePageInteraction(...)),
             new TwigFunction('nowo_cookie_consent_two_step_modal', $this->isTwoStepModal(...)),
             new TwigFunction('nowo_cookie_consent_open_preferences_modal', $this->isOpenPreferencesModal(...)),
             new TwigFunction('nowo_cookie_consent_manage_iframe_placeholders', $this->isManageIframePlaceholders(...)),
@@ -68,6 +69,8 @@ class CookieConsentTwigExtension extends AbstractExtension
             new TwigFunction('nowo_cookie_consent_should_embed_modal', $this->shouldEmbedModal(...)),
             new TwigFunction('nowo_cookie_consent_preferences_bubble_enabled', $this->isPreferencesBubbleEnabled(...)),
             new TwigFunction('nowo_cookie_consent_preferences_bubble_position', $this->getPreferencesBubblePosition(...)),
+            new TwigFunction('nowo_cookie_consent_preferences_bubble_border_color', $this->getPreferencesBubbleBorderColor(...)),
+            new TwigFunction('nowo_cookie_consent_preferences_bubble_icon', $this->getPreferencesBubbleIcon(...)),
             new TwigFunction('nowo_cookie_consent_diagnostic_report', $this->getDiagnosticReport(...)),
         ];
     }
@@ -328,6 +331,16 @@ class CookieConsentTwigExtension extends AbstractExtension
     }
 
     /**
+     * Returns whether page interaction is blocked until consent is given.
+     *
+     * @return bool True when a full-page overlay and scroll lock are applied
+     */
+    public function isDisablePageInteraction(): bool
+    {
+        return $this->cmpUxOptionsResolver->isDisablePageInteraction();
+    }
+
+    /**
      * Returns whether the two-step modal flow is enabled.
      *
      * @return bool True when banner and preferences steps are used
@@ -423,5 +436,25 @@ class CookieConsentTwigExtension extends AbstractExtension
     public function getPreferencesBubblePosition(): string
     {
         return $this->cmpUxOptionsResolver->getPreferencesBubblePosition();
+    }
+
+    /**
+     * Returns the hex color used for the preferences bubble border and icon.
+     *
+     * @return string|null A hex color or null to use the bundle default
+     */
+    public function getPreferencesBubbleBorderColor(): ?string
+    {
+        return $this->cmpUxOptionsResolver->getPreferencesBubbleBorderColor();
+    }
+
+    /**
+     * Returns custom HTML/SVG markup for the preferences bubble icon.
+     *
+     * @return string|null Sanitized icon markup or null to use the bundle default
+     */
+    public function getPreferencesBubbleIcon(): ?string
+    {
+        return $this->cmpUxOptionsResolver->getPreferencesBubbleIcon();
     }
 }

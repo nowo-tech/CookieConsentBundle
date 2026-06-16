@@ -27,7 +27,7 @@
 {% else %}
     <div class="nowo-cookie-consent__category-list">
         {% for child in form %}
-            {% if child.vars.block_prefixes[0] != 'button' %}
+            {% if child.vars.block_prefixes[0] != 'button' and child.vars.name != '_token' %}
                 {{ form_row(child) }}
             {% endif %}
         {% endfor %}

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Nowo\CookieConsentBundle\Tests\Unit\Config;
 
 use Nowo\CookieConsentBundle\Config\CmpUxOptionsResolver;
+use Nowo\CookieConsentBundle\Config\PreferencesBubbleIconSanitizer;
 use Nowo\CookieConsentBundle\Config\ResolvedCookieConsentConfig;
 use Nowo\CookieConsentBundle\Entity\CookieConsentConfig;
 use Nowo\CookieConsentBundle\Entity\CookieConsentConfigTranslation;
@@ -24,6 +25,29 @@ final class CmpUxOptionsResolverTest extends TestCase
         self::assertSame([['title' => 'Analytics', 'categories' => ['analytics']]], $resolver->getPreferenceSections());
     }
 
+    public function testYamlDisablePageInteractionWhenDatabaseConfigDisabled(): void
+    {
+        $resolver = new CmpUxOptionsResolver(
+            new RequestStack(),
+            'light',
+            false,
+            false,
+            true,
+            false,
+            false,
+            false,
+            false,
+            false,
+            'bottom-right',
+            null,
+            null,
+            [],
+            false,
+        );
+
+        self::assertTrue($resolver->isDisablePageInteraction());
+    }
+
     public function testDatabaseValuesOverrideYamlWhenResolvedConfigPresent(): void
     {
         $config = (new CookieConsentConfig())
@@ -32,6 +56,7 @@ final class CmpUxOptionsResolverTest extends TestCase
             ->setTwoStepModal(false)
             ->setOpenPreferencesModal(true)
             ->setDisableTransitions(true)
+            ->setDisablePageInteraction(true)
             ->setManageIframePlaceholders(true);
 
         $translation = (new CookieConsentConfigTranslation())
@@ -52,8 +77,40 @@ final class CmpUxOptionsResolverTest extends TestCase
         self::assertFalse($resolver->isTwoStepModal());
         self::assertTrue($resolver->isOpenPreferencesModal());
         self::assertTrue($resolver->isDisableTransitions());
+        self::assertTrue($resolver->isDisablePageInteraction());
         self::assertTrue($resolver->isManageIframePlaceholders());
         self::assertSame([['title' => 'DB section', 'categories' => ['marketing']]], $resolver->getPreferenceSections());
+    }
+
+    public function testPreferencesBubbleBorderColorComesFromDatabaseProfile(): void
+    {
+        $config = (new CookieConsentConfig())->setPreferencesBubbleBorderColor('#60fed2');
+
+        $request = Request::create('/');
+        $request->attributes->set('nowo_cookie_consent_config', new ResolvedCookieConsentConfig($config, null));
+
+        $stack = new RequestStack();
+        $stack->push($request);
+
+        $resolver = $this->createResolver($stack, useDatabaseConfig: true);
+
+        self::assertSame('#60fed2', $resolver->getPreferencesBubbleBorderColor());
+    }
+
+    public function testPreferencesBubbleIconComesFromDatabaseProfile(): void
+    {
+        $icon   = PreferencesBubbleIconSanitizer::DEMO_EMOJI_ICON_HTML;
+        $config = (new CookieConsentConfig())->setPreferencesBubbleIcon($icon);
+
+        $request = Request::create('/');
+        $request->attributes->set('nowo_cookie_consent_config', new ResolvedCookieConsentConfig($config, null));
+
+        $stack = new RequestStack();
+        $stack->push($request);
+
+        $resolver = $this->createResolver($stack, useDatabaseConfig: true);
+
+        self::assertSame($icon, $resolver->getPreferencesBubbleIcon());
     }
 
     /**
@@ -69,12 +126,15 @@ final class CmpUxOptionsResolverTest extends TestCase
             'dark-turquoise',
             false,
             false,
+            false,
             true,
             false,
             false,
             false,
             false,
             'bottom-right',
+            null,
+            null,
             $yamlPreferenceSections,
             $useDatabaseConfig,
         );

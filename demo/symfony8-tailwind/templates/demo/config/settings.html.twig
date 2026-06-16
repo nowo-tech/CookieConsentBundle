@@ -40,12 +40,13 @@
                     {{ form_row(form.manageScriptTags) }}
                     {{ form_row(form.autoClearCookies) }}
                     {{ form_row(form.hideFromBots) }}
-                    {{ form_row(form.disablePageInteraction) }}
                     {{ form_row(form.lazyHtmlGeneration) }}
                     {{ form_row(form.manageIframePlaceholders) }}
                     {{ form_row(form.granularCookieSelection) }}
                     {{ form_row(form.preferencesBubbleEnabled) }}
                     {{ form_row(form.preferencesBubblePosition) }}
+                    {{ form_row(form.preferencesBubbleBorderColor) }}
+                    {{ form_row(form.preferencesBubbleIcon) }}
                 </section>
 
                 <section class="rounded-lg border border-slate-200 bg-slate-50/60 p-4 space-y-4">
@@ -54,6 +55,7 @@
                         <p class="mt-1 text-sm text-slate-500">{{ 'demo.config.settings.section.appearance_lead'|trans }}</p>
                     </div>
                     {{ form_row(form.colorTheme) }}
+                    {{ form_row(form.disablePageInteraction) }}
                     {{ form_row(form.darkModeEnabled) }}
                     {{ form_row(form.disableTransitions) }}
                     {{ form_row(form.twoStepModal) }}

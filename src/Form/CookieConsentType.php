@@ -19,6 +19,7 @@ use Symfony\Component\Form\FormEvents;
 use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 
+use function in_array;
 use function is_array;
 use function is_string;
 
@@ -127,7 +128,7 @@ class CookieConsentType extends AbstractType
 
                 foreach ($cookieNames as $cookieName) {
                     $value                        = $cookieValues[$cookieName] ?? false;
-                    $data['cookies'][$cookieName] = $value === true || $value === 'true' || $value === '1' || $value === 1;
+                    $data['cookies'][$cookieName] = in_array($value, [true, 'true', '1', 1], true);
                 }
 
                 $data = $this->syncCategoriesFromGranularCookies($data, $inventory);
@@ -161,7 +162,7 @@ class CookieConsentType extends AbstractType
                 }
 
                 $value   = $cookieValues[$row['name']] ?? false;
-                $allowed = $value === true || $value === 'true' || $value === '1' || $value === 1;
+                $allowed = in_array($value, [true, 'true', '1', 1], true);
 
                 if ($allowed) {
                     $data[$category] = true;
@@ -206,7 +207,7 @@ class CookieConsentType extends AbstractType
     {
         $request = $this->requestStack->getMainRequest();
 
-        if ($request !== null) {
+        if ($request instanceof \Symfony\Component\HttpFoundation\Request) {
             $resolved = $request->attributes->get('nowo_cookie_consent_config');
 
             if ($resolved instanceof ResolvedCookieConsentConfig) {

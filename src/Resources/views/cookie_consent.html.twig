@@ -21,6 +21,7 @@
      data-nowo-color-theme="{{ nowo_cookie_consent_color_theme() }}"
      data-nowo-dark-mode="{{ nowo_cookie_consent_dark_mode() ? 'true' : 'false' }}"
      data-nowo-disable-transitions="{{ nowo_cookie_consent_disable_transitions() ? 'true' : 'false' }}"
+     data-nowo-disable-page-interaction="{{ nowo_cookie_consent_disable_page_interaction() ? 'true' : 'false' }}"
      data-nowo-manage-iframe-placeholders="{{ nowo_cookie_consent_manage_iframe_placeholders() ? 'true' : 'false' }}"
      {% if config_api_url %}
          data-nowo-config-url="{{ config_api_url }}"
@@ -38,7 +39,6 @@
          data-nowo-preferences-position-x="{{ ui.preferencesModalPositionX ?? '' }}"
          data-nowo-preferences-equal-weight-buttons="{{ ui.preferencesModalEqualWeightButtons ? 'true' : 'false' }}"
          data-nowo-preferences-flip-buttons="{{ ui.preferencesModalFlipButtons ? 'true' : 'false' }}"
-         data-nowo-disable-page-interaction="{{ ui.disablePageInteraction ? 'true' : 'false' }}"
          data-nowo-revision="{{ ui.revision }}"
      {% endif %}
      aria-labelledby="nowoCookieConsentTitle"

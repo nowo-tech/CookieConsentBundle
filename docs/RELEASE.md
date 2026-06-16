@@ -45,7 +45,7 @@ composer require nowo-tech/cookie-consent-bundle
 
 ## Coverage goals
 
-- **PHP**: **100%** line coverage (123 tests; `make test-coverage`)
+- **PHP**: **100%** line coverage (130 tests; `make test-coverage`)
 - **TypeScript**: **~94%** line coverage, **90%** minimum enforced (`make test-ts`)
 
 Update README **Tests and coverage** percentages after each release when coverage changes materially.
@@ -54,6 +54,7 @@ Update README **Tests and coverage** percentages after each release when coverag
 
 | Version | Date | Notes |
 | --- | --- | --- |
+| [1.2.0](CHANGELOG.md#120---2026-06-15) | 2026-06-15 | Page overlay, settings admin, bubble customization, modal position fix |
 | [1.1.1](CHANGELOG.md#111---2026-06-15) | 2026-06-15 | Standards compliance, SECURITY/docs, TS coverage gate |
 | [1.1.0](CHANGELOG.md#110---2026-06-15) | 2026-06-15 | Cookie inventory, granular selection, preferences bubble |
 | [1.0.0](CHANGELOG.md#100---2026-06-15) | 2026-06-15 | First stable release |

@@ -38,6 +38,25 @@ describe('applyVisualConfig', () => {
     expect(dialog.classList.contains('nowo-cookie-consent--dialog-bar')).toBe(true);
   });
 
+  it('applies bottom position for box layout', () => {
+    document.body.innerHTML = `
+      <div id="cookieconsent" class="modal nowo-cookie-consent show">
+        <div class="modal-dialog modal-xl"></div>
+      </div>
+    `;
+
+    const modal = document.getElementById('cookieconsent')!;
+
+    applyVisualConfig(modal, {
+      layout: 'box',
+      positionY: 'bottom',
+      positionX: 'center',
+    });
+
+    expect(modal.classList.contains('nowo-cookie-consent--layout-box')).toBe(true);
+    expect(modal.classList.contains('nowo-cookie-consent--pos-y-bottom')).toBe(true);
+  });
+
   it('stores and applies preferences modal options from data attributes', () => {
     document.body.innerHTML = `
       <div id="cookieconsent"

@@ -36,6 +36,7 @@ final class ConfigurationTest extends TestCase
         self::assertSame('light', $config['color_theme']);
         self::assertFalse($config['dark_mode_enabled']);
         self::assertFalse($config['disable_transitions']);
+        self::assertFalse($config['disable_page_interaction']);
         self::assertFalse($config['two_step_modal']);
         self::assertFalse($config['open_preferences_modal']);
         self::assertFalse($config['manage_iframe_placeholders']);
@@ -43,6 +44,8 @@ final class ConfigurationTest extends TestCase
         self::assertSame([], $config['cookie_inventory']);
         self::assertFalse($config['preferences_bubble_enabled']);
         self::assertSame('bottom-right', $config['preferences_bubble_position']);
+        self::assertNull($config['preferences_bubble_border_color']);
+        self::assertNull($config['preferences_bubble_icon']);
         self::assertSame([], $config['preference_sections']);
     }
 

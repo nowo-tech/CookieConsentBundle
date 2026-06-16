@@ -21,12 +21,15 @@ final class CmpUxOptionsResolver
      * @param string $colorTheme Default color theme from YAML
      * @param bool $darkModeEnabled Default dark mode flag from YAML
      * @param bool $disableTransitions Default transition flag from YAML
+     * @param bool $disablePageInteraction Default page-interaction lock flag from YAML
      * @param bool $twoStepModal Default two-step modal flag from YAML
      * @param bool $openPreferencesModal Default open-preferences flag from YAML
      * @param bool $manageIframePlaceholders Default iframe management flag from YAML
      * @param bool $granularCookieSelection Default granular selection flag from YAML
      * @param bool $preferencesBubbleEnabled Default bubble flag from YAML
      * @param string $preferencesBubblePosition Default bubble position from YAML
+     * @param string|null $preferencesBubbleBorderColor Default bubble border color from YAML
+     * @param string|null $preferencesBubbleIcon Default bubble icon markup from YAML
      * @param list<array<string, mixed>> $yamlPreferenceSections Preference sections from YAML
      * @param bool $useDatabaseConfig Whether database-backed config is enabled
      */
@@ -35,12 +38,15 @@ final class CmpUxOptionsResolver
         private readonly string $colorTheme,
         private readonly bool $darkModeEnabled,
         private readonly bool $disableTransitions,
+        private readonly bool $disablePageInteraction,
         private readonly bool $twoStepModal,
         private readonly bool $openPreferencesModal,
         private readonly bool $manageIframePlaceholders,
         private readonly bool $granularCookieSelection,
         private readonly bool $preferencesBubbleEnabled,
         private readonly string $preferencesBubblePosition,
+        private readonly ?string $preferencesBubbleBorderColor,
+        private readonly ?string $preferencesBubbleIcon,
         private readonly array $yamlPreferenceSections,
         private readonly bool $useDatabaseConfig,
     ) {
@@ -80,6 +86,18 @@ final class CmpUxOptionsResolver
         $config = $this->getDatabaseConfig();
 
         return $config instanceof CookieConsentConfig ? $config->isDisableTransitions() : $this->disableTransitions;
+    }
+
+    /**
+     * Returns whether page interaction is blocked until consent is given.
+     *
+     * @return bool True when a full-page overlay and scroll lock are applied
+     */
+    public function isDisablePageInteraction(): bool
+    {
+        $config = $this->getDatabaseConfig();
+
+        return $config instanceof CookieConsentConfig ? $config->isDisablePageInteraction() : $this->disablePageInteraction;
     }
 
     /**
@@ -154,6 +172,46 @@ final class CmpUxOptionsResolver
         return $config instanceof CookieConsentConfig
             ? $config->getPreferencesBubblePosition()
             : $this->preferencesBubblePosition;
+    }
+
+    /**
+     * Returns the hex color used for the preferences bubble border and icon.
+     *
+     * @return string|null A hex color or null to use the bundle default
+     */
+    public function getPreferencesBubbleBorderColor(): ?string
+    {
+        $config = $this->getDatabaseConfig();
+
+        if ($config instanceof CookieConsentConfig) {
+            $color = $config->getPreferencesBubbleBorderColor();
+
+            if ($color !== null && $color !== '') {
+                return $color;
+            }
+        }
+
+        return $this->preferencesBubbleBorderColor;
+    }
+
+    /**
+     * Returns custom HTML/SVG markup for the preferences bubble icon.
+     *
+     * @return string|null Sanitized icon markup or null to use the bundle default
+     */
+    public function getPreferencesBubbleIcon(): ?string
+    {
+        $config = $this->getDatabaseConfig();
+
+        if ($config instanceof CookieConsentConfig) {
+            $icon = $config->getPreferencesBubbleIcon();
+
+            if ($icon !== null && $icon !== '') {
+                return $icon;
+            }
+        }
+
+        return $this->preferencesBubbleIcon;
     }
 
     /**

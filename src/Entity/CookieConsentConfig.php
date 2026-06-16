@@ -9,6 +9,7 @@ use Doctrine\Common\Collections\Collection;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 use InvalidArgumentException;
+use Nowo\CookieConsentBundle\Config\PreferencesBubbleIconSanitizer;
 use Nowo\CookieConsentBundle\Repository\CookieConsentConfigRepository;
 
 use function in_array;
@@ -185,6 +186,12 @@ class CookieConsentConfig
 
     #[ORM\Column(name: 'preferences_bubble_position', length: 20, options: ['default' => 'bottom-right'])]
     private string $preferencesBubblePosition = self::PREFERENCES_BUBBLE_POSITION_BOTTOM_RIGHT;
+
+    #[ORM\Column(name: 'preferences_bubble_border_color', length: 7, nullable: true)]
+    private ?string $preferencesBubbleBorderColor = null;
+
+    #[ORM\Column(name: 'preferences_bubble_icon', type: Types::TEXT, nullable: true)]
+    private ?string $preferencesBubbleIcon = null;
 
     /** @var Collection<int, CookieConsentConfigTranslation> */
     #[ORM\OneToMany(targetEntity: CookieConsentConfigTranslation::class, mappedBy: 'config', cascade: ['persist', 'remove'], orphanRemoval: true)]
@@ -1235,6 +1242,59 @@ class CookieConsentConfig
         }
 
         $this->preferencesBubblePosition = $preferencesBubblePosition;
+
+        return $this;
+    }
+
+    /**
+     * Returns the hex color used for the preferences bubble border and icon.
+     *
+     * @return string|null A hex color such as #30363c, or null to use the default
+     */
+    public function getPreferencesBubbleBorderColor(): ?string
+    {
+        return $this->preferencesBubbleBorderColor;
+    }
+
+    /**
+     * Sets the hex color used for the preferences bubble border and icon.
+     *
+     * @param string|null $preferencesBubbleBorderColor A hex color or null for the default
+     *
+     * @return self Fluent interface
+     */
+    public function setPreferencesBubbleBorderColor(?string $preferencesBubbleBorderColor): self
+    {
+        if ($preferencesBubbleBorderColor !== null && $preferencesBubbleBorderColor !== ''
+            && !preg_match('/^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/', $preferencesBubbleBorderColor)) {
+            throw new InvalidArgumentException(sprintf('Invalid preferences bubble border color "%s".', $preferencesBubbleBorderColor));
+        }
+
+        $this->preferencesBubbleBorderColor = $preferencesBubbleBorderColor === '' ? null : $preferencesBubbleBorderColor;
+
+        return $this;
+    }
+
+    /**
+     * Returns custom HTML/SVG markup for the preferences bubble icon.
+     *
+     * @return string|null Sanitized icon markup or null to use the bundle default
+     */
+    public function getPreferencesBubbleIcon(): ?string
+    {
+        return $this->preferencesBubbleIcon;
+    }
+
+    /**
+     * Sets custom HTML/SVG markup for the preferences bubble icon.
+     *
+     * @param string|null $preferencesBubbleIcon Raw SVG/HTML or null for the default icon
+     *
+     * @return self Fluent interface
+     */
+    public function setPreferencesBubbleIcon(?string $preferencesBubbleIcon): self
+    {
+        $this->preferencesBubbleIcon = PreferencesBubbleIconSanitizer::sanitize($preferencesBubbleIcon);
 
         return $this;
     }
