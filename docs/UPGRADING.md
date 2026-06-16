@@ -23,6 +23,42 @@ If you switch `ui_theme` from `bootstrap` to `tailwind` (or vice versa):
 2. Load the matching CSS framework in your layout (Bootstrap 5 or Tailwind)
 3. Override the correct Twig templates (see the theme table in [CONFIGURATION.md](CONFIGURATION.md))
 
+## To 1.2.0
+
+```bash
+composer update nowo-tech/cookie-consent-bundle
+php bin/console cache:clear
+php bin/console assets:install
+```
+
+Minor release: page interaction overlay, bundle profile settings admin, and preferences bubble customization. **No breaking changes** for existing integrations.
+
+### New optional configuration
+
+| Option | Default | Purpose |
+| --- | --- | --- |
+| `disable_page_interaction` | `false` | Full-page overlay and scroll lock until consent |
+| `preferences_bubble_border_color` | `null` | Hex color for bubble outline and default SVG icon |
+| `preferences_bubble_icon` | `null` | Custom HTML/SVG for bubble icon; empty = default cookie SVG |
+
+When `use_database_config: true`, new columns on `CookieConsentConfig` include `disable_page_interaction` (if not already present), `preferences_bubble_border_color`, and `preferences_bubble_icon`. Apply Doctrine migrations or `schema:update`.
+
+### Profile settings admin
+
+Import bundle routes to expose `/cookie-consent-config/{id}/settings` (`CookieConsentConfigSettingsAdminController`). The demo already wires this under its admin shell. See [USAGE.md](USAGE.md).
+
+### Frontend assets
+
+Reinstall public assets — bubble styling and modal positioning fixes require the updated CSS bundled in `nowo-consent-modal.js` build output:
+
+```bash
+php bin/console assets:install
+```
+
+### Breaking changes
+
+None.
+
 ## To 1.1.1
 
 ```bash

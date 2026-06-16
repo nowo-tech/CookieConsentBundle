@@ -8,8 +8,6 @@ Symfony bundle that renders a GDPR cookie consent modal with category toggles, o
 
 Frontend behavior is implemented in TypeScript and built with Vite (`make assets` → `src/Resources/public/nowo-consent-modal.js`).
 
-Extracted and modernized from the [podologiapriego.com](https://github.com) implementation (FatalNetwork/ConnectHolland CookieConsentBundle fork).
-
 ## Documentation
 
 - [Installation](docs/INSTALLATION.md)

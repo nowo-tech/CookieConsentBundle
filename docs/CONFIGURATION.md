@@ -9,6 +9,7 @@
 - [Database configuration](#database-configuration)
 - [Cookie inventory](#cookie-inventory)
 - [Granular cookie selection](#granular-cookie-selection)
+- [Page interaction overlay](#page-interaction-overlay)
 - [Preferences bubble](#preferences-bubble)
 - [Config API (GET)](#config-api-get)
 - [Twig overrides](#twig-overrides)
@@ -40,6 +41,8 @@ nowo_cookie_consent:
     # Floating cookie icon button to reopen preferences (any corner)
     preferences_bubble_enabled: false
     preferences_bubble_position: bottom-right   # bottom-left | top-right | top-left
+    # preferences_bubble_border_color: null     # hex, e.g. #30363c — bubble outline and SVG icon color
+    # preferences_bubble_icon: null             # custom HTML/SVG; empty = default cookie SVG
 
     # Fetch modal settings from GET /cookie-consent/config in the browser
     fetch_config_via_api: false
@@ -71,6 +74,9 @@ nowo_cookie_consent:
         - ca
     ui_theme: bootstrap   # bootstrap (default) or tailwind
     detect_locale_from_accept_language: true
+
+    # Full-page overlay and scroll lock until the user chooses an option
+    disable_page_interaction: false
 ```
 
 ## Table prefix
@@ -156,6 +162,21 @@ When `use_database_config` is `true`, the bundle loads copy and display settings
 Tables: `nowo_cookie_consent_config` and `nowo_cookie_consent_config_translation` (with optional `table_prefix`).
 
 The Symfony 8 demo enables this option and provides an admin CRUD at `/demo/admin/cookie-consent-config`.
+
+### Page overlay (per profile)
+
+Enable the full-page overlay and scroll lock per consent profile:
+
+1. Set `use_database_config: true` in `config/packages/nowo_cookie_consent.yaml`.
+2. Open profile settings in the admin UI:
+   - **Bundle admin** (import bundle routes): `/cookie-consent-config/{id}/settings` — route `nowo_cookie_consent_config_settings_edit`
+   - **Symfony 8 demo**: **Admin → Cookie consent config → profile → Settings**
+3. In **Appearance**, enable **Disable page interaction** (`disablePageInteraction`).
+4. Adjust overlay intensity with **Color theme** on the same screen (`--nowo-cc-overlay` in CSS).
+
+The bundle ships `CookieConsentConfigSettingsType`, `CookieConsentConfigSettingsAdminController`, and Bootstrap templates under `@NowoCookieConsentBundle/admin/config/`. Wire routes via `@NowoCookieConsentBundle/Resources/config/routing.yaml` (same as cookie inventory admin).
+
+The database value overrides the global YAML default when both are set. Twig helper: `nowo_cookie_consent_disable_page_interaction()`.
 
 ## Cookie inventory
 
@@ -251,6 +272,21 @@ Per-cookie consent is stored in the consent cookie JSON map. Check programmatica
 $cookieChecker->isCookieAllowedByUser('_ga', 'analytics');
 ```
 
+## Page interaction overlay
+
+When `disable_page_interaction` is `true`, the modal adds a full-page overlay and blocks scrolling until the visitor accepts, rejects, or saves preferences.
+
+Enable globally in YAML (works without Doctrine):
+
+```yaml
+nowo_cookie_consent:
+    disable_page_interaction: true
+```
+
+With `use_database_config: true`, the active `CookieConsentConfig` profile overrides the YAML default via `disablePageInteraction`.
+
+Overlay opacity follows the active `color_theme` (`--nowo-cc-overlay` CSS variable). Twig helper: `nowo_cookie_consent_disable_page_interaction()`.
+
 ## Preferences bubble
 
 When `preferences_bubble_enabled` is `true`, the bundle renders a fixed circular button with a cookie icon. It uses the same `data-nowo-open-consent` handler as manual “Cookie settings” links and opens the preferences step of the modal.
@@ -265,7 +301,9 @@ Keep the modal in the DOM after consent is saved:
 
 Position with `preferences_bubble_position`: `bottom-right` (default), `bottom-left`, `top-right`, or `top-left`.
 
-With `use_database_config`, configure per profile via `CookieConsentConfig::preferencesBubbleEnabled` and `preferencesBubblePosition`.
+Set `preferences_bubble_border_color` (hex, e.g. `#60fed2`) for the transparent bubble outline and cookie icon. With `use_database_config: true`, configure per profile via `CookieConsentConfig::preferencesBubbleBorderColor` in the admin settings form.
+
+Set `preferences_bubble_icon` to custom SVG or HTML markup (e.g. an emoji wrapped in a `<span>`). With `use_database_config: true`, configure per profile via `CookieConsentConfig::preferencesBubbleIcon` in the admin settings form. Leave empty to use the default cookie SVG.
 
 Twig helpers:
 
@@ -281,7 +319,7 @@ When `two_step_modal` is enabled on the profile, the preferences step includes a
 
 ## Config API (GET)
 
-When `fetch_config_via_api` is `true`, the bundle exposes JSON endpoints compatible with the podologiapriego flow:
+When `fetch_config_via_api` is `true`, the bundle exposes JSON endpoints for client-side modal configuration:
 
 | Route | Path |
 | --- | --- |
@@ -340,6 +378,7 @@ Controllers and Twig use logical names such as `@NowoCookieConsentBundle/cookie_
 | `form/cookie_consent_theme.html.twig` | Symfony form theme for consent fields (Bootstrap) |
 | `form/cookie_consent_theme.tailwind.html.twig` | Form theme (Tailwind) |
 | `cookie_consent_preferences_bubble.html.twig` | Floating “cookie settings” bubble button |
+| `_preferences_bubble_icon_default.html.twig` | Default cookie SVG for the preferences bubble |
 | `cookie_consent_manage_link.html.twig` | Inline link to reopen preferences |
 | `_category_cookie_table.html.twig` | Per-category cookie inventory table (granular mode) |
 | `_preference_sections.html.twig` | Preferences step category blocks |
@@ -349,6 +388,8 @@ Controllers and Twig use logical names such as `@NowoCookieConsentBundle/cookie_
 | `admin/cookie_definition/index.html.twig` | Cookie definition list |
 | `admin/cookie_definition/form.html.twig` | Create/edit cookie definition form |
 | `admin/cookie_definition/_table.html.twig` | Admin list table partial |
+| `admin/config/layout.html.twig` | Profile settings admin layout shell |
+| `admin/config/settings.html.twig` | Profile settings form (overlay, theme, bubble, layout) |
 
 Theme selection follows `ui_theme` (`bootstrap` or `tailwind`); override the modal and form theme rows that match your active theme.
 
@@ -363,7 +404,10 @@ See also [UI theme](#ui-theme) for theme-specific override paths.
 - `nowo_cookie_consent_locale()`
 - `nowo_cookie_consent_cookie_inventory()`
 - `nowo_cookie_consent_granular_cookie_selection()`
+- `nowo_cookie_consent_disable_page_interaction()`
 - `nowo_cookie_consent_should_embed_modal()`
 - `nowo_cookie_consent_preferences_bubble_enabled()`
 - `nowo_cookie_consent_preferences_bubble_position()`
+- `nowo_cookie_consent_preferences_bubble_border_color()`
+- `nowo_cookie_consent_preferences_bubble_icon()`
 - `nowo_cookie_consent_two_step_modal()`

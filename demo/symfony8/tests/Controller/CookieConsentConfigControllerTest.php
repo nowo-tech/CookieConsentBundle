@@ -167,6 +167,26 @@ final class CookieConsentConfigControllerTest extends WebTestCase
         self::assertSelectorTextNotContains('body', 'nowo_cookie_consent.enabled.title');
     }
 
+    public function testDisablePageInteractionCanBeEnabledFromSettings(): void
+    {
+        $client = static::createClient();
+        $this->ensureDatabaseSchema($client);
+        $configId = $this->getDefaultConfigId($client);
+
+        $client->request('GET', sprintf('/en/demo/admin/cookie-consent-config/%d/settings', $configId));
+        self::assertResponseIsSuccessful();
+
+        $client->submitForm('Save settings', $this->buildSettingsFormData([
+            'cookie_consent_config_settings[disablePageInteraction]' => '1',
+        ]));
+
+        self::assertResponseRedirects(sprintf('/en/demo/admin/cookie-consent-config/%d', $configId));
+
+        $client->request('GET', '/en/');
+        self::assertResponseIsSuccessful();
+        self::assertSelectorExists('#cookieconsent[data-nowo-disable-page-interaction="true"]');
+    }
+
     public function testColorThemeCanBeChangedToLight(): void
     {
         $client = static::createClient();

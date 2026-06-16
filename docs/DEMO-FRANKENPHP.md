@@ -24,7 +24,7 @@ Demos use:
 - **Two Caddyfiles**: `Caddyfile` (production, with worker) and `Caddyfile.dev` (development, no worker)
 - An **entrypoint** that copies `Caddyfile.dev` when `APP_ENV=dev`
 
-There are two Symfony 8 demos:
+There are two Symfony 8.1 demos:
 
 | Demo | UI theme | Default port |
 | --- | --- | --- |

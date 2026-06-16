@@ -6,7 +6,6 @@ namespace Nowo\CookieConsentBundle\Controller;
 
 use Nowo\CookieConsentBundle\Config\CookieConsentConfigResolver;
 use Nowo\CookieConsentBundle\Config\ResolvedCookieConsentConfig;
-use Nowo\CookieConsentBundle\Cookie\CookieChecker;
 use Nowo\CookieConsentBundle\Form\CookieConsentType;
 use Nowo\CookieConsentBundle\Locale\LocaleResolver;
 use Symfony\Component\Form\FormFactoryInterface;
@@ -35,7 +34,6 @@ class CookieConsentController
     public function __construct(
         private readonly Environment $twigEnvironment,
         private readonly FormFactoryInterface $formFactory,
-        private readonly CookieChecker $cookieChecker,
         private readonly RouterInterface $router,
         private readonly LocaleResolver $localeResolver,
         private readonly RequestStack $requestStack,
