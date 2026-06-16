@@ -205,7 +205,7 @@ final class CookieConsentTwigExtensionTest extends TestCase
             $useDatabaseConfig,
             $fetchConfigViaApi,
             $disabledRoutes,
-            new CmpUxOptionsResolver($stack, 'light', false, false, false, false, false, false, false, 'bottom-right', [], $useDatabaseConfig),
+            new CmpUxOptionsResolver($stack, 'light', false, false, false, false, false, false, false, false, 'bottom-right', null, null, [], $useDatabaseConfig),
             new CookieInventoryProvider($this->createMock(CookieDefinitionRepository::class), false, []),
         );
     }

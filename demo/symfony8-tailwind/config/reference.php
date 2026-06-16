@@ -78,6 +78,7 @@ use Symfony\Component\Config\Loader\ParamConfigurator as Param;
  *     tags?: TagsType,
  *     resource_tags?: TagsType,
  *     decorates?: string,
+ *     decorates_tag?: string,
  *     decoration_inner_name?: string,
  *     decoration_priority?: int,
  *     decoration_on_invalid?: 'exception'|'ignore'|null,
@@ -118,6 +119,11 @@ use Symfony\Component\Config\Loader\ParamConfigurator as Param;
  *     stack: list<DefinitionType|AliasType|PrototypeType|array<class-string, ArgumentsType|null>>,
  *     public?: bool,
  *     deprecated?: DeprecationType,
+ *     decorates?: string,
+ *     decorates_tag?: string,
+ *     decoration_inner_name?: string,
+ *     decoration_priority?: int,
+ *     decoration_on_invalid?: 'exception'|'ignore'|null,
  * }
  * @psalm-type ServicesConfig = array{
  *     _defaults?: DefaultsType,
@@ -168,7 +174,7 @@ use Symfony\Component\Config\Loader\ParamConfigurator as Param;
  *         allow_revalidate?: bool|Param,
  *         stale_while_revalidate?: int|Param,
  *         stale_if_error?: int|Param,
- *         terminate_on_cache_hit?: bool|Param,
+ *         terminate_on_cache_hit?: bool|Param, // Deprecated: Setting the "framework.http_cache.terminate_on_cache_hit.terminate_on_cache_hit" configuration option is deprecated. It will be removed in version 9.0.
  *     },
  *     esi?: bool|array{ // ESI configuration
  *         enabled?: bool|Param, // Default: false
@@ -188,7 +194,7 @@ use Symfony\Component\Config\Loader\ParamConfigurator as Param;
  *         only_exceptions?: bool|Param, // Default: false
  *         only_main_requests?: bool|Param, // Default: false
  *         dsn?: scalar|Param|null, // Default: "file:%kernel.cache_dir%/profiler"
- *         collect_serializer_data?: true|Param, // Default: true
+ *         collect_serializer_data?: true|Param, // Deprecated: Setting the "framework.profiler.collect_serializer_data.collect_serializer_data" configuration option is deprecated. It will be removed in version 9.0. // Default: true
  *     },
  *     workflows?: bool|array{
  *         enabled?: bool|Param, // Default: false
@@ -340,6 +346,7 @@ use Symfony\Component\Config\Loader\ParamConfigurator as Param;
  *             endpoint?: scalar|Param|null, // API endpoint for the NotCompromisedPassword Validator. // Default: null
  *         },
  *         disable_translation?: bool|Param, // Default: false
+ *         property_metadata_existence_check?: bool|Param, // When enabled, validateProperty() and validatePropertyValue() throw an exception if no metadata is found for the given property. // Default: false
  *         auto_mapping?: array<string, array{ // Default: []
  *             services?: list<scalar|Param|null>,
  *         }>,
@@ -396,6 +403,7 @@ use Symfony\Component\Config\Loader\ParamConfigurator as Param;
  *             provider?: scalar|Param|null, // Overwrite the setting from the default provider for this adapter.
  *             early_expiration_message_bus?: scalar|Param|null,
  *             clearer?: scalar|Param|null,
+ *             marshaller?: scalar|Param|null, // The marshaller service to use for this pool.
  *         }>,
  *     },
  *     php_errors?: array{ // PHP errors handling configuration
@@ -420,9 +428,7 @@ use Symfony\Component\Config\Loader\ParamConfigurator as Param;
  *     },
  *     messenger?: bool|array{ // Messenger configuration
  *         enabled?: bool|Param, // Default: false
- *         routing?: array<string, string|array{ // Default: []
- *             senders?: list<scalar|Param|null>,
- *         }>,
+ *         routing?: array<string, string|list<scalar|Param|null>>,
  *         serializer?: array{
  *             default_serializer?: scalar|Param|null, // Service id to use as the default serializer for the transports. // Default: "messenger.transport.native_php_serializer"
  *             symfony_serializer?: array{
@@ -498,7 +504,7 @@ use Symfony\Component\Config\Loader\ParamConfigurator as Param;
  *                 enabled?: bool|Param, // Default: false
  *                 cache_pool?: string|Param, // The taggable cache pool to use for storing the responses. // Default: "cache.http_client"
  *                 shared?: bool|Param, // Indicates whether the cache is shared (public) or private. // Default: true
- *                 max_ttl?: int|Param, // The maximum TTL (in seconds) allowed for cached responses. Null means no cap. // Default: null
+ *                 max_ttl?: int|Param, // The maximum TTL (in seconds) allowed for cached responses. // Default: 86400
  *             },
  *             retry_failed?: bool|array{
  *                 enabled?: bool|Param, // Default: false
@@ -514,7 +520,7 @@ use Symfony\Component\Config\Loader\ParamConfigurator as Param;
  *                 jitter?: float|Param, // Randomness in percent (between 0 and 1) to apply to the delay. // Default: 0.1
  *             },
  *         },
- *         mock_response_factory?: scalar|Param|null, // The id of the service that should generate mock responses. It should be either an invokable or an iterable.
+ *         mock_response_factory?: scalar|Param|null, // `true` to always return empty 200 responses, or the id of the service to use to generate mock responses - which should be either an invokable or an iterable.
  *         scoped_clients?: array<string, string|array{ // Default: []
  *             scope?: scalar|Param|null, // The regular expression that the request URL must match before adding the other options. When none is provided, the base URI is used instead.
  *             base_uri?: scalar|Param|null, // The URI to resolve relative URLs, following rules in RFC 3985, section 2.
@@ -545,13 +551,14 @@ use Symfony\Component\Config\Loader\ParamConfigurator as Param;
  *                 md5?: mixed,
  *             },
  *             crypto_method?: scalar|Param|null, // The minimum version of TLS to accept; must be one of STREAM_CRYPTO_METHOD_TLSv*_CLIENT constants.
+ *             mock_response_factory?: scalar|Param|null, // `true` to always return empty 200 responses, `false` to disable mocking, or the id of the service to use to generate mock responses (invokable or iterable).
  *             extra?: array<string, mixed>,
  *             rate_limiter?: scalar|Param|null, // Rate limiter name to use for throttling requests. // Default: null
  *             caching?: bool|array{ // Caching configuration.
  *                 enabled?: bool|Param, // Default: false
  *                 cache_pool?: string|Param, // The taggable cache pool to use for storing the responses. // Default: "cache.http_client"
  *                 shared?: bool|Param, // Indicates whether the cache is shared (public) or private. // Default: true
- *                 max_ttl?: int|Param, // The maximum TTL (in seconds) allowed for cached responses. Null means no cap. // Default: null
+ *                 max_ttl?: int|Param, // The maximum TTL (in seconds) allowed for cached responses. // Default: 86400
  *             },
  *             retry_failed?: bool|array{
  *                 enabled?: bool|Param, // Default: false
@@ -635,6 +642,7 @@ use Symfony\Component\Config\Loader\ParamConfigurator as Param;
  *                 interval?: scalar|Param|null, // Configures the rate interval. The value must be a number followed by "second", "minute", "hour", "day", "week" or "month" (or their plural equivalent).
  *                 amount?: int|Param, // Amount of tokens to add each interval. // Default: 1
  *             },
+ *             anchor_at?: scalar|Param|null, // Aligns the "fixed_window" policy to a calendar (e.g. "2024-01-05 00:00:00 UTC" combined with `interval: 1 month` resets the counter on the 5th of each month). UTC if not specified. // Default: null
  *         }>,
  *     },
  *     uid?: bool|array{ // Uid configuration
@@ -644,10 +652,12 @@ use Symfony\Component\Config\Loader\ParamConfigurator as Param;
  *         name_based_uuid_namespace?: scalar|Param|null,
  *         time_based_uuid_version?: 7|6|1|Param, // Default: 7
  *         time_based_uuid_node?: scalar|Param|null,
+ *         uuid47_secret?: scalar|Param|null, // A high-entropy secret used by the "uuid47_transformer" service. Defaults to "kernel.secret". // Default: null
  *     },
  *     html_sanitizer?: bool|array{ // HtmlSanitizer configuration
  *         enabled?: bool|Param, // Default: false
  *         sanitizers?: array<string, array{ // Default: []
+ *             default_action?: "drop"|"block"|"allow"|Param, // Defines how the sanitizer must behave by default.
  *             allow_safe_elements?: bool|Param, // Allows "safe" elements and attributes. // Default: false
  *             allow_static_elements?: bool|Param, // Allows all static elements and attributes from the W3C Sanitizer API standard. // Default: false
  *             allow_elements?: array<string, mixed>,
@@ -671,6 +681,10 @@ use Symfony\Component\Config\Loader\ParamConfigurator as Param;
  *     webhook?: bool|array{ // Webhook configuration
  *         enabled?: bool|Param, // Default: false
  *         message_bus?: scalar|Param|null, // The message bus to use. // Default: "messenger.default_bus"
+ *         event_header_name?: scalar|Param|null, // Default: "Webhook-Event"
+ *         id_header_name?: scalar|Param|null, // Default: "Webhook-Id"
+ *         signature_header_name?: scalar|Param|null, // Default: "Webhook-Signature"
+ *         signing_algorithm?: scalar|Param|null, // Default: "sha256"
  *         routing?: array<string, array{ // Default: []
  *             service?: scalar|Param|null,
  *             secret?: scalar|Param|null, // Default: ""
@@ -681,6 +695,10 @@ use Symfony\Component\Config\Loader\ParamConfigurator as Param;
  *     },
  *     json_streamer?: bool|array{ // JSON streamer configuration
  *         enabled?: bool|Param, // Default: false
+ *         default_options?: array{
+ *             include_null_properties?: bool|Param, // Encode the properties with null value // Default: false
+ *             ...<string, mixed>
+ *         },
  *     },
  * }
  * @psalm-type TwigConfig = array{
@@ -943,6 +961,20 @@ use Symfony\Component\Config\Loader\ParamConfigurator as Param;
  *     categories?: mixed, // Cookie categories shown in the consent modal (excluding "required"). // Default: ["analytics","marketing","preferences"]
  *     use_logger?: bool|Param, // Persist consent choices to the database when true. // Default: true
  *     use_database_config?: bool|Param, // Load modal copy and display settings from CookieConsentConfig entities when true. // Default: false
+ *     use_cookie_inventory?: bool|Param, // Expose cookie definitions (name, category/block, duration, provider, purpose) in the preferences modal and legal pages. // Default: false
+ *     cookie_inventory?: list<array{ // Default: []
+ *         name?: scalar|Param|null,
+ *         duration?: scalar|Param|null, // Default: ""
+ *         category?: scalar|Param|null, // Default: "required"
+ *         type?: scalar|Param|null, // Default: "first_party"
+ *         sort_order?: int|Param, // Default: 0
+ *         provider?: scalar|Param|null, // Default: null
+ *         purpose?: scalar|Param|null, // Default: null
+ *         translations?: list<array{ // Default: []
+ *             provider?: scalar|Param|null, // Default: ""
+ *             purpose?: scalar|Param|null, // Default: ""
+ *         }>,
+ *     }>,
  *     fetch_config_via_api?: bool|Param, // Expose GET /cookie-consent/config and let the frontend script load settings via fetch(). // Default: false
  *     http_only?: bool|Param, // Set HttpOnly flag on consent cookies. // Default: true
  *     form_action?: scalar|Param|null, // Optional route name used as the form action URL. // Default: null
@@ -954,6 +986,16 @@ use Symfony\Component\Config\Loader\ParamConfigurator as Param;
  *     enabled_locales?: mixed, // Locales supported by the cookie consent UI and locale detection. // Default: ["en","es","it","fr","de","pt","nl","pl","ca"]
  *     detect_locale_from_accept_language?: bool|Param, // Use the Accept-Language request header when no explicit locale is available. // Default: true
  *     ui_theme?: "bootstrap"|"tailwind"|Param, // UI framework used by the bundled cookie consent modal templates. // Default: "bootstrap"
+ *     color_theme?: "light"|"dark"|"dark-turquoise"|"light-funky"|"elegant-black"|Param, // Default: "light"
+ *     dark_mode_enabled?: bool|Param, // Default: false
+ *     disable_transitions?: bool|Param, // Default: false
+ *     two_step_modal?: bool|Param, // Default: false
+ *     open_preferences_modal?: bool|Param, // Default: false
+ *     manage_iframe_placeholders?: bool|Param, // Default: false
+ *     granular_cookie_selection?: bool|Param, // When true, optional cookies can be toggled individually inside each category block. // Default: false
+ *     preferences_bubble_enabled?: bool|Param, // Shows a floating cookie icon button to reopen the preferences modal after consent is saved. // Default: false
+ *     preferences_bubble_position?: "bottom-right"|"bottom-left"|"top-right"|"top-left"|Param, // Screen corner for the floating preferences bubble. // Default: "bottom-right"
+ *     preference_sections?: mixed, // Default: []
  * }
  * @psalm-type NowoTwigInspectorConfig = array{
  *     enabled_extensions?: list<scalar|Param|null>,

@@ -9,7 +9,7 @@
 {% endblock %}
 
 <div id="cookieconsent"
-     class="nowo-cookie-consent fixed inset-0 z-50 hidden items-center justify-center p-4{% if two_step %} nowo-cookie-consent--two-step{% endif %}"
+     class="nowo-cookie-consent fixed inset-0 z-50 hidden p-4{% if two_step %} nowo-cookie-consent--two-step{% endif %}"
      tabindex="-1"
      data-nowo-ui-theme="tailwind"
      data-nowo-open="{{ nowo_cookie_consent_is_open_by_default(app.request.attributes.get('_route'), disabled_routes) }}"
@@ -18,6 +18,7 @@
      data-nowo-color-theme="{{ nowo_cookie_consent_color_theme() }}"
      data-nowo-dark-mode="{{ nowo_cookie_consent_dark_mode() ? 'true' : 'false' }}"
      data-nowo-disable-transitions="{{ nowo_cookie_consent_disable_transitions() ? 'true' : 'false' }}"
+     data-nowo-disable-page-interaction="{{ nowo_cookie_consent_disable_page_interaction() ? 'true' : 'false' }}"
      data-nowo-manage-iframe-placeholders="{{ nowo_cookie_consent_manage_iframe_placeholders() ? 'true' : 'false' }}"
      {% if config_api_url %}
          data-nowo-config-url="{{ config_api_url }}"
@@ -35,7 +36,6 @@
          data-nowo-preferences-position-x="{{ ui.preferencesModalPositionX ?? '' }}"
          data-nowo-preferences-equal-weight-buttons="{{ ui.preferencesModalEqualWeightButtons ? 'true' : 'false' }}"
          data-nowo-preferences-flip-buttons="{{ ui.preferencesModalFlipButtons ? 'true' : 'false' }}"
-         data-nowo-disable-page-interaction="{{ ui.disablePageInteraction ? 'true' : 'false' }}"
          data-nowo-revision="{{ ui.revision }}"
      {% endif %}
      aria-labelledby="nowoCookieConsentTitle"

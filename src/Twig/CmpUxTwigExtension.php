@@ -36,10 +36,13 @@ final class CmpUxTwigExtension extends AbstractExtension
             new TwigFunction('nowo_cookie_consent_color_theme', $this->getColorTheme(...)),
             new TwigFunction('nowo_cookie_consent_dark_mode', $this->isDarkModeEnabled(...)),
             new TwigFunction('nowo_cookie_consent_disable_transitions', $this->isDisableTransitions(...)),
+            new TwigFunction('nowo_cookie_consent_disable_page_interaction', $this->isDisablePageInteraction(...)),
             new TwigFunction('nowo_cookie_consent_manage_iframe_placeholders', $this->isManageIframePlaceholders(...)),
             new TwigFunction('nowo_cookie_consent_granular_cookie_selection', $this->isGranularCookieSelection(...)),
             new TwigFunction('nowo_cookie_consent_preferences_bubble_enabled', $this->isPreferencesBubbleEnabled(...)),
             new TwigFunction('nowo_cookie_consent_preferences_bubble_position', $this->getPreferencesBubblePosition(...)),
+            new TwigFunction('nowo_cookie_consent_preferences_bubble_border_color', $this->getPreferencesBubbleBorderColor(...)),
+            new TwigFunction('nowo_cookie_consent_preferences_bubble_icon', $this->getPreferencesBubbleIcon(...)),
             new TwigFunction('nowo_cookie_consent_preference_sections', $this->getPreferenceSections(...)),
         ];
     }
@@ -95,6 +98,16 @@ final class CmpUxTwigExtension extends AbstractExtension
     }
 
     /**
+     * Returns whether page interaction is blocked until consent is given.
+     *
+     * @return bool True when a full-page overlay and scroll lock are applied
+     */
+    public function isDisablePageInteraction(): bool
+    {
+        return $this->uxOptionsResolver->isDisablePageInteraction();
+    }
+
+    /**
      * Returns whether iframe placeholders are managed after consent.
      *
      * @return bool True when iframe activation is enabled
@@ -132,6 +145,26 @@ final class CmpUxTwigExtension extends AbstractExtension
     public function getPreferencesBubblePosition(): string
     {
         return $this->uxOptionsResolver->getPreferencesBubblePosition();
+    }
+
+    /**
+     * Returns the hex color used for the preferences bubble border and icon.
+     *
+     * @return string|null A hex color or null to use the bundle default
+     */
+    public function getPreferencesBubbleBorderColor(): ?string
+    {
+        return $this->uxOptionsResolver->getPreferencesBubbleBorderColor();
+    }
+
+    /**
+     * Returns custom HTML/SVG markup for the preferences bubble icon.
+     *
+     * @return string|null Sanitized icon markup or null to use the bundle default
+     */
+    public function getPreferencesBubbleIcon(): ?string
+    {
+        return $this->uxOptionsResolver->getPreferencesBubbleIcon();
     }
 
     /**

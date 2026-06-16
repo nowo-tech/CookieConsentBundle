@@ -1,0 +1,93 @@
+{% extends '@NowoCookieConsentBundle/admin/config/layout.html.twig' %}
+
+{% block title %}{{ 'nowo_cookie_consent.admin.config.settings.title'|trans({}, 'NowoCookieConsentBundle') }} — {{ config.displayName }}{% endblock %}
+
+{% block body %}
+    <div class="card shadow-sm">
+        <div class="card-body p-4">
+            <h1 class="h4 mb-2">
+                {{ 'nowo_cookie_consent.admin.config.settings.title'|trans({}, 'NowoCookieConsentBundle') }} — {{ config.displayName }}
+            </h1>
+
+            {% for label, messages in app.flashes %}
+                {% for message in messages %}
+                    <div class="alert alert-{{ label == 'success' ? 'success' : label }} mt-3 mb-0" role="alert">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            {% endfor %}
+
+            {% form_theme form 'bootstrap_5_layout.html.twig' %}
+            {{ form_start(form) }}
+                <section class="border rounded-3 p-3 p-md-4 mb-4 mt-4">
+                    <h2 class="h6 text-uppercase text-muted fw-semibold mb-1">{{ 'nowo_cookie_consent.admin.config.settings.section.profile'|trans({}, 'NowoCookieConsentBundle') }}</h2>
+                    <p class="small text-muted mb-3">{{ 'nowo_cookie_consent.admin.config.settings.section.profile_lead'|trans({}, 'NowoCookieConsentBundle') }}</p>
+                    {{ form_row(form.enabled) }}
+                    {{ form_row(form.name) }}
+                    {{ form_row(form.routePatternsText) }}
+                    {{ form_row(form.priority) }}
+                    {{ form_row(form.default) }}
+                </section>
+
+                <section class="border rounded-3 p-3 p-md-4 mb-4">
+                    <h2 class="h6 text-uppercase text-muted fw-semibold mb-1">{{ 'nowo_cookie_consent.admin.config.settings.section.behavior'|trans({}, 'NowoCookieConsentBundle') }}</h2>
+                    <p class="small text-muted mb-3">{{ 'nowo_cookie_consent.admin.config.settings.section.behavior_lead'|trans({}, 'NowoCookieConsentBundle') }}</p>
+                    {{ form_row(form.autoShow) }}
+                    {{ form_row(form.revision) }}
+                    {{ form_row(form.manageScriptTags) }}
+                    {{ form_row(form.autoClearCookies) }}
+                    {{ form_row(form.hideFromBots) }}
+                    {{ form_row(form.lazyHtmlGeneration) }}
+                    {{ form_row(form.manageIframePlaceholders) }}
+                    {{ form_row(form.granularCookieSelection) }}
+                    {{ form_row(form.preferencesBubbleEnabled) }}
+                    {{ form_row(form.preferencesBubblePosition) }}
+                    {{ form_row(form.preferencesBubbleBorderColor) }}
+                    {{ form_row(form.preferencesBubbleIcon) }}
+                </section>
+
+                <section class="border rounded-3 p-3 p-md-4 mb-4">
+                    <h2 class="h6 text-uppercase text-muted fw-semibold mb-1">{{ 'nowo_cookie_consent.admin.config.settings.section.appearance'|trans({}, 'NowoCookieConsentBundle') }}</h2>
+                    <p class="small text-muted mb-3">{{ 'nowo_cookie_consent.admin.config.settings.section.appearance_lead'|trans({}, 'NowoCookieConsentBundle') }}</p>
+                    {{ form_row(form.colorTheme) }}
+                    {{ form_row(form.disablePageInteraction) }}
+                    {{ form_row(form.darkModeEnabled) }}
+                    {{ form_row(form.disableTransitions) }}
+                    {{ form_row(form.twoStepModal) }}
+                    {{ form_row(form.openPreferencesModal) }}
+                </section>
+
+                <section class="border rounded-3 p-3 p-md-4 mb-4">
+                    <h2 class="h6 text-uppercase text-muted fw-semibold mb-1">{{ 'nowo_cookie_consent.admin.config.settings.section.consent_modal'|trans({}, 'NowoCookieConsentBundle') }}</h2>
+                    <p class="small text-muted mb-3">{{ 'nowo_cookie_consent.admin.config.settings.section.consent_modal_lead'|trans({}, 'NowoCookieConsentBundle') }}</p>
+                    {{ form_row(form.consentModalLayout) }}
+                    {{ form_row(form.consentModalVariant) }}
+                    {{ form_row(form.consentModalPositionY) }}
+                    {{ form_row(form.consentModalPositionX) }}
+                    {{ form_row(form.consentModalEqualWeightButtons) }}
+                    {{ form_row(form.consentModalFlipButtons) }}
+                </section>
+
+                <section class="border rounded-3 p-3 p-md-4 mb-4">
+                    <h2 class="h6 text-uppercase text-muted fw-semibold mb-1">{{ 'nowo_cookie_consent.admin.config.settings.section.preferences_modal'|trans({}, 'NowoCookieConsentBundle') }}</h2>
+                    <p class="small text-muted mb-3">{{ 'nowo_cookie_consent.admin.config.settings.section.preferences_modal_lead'|trans({}, 'NowoCookieConsentBundle') }}</p>
+                    {{ form_row(form.preferencesModalLayout) }}
+                    {{ form_row(form.preferencesModalVariant) }}
+                    {{ form_row(form.preferencesModalPositionY) }}
+                    {{ form_row(form.preferencesModalPositionX) }}
+                    {{ form_row(form.preferencesModalEqualWeightButtons) }}
+                    {{ form_row(form.preferencesModalFlipButtons) }}
+                </section>
+
+                <section class="border rounded-3 p-3 p-md-4 mb-4">
+                    <h2 class="h6 text-uppercase text-muted fw-semibold mb-1">{{ 'nowo_cookie_consent.admin.config.settings.section.route_targeting'|trans({}, 'NowoCookieConsentBundle') }}</h2>
+                    <p class="small text-muted mb-3">{{ 'nowo_cookie_consent.admin.config.settings.section.route_targeting_lead'|trans({}, 'NowoCookieConsentBundle') }}</p>
+                    {{ form_row(form.autoShowRouteMode) }}
+                    {{ form_row(form.autoShowRoutesText) }}
+                </section>
+
+                <button type="submit" class="btn btn-primary">{{ 'nowo_cookie_consent.admin.config.settings.save'|trans({}, 'NowoCookieConsentBundle') }}</button>
+            {{ form_end(form) }}
+        </div>
+    </div>
+{% endblock %}

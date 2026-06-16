@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Nowo\CookieConsentBundle\Tests\Integration;
 
 use Doctrine\DBAL\DriverManager;
+use Doctrine\ORM\Configuration;
 use Doctrine\ORM\EntityManager;
 use Doctrine\ORM\ORMSetup;
 use Doctrine\Persistence\ManagerRegistry;
@@ -13,8 +14,11 @@ use Nowo\CookieConsentBundle\Entity\CookieConsentConfigTranslation;
 use Nowo\CookieConsentBundle\Repository\CookieConsentConfigRepository;
 use Nowo\CookieConsentBundle\Repository\CookieConsentConfigTranslationRepository;
 use PHPUnit\Framework\TestCase;
+use RuntimeException;
 
 use function dirname;
+
+use const PHP_VERSION_ID;
 
 final class DoctrineRepositoryTest extends TestCase
 {
@@ -22,16 +26,40 @@ final class DoctrineRepositoryTest extends TestCase
 
     protected function setUp(): void
     {
+        $this->entityManager = $this->createEntityManager();
+
+        $schemaTool = new \Doctrine\ORM\Tools\SchemaTool($this->entityManager);
+        $schemaTool->createSchema($this->entityManager->getMetadataFactory()->getAllMetadata());
+    }
+
+    private function createEntityManager(): EntityManager
+    {
         $config = ORMSetup::createAttributeMetadataConfiguration(
             paths: [dirname(__DIR__, 2) . '/src/Entity'],
             isDevMode: true,
         );
 
-        $connection          = DriverManager::getConnection(['driver' => 'pdo_sqlite', 'memory' => true]);
-        $this->entityManager = new EntityManager($connection, $config);
+        $this->configureLazyLoading($config);
 
-        $schemaTool = new \Doctrine\ORM\Tools\SchemaTool($this->entityManager);
-        $schemaTool->createSchema($this->entityManager->getMetadataFactory()->getAllMetadata());
+        $connection = DriverManager::getConnection(['driver' => 'pdo_sqlite', 'memory' => true]);
+
+        return new EntityManager($connection, $config);
+    }
+
+    /**
+     * Symfony 8 removed LazyGhost helpers; PHP 8.4+ with Doctrine ORM 3.4+ must use native lazy objects.
+     */
+    private function configureLazyLoading(Configuration $config): void
+    {
+        if (PHP_VERSION_ID < 80400) {
+            return;
+        }
+
+        if (!method_exists($config, 'enableNativeLazyObjects')) {
+            throw new RuntimeException('Doctrine ORM 3.4+ is required on PHP 8.4+ for integration tests (missing enableNativeLazyObjects).');
+        }
+
+        $config->enableNativeLazyObjects(true);
     }
 
     public function testConfigRepositoryFinders(): void

@@ -48,6 +48,28 @@ The bundle provides `CookieDefinitionAdminController`, `CookieDefinitionType`, a
 
 The Symfony 8 demo implements a full CRUD at `/demo/admin/cookie-consent-config/{id}/cookies` with locale tabs for translations.
 
+## Profile settings admin (overlay, theme, layout)
+
+When `use_database_config: true`, edit `CookieConsentConfig` profiles with:
+
+- **Form:** `Nowo\CookieConsentBundle\Form\CookieConsentConfigSettingsType`
+- **Controller:** `CookieConsentConfigSettingsAdminController` — `GET/POST /cookie-consent-config/{configId}/settings`
+- **Template:** `@NowoCookieConsentBundle/admin/config/settings.html.twig`
+
+Import bundle routes (`config/routes/nowo_cookie_consent.yaml` → `@NowoCookieConsentBundle/Resources/config/routing.yaml`). Labels use the `NowoCookieConsentBundle` translation domain (`en` and `es` shipped; other locales fall back to English).
+
+Example in your controller:
+
+```php
+$form = $this->createForm(CookieConsentConfigSettingsType::class, $config);
+```
+
+The demo reuses this form with demo-specific route placeholders in its own admin shell. Bubble icon, border color, overlay, theme, and modal layout can all be edited from this screen when using database-backed config.
+
+## Preferences bubble icon
+
+When the bubble is enabled, set custom markup in the admin **Bubble icon (HTML/SVG)** field or via `CookieConsentConfig::setPreferencesBubbleIcon()`. SVG and simple HTML (e.g. an emoji in a `<span class="nowo-cookie-consent__preferences-bubble-emoji">`) are supported; dangerous markup is rejected server-side. Leave empty for the default cookie SVG.
+
 ## AJAX submission
 
 The bundled `nowo-consent-modal.js` (built from TypeScript via Vite) submits the form via `XMLHttpRequest` and dispatches `nowo-cookie-consent-form-submit-successful` on success.

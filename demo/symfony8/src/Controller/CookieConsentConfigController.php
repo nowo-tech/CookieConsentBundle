@@ -5,11 +5,11 @@ declare(strict_types=1);
 namespace App\Controller;
 
 use App\Demo\DemoLocale;
-use App\Form\CookieConsentConfigSettingsType;
 use App\Form\CookieConsentConfigTranslationType;
 use Doctrine\ORM\EntityManagerInterface;
 use Nowo\CookieConsentBundle\Entity\CookieConsentConfig;
 use Nowo\CookieConsentBundle\Entity\CookieConsentConfigTranslation;
+use Nowo\CookieConsentBundle\Form\CookieConsentConfigSettingsType;
 use Nowo\CookieConsentBundle\Repository\CookieConsentConfigRepository;
 use Nowo\CookieConsentBundle\Repository\CookieConsentConfigTranslationRepository;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -209,7 +209,13 @@ class CookieConsentConfigController extends AbstractController
             $entityManager->persist($config);
         }
 
-        $form = $this->createForm(CookieConsentConfigSettingsType::class, $config);
+        $form = $this->createForm(CookieConsentConfigSettingsType::class, $config, [
+            'translation_domain'           => 'messages',
+            'label_prefix'                 => 'demo.config.settings.fields.',
+            'choice_label_prefix'          => 'demo.config.settings.',
+            'route_patterns_placeholder'   => "demo_admin_*\ndemo_cookie_consent_config_*",
+            'auto_show_routes_placeholder' => "demo_home\ndemo_admin_*",
+        ]);
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {

@@ -60,14 +60,12 @@ jobs:
 
       - name: Install dependencies with Symfony ${{ matrix.symfony }}
         run: |
-          composer require symfony/framework-bundle:^${{ matrix.symfony }} symfony/form:^${{ matrix.symfony }} symfony/http-kernel:^${{ matrix.symfony }} symfony/routing:^${{ matrix.symfony }} symfony/translation:^${{ matrix.symfony }} symfony/twig-bundle:^${{ matrix.symfony }} --no-interaction --no-update
-          UPDATE_PACKAGES="symfony/*"
+          SYMFONY_PACKAGES="symfony/framework-bundle:^${{ matrix.symfony }} symfony/form:^${{ matrix.symfony }} symfony/http-kernel:^${{ matrix.symfony }} symfony/routing:^${{ matrix.symfony }} symfony/translation:^${{ matrix.symfony }} symfony/twig-bundle:^${{ matrix.symfony }}"
           if [[ "${{ matrix.symfony }}" == 8.* ]]; then
             # doctrine/doctrine-bundle 2.x supports Symfony only up to 7.x; Symfony 8 needs 3.2+ (PHP 8.4+).
-            composer require doctrine/doctrine-bundle:^3.2 doctrine/orm:^3.0 --no-interaction --no-update
-            UPDATE_PACKAGES="symfony/* doctrine/doctrine-bundle doctrine/orm"
+            SYMFONY_PACKAGES="${SYMFONY_PACKAGES} doctrine/doctrine-bundle:^3.2 doctrine/orm:^3.4 symfony/var-exporter:^${{ matrix.symfony }}"
           fi
-          composer update ${UPDATE_PACKAGES} --with-all-dependencies --no-interaction --prefer-dist --no-progress
+          composer update ${SYMFONY_PACKAGES} --with-all-dependencies --no-interaction --prefer-dist --no-progress
 
       - name: Run tests
         run: |
@@ -131,6 +129,12 @@ jobs:
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
           git add -A
+          git restore --staged composer.json composer.lock 2>/dev/null || true
+          git checkout -- composer.json composer.lock 2>/dev/null || true
+          if [ -z "$(git status --porcelain)" ]; then
+            echo "No PHP CS Fixer changes to commit (composer files excluded)."
+            exit 0
+          fi
           git commit -m "Apply PHP CS Fixer fixes [skip ci]"
           git push
 
@@ -173,8 +177,7 @@ jobs:
 
       - name: Install dependencies (Symfony 7.0)
         run: |
-          composer require symfony/framework-bundle:^7.0 symfony/form:^7.0 symfony/http-kernel:^7.0 symfony/routing:^7.0 symfony/translation:^7.0 symfony/twig-bundle:^7.0 --no-interaction --no-update
-          composer update symfony/* --with-all-dependencies --no-interaction --prefer-dist --no-progress
+          composer update symfony/framework-bundle:^7.0 symfony/form:^7.0 symfony/http-kernel:^7.0 symfony/routing:^7.0 symfony/translation:^7.0 symfony/twig-bundle:^7.0 --with-all-dependencies --no-interaction --prefer-dist --no-progress
 
       - name: Run tests with coverage
         run: |

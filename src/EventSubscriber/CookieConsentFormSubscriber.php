@@ -16,6 +16,7 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Event\ResponseEvent;
 use Symfony\Component\HttpKernel\KernelEvents;
 
+use function in_array;
 use function is_array;
 use function is_string;
 
@@ -111,7 +112,7 @@ class CookieConsentFormSubscriber implements EventSubscriberInterface
                 continue;
             }
 
-            $granular[$name] = $allowed === true || $allowed === 'true' || $allowed === '1' || $allowed === 1;
+            $granular[$name] = in_array($allowed, [true, 'true', '1', 1], true);
         }
 
         return $granular;

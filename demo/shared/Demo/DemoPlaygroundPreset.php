@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Demo;
 
+use Nowo\CookieConsentBundle\Config\PreferencesBubbleIconSanitizer;
 use Nowo\CookieConsentBundle\Entity\CookieConsentConfig;
 
 /**
@@ -25,6 +26,7 @@ final class DemoPlaygroundPreset
             ->setGranularCookieSelection(true)
             ->setPreferencesBubbleEnabled(true)
             ->setPreferencesBubblePosition(CookieConsentConfig::PREFERENCES_BUBBLE_POSITION_BOTTOM_RIGHT)
+            ->setPreferencesBubbleIcon(PreferencesBubbleIconSanitizer::DEMO_EMOJI_ICON_HTML)
             ->setManageScriptTags(true)
             ->setAutoClearCookies(true)
             ->setDisablePageInteraction(true)

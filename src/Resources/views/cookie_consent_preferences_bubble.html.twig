@@ -1,13 +1,17 @@
 {% set bubble_position = position|default(nowo_cookie_consent_preferences_bubble_position()) %}
+{% set bubble_border_color = border_color|default(nowo_cookie_consent_preferences_bubble_border_color()) %}
+{% set bubble_icon = icon|default(nowo_cookie_consent_preferences_bubble_icon()) %}
 <button type="button"
         class="nowo-cookie-consent__preferences-bubble nowo-cookie-consent__preferences-bubble--{{ bubble_position }}"
         data-nowo-open-consent
         aria-label="{{ 'nowo_cookie_consent.preferences_bubble.label'|trans({}, 'NowoCookieConsentBundle') }}"
-        title="{{ label|default('nowo_cookie_consent.manage_link'|trans({}, 'NowoCookieConsentBundle')) }}">
-    <svg class="nowo-cookie-consent__preferences-bubble-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-        <path fill="currentColor" d="M12 2C8.686 2 6 4.686 6 8c0 2.042.94 3.855 2.41 5.043-.17.57-.55 1.47-1.18 2.53-.12.2-.02.46.2.52.95.28 2.12-.08 3.07-.55.76.22 1.57.34 2.5.34 3.314 0 6-2.686 6-6s-2.686-6-6-6Zm0 10.5A4.5 4.5 0 1 1 12 3.5a4.5 4.5 0 0 1 0 9Z"/>
-        <circle fill="currentColor" cx="9.25" cy="8" r="1"/>
-        <circle fill="currentColor" cx="12" cy="8" r="1"/>
-        <circle fill="currentColor" cx="14.75" cy="8" r="1"/>
-    </svg>
+        title="{{ label|default('nowo_cookie_consent.manage_link'|trans({}, 'NowoCookieConsentBundle')) }}"
+        {% if bubble_border_color %}style="--nowo-cc-bubble-accent: {{ bubble_border_color|e('html_attr') }}"{% endif %}>
+    <span class="nowo-cookie-consent__preferences-bubble-icon">
+        {% if bubble_icon %}
+            {{ bubble_icon|raw }}
+        {% else %}
+            {% include '@NowoCookieConsentBundle/_preferences_bubble_icon_default.html.twig' %}
+        {% endif %}
+    </span>
 </button>

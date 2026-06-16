@@ -75,10 +75,11 @@ final class CookieConsentConfigPayloadFactoryTest extends TestCase
         $translator = $this->createMock(TranslatorInterface::class);
         $translator->method('trans')->willReturn('fallback');
 
-        $factory = new CookieConsentConfigPayloadFactory($resolver, $translator, $this->createInventoryProvider(), ['analytics', 'marketing']);
+        $factory = new CookieConsentConfigPayloadFactory($resolver, $translator, $this->createInventoryProvider(), ['analytics', 'marketing'], [], true);
         $payload = $factory->build('en', 'home');
 
         self::assertTrue($payload['data']['autoShow']);
+        self::assertTrue($payload['data']['disablePageInteraction']);
         self::assertSame('fallback', $payload['data']['language']['translations']['en']['consentModal']['title']);
         self::assertArrayHasKey('marketing', $payload['data']['categories']);
     }

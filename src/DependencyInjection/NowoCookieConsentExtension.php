@@ -51,12 +51,15 @@ class NowoCookieConsentExtension extends Extension
         $container->setParameter('nowo_cookie_consent.color_theme', $config['color_theme']);
         $container->setParameter('nowo_cookie_consent.dark_mode_enabled', $config['dark_mode_enabled']);
         $container->setParameter('nowo_cookie_consent.disable_transitions', $config['disable_transitions']);
+        $container->setParameter('nowo_cookie_consent.disable_page_interaction', $config['disable_page_interaction']);
         $container->setParameter('nowo_cookie_consent.two_step_modal', $config['two_step_modal']);
         $container->setParameter('nowo_cookie_consent.open_preferences_modal', $config['open_preferences_modal']);
         $container->setParameter('nowo_cookie_consent.manage_iframe_placeholders', $config['manage_iframe_placeholders']);
         $container->setParameter('nowo_cookie_consent.granular_cookie_selection', $config['granular_cookie_selection']);
         $container->setParameter('nowo_cookie_consent.preferences_bubble_enabled', $config['preferences_bubble_enabled']);
         $container->setParameter('nowo_cookie_consent.preferences_bubble_position', $config['preferences_bubble_position']);
+        $container->setParameter('nowo_cookie_consent.preferences_bubble_border_color', $config['preferences_bubble_border_color']);
+        $container->setParameter('nowo_cookie_consent.preferences_bubble_icon', $config['preferences_bubble_icon']);
         $container->setParameter('nowo_cookie_consent.preference_sections', $config['preference_sections']);
 
         $loader = new YamlFileLoader($container, new FileLocator(__DIR__ . '/../Resources/config'));

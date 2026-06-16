@@ -27,6 +27,7 @@ final class CookieConsentConfigPayloadFactory
         private readonly CookieInventoryProvider $inventoryProvider,
         private readonly array $categories,
         private readonly array $yamlPreferenceSections = [],
+        private readonly bool $disablePageInteraction = false,
     ) {
     }
 
@@ -52,7 +53,7 @@ final class CookieConsentConfigPayloadFactory
                 'manageScriptTags'          => $config?->isManageScriptTags() ?? false,
                 'autoClearCookies'          => $config?->isAutoClearCookies() ?? false,
                 'hideFromBots'              => $config?->isHideFromBots() ?? true,
-                'disablePageInteraction'    => $config?->isDisablePageInteraction() ?? false,
+                'disablePageInteraction'    => $config?->isDisablePageInteraction() ?? $this->disablePageInteraction,
                 'lazyHtmlGeneration'        => $config?->isLazyHtmlGeneration() ?? false,
                 'colorTheme'                => $config?->getColorTheme() ?? 'light',
                 'darkModeEnabled'           => $config?->isDarkModeEnabled() ?? false,
