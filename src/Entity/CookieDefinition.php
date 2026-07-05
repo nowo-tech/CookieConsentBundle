@@ -11,7 +11,7 @@ use Doctrine\ORM\Mapping as ORM;
 use Nowo\CookieConsentBundle\Repository\CookieDefinitionRepository;
 
 #[ORM\Entity(repositoryClass: CookieDefinitionRepository::class)]
-#[ORM\Table(name: 'nowo_cookie_consent_cookie_definition')]
+#[ORM\Table(name: 'dashboard_cookie_definition')]
 #[ORM\UniqueConstraint(name: 'uniq_cookie_definition_config_name', columns: ['config_id', 'name'])]
 /**
  * Doctrine entity describing a single cookie in the inventory for a consent profile.

@@ -34,7 +34,8 @@ composer require nowo-tech/cookie-consent-bundle
 ```yaml
 # config/packages/nowo_cookie_consent.yaml
 nowo_cookie_consent:
-    table_prefix: 'app_'   # optional; yields app_nowo_cookie_consent_log
+    doctrine:
+        table_prefix: 'app_'   # optional; yields app_dashboard_cookie_log
     use_logger: true
 ```
 

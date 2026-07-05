@@ -9,7 +9,7 @@ use Doctrine\ORM\Mapping as ORM;
 use Nowo\CookieConsentBundle\Repository\CookieDefinitionTranslationRepository;
 
 #[ORM\Entity(repositoryClass: CookieDefinitionTranslationRepository::class)]
-#[ORM\Table(name: 'nowo_cookie_consent_cookie_definition_translation')]
+#[ORM\Table(name: 'dashboard_cookie_definition_translation')]
 #[ORM\UniqueConstraint(name: 'uniq_cookie_definition_translation_locale', columns: ['definition_id', 'locale'])]
 /**
  * Locale-specific provider and purpose text for a cookie definition.

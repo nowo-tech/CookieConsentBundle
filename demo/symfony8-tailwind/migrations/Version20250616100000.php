@@ -16,7 +16,7 @@ final class Version20250616100000 extends AbstractMigration
 
     public function up(Schema $schema): void
     {
-        $configTable = 'demo_tailwind_nowo_cookie_consent_config';
+        $configTable = 'demo_tailwind_dashboard_cookie_config';
 
         if (!$this->columnExists($configTable, 'preferences_bubble_border_color')) {
             $this->addSql("ALTER TABLE {$configTable} ADD COLUMN preferences_bubble_border_color VARCHAR(7) DEFAULT NULL");

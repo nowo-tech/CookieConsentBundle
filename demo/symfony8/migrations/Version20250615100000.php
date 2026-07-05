@@ -19,7 +19,7 @@ final class Version20250615100000 extends AbstractMigration
     {
         foreach (GdprConsentCopy::defaults() as $row) {
             $this->connection->executeStatement(
-                'UPDATE demo_nowo_cookie_consent_config_translation
+                'UPDATE demo_dashboard_cookie_config_translation
                  SET consent_modal_title = ?,
                      consent_modal_description = ?,
                      consent_modal_footer = ?,
