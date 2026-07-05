@@ -11,9 +11,16 @@ This guide provides step-by-step instructions for upgrading Cookie Consent Bundl
 5. **Rebuild assets** if you ship the bundled JS: `php bin/console assets:install`
 6. **Test** the consent modal and logging in your environments
 
-## Database migrations
+## To next release (dashboard table names)
 
-When `use_logger` or `use_database_config` is enabled, ensure Doctrine migrations for bundle tables are applied after upgrading. Table names respect `table_prefix` (see [CONFIGURATION.md](CONFIGURATION.md)).
+**Breaking:** entity table names changed from `nowo_cookie_consent_*` to `dashboard_cookie_*`.
+
+1. Run `composer update nowo-tech/cookie-consent-bundle`.
+2. Rename tables (or drop and recreate in dev). See [CHANGELOG.md](CHANGELOG.md) for the full mapping.
+3. Prefer `doctrine.table_prefix` in YAML; root `table_prefix` is deprecated.
+4. Clear cache: `php bin/console cache:clear`.
+
+When `use_logger` or `use_database_config` is enabled, ensure Doctrine migrations for bundle tables are applied after upgrading. Table names respect `doctrine.table_prefix` (see [CONFIGURATION.md](CONFIGURATION.md)).
 
 ## UI theme changes
 
@@ -99,8 +106,8 @@ When `use_database_config: true`, new columns on `CookieConsentConfig` include `
 
 If you store definitions in the database, create:
 
-- `{prefix}nowo_cookie_consent_cookie_definition` (includes `allowed_by_default`)
-- `{prefix}nowo_cookie_consent_cookie_definition_translation`
+- `{prefix}dashboard_cookie_definition` (includes `allowed_by_default`)
+- `{prefix}dashboard_cookie_definition_translation`
 
 Register admin routes for `CookieDefinitionAdminController` in your application, or implement your own CRUD using `CookieDefinitionType`.
 

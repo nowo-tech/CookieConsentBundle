@@ -9,7 +9,7 @@ use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 
 #[ORM\Entity]
-#[ORM\Table(name: 'nowo_cookie_consent_log')]
+#[ORM\Table(name: 'dashboard_cookie_log')]
 /**
  * Doctrine entity storing an anonymized record of a consent category choice.
  */

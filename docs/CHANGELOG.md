@@ -7,6 +7,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- **Breaking:** Doctrine table names now use the `dashboard_cookie_*` prefix (e.g. `dashboard_cookie_log`, `dashboard_cookie_config`, `dashboard_cookie_definition`), aligned with [DashboardMenuBundle](https://github.com/nowo-tech/DashboardMenuBundle).
+- **`doctrine.table_prefix`** — preferred config key (same structure as dashboard menu). Root `table_prefix` is deprecated but still supported.
+
+### Migration
+
+Rename existing tables or regenerate migrations. Examples:
+
+| Old | New |
+|-----|-----|
+| `nowo_cookie_consent_log` | `dashboard_cookie_log` |
+| `nowo_cookie_consent_config` | `dashboard_cookie_config` |
+| `nowo_cookie_consent_config_translation` | `dashboard_cookie_config_translation` |
+| `nowo_cookie_consent_cookie_definition` | `dashboard_cookie_definition` |
+| `nowo_cookie_consent_cookie_definition_translation` | `dashboard_cookie_definition_translation` |
+
 ## [1.2.0] - 2026-06-15
 
 ### Added
