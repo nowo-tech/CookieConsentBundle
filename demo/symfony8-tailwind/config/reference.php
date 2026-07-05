@@ -127,7 +127,7 @@ use Symfony\Component\Config\Loader\ParamConfigurator as Param;
  * }
  * @psalm-type ServicesConfig = array{
  *     _defaults?: DefaultsType,
- *     _instanceof?: InstanceofType,
+ *     _instanceof?: array<class-string, InstanceofType>,
  *     ...<string, DefinitionType|AliasType|PrototypeType|StackType|ArgumentsType|null>
  * }
  * @psalm-type ExtensionType = array<string, mixed>
@@ -957,7 +957,11 @@ use Symfony\Component\Config\Loader\ParamConfigurator as Param;
  *     theme?: "dark"|"light"|Param, // Changes the color of the dump() output when rendered directly on the templating. "dark" (default) or "light". // Default: "dark"
  * }
  * @psalm-type NowoCookieConsentConfig = array{
- *     table_prefix?: scalar|Param|null, // Optional prefix for Doctrine entity table names (e.g. "app_" yields "app_cookie_consent_log"). // Default: ""
+ *     doctrine?: array{ // Doctrine DBAL connection and table prefix for cookie consent entities.
+ *         connection?: scalar|Param|null, // Name of the Doctrine DBAL connection to use (e.g. default, or a custom connection). // Default: "default"
+ *         table_prefix?: scalar|Param|null, // Prefix prepended to table names (dashboard_cookie_log, dashboard_cookie_config, …). Empty = no prefix. // Default: ""
+ *     },
+ *     table_prefix?: scalar|Param|null, // Deprecated: Use doctrine.table_prefix instead. // Deprecated. Use doctrine.table_prefix (e.g. "app_" yields app_dashboard_cookie_log). // Default: ""
  *     categories?: mixed, // Cookie categories shown in the consent modal (excluding "required"). // Default: ["analytics","marketing","preferences"]
  *     use_logger?: bool|Param, // Persist consent choices to the database when true. // Default: true
  *     use_database_config?: bool|Param, // Load modal copy and display settings from CookieConsentConfig entities when true. // Default: false
@@ -989,12 +993,15 @@ use Symfony\Component\Config\Loader\ParamConfigurator as Param;
  *     color_theme?: "light"|"dark"|"dark-turquoise"|"light-funky"|"elegant-black"|Param, // Default: "light"
  *     dark_mode_enabled?: bool|Param, // Default: false
  *     disable_transitions?: bool|Param, // Default: false
+ *     disable_page_interaction?: bool|Param, // When true, adds a full-page overlay and blocks scrolling until the user chooses an option. // Default: false
  *     two_step_modal?: bool|Param, // Default: false
  *     open_preferences_modal?: bool|Param, // Default: false
  *     manage_iframe_placeholders?: bool|Param, // Default: false
  *     granular_cookie_selection?: bool|Param, // When true, optional cookies can be toggled individually inside each category block. // Default: false
  *     preferences_bubble_enabled?: bool|Param, // Shows a floating cookie icon button to reopen the preferences modal after consent is saved. // Default: false
  *     preferences_bubble_position?: "bottom-right"|"bottom-left"|"top-right"|"top-left"|Param, // Screen corner for the floating preferences bubble. // Default: "bottom-right"
+ *     preferences_bubble_border_color?: scalar|Param|null, // Hex color for the preferences bubble border and cookie icon (e.g. #30363c). // Default: null
+ *     preferences_bubble_icon?: scalar|Param|null, // Custom HTML or SVG markup for the preferences bubble icon. Leave empty for the default cookie SVG. // Default: null
  *     preference_sections?: mixed, // Default: []
  * }
  * @psalm-type NowoTwigInspectorConfig = array{

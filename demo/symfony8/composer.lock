@@ -1120,7 +1120,7 @@
             "dist": {
                 "type": "path",
                 "url": "/var/cookie-consent-bundle",
-                "reference": "0308bd68cb8680591d31672059cc2ddbe14e9ea7"
+                "reference": "3162ce83172e1dc16b9434bd14be02515d37970b"
             },
             "require": {
                 "doctrine/doctrine-bundle": "^2.10 || ^3.0",
