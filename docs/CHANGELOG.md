@@ -7,6 +7,30 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.3.1] - 2026-07-09
+
+### Added
+
+- **GitHub Spec Kit** — baseline spec at `specs/001-baseline/`, Cursor Agent skills (`.cursor/skills/speckit-*`), and operator manual [SPEC-KIT.md](SPEC-KIT.md)
+
+### Changed
+
+- [SPEC-DRIVEN-DEVELOPMENT.md](SPEC-DRIVEN-DEVELOPMENT.md) — three-layer spec model with Spec Kit baseline and maintainer sync checklist
+- Dev dependency lock refresh (`phpunit`, `php-cs-fixer` in `require-dev` only)
+
+### Fixed
+
+- Demo `make update-deps` — define `SERVICE_PHP := php` in `demo/symfony8` and `demo/symfony8-tailwind` Makefiles (fixes `no such service: sh`)
+
+### Documentation
+
+- README link to [SPEC-KIT.md](SPEC-KIT.md)
+- [UPGRADING.md](UPGRADING.md) — upgrade path from 1.3.0
+
+No consumer-facing bundle API, configuration, or runtime changes.
+
+[1.3.1]: https://github.com/nowo-tech/CookieConsentBundle/releases/tag/v1.3.1
+
 ## [1.3.0] - 2026-07-05
 
 ### Changed
