@@ -17,12 +17,12 @@ final class TablePrefixListenerTest extends TestCase
     public function testAppliesPrefixToConfiguredEntity(): void
     {
         $metadata = new ClassMetadata(CookieConsentLog::class);
-        $metadata->setPrimaryTable(['name' => 'nowo_cookie_consent_log']);
+        $metadata->setPrimaryTable(['name' => 'dashboard_cookie_log']);
 
         $listener = new TablePrefixListener('app_');
         $listener->loadClassMetadata($this->createEventArgs($metadata));
 
-        self::assertSame('app_nowo_cookie_consent_log', $metadata->getTableName());
+        self::assertSame('app_dashboard_cookie_log', $metadata->getTableName());
     }
 
     public function testIgnoresOtherEntities(): void
@@ -39,12 +39,12 @@ final class TablePrefixListenerTest extends TestCase
     public function testSkipsWhenPrefixEmpty(): void
     {
         $metadata = new ClassMetadata(CookieConsentLog::class);
-        $metadata->setPrimaryTable(['name' => 'nowo_cookie_consent_log']);
+        $metadata->setPrimaryTable(['name' => 'dashboard_cookie_log']);
 
         $listener = new TablePrefixListener('');
         $listener->loadClassMetadata($this->createEventArgs($metadata));
 
-        self::assertSame('nowo_cookie_consent_log', $metadata->getTableName());
+        self::assertSame('dashboard_cookie_log', $metadata->getTableName());
     }
 
     /**

@@ -20,6 +20,7 @@ Frontend behavior is implemented in TypeScript and built with Vite (`make assets
 - [Security](docs/SECURITY.md)
 - [Engram](docs/ENGRAM.md)
 - [Spec-driven development](docs/SPEC-DRIVEN-DEVELOPMENT.md)
+- [GitHub Spec Kit](docs/SPEC-KIT.md)
 
 ### Additional documentation
 
@@ -34,7 +35,8 @@ composer require nowo-tech/cookie-consent-bundle
 ```yaml
 # config/packages/nowo_cookie_consent.yaml
 nowo_cookie_consent:
-    table_prefix: 'app_'   # optional; yields app_nowo_cookie_consent_log
+    doctrine:
+        table_prefix: 'app_'   # optional; yields app_dashboard_cookie_log
     use_logger: true
 ```
 

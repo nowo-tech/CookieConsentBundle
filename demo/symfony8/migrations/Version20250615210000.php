@@ -16,7 +16,7 @@ final class Version20250615210000 extends AbstractMigration
 
     public function up(Schema $schema): void
     {
-        $configTable = 'demo_nowo_cookie_consent_config';
+        $configTable = 'demo_dashboard_cookie_config';
 
         if (!$this->columnExists($configTable, 'granular_cookie_selection')) {
             $this->addSql("ALTER TABLE {$configTable} ADD COLUMN granular_cookie_selection BOOLEAN DEFAULT 0 NOT NULL");

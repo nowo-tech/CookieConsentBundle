@@ -28,7 +28,14 @@ class NowoCookieConsentExtension extends Extension
         $configuration = new Configuration();
         $config        = $this->processConfiguration($configuration, $configs);
 
-        $container->setParameter('nowo_cookie_consent.table_prefix', $config['table_prefix']);
+        $tablePrefix = trim((string) ($config['doctrine']['table_prefix'] ?? ''));
+        if ($tablePrefix === '' && isset($config['table_prefix'])) {
+            $tablePrefix = trim((string) $config['table_prefix']);
+        }
+
+        $container->setParameter('nowo_cookie_consent.doctrine.connection', $config['doctrine']['connection'] ?? 'default');
+        $container->setParameter('nowo_cookie_consent.doctrine.table_prefix', $tablePrefix);
+        $container->setParameter('nowo_cookie_consent.table_prefix', $tablePrefix);
         $container->setParameter('nowo_cookie_consent.categories', $config['categories']);
         $container->setParameter('nowo_cookie_consent.use_logger', $config['use_logger']);
         $container->setParameter('nowo_cookie_consent.use_database_config', $config['use_database_config']);
@@ -65,11 +72,11 @@ class NowoCookieConsentExtension extends Extension
         $loader = new YamlFileLoader($container, new FileLocator(__DIR__ . '/../Resources/config'));
         $loader->load('services.yaml');
 
-        if ($config['table_prefix'] !== '') {
+        if ($tablePrefix !== '') {
             $container->setDefinition(
                 TablePrefixListener::class,
                 (new Definition(TablePrefixListener::class))
-                    ->setArguments([$config['table_prefix']])
+                    ->setArguments([$tablePrefix])
                     ->addTag('doctrine.event_listener', ['event' => 'loadClassMetadata']),
             );
         }

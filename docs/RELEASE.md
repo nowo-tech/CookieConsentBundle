@@ -54,6 +54,8 @@ Update README **Tests and coverage** percentages after each release when coverag
 
 | Version | Date | Notes |
 | --- | --- | --- |
+| [1.3.1](CHANGELOG.md#131---2026-07-09) | 2026-07-09 | Spec Kit baseline, demo update-deps fix, dev lock sync |
+| [1.3.0](CHANGELOG.md#130---2026-07-05) | 2026-07-05 | Dashboard table names, `doctrine.table_prefix`, locale translations |
 | [1.2.0](CHANGELOG.md#120---2026-06-15) | 2026-06-15 | Page overlay, settings admin, bubble customization, modal position fix |
 | [1.1.1](CHANGELOG.md#111---2026-06-15) | 2026-06-15 | Standards compliance, SECURITY/docs, TS coverage gate |
 | [1.1.0](CHANGELOG.md#110---2026-06-15) | 2026-06-15 | Cookie inventory, granular selection, preferences bubble |

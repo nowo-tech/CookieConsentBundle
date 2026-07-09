@@ -7,6 +7,58 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.3.1] - 2026-07-09
+
+### Added
+
+- **GitHub Spec Kit** — baseline spec at `specs/001-baseline/`, Cursor Agent skills (`.cursor/skills/speckit-*`), and operator manual [SPEC-KIT.md](SPEC-KIT.md)
+
+### Changed
+
+- [SPEC-DRIVEN-DEVELOPMENT.md](SPEC-DRIVEN-DEVELOPMENT.md) — three-layer spec model with Spec Kit baseline and maintainer sync checklist
+- Dev dependency lock refresh (`phpunit`, `php-cs-fixer` in `require-dev` only)
+
+### Fixed
+
+- Demo `make update-deps` — define `SERVICE_PHP := php` in `demo/symfony8` and `demo/symfony8-tailwind` Makefiles (fixes `no such service: sh`)
+
+### Documentation
+
+- README link to [SPEC-KIT.md](SPEC-KIT.md)
+- [UPGRADING.md](UPGRADING.md) — upgrade path from 1.3.0
+
+No consumer-facing bundle API, configuration, or runtime changes.
+
+[1.3.1]: https://github.com/nowo-tech/CookieConsentBundle/releases/tag/v1.3.1
+
+## [1.3.0] - 2026-07-05
+
+### Changed
+
+- **Breaking:** Doctrine table names now use the `dashboard_cookie_*` prefix (e.g. `dashboard_cookie_log`, `dashboard_cookie_config`, `dashboard_cookie_definition`), aligned with [DashboardMenuBundle](https://github.com/nowo-tech/DashboardMenuBundle).
+- **`doctrine.table_prefix`** — preferred config key (same structure as dashboard menu). Root `table_prefix` is deprecated but still supported.
+- **Translations** — complete consent modal strings for `de`, `fr`, `it`, `nl`, and `pt` (previously partial English fallback).
+
+### Migration
+
+Rename existing tables or regenerate migrations. Examples:
+
+| Old | New |
+|-----|-----|
+| `nowo_cookie_consent_log` | `dashboard_cookie_log` |
+| `nowo_cookie_consent_config` | `dashboard_cookie_config` |
+| `nowo_cookie_consent_config_translation` | `dashboard_cookie_config_translation` |
+| `nowo_cookie_consent_cookie_definition` | `dashboard_cookie_definition` |
+| `nowo_cookie_consent_cookie_definition_translation` | `dashboard_cookie_definition_translation` |
+
+### Documentation
+
+- [CONFIGURATION.md](CONFIGURATION.md) — `doctrine.table_prefix`, deprecated root `table_prefix`, updated default table names
+- [INSTALLATION.md](INSTALLATION.md) — database table names and prefix configuration
+- [UPGRADING.md](UPGRADING.md) — upgrade path from 1.2.0
+
+[1.3.0]: https://github.com/nowo-tech/CookieConsentBundle/releases/tag/v1.3.0
+
 ## [1.2.0] - 2026-06-15
 
 ### Added

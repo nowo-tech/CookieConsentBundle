@@ -11,9 +11,41 @@ This guide provides step-by-step instructions for upgrading Cookie Consent Bundl
 5. **Rebuild assets** if you ship the bundled JS: `php bin/console assets:install`
 6. **Test** the consent modal and logging in your environments
 
-## Database migrations
+## To 1.3.1
 
-When `use_logger` or `use_database_config` is enabled, ensure Doctrine migrations for bundle tables are applied after upgrading. Table names respect `table_prefix` (see [CONFIGURATION.md](CONFIGURATION.md)).
+```bash
+composer update nowo-tech/cookie-consent-bundle
+php bin/console cache:clear
+```
+
+Patch release: GitHub Spec Kit maintainer tooling, demo `update-deps` fix, and dev lock sync. **No configuration, API, or runtime changes** for bundle consumers.
+
+### Breaking changes
+
+None.
+
+## To 1.3.0
+
+```bash
+composer update nowo-tech/cookie-consent-bundle
+php bin/console cache:clear
+```
+
+**Breaking:** entity table names changed from `nowo_cookie_consent_*` to `dashboard_cookie_*`.
+
+1. Rename existing tables (or drop and recreate in dev). See [CHANGELOG.md](CHANGELOG.md) for the full mapping.
+2. Move `table_prefix` to `doctrine.table_prefix` in YAML (root key is deprecated but still supported as fallback).
+3. Regenerate or adjust application migrations if you manage bundle tables manually.
+4. Clear cache: `php bin/console cache:clear`.
+
+When `use_logger` or `use_database_config` is enabled, ensure Doctrine migrations for bundle tables are applied after upgrading. Table names respect `doctrine.table_prefix` (see [CONFIGURATION.md](CONFIGURATION.md)).
+
+### Breaking changes
+
+- Doctrine table names: `nowo_cookie_consent_*` → `dashboard_cookie_*`
+- Root `table_prefix` deprecated in favor of `doctrine.table_prefix` (fallback retained)
+
+No frontend asset or Twig API changes.
 
 ## UI theme changes
 
@@ -99,8 +131,8 @@ When `use_database_config: true`, new columns on `CookieConsentConfig` include `
 
 If you store definitions in the database, create:
 
-- `{prefix}nowo_cookie_consent_cookie_definition` (includes `allowed_by_default`)
-- `{prefix}nowo_cookie_consent_cookie_definition_translation`
+- `{prefix}dashboard_cookie_definition` (includes `allowed_by_default`)
+- `{prefix}dashboard_cookie_definition_translation`
 
 Register admin routes for `CookieDefinitionAdminController` in your application, or implement your own CRUD using `CookieDefinitionType`.
 

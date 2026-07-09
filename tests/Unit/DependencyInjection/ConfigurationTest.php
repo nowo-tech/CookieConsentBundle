@@ -17,6 +17,8 @@ final class ConfigurationTest extends TestCase
         $config    = $processor->processConfiguration(new Configuration(), [[]]);
 
         self::assertSame('', $config['table_prefix']);
+        self::assertSame('default', $config['doctrine']['connection']);
+        self::assertSame('', $config['doctrine']['table_prefix']);
         self::assertSame(
             [
                 CategoryEnum::CATEGORY_ANALYTICS,
@@ -49,7 +51,17 @@ final class ConfigurationTest extends TestCase
         self::assertSame([], $config['preference_sections']);
     }
 
-    public function testTablePrefixIsApplied(): void
+    public function testDoctrineTablePrefixIsApplied(): void
+    {
+        $processor = new Processor();
+        $config    = $processor->processConfiguration(new Configuration(), [[
+            'doctrine' => ['table_prefix' => 'app_'],
+        ]]);
+
+        self::assertSame('app_', $config['doctrine']['table_prefix']);
+    }
+
+    public function testLegacyTablePrefixIsApplied(): void
     {
         $processor = new Processor();
         $config    = $processor->processConfiguration(new Configuration(), [[
