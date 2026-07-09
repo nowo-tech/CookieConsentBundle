@@ -127,7 +127,7 @@ use Symfony\Component\Config\Loader\ParamConfigurator as Param;
  * }
  * @psalm-type ServicesConfig = array{
  *     _defaults?: DefaultsType,
- *     _instanceof?: InstanceofType,
+ *     _instanceof?: array<class-string, InstanceofType>,
  *     ...<string, DefinitionType|AliasType|PrototypeType|StackType|ArgumentsType|null>
  * }
  * @psalm-type ExtensionType = array<string, mixed>
@@ -957,7 +957,11 @@ use Symfony\Component\Config\Loader\ParamConfigurator as Param;
  *     theme?: "dark"|"light"|Param, // Changes the color of the dump() output when rendered directly on the templating. "dark" (default) or "light". // Default: "dark"
  * }
  * @psalm-type NowoCookieConsentConfig = array{
- *     table_prefix?: scalar|Param|null, // Optional prefix for Doctrine entity table names (e.g. "app_" yields "app_cookie_consent_log"). // Default: ""
+ *     doctrine?: array{ // Doctrine DBAL connection and table prefix for cookie consent entities.
+ *         connection?: scalar|Param|null, // Name of the Doctrine DBAL connection to use (e.g. default, or a custom connection). // Default: "default"
+ *         table_prefix?: scalar|Param|null, // Prefix prepended to table names (dashboard_cookie_log, dashboard_cookie_config, …). Empty = no prefix. // Default: ""
+ *     },
+ *     table_prefix?: scalar|Param|null, // Deprecated: Use doctrine.table_prefix instead. // Deprecated. Use doctrine.table_prefix (e.g. "app_" yields app_dashboard_cookie_log). // Default: ""
  *     categories?: mixed, // Cookie categories shown in the consent modal (excluding "required"). // Default: ["analytics","marketing","preferences"]
  *     use_logger?: bool|Param, // Persist consent choices to the database when true. // Default: true
  *     use_database_config?: bool|Param, // Load modal copy and display settings from CookieConsentConfig entities when true. // Default: false

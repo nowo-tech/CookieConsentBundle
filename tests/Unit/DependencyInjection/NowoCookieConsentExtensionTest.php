@@ -24,13 +24,14 @@ final class NowoCookieConsentExtensionTest extends TestCase
         self::assertFalse($container->hasDefinition(TablePrefixListener::class));
     }
 
-    public function testRegistersTablePrefixListenerWhenPrefixConfigured(): void
+    public function testRegistersTablePrefixListenerWhenDoctrinePrefixConfigured(): void
     {
         $container = new ContainerBuilder();
         $extension = new NowoCookieConsentExtension();
-        $extension->load([['table_prefix' => 'demo_']], $container);
+        $extension->load([['doctrine' => ['table_prefix' => 'demo_']]], $container);
 
         self::assertSame('demo_', $container->getParameter('nowo_cookie_consent.table_prefix'));
+        self::assertSame('demo_', $container->getParameter('nowo_cookie_consent.doctrine.table_prefix'));
         self::assertTrue($container->hasDefinition(TablePrefixListener::class));
     }
 

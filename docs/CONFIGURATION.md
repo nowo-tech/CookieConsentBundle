@@ -20,8 +20,11 @@ Extension alias: `nowo_cookie_consent`
 ```yaml
 # config/packages/nowo_cookie_consent.yaml
 nowo_cookie_consent:
-    # Prefix applied to Doctrine table names (optional)
-    table_prefix: ''
+    doctrine:
+        table_prefix: ''
+
+    # Deprecated: use doctrine.table_prefix instead
+    # table_prefix: ''
 
     # Categories shown in the modal (required is always shown)
     categories:
@@ -81,7 +84,9 @@ nowo_cookie_consent:
 
 ## Table prefix
 
-When `table_prefix` is set to e.g. `app_`, the log table becomes `app_nowo_cookie_consent_log`. Useful when multiple apps share a database or when your project uses a global table prefix convention.
+When `doctrine.table_prefix` is set to e.g. `app_`, the log table becomes `app_dashboard_cookie_log`. Useful when multiple apps share a database or when your project uses a global table prefix convention (same pattern as [DashboardMenuBundle](https://github.com/nowo-tech/DashboardMenuBundle)).
+
+Root `table_prefix` is deprecated but still supported as a fallback.
 
 ## Locale detection
 
@@ -159,7 +164,7 @@ When `use_database_config` is `true`, the bundle loads copy and display settings
 - `CookieConsentConfig` — behavior and modal layout (one default enabled record is typical)
 - `CookieConsentConfigTranslation` — per-locale texts mapped to bundle translation keys
 
-Tables: `nowo_cookie_consent_config` and `nowo_cookie_consent_config_translation` (with optional `table_prefix`).
+Tables: `dashboard_cookie_config` and `dashboard_cookie_config_translation` (with optional `doctrine.table_prefix`).
 
 The Symfony 8 demo enables this option and provides an admin CRUD at `/demo/admin/cookie-consent-config`.
 
@@ -203,8 +208,8 @@ When `use_database_config` is enabled, store definitions as Doctrine entities li
 
 Tables (with optional prefix):
 
-- `{prefix}nowo_cookie_consent_cookie_definition`
-- `{prefix}nowo_cookie_consent_cookie_definition_translation`
+- `{prefix}dashboard_cookie_definition`
+- `{prefix}dashboard_cookie_definition_translation`
 
 Run `doctrine:schema:update` or add a migration after enabling the bundle entities. The demo seeds sample rows with `app:seed-cookie-definitions`.
 

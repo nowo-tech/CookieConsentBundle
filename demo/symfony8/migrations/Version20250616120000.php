@@ -17,7 +17,7 @@ final class Version20250616120000 extends AbstractMigration
 
     public function up(Schema $schema): void
     {
-        $configTable = 'demo_nowo_cookie_consent_config';
+        $configTable = 'demo_dashboard_cookie_config';
 
         if (!$this->columnExists($configTable, 'preferences_bubble_icon')) {
             $this->addSql("ALTER TABLE {$configTable} ADD COLUMN preferences_bubble_icon CLOB DEFAULT NULL");

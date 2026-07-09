@@ -16,7 +16,7 @@ final class Version20250615230000 extends AbstractMigration
 
     public function up(Schema $schema): void
     {
-        $table = 'demo_tailwind_nowo_cookie_consent_cookie_definition';
+        $table = 'demo_tailwind_dashboard_cookie_definition';
 
         if (!$this->columnExists($table, 'allowed_by_default')) {
             $this->addSql("ALTER TABLE {$table} ADD COLUMN allowed_by_default BOOLEAN DEFAULT 1 NOT NULL");
