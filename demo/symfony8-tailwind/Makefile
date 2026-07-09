@@ -2,6 +2,7 @@
 
 BUNDLE_ROOT := $(abspath $(dir $(lastword $(MAKEFILE_LIST)))/../..)
 export DOCKER_CONFIG := $(BUNDLE_ROOT)/.docker
+SERVICE_PHP := php
 
 help:
 	@echo "Symfony 8 Tailwind Demo - Cookie Consent Bundle"

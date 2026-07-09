@@ -23,6 +23,7 @@ services:
       - APP_DEBUG=1
       - APP_SECRET=${APP_SECRET:-demo-secret}
       - DATABASE_URL=${DATABASE_URL:-sqlite:///%kernel.project_dir%/var/data.db}
+    # REQ-DEMO-009: public DNS for Composer / Packagist (Docker/WSL resolver issues).
     dns:
       - 8.8.8.8
       - 8.8.4.4

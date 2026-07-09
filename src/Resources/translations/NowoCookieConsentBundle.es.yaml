@@ -1,3 +1,4 @@
+nowo_cookie_consent.show_preferences: 'Personalizar'
 nowo_cookie_consent.functionality.title: 'Funcionalidad'
 nowo_cookie_consent.functionality.description: 'Cookies que habilitan funciones mejoradas y personalización de la experiencia.'
 nowo_cookie_consent.title: 'Configuración de cookies'
@@ -21,7 +22,6 @@ nowo_cookie_consent.use_all_cookies: 'Aceptar todas las cookies'
 nowo_cookie_consent.manage_link: 'Configuración de cookies'
 nowo_cookie_consent.preferences_bubble.label: 'Abrir preferencias de cookies'
 nowo_cookie_consent.privacy_route: ''
-
 nowo_cookie_consent.inventory.caption: 'Cookies utilizadas en este sitio'
 nowo_cookie_consent.inventory.name: 'Cookie'
 nowo_cookie_consent.inventory.provider: 'Proveedor'

@@ -16,7 +16,7 @@ use function in_array;
 use function sprintf;
 
 #[ORM\Entity(repositoryClass: CookieConsentConfigRepository::class)]
-#[ORM\Table(name: 'nowo_cookie_consent_config')]
+#[ORM\Table(name: 'dashboard_cookie_config')]
 /**
  * Doctrine entity storing cookie consent modal display and targeting settings.
  */
