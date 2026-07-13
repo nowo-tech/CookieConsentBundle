@@ -11,6 +11,26 @@ This guide provides step-by-step instructions for upgrading Cookie Consent Bundl
 5. **Rebuild assets** if you ship the bundled JS: `php bin/console assets:install`
 6. **Test** the consent modal and logging in your environments
 
+## To 1.3.2
+
+```bash
+composer update nowo-tech/cookie-consent-bundle
+php bin/console cache:clear
+php bin/console assets:install
+```
+
+Patch release: registers the `nowo_cookie_consent` Symfony asset package and loads `nowo-consent-modal.js` through the asset helper. **No configuration or API breaking changes** for bundle consumers.
+
+If you override `cookie_consent.html.twig` or `cookie_consent.tailwind.html.twig` and copied the old hardcoded script tag, update it to:
+
+```twig
+<script src="{{ asset('nowo-consent-modal.js', 'nowo_cookie_consent') }}" defer></script>
+```
+
+### Breaking changes
+
+None.
+
 ## To 1.3.1
 
 ```bash

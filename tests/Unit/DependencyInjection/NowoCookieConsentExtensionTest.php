@@ -58,4 +58,20 @@ final class NowoCookieConsentExtensionTest extends TestCase
     {
         self::assertSame('nowo_cookie_consent', (new NowoCookieConsentExtension())->getAlias());
     }
+
+    public function testPrependConfiguresAssets(): void
+    {
+        $container = new ContainerBuilder();
+        $container->registerExtension(new \Symfony\Bundle\FrameworkBundle\DependencyInjection\FrameworkExtension());
+        (new NowoCookieConsentExtension())->prepend($container);
+        $configs = $container->getExtensionConfig('framework');
+        self::assertSame('/bundles/nowocookieconsent', $configs[0]['assets']['packages']['nowo_cookie_consent']['base_path']);
+    }
+
+    public function testPrependSkipsWithoutFramework(): void
+    {
+        $container = new ContainerBuilder();
+        (new NowoCookieConsentExtension())->prepend($container);
+        self::assertFalse($container->hasExtension('framework'));
+    }
 }

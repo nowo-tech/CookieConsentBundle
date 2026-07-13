@@ -48,7 +48,11 @@ nowo_cookie_consent:
 php bin/console assets:install
 ```
 
-This publishes `src/Resources/public` to `public/bundles/nowocookieconsent/` (`nowo-consent-modal.js`; styles injected at runtime).
+This publishes `src/Resources/public` to `public/bundles/nowocookieconsent/` (`nowo-consent-modal.js`; styles injected at runtime). Templates load it via `asset('nowo-consent-modal.js', 'nowo_cookie_consent')`.
+
+### AssetMapper
+
+If your app uses [Symfony AssetMapper](https://symfony.com/doc/current/frontend/asset_mapper.html), the bundle registers the `nowo_cookie_consent` asset package. Run `assets:install` once so `nowo-consent-modal.js` is published to `public/bundles/nowocookieconsent/`.
 
 Contributors rebuild frontend assets with:
 

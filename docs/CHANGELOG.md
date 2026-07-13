@@ -7,6 +7,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.3.2] - 2026-07-13
+
+### Added
+
+- **`nowo_cookie_consent` asset package** — `NowoCookieConsentExtension` implements `PrependExtensionInterface` and registers `framework.assets.packages.nowo_cookie_consent` (`base_path: /bundles/nowocookieconsent`)
+
+### Changed
+
+- Twig consent templates load `nowo-consent-modal.js` via `asset('nowo-consent-modal.js', 'nowo_cookie_consent')` with `defer` instead of a hardcoded `/bundles/nowocookieconsent/` path
+
+### Fixed
+
+- Consent modal JavaScript resolves correctly in apps using Symfony AssetMapper and standard asset packages
+
+### Documentation
+
+- [INSTALLATION.md](INSTALLATION.md) — AssetMapper note and asset package loading
+- [UPGRADING.md](UPGRADING.md) — upgrade path from 1.3.1
+
+No configuration or API breaking changes.
+
+[1.3.2]: https://github.com/nowo-tech/CookieConsentBundle/releases/tag/v1.3.2
+
 ## [1.3.1] - 2026-07-09
 
 ### Added

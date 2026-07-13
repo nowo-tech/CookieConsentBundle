@@ -9,13 +9,14 @@ use Symfony\Component\Config\FileLocator;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\Definition;
 use Symfony\Component\DependencyInjection\Extension\Extension;
+use Symfony\Component\DependencyInjection\Extension\PrependExtensionInterface;
 use Symfony\Component\DependencyInjection\Loader\YamlFileLoader;
 use Symfony\Component\Translation\Loader\ArrayLoader;
 
 /**
  * Loads bundle configuration and registers services in the container.
  */
-class NowoCookieConsentExtension extends Extension
+class NowoCookieConsentExtension extends Extension implements PrependExtensionInterface
 {
     /**
      * Processes configuration and loads service definitions.
@@ -97,5 +98,25 @@ class NowoCookieConsentExtension extends Extension
     public function getAlias(): string
     {
         return Configuration::ALIAS;
+    }
+
+    /**
+     * Registers the bundle asset package before the FrameworkExtension processes assets.
+     */
+    public function prepend(ContainerBuilder $container): void
+    {
+        if (!$container->hasExtension('framework')) {
+            return;
+        }
+
+        $container->prependExtensionConfig('framework', [
+            'assets' => [
+                'packages' => [
+                    Configuration::ALIAS => [
+                        'base_path' => '/bundles/nowocookieconsent',
+                    ],
+                ],
+            ],
+        ]);
     }
 }

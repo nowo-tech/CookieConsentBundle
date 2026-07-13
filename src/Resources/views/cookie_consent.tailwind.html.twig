@@ -4,10 +4,6 @@
 
 {% set two_step = nowo_cookie_consent_two_step_modal() %}
 
-{% block script %}
-    <script type="text/javascript" src="{{ asset('bundles/nowocookieconsent/nowo-consent-modal.js') }}"></script>
-{% endblock %}
-
 <div id="cookieconsent"
      class="nowo-cookie-consent fixed inset-0 z-50 hidden p-4{% if two_step %} nowo-cookie-consent--two-step{% endif %}"
      tabindex="-1"
@@ -91,4 +87,4 @@
     {% include '@NowoCookieConsentBundle/cookie_consent_preferences_bubble.html.twig' %}
 {% endif %}
 
-{{ block('script') }}
+<script src="{{ asset('nowo-consent-modal.js', 'nowo_cookie_consent') }}" defer></script>

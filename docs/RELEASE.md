@@ -54,6 +54,7 @@ Update README **Tests and coverage** percentages after each release when coverag
 
 | Version | Date | Notes |
 | --- | --- | --- |
+| [1.3.2](CHANGELOG.md#132---2026-07-13) | 2026-07-13 | Asset package `nowo_cookie_consent`, AssetMapper-compatible script loading |
 | [1.3.1](CHANGELOG.md#131---2026-07-09) | 2026-07-09 | Spec Kit baseline, demo update-deps fix, dev lock sync |
 | [1.3.0](CHANGELOG.md#130---2026-07-05) | 2026-07-05 | Dashboard table names, `doctrine.table_prefix`, locale translations |
 | [1.2.0](CHANGELOG.md#120---2026-06-15) | 2026-06-15 | Page overlay, settings admin, bubble customization, modal position fix |

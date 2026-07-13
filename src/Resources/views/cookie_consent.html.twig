@@ -8,10 +8,6 @@
 {% set preferences_title = translation and translation.preferencesModalTitle ? translation.preferencesModalTitle : 'nowo_cookie_consent.preferences.title'|trans({}, 'NowoCookieConsentBundle') %}
 {% set preferences_close_label = translation and translation.preferencesModalCloseIconLabel ? translation.preferencesModalCloseIconLabel : 'nowo_cookie_consent.preferences.close'|trans({}, 'NowoCookieConsentBundle') %}
 
-{% block script %}
-    <script type="text/javascript" src="{{ asset('bundles/nowocookieconsent/nowo-consent-modal.js') }}"></script>
-{% endblock %}
-
 <div id="cookieconsent"
      class="modal nowo-cookie-consent{% if two_step %} nowo-cookie-consent--two-step{% endif %}"
      tabindex="-1"
@@ -129,4 +125,4 @@
     {% include '@NowoCookieConsentBundle/cookie_consent_preferences_bubble.html.twig' %}
 {% endif %}
 
-{{ block('script') }}
+<script src="{{ asset('nowo-consent-modal.js', 'nowo_cookie_consent') }}" defer></script>
