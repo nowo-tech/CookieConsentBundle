@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Nowo\CookieConsentBundle\Tests\Unit\Repository;
 
 use Doctrine\Persistence\ManagerRegistry;
-use Nowo\CookieConsentBundle\Entity\CookieDefinitionTranslation;
 use Nowo\CookieConsentBundle\Repository\CookieDefinitionTranslationRepository;
 use PHPUnit\Framework\TestCase;
 

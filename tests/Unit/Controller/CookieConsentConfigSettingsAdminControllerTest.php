@@ -10,6 +10,7 @@ use Nowo\CookieConsentBundle\Entity\CookieConsentConfig;
 use Nowo\CookieConsentBundle\Form\CookieConsentConfigSettingsType;
 use Nowo\CookieConsentBundle\Repository\CookieConsentConfigRepository;
 use Nowo\CookieConsentBundle\Tests\Unit\Support\AbstractControllerTestCase;
+use ReflectionProperty;
 use Symfony\Component\Form\FormFactoryInterface;
 use Symfony\Component\Form\FormInterface;
 use Symfony\Component\Form\FormView;
@@ -100,7 +101,7 @@ final class CookieConsentConfigSettingsAdminControllerTest extends AbstractContr
 
     private function setEntityId(object $entity, int $id): void
     {
-        $reflection = new \ReflectionProperty($entity, 'id');
+        $reflection = new ReflectionProperty($entity, 'id');
         $reflection->setAccessible(true);
         $reflection->setValue($entity, $id);
     }

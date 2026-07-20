@@ -78,7 +78,7 @@ abstract class AbstractControllerTestCase extends TestCase
 
     protected function createCsrfTokenManager(bool $valid = true): object
     {
-        return new class ($valid) {
+        return new class($valid) {
             public function __construct(private readonly bool $valid)
             {
             }

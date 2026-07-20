@@ -58,10 +58,10 @@ final class CookieInventoryProviderTest extends TestCase
             'invalid',
             ['name' => ''],
             [
-                'name'         => '_bad',
-                'type'         => 'unknown',
-                'sortOrder'    => 'x',
-                'translations' => [123 => ['provider' => 'x']],
+                'name'             => '_bad',
+                'type'             => 'unknown',
+                'sortOrder'        => 'x',
+                'translations'     => [123 => ['provider' => 'x']],
                 'allowedByDefault' => 'false',
             ],
         ]);

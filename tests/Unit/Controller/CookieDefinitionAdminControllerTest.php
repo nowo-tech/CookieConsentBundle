@@ -12,12 +12,14 @@ use Nowo\CookieConsentBundle\Form\CookieDefinitionType;
 use Nowo\CookieConsentBundle\Repository\CookieConsentConfigRepository;
 use Nowo\CookieConsentBundle\Repository\CookieDefinitionRepository;
 use Nowo\CookieConsentBundle\Tests\Unit\Support\AbstractControllerTestCase;
+use ReflectionProperty;
 use Symfony\Component\Form\FormFactoryInterface;
 use Symfony\Component\Form\FormInterface;
 use Symfony\Component\Form\FormView;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Contracts\Translation\TranslatorInterface;
+use Throwable;
 
 /**
  * @internal test double overriding CSRF validation without security-bundle
@@ -38,7 +40,7 @@ final class TestableCookieDefinitionAdminController extends CookieDefinitionAdmi
         return $this->csrfValid;
     }
 
-    protected function createAccessDeniedException(string $message = 'Access Denied.', ?\Throwable $previous = null): \Symfony\Component\Security\Core\Exception\AccessDeniedException
+    protected function createAccessDeniedException(string $message = 'Access Denied.', ?Throwable $previous = null): \Symfony\Component\Security\Core\Exception\AccessDeniedException
     {
         throw new \Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException($message, $previous);
     }
@@ -210,7 +212,7 @@ final class CookieDefinitionAdminControllerTest extends AbstractControllerTestCa
         $formFactory = $this->createMock(FormFactoryInterface::class);
         $formFactory->method('create')->with(CookieDefinitionType::class)->willReturn($form);
 
-        $persisted = null;
+        $persisted     = null;
         $entityManager = $this->createMock(EntityManagerInterface::class);
         $entityManager->expects(self::once())->method('persist')->willReturnCallback(static function (object $entity) use (&$persisted): void {
             $persisted = $entity;
@@ -265,7 +267,7 @@ final class CookieDefinitionAdminControllerTest extends AbstractControllerTestCa
 
     private function setEntityId(object $entity, int $id): void
     {
-        $reflection = new \ReflectionProperty($entity, 'id');
+        $reflection = new ReflectionProperty($entity, 'id');
         $reflection->setAccessible(true);
         $reflection->setValue($entity, $id);
     }
