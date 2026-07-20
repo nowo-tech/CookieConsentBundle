@@ -113,6 +113,53 @@ final class CmpUxOptionsResolverTest extends TestCase
         self::assertSame($icon, $resolver->getPreferencesBubbleIcon());
     }
 
+    public function testGranularCookieSelectionAndPreferencesBubbleFromDatabase(): void
+    {
+        $config = (new CookieConsentConfig())
+            ->setGranularCookieSelection(true)
+            ->setPreferencesBubbleEnabled(true)
+            ->setPreferencesBubblePosition('top-right');
+
+        $request = Request::create('/');
+        $request->attributes->set('nowo_cookie_consent_config', new ResolvedCookieConsentConfig($config, null));
+
+        $stack = new RequestStack();
+        $stack->push($request);
+
+        $resolver = $this->createResolver($stack, useDatabaseConfig: true);
+
+        self::assertTrue($resolver->isGranularCookieSelection());
+        self::assertTrue($resolver->isPreferencesBubbleEnabled());
+        self::assertSame('top-right', $resolver->getPreferencesBubblePosition());
+    }
+
+    public function testYamlGranularAndPreferencesBubbleDefaults(): void
+    {
+        $resolver = new CmpUxOptionsResolver(
+            new RequestStack(),
+            'light',
+            true,
+            true,
+            false,
+            false,
+            true,
+            false,
+            true,
+            true,
+            'bottom-left',
+            '#ff0000',
+            '<svg></svg>',
+            [],
+            false,
+        );
+
+        self::assertTrue($resolver->isGranularCookieSelection());
+        self::assertTrue($resolver->isPreferencesBubbleEnabled());
+        self::assertSame('bottom-left', $resolver->getPreferencesBubblePosition());
+        self::assertSame('#ff0000', $resolver->getPreferencesBubbleBorderColor());
+        self::assertSame('<svg></svg>', $resolver->getPreferencesBubbleIcon());
+    }
+
     /**
      * @param list<array<string, mixed>> $yamlPreferenceSections
      */

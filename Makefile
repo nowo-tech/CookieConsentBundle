@@ -7,7 +7,8 @@ export DOCKER_CONFIG := $(BUNDLE_ROOT)/.docker
 
 .PHONY: help ensure-up up down build shell install assets assets-test test-ts test test-coverage test-with-db \
 	test-coverage-with-db cs-check cs-fix rector rector-dry phpstan validate-phpdoc qa release-check \
-	release-check-demos composer-sync clean update validate validate-translations
+	release-check-demos composer-sync clean update validate validate-translations \
+	setup-hooks check-no-cursor-coauthor strip-cursor-coauthor-from-history
 
 help:
 	@echo "Cookie Consent Bundle - Development Commands"
@@ -93,7 +94,7 @@ validate-translations: ensure-up
 
 qa: cs-check test test-ts
 
-release-check: ensure-up assets composer-sync cs-fix cs-check rector-dry phpstan validate-phpdoc test-coverage test-ts release-check-demos
+release-check: check-no-cursor-coauthor ensure-up assets composer-sync cs-fix cs-check rector-dry phpstan validate-phpdoc test-coverage test-ts release-check-demos
 
 release-check-demos:
 	@if [ -f demo/Makefile ]; then $(MAKE) -C demo release-check 2>/dev/null || true; else true; fi
@@ -111,5 +112,19 @@ update: ensure-up
 validate: ensure-up
 	@$(COMPOSE) exec -T $(SERVICE_PHP) composer validate --strict
 
+
+setup-hooks:
+	@chmod +x .githooks/pre-commit 2>/dev/null || true
+	@chmod +x .githooks/commit-msg 2>/dev/null || true
+	@git config core.hooksPath .githooks
+	@echo "✅ Git hooks installed (.githooks — includes commit-msg for REQ-GIT-001)."
+
 # REQ-MAKE-008: update-deps (REQ-MAKE-008)
 include $(BUNDLE_ROOT)/../.scripts/Makefile.update-deps.mk
+check-no-cursor-coauthor:
+	@chmod +x .scripts/check-no-cursor-coauthor.sh
+	@./.scripts/check-no-cursor-coauthor.sh HEAD
+
+strip-cursor-coauthor-from-history:
+	@chmod +x .scripts/strip-cursor-coauthor-from-history.sh
+	@./.scripts/strip-cursor-coauthor-from-history.sh master

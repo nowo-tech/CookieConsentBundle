@@ -181,6 +181,158 @@ final class CookieConsentTwigExtensionTest extends TestCase
         self::assertSame([], $report['server']['open_blockers']);
     }
 
+    public function testUxGettersDelegateToCmpUxOptionsResolver(): void
+    {
+        $config = (new CookieConsentConfig())
+            ->setColorTheme('elegant-black')
+            ->setDarkModeEnabled(true)
+            ->setGranularCookieSelection(true)
+            ->setPreferencesBubbleEnabled(true);
+
+        $request = Request::create('/');
+        $request->attributes->set('nowo_cookie_consent_config', new ResolvedCookieConsentConfig($config, null));
+
+        $stack = new RequestStack();
+        $stack->push($request);
+
+        $extension = $this->createExtension($this->createChecker(false), $stack, true);
+
+        self::assertSame('elegant-black', $extension->getColorTheme());
+        self::assertTrue($extension->isDarkModeEnabled());
+        self::assertTrue($extension->isGranularCookieSelection());
+        self::assertTrue($extension->isPreferencesBubbleEnabled());
+    }
+
+    public function testShouldEmbedModalAndCookieInventory(): void
+    {
+        $config  = (new CookieConsentConfig())->setGranularCookieSelection(true);
+        $request = Request::create('/');
+        $request->attributes->set('nowo_cookie_consent_config', new ResolvedCookieConsentConfig($config, null));
+
+        $stack = new RequestStack();
+        $stack->push($request);
+
+        $extension = $this->createExtension(
+            $this->createChecker(false),
+            $stack,
+            true,
+            inventory: [
+                [
+                    'name'         => '_ga',
+                    'duration'     => '2 years',
+                    'category'     => 'analytics',
+                    'type'         => 'third_party',
+                    'sort_order'   => 0,
+                    'translations' => ['en' => ['provider' => 'Google', 'purpose' => 'Analytics']],
+                ],
+            ],
+        );
+
+        self::assertTrue($extension->shouldEmbedModal());
+        self::assertNotEmpty($extension->getCookieInventory());
+        self::assertSame('_ga', $extension->getCookieInventory()[0]['name']);
+    }
+
+    public function testDiagnosticReportIncludesRouteTargetingBlockers(): void
+    {
+        $config = (new CookieConsentConfig())
+            ->setAutoShowRouteMode(CookieConsentConfig::AUTO_SHOW_ROUTE_MODE_ONLY)
+            ->setAutoShowRoutes(['home']);
+
+        $request = Request::create('/');
+        $request->attributes->set('nowo_cookie_consent_config', new ResolvedCookieConsentConfig($config, null));
+
+        $stack = new RequestStack();
+        $stack->push($request);
+
+        $extension = $this->createExtension($this->createChecker(false), $stack, true);
+        $report    = $extension->getDiagnosticReport('admin');
+
+        self::assertContains('route_not_in_only_list', $report['server']['open_blockers']);
+        self::assertNotNull($report['server']['resolved_config']);
+    }
+
+    public function testDiagnosticReportFlagsDisabledRoutes(): void
+    {
+        $extension = $this->createExtension($this->createChecker(false), disabledRoutes: ['privacy']);
+        $report    = $extension->getDiagnosticReport('privacy');
+
+        self::assertContains('route_in_disabled_routes_list', $report['server']['open_blockers']);
+    }
+
+    public function testDiagnosticReportFlagsEmptyRoute(): void
+    {
+        $config = (new CookieConsentConfig())
+            ->setAutoShowRouteMode(CookieConsentConfig::AUTO_SHOW_ROUTE_MODE_ONLY)
+            ->setAutoShowRoutes(['home']);
+
+        $request = Request::create('/');
+        $request->attributes->set('nowo_cookie_consent_config', new ResolvedCookieConsentConfig($config, null));
+
+        $stack = new RequestStack();
+        $stack->push($request);
+
+        $extension = $this->createExtension($this->createChecker(false), $stack, true);
+        $report    = $extension->getDiagnosticReport('');
+
+        self::assertContains('empty_route_name', $report['server']['open_blockers']);
+    }
+
+    public function testShouldEmbedModalWhenPreferencesBubbleEnabledAfterConsent(): void
+    {
+        $config = (new CookieConsentConfig())->setPreferencesBubbleEnabled(true);
+
+        $request = Request::create('/');
+        $request->cookies->set(CookieNameEnum::COOKIE_CONSENT_NAME, '1');
+        $request->attributes->set('nowo_cookie_consent_config', new ResolvedCookieConsentConfig($config, null));
+
+        $stack = new RequestStack();
+        $stack->push($request);
+
+        $extension = $this->createExtension(new CookieChecker($stack), $stack, true);
+
+        self::assertTrue($extension->shouldEmbedModal());
+    }
+
+    public function testAllUxDelegationMethods(): void
+    {
+        $extension = $this->createExtension($this->createChecker(false));
+
+        self::assertIsBool($extension->isDisableTransitions());
+        self::assertIsBool($extension->isDisablePageInteraction());
+        self::assertIsBool($extension->isTwoStepModal());
+        self::assertIsBool($extension->isOpenPreferencesModal());
+        self::assertIsBool($extension->isManageIframePlaceholders());
+        self::assertIsArray($extension->getPreferenceSections());
+        self::assertIsString($extension->getPreferencesBubblePosition());
+    }
+
+    public function testDiagnosticReportFlagsExceptRoute(): void
+    {
+        $config = (new CookieConsentConfig())
+            ->setAutoShowRouteMode(CookieConsentConfig::AUTO_SHOW_ROUTE_MODE_EXCEPT)
+            ->setAutoShowRoutes(['admin']);
+
+        $request = Request::create('/');
+        $request->attributes->set('nowo_cookie_consent_config', new ResolvedCookieConsentConfig($config, null));
+
+        $stack = new RequestStack();
+        $stack->push($request);
+
+        $extension = $this->createExtension($this->createChecker(false), $stack, true);
+        $report    = $extension->getDiagnosticReport('admin');
+
+        self::assertContains('route_in_except_list', $report['server']['open_blockers']);
+    }
+
+    public function testDiagnosticReportWithFetchConfigViaApi(): void
+    {
+        $extension = $this->createExtension($this->createChecker(false), fetchConfigViaApi: true);
+        $report    = $extension->getDiagnosticReport('home');
+
+        self::assertTrue($report['server']['fetch_config_via_api']);
+    }
+
     /**
      * @param list<string> $yamlRoutes
      */
@@ -192,6 +344,7 @@ final class CookieConsentTwigExtensionTest extends TestCase
         array $yamlRoutes = [],
         bool $fetchConfigViaApi = false,
         array $disabledRoutes = ['privacy'],
+        array $inventory = [],
     ): CookieConsentTwigExtension {
         $stack ??= new RequestStack();
 
@@ -206,7 +359,7 @@ final class CookieConsentTwigExtensionTest extends TestCase
             $fetchConfigViaApi,
             $disabledRoutes,
             new CmpUxOptionsResolver($stack, 'light', false, false, false, false, false, false, false, false, 'bottom-right', null, null, [], $useDatabaseConfig),
-            new CookieInventoryProvider($this->createMock(CookieDefinitionRepository::class), false, []),
+            new CookieInventoryProvider($this->createMock(CookieDefinitionRepository::class), $inventory !== [], $inventory),
         );
     }
 

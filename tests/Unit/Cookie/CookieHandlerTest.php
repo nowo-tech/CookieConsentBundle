@@ -30,4 +30,22 @@ final class CookieHandlerTest extends TestCase
         self::assertContains(CookieNameEnum::getCookieCategoryName('analytics'), $names);
         self::assertContains(CookieNameEnum::getCookieCategoryName('marketing'), $names);
     }
+
+    public function testSavesGranularCookies(): void
+    {
+        $handler  = new CookieHandler(false);
+        $response = new Response();
+
+        $handler->save(
+            ['required' => true, 'analytics' => true, 'cookies' => ['_ga' => true]],
+            'key',
+            $response,
+            ['_ga' => true, '' => false, 123 => true],
+        );
+
+        $cookies = $response->headers->getCookies();
+        $names   = array_map(static fn (\Symfony\Component\HttpFoundation\Cookie $cookie): string => $cookie->getName(), $cookies);
+
+        self::assertContains(CookieNameEnum::COOKIE_CONSENT_GRANULAR_NAME, $names);
+    }
 }

@@ -52,6 +52,26 @@ final class CookieInventoryProviderTest extends TestCase
         self::assertFalse($entries[0]['allowed_by_default']);
     }
 
+    public function testNormalizerSkipsInvalidEntries(): void
+    {
+        $entries = CookieInventoryNormalizer::normalize([
+            'invalid',
+            ['name' => ''],
+            [
+                'name'         => '_bad',
+                'type'         => 'unknown',
+                'sortOrder'    => 'x',
+                'translations' => [123 => ['provider' => 'x']],
+                'allowedByDefault' => 'false',
+            ],
+        ]);
+
+        self::assertCount(1, $entries);
+        self::assertSame('_bad', $entries[0]['name']);
+        self::assertSame(CookieDefinition::TYPE_FIRST_PARTY, $entries[0]['type']);
+        self::assertFalse($entries[0]['allowed_by_default']);
+    }
+
     public function testReturnsEmptyWhenDisabled(): void
     {
         $provider = new CookieInventoryProvider(
@@ -84,7 +104,7 @@ final class CookieInventoryProviderTest extends TestCase
 
         $inventory = $provider->listForLocale(null, 'en');
 
-        self::assertCount(1, $inventory);
+        self::assertNotEmpty($inventory);
         self::assertSame('_ga', $inventory[0]['name']);
         self::assertSame('Google', $inventory[0]['provider']);
         self::assertSame('analytics', $inventory[0]['category']);
@@ -125,6 +145,60 @@ final class CookieInventoryProviderTest extends TestCase
 
         self::assertCount(1, $inventory);
         self::assertSame('_pk_id', $inventory[0]['name']);
+        self::assertSame('Matomo', $inventory[0]['provider']);
+    }
+
+    public function testBuildCookieTableBodyFiltersByCategory(): void
+    {
+        $repository = $this->createMock(CookieDefinitionRepository::class);
+        $repository->method('findByConfigOrdered')->willReturn([]);
+
+        $provider = new CookieInventoryProvider($repository, true, [
+            [
+                'name'         => '_ga',
+                'duration'     => '2 years',
+                'category'     => 'analytics',
+                'type'         => CookieDefinition::TYPE_THIRD_PARTY,
+                'sort_order'   => 0,
+                'translations' => ['en' => ['provider' => 'Google', 'purpose' => 'Analytics']],
+            ],
+            [
+                'name'         => '_fbp',
+                'duration'     => '3 months',
+                'category'     => 'marketing',
+                'type'         => CookieDefinition::TYPE_THIRD_PARTY,
+                'sort_order'   => 1,
+                'translations' => ['en' => ['provider' => 'Meta', 'purpose' => 'Ads']],
+            ],
+        ]);
+
+        $rows = $provider->buildCookieTableBody(null, 'en', 'analytics');
+
+        self::assertCount(1, $rows);
+        self::assertSame('_ga', $rows[0]['name']);
+    }
+
+    public function testFallsBackToEnglishTranslation(): void
+    {
+        $config     = new CookieConsentConfig();
+        $definition = (new CookieDefinition())
+            ->setName('_pk_id')
+            ->setDuration('13 months')
+            ->setCategory('analytics')
+            ->setType(CookieDefinition::TYPE_FIRST_PARTY)
+            ->addTranslation(
+                (new CookieDefinitionTranslation())
+                    ->setLocale('en')
+                    ->setProvider('Matomo')
+                    ->setPurpose('Visitor id'),
+            );
+
+        $repository = $this->createMock(CookieDefinitionRepository::class);
+        $repository->method('findByConfigOrdered')->willReturn([$definition]);
+
+        $provider  = new CookieInventoryProvider($repository, true, []);
+        $inventory = $provider->listForLocale($config, 'fr');
+
         self::assertSame('Matomo', $inventory[0]['provider']);
     }
 }

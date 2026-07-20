@@ -114,6 +114,32 @@ final class DoctrineRepositoryTest extends TestCase
         self::assertSame('Hola', $found->getConsentModalTitle());
     }
 
+    public function testDefinitionRepositoryFindByConfigOrdered(): void
+    {
+        $config = (new CookieConsentConfig())->setEnabled(true)->setDefault(true);
+
+        $first = (new \Nowo\CookieConsentBundle\Entity\CookieDefinition())
+            ->setName('_ga')
+            ->setSortOrder(2)
+            ->setConfig($config);
+        $second = (new \Nowo\CookieConsentBundle\Entity\CookieDefinition())
+            ->setName('_fbp')
+            ->setSortOrder(1)
+            ->setConfig($config);
+
+        $this->entityManager->persist($config);
+        $this->entityManager->persist($first);
+        $this->entityManager->persist($second);
+        $this->entityManager->flush();
+
+        $repository = new \Nowo\CookieConsentBundle\Repository\CookieDefinitionRepository($this->createRegistry());
+        $ordered    = $repository->findByConfigOrdered($config);
+
+        self::assertCount(2, $ordered);
+        self::assertSame('_fbp', $ordered[0]->getName());
+        self::assertSame('_ga', $ordered[1]->getName());
+    }
+
     private function createRegistry(): ManagerRegistry
     {
         $entityManager = $this->entityManager;

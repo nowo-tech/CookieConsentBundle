@@ -129,4 +129,35 @@ final class CookieConsentFormSubscriberTest extends TestCase
 
         $subscriber->onResponse($event);
     }
+
+    public function testHandlesGranularCookieSubmission(): void
+    {
+        $handler = $this->createMock(CookieHandler::class);
+        $handler->expects(self::once())->method('save')->with(
+            self::anything(),
+            self::anything(),
+            self::anything(),
+            ['_ga' => true],
+        );
+
+        $form = $this->createMock(\Symfony\Component\Form\FormInterface::class);
+        $form->method('handleRequest');
+        $form->method('isSubmitted')->willReturn(true);
+        $form->method('isValid')->willReturn(true);
+        $form->method('getData')->willReturn([
+            'required' => true,
+            'cookies'  => ['_ga' => true],
+        ]);
+
+        $formFactory = $this->createMock(\Symfony\Component\Form\FormFactoryInterface::class);
+        $formFactory->method('create')->willReturn($form);
+
+        $subscriber = new CookieConsentFormSubscriber($formFactory, $this->createMock(CookieLogger::class), $handler, false);
+        $subscriber->onResponse(new ResponseEvent(
+            $this->createMock(HttpKernelInterface::class),
+            Request::create('/', 'POST'),
+            HttpKernelInterface::MAIN_REQUEST,
+            new Response(),
+        ));
+    }
 }

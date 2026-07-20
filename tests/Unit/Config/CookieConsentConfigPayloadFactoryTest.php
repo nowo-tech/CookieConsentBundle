@@ -88,4 +88,49 @@ final class CookieConsentConfigPayloadFactoryTest extends TestCase
     {
         return new CookieInventoryProvider($this->createMock(CookieDefinitionRepository::class), false, []);
     }
+
+    public function testBuildIncludesInventorySectionsWhenEnabled(): void
+    {
+        $config = (new CookieConsentConfig())->setEnabled(true)->setDefault(true);
+
+        $configRepository = $this->createMock(CookieConsentConfigRepository::class);
+        $configRepository->method('findAllEnabledNonDefault')->willReturn([]);
+        $configRepository->method('findDefaultEnabled')->willReturn($config);
+
+        $resolver = new CookieConsentConfigResolver(
+            new CookieConsentConfigSelector($configRepository, new CookieConsentRoutePatternMatcher()),
+            $this->createMock(CookieConsentConfigTranslationRepository::class),
+            true,
+        );
+
+        $inventoryProvider = new CookieInventoryProvider(
+            $this->createMock(CookieDefinitionRepository::class),
+            true,
+            [[
+                'name'         => '_ga',
+                'duration'     => '2 years',
+                'category'     => 'analytics',
+                'type'         => 'third_party',
+                'sort_order'   => 0,
+                'translations' => ['en' => ['provider' => 'Google', 'purpose' => 'Analytics']],
+            ]],
+        );
+
+        $translator = $this->createMock(TranslatorInterface::class);
+        $translator->method('trans')->willReturnArgument(0);
+
+        $factory = new CookieConsentConfigPayloadFactory(
+            $resolver,
+            $translator,
+            $inventoryProvider,
+            ['analytics'],
+            [['title' => 'Analytics', 'categories' => ['analytics']]],
+        );
+
+        $payload = $factory->build('en');
+
+        $sections = $payload['data']['language']['translations']['en']['preferencesModal']['sections'];
+        self::assertNotEmpty($sections);
+        self::assertArrayHasKey('cookieTable', $sections[0]);
+    }
 }

@@ -45,7 +45,7 @@ composer require nowo-tech/cookie-consent-bundle
 
 ## Coverage goals
 
-- **PHP**: **100%** line coverage (130 tests; `make test-coverage`)
+- **PHP**: **100%** line coverage (`make test-coverage`)
 - **TypeScript**: **~94%** line coverage, **90%** minimum enforced (`make test-ts`)
 
 Update README **Tests and coverage** percentages after each release when coverage changes materially.
@@ -54,6 +54,7 @@ Update README **Tests and coverage** percentages after each release when coverag
 
 | Version | Date | Notes |
 | --- | --- | --- |
+| [1.3.3](CHANGELOG.md#133---2026-07-20) | 2026-07-20 | REQ-GIT-001 hygiene, Code of Conduct, expanded PHPUnit coverage |
 | [1.3.2](CHANGELOG.md#132---2026-07-13) | 2026-07-13 | Asset package `nowo_cookie_consent`, AssetMapper-compatible script loading |
 | [1.3.1](CHANGELOG.md#131---2026-07-09) | 2026-07-09 | Spec Kit baseline, demo update-deps fix, dev lock sync |
 | [1.3.0](CHANGELOG.md#130---2026-07-05) | 2026-07-05 | Dashboard table names, `doctrine.table_prefix`, locale translations |
@@ -61,3 +62,5 @@ Update README **Tests and coverage** percentages after each release when coverag
 | [1.1.1](CHANGELOG.md#111---2026-06-15) | 2026-06-15 | Standards compliance, SECURITY/docs, TS coverage gate |
 | [1.1.0](CHANGELOG.md#110---2026-06-15) | 2026-06-15 | Cookie inventory, granular selection, preferences bubble |
 | [1.0.0](CHANGELOG.md#100---2026-06-15) | 2026-06-15 | First stable release |
+
+After creating the release commit and tag, run `make check-no-cursor-coauthor` again **before** `git push` (REQ-GIT-001). The release commit itself is not covered by an earlier `release-check` run.

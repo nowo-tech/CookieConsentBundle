@@ -7,6 +7,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.3.3] - 2026-07-20
+
+### Added
+
+- **REQ-GIT-001** — git hygiene: `.githooks/commit-msg`, `make setup-hooks`, `make check-no-cursor-coauthor`, CI job `git-hygiene`, and [GITHUB_CI.md](GITHUB_CI.md)
+- **Code of Conduct** — [CODE_OF_CONDUCT.md](../CODE_OF_CONDUCT.md) (Contributor Covenant)
+- Expanded PHPUnit coverage for admin controllers, forms, Twig CMP UX helpers, repositories, and cookie/config edge cases (**180 tests**)
+
+### Changed
+
+- `make release-check` runs `check-no-cursor-coauthor` before the rest of the pipeline
+- [CONTRIBUTING.md](CONTRIBUTING.md) and [RELEASE.md](RELEASE.md) document hook setup and pre-push co-author verification
+
+No configuration, public API, or runtime changes for bundle consumers.
+
+[1.3.3]: https://github.com/nowo-tech/CookieConsentBundle/releases/tag/v1.3.3
+
 ## [1.3.2] - 2026-07-13
 
 ### Added
