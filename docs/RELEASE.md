@@ -54,6 +54,7 @@ Update README **Tests and coverage** percentages after each release when coverag
 
 | Version | Date | Notes |
 | --- | --- | --- |
+| [1.3.4](CHANGELOG.md#134---2026-07-22) | 2026-07-22 | Vite 8 / happy-dom 20, GHA bumps, demo `FRANKENPHP_MODE` |
 | [1.3.3](CHANGELOG.md#133---2026-07-20) | 2026-07-20 | REQ-GIT-001 hygiene, Code of Conduct, expanded PHPUnit coverage |
 | [1.3.2](CHANGELOG.md#132---2026-07-13) | 2026-07-13 | Asset package `nowo_cookie_consent`, AssetMapper-compatible script loading |
 | [1.3.1](CHANGELOG.md#131---2026-07-09) | 2026-07-09 | Spec Kit baseline, demo update-deps fix, dev lock sync |

@@ -19,13 +19,7 @@ ENV SERVER_NAME=:80
 COPY docker/frankenphp/Caddyfile /etc/frankenphp/Caddyfile
 COPY docker/frankenphp/Caddyfile.dev /etc/frankenphp/Caddyfile.dev
 
-RUN echo '#!/bin/sh' > /usr/local/bin/docker-entrypoint.sh && \
-    echo 'set -e' >> /usr/local/bin/docker-entrypoint.sh && \
-    echo 'if [ "${APP_ENV:-prod}" = "dev" ]; then cp /etc/frankenphp/Caddyfile.dev /etc/frankenphp/Caddyfile; fi' >> /usr/local/bin/docker-entrypoint.sh && \
-    echo 'mkdir -p /app/var/cache /app/var/log /app/var' >> /usr/local/bin/docker-entrypoint.sh && \
-    echo 'chmod -R 777 /app/var' >> /usr/local/bin/docker-entrypoint.sh && \
-    echo 'if [ -f /app/composer.json ]; then composer install --no-interaction --prefer-dist; fi' >> /usr/local/bin/docker-entrypoint.sh && \
-    echo 'exec frankenphp run --config /etc/frankenphp/Caddyfile --adapter caddyfile' >> /usr/local/bin/docker-entrypoint.sh && \
-    chmod +x /usr/local/bin/docker-entrypoint.sh
+COPY docker/entrypoint.sh /usr/local/bin/docker-entrypoint.sh
+RUN chmod +x /usr/local/bin/docker-entrypoint.sh
 
 ENTRYPOINT ["docker-entrypoint.sh"]

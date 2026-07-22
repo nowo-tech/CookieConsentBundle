@@ -7,6 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.3.4] - 2026-07-22
+
+### Changed
+
+- **Dev tooling** — Vite **8**, happy-dom **20**, `@types/node` **26**; GitHub Actions `checkout`/`setup-node` **v7**, `pnpm/action-setup` **v6**
+- **Demos** — FrankenPHP mode via `FRANKENPHP_MODE` (`classic` \| `worker`, default `worker`); shared `docker/entrypoint.sh` instead of inline Dockerfile script
+
+### Documentation
+
+- [DEMO-FRANKENPHP.md](DEMO-FRANKENPHP.md) — `FRANKENPHP_MODE` switching (classic vs worker)
+- [UPGRADING.md](UPGRADING.md) — upgrade path from 1.3.3
+
+No configuration, public API, or runtime changes for bundle consumers.
+
+[1.3.4]: https://github.com/nowo-tech/CookieConsentBundle/releases/tag/v1.3.4
+
 ## [1.3.3] - 2026-07-20
 
 ### Added

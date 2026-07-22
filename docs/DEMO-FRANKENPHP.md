@@ -8,7 +8,7 @@ This document describes how the **Cookie Consent Bundle** demo applications run 
 - [What the demos include](#what-the-demos-include)
 - [Development configuration](#development-configuration)
 - [Production configuration](#production-configuration)
-- [Switching between development and production](#switching-between-development-and-production)
+- [Switching classic vs worker (`FRANKENPHP_MODE`)](#switching-classic-vs-worker-frankenphp_mode)
 - [Troubleshooting](#troubleshooting)
 
 ---
@@ -22,7 +22,7 @@ Demos use:
 - **FrankenPHP** (Caddy + PHP) in a single container
 - **Docker Compose** with the app and parent bundle mounted (`../..` → `/var/cookie-consent-bundle`)
 - **Two Caddyfiles**: `Caddyfile` (production, with worker) and `Caddyfile.dev` (development, no worker)
-- An **entrypoint** that copies `Caddyfile.dev` when `APP_ENV=dev`
+- An **entrypoint** that selects classic vs worker Caddyfile from **`FRANKENPHP_MODE`** (`classic` \| `worker`, default **`worker`** in `.env.example`)
 
 There are two Symfony 8.1 demos:
 
@@ -133,10 +133,12 @@ php bin/console cache:warmup --env=prod
 
 ---
 
-## Switching between development and production
+## Switching classic vs worker (`FRANKENPHP_MODE`)
 
-- **Development:** `APP_ENV=dev` — entrypoint copies `Caddyfile.dev`
-- **Production:** `APP_ENV=prod` — default Caddyfile with worker
+- **Classic (hot-reload):** `FRANKENPHP_MODE=classic` — entrypoint copies `Caddyfile.dev`
+- **Worker (default):** `FRANKENPHP_MODE=worker` — worker Caddyfile
+- Keep `APP_ENV=dev` / `APP_DEBUG=1` for Symfony debug tools independently of FrankenPHP mode.
+After changing `.env`, recreate with `docker compose up -d` (no rebuild).
 
 Restart after env or Caddyfile changes: `docker-compose restart` or `make down && make up`.
 
