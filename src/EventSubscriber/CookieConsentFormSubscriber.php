@@ -56,8 +56,6 @@ class CookieConsentFormSubscriber implements EventSubscriberInterface
      * Processes a submitted consent form and persists cookies when valid.
      *
      * @param ResponseEvent $event The kernel response event
-     *
-     * @return void
      */
     public function onResponse(ResponseEvent $event): void
     {

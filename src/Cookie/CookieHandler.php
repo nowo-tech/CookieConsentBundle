@@ -34,8 +34,6 @@ class CookieHandler
      * @param string $key The anonymous consent key
      * @param Response $response The HTTP response to modify
      * @param array<string, bool> $granularCookies Optional per-cookie consent map
-     *
-     * @return void
      */
     public function save(array $categories, string $key, Response $response, array $granularCookies = []): void
     {
