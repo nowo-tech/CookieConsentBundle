@@ -15,6 +15,7 @@ use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Routing\RouterInterface;
+use Symfony\Component\Translation\Translator;
 use Symfony\Contracts\Translation\TranslatorInterface;
 use Throwable;
 use Twig\Environment;
@@ -126,7 +127,7 @@ class CookieConsentController
 
         $messages = $resolved->getTranslationMessages();
 
-        if ($messages !== [] && $this->translator instanceof \Symfony\Component\Translation\Translator) {
+        if ($messages !== [] && $this->translator instanceof Translator) {
             $this->translator->addResource(
                 'array',
                 $messages,

@@ -7,6 +7,7 @@ namespace Nowo\CookieConsentBundle\Tests\Unit\Cookie;
 use Nowo\CookieConsentBundle\Cookie\CookieHandler;
 use Nowo\CookieConsentBundle\Enum\CookieNameEnum;
 use PHPUnit\Framework\TestCase;
+use Symfony\Component\HttpFoundation\Cookie;
 use Symfony\Component\HttpFoundation\Response;
 
 final class CookieHandlerTest extends TestCase
@@ -23,7 +24,7 @@ final class CookieHandlerTest extends TestCase
         ], 'consent-key', $response);
 
         $cookies = $response->headers->getCookies();
-        $names   = array_map(static fn (\Symfony\Component\HttpFoundation\Cookie $cookie): string => $cookie->getName(), $cookies);
+        $names   = array_map(static fn (Cookie $cookie): string => $cookie->getName(), $cookies);
 
         self::assertContains(CookieNameEnum::COOKIE_CONSENT_NAME, $names);
         self::assertContains(CookieNameEnum::COOKIE_CONSENT_KEY_NAME, $names);
@@ -37,14 +38,14 @@ final class CookieHandlerTest extends TestCase
         $response = new Response();
 
         $handler->save(
-            ['required' => true, 'analytics' => true, 'cookies' => ['_ga' => true]],
+            ['required' => true, 'analytics' => true],
             'key',
             $response,
-            ['_ga' => true, '' => false, 123 => true],
+            ['_ga' => true, '' => false],
         );
 
         $cookies = $response->headers->getCookies();
-        $names   = array_map(static fn (\Symfony\Component\HttpFoundation\Cookie $cookie): string => $cookie->getName(), $cookies);
+        $names   = array_map(static fn (Cookie $cookie): string => $cookie->getName(), $cookies);
 
         self::assertContains(CookieNameEnum::COOKIE_CONSENT_GRANULAR_NAME, $names);
     }

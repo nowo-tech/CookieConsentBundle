@@ -12,13 +12,14 @@ use Nowo\CookieConsentBundle\Twig\CmpUxTwigExtension;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\RequestStack;
+use Twig\TwigFunction;
 
 final class CmpUxTwigExtensionTest extends TestCase
 {
     public function testGetFunctionsRegistersAllUxCallbacks(): void
     {
         $extension = $this->createExtension();
-        $names     = array_map(static fn (\Twig\TwigFunction $function): string => $function->getName(), $extension->getFunctions());
+        $names     = array_map(static fn (TwigFunction $function): string => $function->getName(), $extension->getFunctions());
 
         self::assertContains('nowo_cookie_consent_two_step_modal', $names);
         self::assertContains('nowo_cookie_consent_preferences_bubble_icon', $names);
@@ -58,13 +59,13 @@ final class CmpUxTwigExtensionTest extends TestCase
     {
         $extension = $this->createExtension();
 
-        self::assertIsBool($extension->isOpenPreferencesModal());
-        self::assertIsBool($extension->isDisableTransitions());
-        self::assertIsBool($extension->isDisablePageInteraction());
-        self::assertIsBool($extension->isManageIframePlaceholders());
-        self::assertIsBool($extension->isDarkModeEnabled());
-        self::assertIsString($extension->getPreferencesBubblePosition());
-        self::assertIsArray($extension->getPreferenceSections());
+        self::assertFalse($extension->isOpenPreferencesModal());
+        self::assertFalse($extension->isDisableTransitions());
+        self::assertFalse($extension->isDisablePageInteraction());
+        self::assertFalse($extension->isManageIframePlaceholders());
+        self::assertFalse($extension->isDarkModeEnabled());
+        self::assertSame('bottom-right', $extension->getPreferencesBubblePosition());
+        self::assertSame([['title' => 'Analytics', 'categories' => ['analytics']]], $extension->getPreferenceSections());
     }
 
     private function createExtension(): CmpUxTwigExtension

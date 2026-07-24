@@ -5,9 +5,11 @@ declare(strict_types=1);
 namespace Nowo\CookieConsentBundle\EventSubscriber;
 
 use Nowo\CookieConsentBundle\Config\CookieConsentConfigResolver;
+use Nowo\CookieConsentBundle\Config\ResolvedCookieConsentConfig;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use Symfony\Component\HttpKernel\Event\RequestEvent;
 use Symfony\Component\HttpKernel\KernelEvents;
+use Symfony\Component\Translation\Translator;
 use Symfony\Contracts\Translation\TranslatorInterface;
 
 use function is_string;
@@ -45,6 +47,8 @@ final class CookieConsentConfigTranslationSubscriber implements EventSubscriberI
      * Resolves and registers consent translations for the current request.
      *
      * @param RequestEvent $event The kernel request event
+     *
+     * @return void
      */
     public function onKernelRequest(RequestEvent $event): void
     {
@@ -56,13 +60,13 @@ final class CookieConsentConfigTranslationSubscriber implements EventSubscriberI
             is_string($route) && $route !== '' ? $route : null,
         );
 
-        if (!$resolved instanceof \Nowo\CookieConsentBundle\Config\ResolvedCookieConsentConfig) {
+        if (!$resolved instanceof ResolvedCookieConsentConfig) {
             return;
         }
 
         $messages = $resolved->getTranslationMessages();
 
-        if ($messages !== [] && $this->translator instanceof \Symfony\Component\Translation\Translator) {
+        if ($messages !== [] && $this->translator instanceof Translator) {
             $this->translator->addResource(
                 'array',
                 $messages,

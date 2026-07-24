@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Nowo\CookieConsentBundle\Config;
 
+use Nowo\CookieConsentBundle\Entity\CookieConsentConfig;
 use Nowo\CookieConsentBundle\Repository\CookieConsentConfigTranslationRepository;
 
 /**
@@ -41,7 +42,7 @@ final class CookieConsentConfigResolver
 
         $config = $this->configSelector->select($route);
 
-        if (!$config instanceof \Nowo\CookieConsentBundle\Entity\CookieConsentConfig) {
+        if (!$config instanceof CookieConsentConfig) {
             return null;
         }
 

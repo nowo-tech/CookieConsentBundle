@@ -20,6 +20,7 @@ final class CookieConsentConfigPayloadFactory
      * Creates a new configuration payload factory.
      *
      * @param list<string> $categories
+     * @param list<array<string, mixed>> $yamlPreferenceSections
      */
     public function __construct(
         private readonly CookieConsentConfigResolver $configResolver,
@@ -168,10 +169,6 @@ final class CookieConsentConfigPayloadFactory
         $sections   = [];
 
         foreach ($configured as $section) {
-            if (!is_array($section)) {
-                continue;
-            }
-
             $title       = isset($section['title']) ? (string) $section['title'] : '';
             $description = isset($section['description']) ? (string) $section['description'] : '';
             $categories  = $section['categories'] ?? [];

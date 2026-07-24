@@ -15,6 +15,6 @@ final class CookieDefinitionTranslationRepositoryTest extends TestCase
         $registry   = $this->createMock(ManagerRegistry::class);
         $repository = new CookieDefinitionTranslationRepository($registry);
 
-        self::assertInstanceOf(CookieDefinitionTranslationRepository::class, $repository);
+        self::assertSame(CookieDefinitionTranslationRepository::class, $repository::class);
     }
 }

@@ -8,12 +8,13 @@ use Nowo\CookieConsentBundle\DependencyInjection\Compiler\TwigPathsPass;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\Definition;
+use Twig\Loader\FilesystemLoader;
 
 final class TwigPathsPassTest extends TestCase
 {
     public function testAddsBundleViewsPathToNativeLoader(): void
     {
-        $loader    = new Definition(\Twig\Loader\FilesystemLoader::class);
+        $loader    = new Definition(FilesystemLoader::class);
         $container = new ContainerBuilder();
         $container->setDefinition('twig.loader.native_filesystem', $loader);
 
@@ -37,7 +38,7 @@ final class TwigPathsPassTest extends TestCase
 
     public function testUsesNativeLoaderDefinitionWhenPresent(): void
     {
-        $loader    = new Definition(\Twig\Loader\FilesystemLoader::class);
+        $loader    = new Definition(FilesystemLoader::class);
         $container = new ContainerBuilder();
         $container->setDefinition('twig.loader.native', $loader);
 
@@ -48,7 +49,7 @@ final class TwigPathsPassTest extends TestCase
 
     public function testUsesNativeLoaderAliasWhenPresent(): void
     {
-        $loader    = new Definition(\Twig\Loader\FilesystemLoader::class);
+        $loader    = new Definition(FilesystemLoader::class);
         $container = new ContainerBuilder();
         $container->setDefinition('custom.native.loader', $loader);
         $container->setAlias('twig.loader.native', 'custom.native.loader');

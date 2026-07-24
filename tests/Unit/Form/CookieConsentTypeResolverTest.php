@@ -15,6 +15,7 @@ use Nowo\CookieConsentBundle\Form\CookieConsentType;
 use Nowo\CookieConsentBundle\Repository\CookieConsentConfigRepository;
 use Nowo\CookieConsentBundle\Repository\CookieConsentConfigTranslationRepository;
 use Nowo\CookieConsentBundle\Repository\CookieDefinitionRepository;
+use Symfony\Component\Form\FormTypeInterface;
 use Symfony\Component\Form\Test\TypeTestCase;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\RequestStack;
@@ -47,7 +48,7 @@ final class CookieConsentTypeResolverTest extends TypeTestCase
     }
 
     /**
-     * @return list<\Symfony\Component\Form\FormTypeInterface<mixed>>
+     * @return list<FormTypeInterface<mixed>>
      */
     protected function getTypes(): array
     {

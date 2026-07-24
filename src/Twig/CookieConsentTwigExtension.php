@@ -11,6 +11,7 @@ use Nowo\CookieConsentBundle\Config\ResolvedCookieConsentConfig;
 use Nowo\CookieConsentBundle\Cookie\CookieChecker;
 use Nowo\CookieConsentBundle\Entity\CookieConsentConfig;
 use Nowo\CookieConsentBundle\Locale\LocaleResolver;
+use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\RequestStack;
 use Twig\Extension\AbstractExtension;
 use Twig\TwigFunction;
@@ -94,7 +95,7 @@ class CookieConsentTwigExtension extends AbstractExtension
     {
         $request = $this->requestStack->getCurrentRequest();
 
-        if (!$request instanceof \Symfony\Component\HttpFoundation\Request) {
+        if (!$request instanceof Request) {
             return $this->localeResolver->getDefaultLocale();
         }
 
@@ -248,7 +249,7 @@ class CookieConsentTwigExtension extends AbstractExtension
     private function getResolvedConfig(): ?ResolvedCookieConsentConfig
     {
         foreach ([$this->requestStack->getCurrentRequest(), $this->requestStack->getMainRequest()] as $request) {
-            if (!$request instanceof \Symfony\Component\HttpFoundation\Request) {
+            if (!$request instanceof Request) {
                 continue;
             }
 
@@ -267,7 +268,7 @@ class CookieConsentTwigExtension extends AbstractExtension
         $mainRequest    = $this->requestStack->getMainRequest();
         $currentRequest = $this->requestStack->getCurrentRequest();
 
-        if ($mainRequest instanceof \Symfony\Component\HttpFoundation\Request && $currentRequest instanceof \Symfony\Component\HttpFoundation\Request && $mainRequest !== $currentRequest) {
+        if ($mainRequest instanceof Request && $currentRequest instanceof Request && $mainRequest !== $currentRequest) {
             $mainRoute = $mainRequest->attributes->get('_route');
 
             if (is_string($mainRoute) && $mainRoute !== '') {
@@ -383,7 +384,7 @@ class CookieConsentTwigExtension extends AbstractExtension
     /**
      * Returns grouped preference sections configured for the active profile.
      *
-     * @return list<array{title: string, description: string, categories: list<string>}> Preference sections
+     * @return list<array<string, mixed>> Preference sections
      */
     public function getPreferenceSections(): array
     {

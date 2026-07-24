@@ -16,6 +16,7 @@ use Symfony\Component\Form\FormInterface;
 use Symfony\Component\Form\FormView;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Symfony\Contracts\Translation\TranslatorInterface;
 
 final class CookieConsentConfigSettingsAdminControllerTest extends AbstractControllerTestCase
@@ -79,7 +80,7 @@ final class CookieConsentConfigSettingsAdminControllerTest extends AbstractContr
         );
         $this->configureController($controller);
 
-        $this->expectException(\Symfony\Component\HttpKernel\Exception\NotFoundHttpException::class);
+        $this->expectException(NotFoundHttpException::class);
         $controller->edit(1, Request::create('/settings'), $this->createMock(EntityManagerInterface::class));
     }
 
@@ -102,7 +103,6 @@ final class CookieConsentConfigSettingsAdminControllerTest extends AbstractContr
     private function setEntityId(object $entity, int $id): void
     {
         $reflection = new ReflectionProperty($entity, 'id');
-        $reflection->setAccessible(true);
         $reflection->setValue($entity, $id);
     }
 }

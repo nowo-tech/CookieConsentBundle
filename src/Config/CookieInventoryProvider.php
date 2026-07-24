@@ -17,6 +17,19 @@ use Nowo\CookieConsentBundle\Repository\CookieDefinitionRepository;
 final class CookieInventoryProvider
 {
     /**
+     * @var list<array{
+     *     name: string,
+     *     duration: string,
+     *     category: string,
+     *     type: string,
+     *     sort_order: int,
+     *     allowed_by_default: bool,
+     *     translations: array<string, array{provider: string, purpose: string}>
+     * }>|null
+     */
+    private ?array $normalizedYamlInventory = null;
+
+    /**
      * Creates a new cookie inventory provider.
      *
      * @param CookieDefinitionRepository $definitionRepository Repository for database definitions
@@ -172,12 +185,12 @@ final class CookieInventoryProvider
 
             $inventory[] = [
                 'name'               => $entry['name'],
-                'provider'           => $translation['provider'] ?? '',
-                'purpose'            => $translation['purpose'] ?? '',
+                'provider'           => $translation['provider'],
+                'purpose'            => $translation['purpose'],
                 'duration'           => $entry['duration'],
                 'category'           => $entry['category'],
                 'type'               => $entry['type'],
-                'allowed_by_default' => $entry['allowed_by_default'] ?? true,
+                'allowed_by_default' => $entry['allowed_by_default'],
             ];
         }
 
@@ -191,18 +204,17 @@ final class CookieInventoryProvider
      *     category: string,
      *     type: string,
      *     sort_order: int,
+     *     allowed_by_default: bool,
      *     translations: array<string, array{provider: string, purpose: string}>
      * }>
      */
     private function getNormalizedYamlInventory(): array
     {
-        static $cache = null;
-
-        if ($cache === null) {
-            $cache = CookieInventoryNormalizer::normalize($this->yamlCookieInventory);
+        if ($this->normalizedYamlInventory === null) {
+            $this->normalizedYamlInventory = CookieInventoryNormalizer::normalize($this->yamlCookieInventory);
         }
 
-        return $cache;
+        return $this->normalizedYamlInventory;
     }
 
     private function hasDatabaseDefinitions(CookieConsentConfig $config): bool

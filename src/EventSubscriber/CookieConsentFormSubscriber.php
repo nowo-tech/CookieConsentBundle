@@ -18,7 +18,6 @@ use Symfony\Component\HttpKernel\KernelEvents;
 
 use function in_array;
 use function is_array;
-use function is_string;
 
 /**
  * Handles cookie consent form submission on the HTTP response event.
@@ -57,6 +56,8 @@ class CookieConsentFormSubscriber implements EventSubscriberInterface
      * Processes a submitted consent form and persists cookies when valid.
      *
      * @param ResponseEvent $event The kernel response event
+     *
+     * @return void
      */
     public function onResponse(ResponseEvent $event): void
     {
@@ -108,7 +109,7 @@ class CookieConsentFormSubscriber implements EventSubscriberInterface
         $granular = [];
 
         foreach ($cookies as $name => $allowed) {
-            if (!is_string($name)) {
+            if ($name === '') {
                 continue;
             }
 

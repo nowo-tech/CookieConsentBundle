@@ -17,14 +17,18 @@ use Symfony\Component\OptionsResolver\OptionsResolver;
 
 /**
  * Symfony form type for editing CookieConsentConfig profile settings.
+ *
+ * @extends AbstractType<CookieConsentConfig>
  */
 class CookieConsentConfigSettingsType extends AbstractType
 {
     /**
      * Builds the consent profile settings form fields.
      *
-     * @param FormBuilderInterface $builder The form builder
+     * @param FormBuilderInterface<CookieConsentConfig|null> $builder The form builder
      * @param array<string, mixed> $options Resolved form options
+     *
+     * @return void
      */
     public function buildForm(FormBuilderInterface $builder, array $options): void
     {
@@ -290,6 +294,8 @@ class CookieConsentConfigSettingsType extends AbstractType
      * Configures default options for the consent profile settings form.
      *
      * @param OptionsResolver $resolver The options resolver
+     *
+     * @return void
      */
     public function configureOptions(OptionsResolver $resolver): void
     {

@@ -14,6 +14,7 @@ use Nowo\CookieConsentBundle\Repository\CookieDefinitionRepository;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Contracts\Translation\TranslatorInterface;
 
@@ -118,7 +119,7 @@ class CookieDefinitionAdminController extends AbstractController
         $definition = $this->getDefinition($config, $id);
 
         if (!$this->isCsrfTokenValid('delete-cookie-definition-' . $definition->getId(), (string) $request->request->get('_token'))) {
-            throw $this->createAccessDeniedException();
+            throw new AccessDeniedHttpException();
         }
 
         $entityManager->remove($definition);

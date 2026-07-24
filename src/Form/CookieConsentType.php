@@ -16,6 +16,7 @@ use Symfony\Component\Form\Extension\Core\Type\SubmitType;
 use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\Form\FormEvent;
 use Symfony\Component\Form\FormEvents;
+use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 
@@ -50,6 +51,8 @@ class CookieConsentType extends AbstractType
      *
      * @param FormBuilderInterface<array<string, mixed>|null> $builder The form builder
      * @param array<string, mixed> $options The form options
+     *
+     * @return void
      */
     public function buildForm(FormBuilderInterface $builder, array $options): void
     {
@@ -196,7 +199,7 @@ class CookieConsentType extends AbstractType
             $inventory[] = [
                 'name'               => $row['name'],
                 'category'           => $row['category'],
-                'allowed_by_default' => $row['allowed_by_default'] ?? true,
+                'allowed_by_default' => $row['allowed_by_default'],
             ];
         }
 
@@ -207,7 +210,7 @@ class CookieConsentType extends AbstractType
     {
         $request = $this->requestStack->getMainRequest();
 
-        if ($request instanceof \Symfony\Component\HttpFoundation\Request) {
+        if ($request instanceof Request) {
             $resolved = $request->attributes->get('nowo_cookie_consent_config');
 
             if ($resolved instanceof ResolvedCookieConsentConfig) {
@@ -264,6 +267,8 @@ class CookieConsentType extends AbstractType
      * Configures default options for the consent form type.
      *
      * @param OptionsResolver $resolver The options resolver
+     *
+     * @return void
      */
     public function configureOptions(OptionsResolver $resolver): void
     {

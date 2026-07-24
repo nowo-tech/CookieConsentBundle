@@ -7,7 +7,6 @@ services:
     public: false
     bind:
       $cookieCategories: '%nowo_cookie_consent.categories%'
-      $useLogger: '%nowo_cookie_consent.use_logger%'
       $httpOnly: '%nowo_cookie_consent.http_only%'
       $formAction: '%nowo_cookie_consent.form_action%'
       $csrfProtection: '%nowo_cookie_consent.csrf_protection%'
@@ -22,6 +21,12 @@ services:
       - '../../DependencyInjection/'
       - '../../Entity/'
       - '../../NowoCookieConsentBundle.php'
+
+  # Explicit (not _defaults.bind): survives setClass overrides and avoids unused-bind
+  # errors when the FormSubscriber definition is replaced by the host app.
+  Nowo\CookieConsentBundle\EventSubscriber\CookieConsentFormSubscriber:
+    arguments:
+      $useLogger: '%nowo_cookie_consent.use_logger%'
 
   Nowo\CookieConsentBundle\Locale\LocaleResolver:
     arguments:

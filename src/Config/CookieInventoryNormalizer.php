@@ -20,7 +20,7 @@ use const FILTER_VALIDATE_BOOL;
 final class CookieInventoryNormalizer
 {
     /**
-     * @param list<array<string, mixed>> $entries
+     * @param array<int|string, mixed> $entries
      *
      * @return list<array{
      *     name: string,

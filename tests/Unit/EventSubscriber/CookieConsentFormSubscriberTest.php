@@ -9,6 +9,8 @@ use Nowo\CookieConsentBundle\Cookie\CookieLogger;
 use Nowo\CookieConsentBundle\Enum\CookieNameEnum;
 use Nowo\CookieConsentBundle\EventSubscriber\CookieConsentFormSubscriber;
 use PHPUnit\Framework\TestCase;
+use Symfony\Component\Form\FormFactoryInterface;
+use Symfony\Component\Form\FormInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Event\ResponseEvent;
@@ -28,7 +30,7 @@ final class CookieConsentFormSubscriberTest extends TestCase
     public function testIgnoresSubRequests(): void
     {
         $subscriber = new CookieConsentFormSubscriber(
-            $this->createMock(\Symfony\Component\Form\FormFactoryInterface::class),
+            $this->createMock(FormFactoryInterface::class),
             $this->createMock(CookieLogger::class),
             $this->createMock(CookieHandler::class),
             true,
@@ -50,12 +52,12 @@ final class CookieConsentFormSubscriberTest extends TestCase
         $handler = $this->createMock(CookieHandler::class);
         $handler->expects(self::never())->method('save');
 
-        $form = $this->createMock(\Symfony\Component\Form\FormInterface::class);
+        $form = $this->createMock(FormInterface::class);
         $form->method('handleRequest');
         $form->method('isSubmitted')->willReturn(true);
         $form->method('isValid')->willReturn(false);
 
-        $formFactory = $this->createMock(\Symfony\Component\Form\FormFactoryInterface::class);
+        $formFactory = $this->createMock(FormFactoryInterface::class);
         $formFactory->method('create')->willReturn($form);
 
         $subscriber = new CookieConsentFormSubscriber($formFactory, $this->createMock(CookieLogger::class), $handler, true);
@@ -75,13 +77,13 @@ final class CookieConsentFormSubscriberTest extends TestCase
         $logger = $this->createMock(CookieLogger::class);
         $logger->expects(self::once())->method('log');
 
-        $form = $this->createMock(\Symfony\Component\Form\FormInterface::class);
+        $form = $this->createMock(FormInterface::class);
         $form->method('handleRequest');
         $form->method('isSubmitted')->willReturn(true);
         $form->method('isValid')->willReturn(true);
         $form->method('getData')->willReturn(['required' => true, 'analytics' => true]);
 
-        $formFactory = $this->createMock(\Symfony\Component\Form\FormFactoryInterface::class);
+        $formFactory = $this->createMock(FormFactoryInterface::class);
         $formFactory->method('create')->willReturn($form);
 
         $subscriber = new CookieConsentFormSubscriber($formFactory, $logger, $handler, true);
@@ -107,13 +109,13 @@ final class CookieConsentFormSubscriberTest extends TestCase
         $logger = $this->createMock(CookieLogger::class);
         $logger->expects(self::never())->method('log');
 
-        $form = $this->createMock(\Symfony\Component\Form\FormInterface::class);
+        $form = $this->createMock(FormInterface::class);
         $form->method('handleRequest');
         $form->method('isSubmitted')->willReturn(true);
         $form->method('isValid')->willReturn(true);
         $form->method('getData')->willReturn(['required' => true, 'analytics' => true]);
 
-        $formFactory = $this->createMock(\Symfony\Component\Form\FormFactoryInterface::class);
+        $formFactory = $this->createMock(FormFactoryInterface::class);
         $formFactory->method('create')->willReturn($form);
 
         $subscriber = new CookieConsentFormSubscriber($formFactory, $logger, $handler, false);
@@ -140,7 +142,7 @@ final class CookieConsentFormSubscriberTest extends TestCase
             ['_ga' => true],
         );
 
-        $form = $this->createMock(\Symfony\Component\Form\FormInterface::class);
+        $form = $this->createMock(FormInterface::class);
         $form->method('handleRequest');
         $form->method('isSubmitted')->willReturn(true);
         $form->method('isValid')->willReturn(true);
@@ -149,7 +151,7 @@ final class CookieConsentFormSubscriberTest extends TestCase
             'cookies'  => ['_ga' => true],
         ]);
 
-        $formFactory = $this->createMock(\Symfony\Component\Form\FormFactoryInterface::class);
+        $formFactory = $this->createMock(FormFactoryInterface::class);
         $formFactory->method('create')->willReturn($form);
 
         $subscriber = new CookieConsentFormSubscriber($formFactory, $this->createMock(CookieLogger::class), $handler, false);

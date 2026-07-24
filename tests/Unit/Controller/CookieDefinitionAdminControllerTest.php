@@ -18,8 +18,9 @@ use Symfony\Component\Form\FormInterface;
 use Symfony\Component\Form\FormView;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
+use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Symfony\Contracts\Translation\TranslatorInterface;
-use Throwable;
 
 /**
  * @internal test double overriding CSRF validation without security-bundle
@@ -38,11 +39,6 @@ final class TestableCookieDefinitionAdminController extends CookieDefinitionAdmi
     protected function isCsrfTokenValid(string $tokenId, ?string $token): bool
     {
         return $this->csrfValid;
-    }
-
-    protected function createAccessDeniedException(string $message = 'Access Denied.', ?Throwable $previous = null): \Symfony\Component\Security\Core\Exception\AccessDeniedException
-    {
-        throw new \Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException($message, $previous);
     }
 }
 
@@ -127,7 +123,7 @@ final class CookieDefinitionAdminControllerTest extends AbstractControllerTestCa
             csrfValid: false,
         );
 
-        $this->expectException(\Symfony\Component\HttpKernel\Exception\HttpException::class);
+        $this->expectException(AccessDeniedHttpException::class);
 
         $controller->delete(1, 5, Request::create('/delete', 'POST', ['_token' => 'bad']), $this->createMock(EntityManagerInterface::class));
     }
@@ -144,7 +140,7 @@ final class CookieDefinitionAdminControllerTest extends AbstractControllerTestCa
         );
         $this->configureController($controller);
 
-        $this->expectException(\Symfony\Component\HttpKernel\Exception\NotFoundHttpException::class);
+        $this->expectException(NotFoundHttpException::class);
         $controller->index(99);
     }
 
@@ -232,7 +228,7 @@ final class CookieDefinitionAdminControllerTest extends AbstractControllerTestCa
         ?CookieDefinitionRepository $definitionRepository = null,
         ?FormFactoryInterface $formFactory = null,
         bool $csrfValid = true,
-    ): CookieDefinitionAdminController {
+    ): TestableCookieDefinitionAdminController {
         $config ??= $this->createEnabledConfig(1);
 
         $configRepository = $this->createMock(CookieConsentConfigRepository::class);
@@ -268,7 +264,6 @@ final class CookieDefinitionAdminControllerTest extends AbstractControllerTestCa
     private function setEntityId(object $entity, int $id): void
     {
         $reflection = new ReflectionProperty($entity, 'id');
-        $reflection->setAccessible(true);
         $reflection->setValue($entity, $id);
     }
 }

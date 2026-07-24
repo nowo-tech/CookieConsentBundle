@@ -10,8 +10,6 @@ use Nowo\CookieConsentBundle\Enum\CookieNameEnum;
 use Symfony\Component\HttpFoundation\Cookie;
 use Symfony\Component\HttpFoundation\Response;
 
-use function is_string;
-
 use const JSON_THROW_ON_ERROR;
 
 /**
@@ -36,6 +34,8 @@ class CookieHandler
      * @param string $key The anonymous consent key
      * @param Response $response The HTTP response to modify
      * @param array<string, bool> $granularCookies Optional per-cookie consent map
+     *
+     * @return void
      */
     public function save(array $categories, string $key, Response $response, array $granularCookies = []): void
     {
@@ -67,11 +67,11 @@ class CookieHandler
         $normalized = [];
 
         foreach ($granularCookies as $cookieName => $allowed) {
-            if (!is_string($cookieName) || $cookieName === '') {
+            if ($cookieName === '') {
                 continue;
             }
 
-            $normalized[$cookieName] = $allowed === true || $allowed === 'true';
+            $normalized[$cookieName] = $allowed;
         }
 
         return $normalized;

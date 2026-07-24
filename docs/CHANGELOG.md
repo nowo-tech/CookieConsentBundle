@@ -7,6 +7,33 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.3.5] - 2026-07-24
+
+### Added
+
+- **REQ-CS-005** — `nowo-tech/phpstan-frankenphp` (classic + worker rulesets) in `phpstan.neon.dist`
+- Empty `phpstan-baseline.neon` (`ignoreErrors: []`) included from PHPStan config
+
+### Changed
+
+- PHPStan Level max hygiene: typed PHPDoc/generics, FQCN → `use` imports, inventory YAML cache as instance property
+- **DI** — `$useLogger` bound explicitly on `CookieConsentFormSubscriber` (survives host `setClass` overrides; avoids unused global bind)
+- PHP-CS-Fixer `fully_qualified_strict_types.import_symbols` enabled
+- Dev lock refresh (PHPStan ecosystem, php-cs-fixer, demo locks)
+
+### Fixed
+
+- CSRF deny on cookie definition delete throws `AccessDeniedHttpException` (consistent 403)
+
+No configuration or public API breaking changes for bundle consumers.
+
+### Documentation
+
+- [UPGRADING.md](UPGRADING.md) — upgrade path from 1.3.4
+- [RELEASE.md](RELEASE.md) — release history entry
+
+[1.3.5]: https://github.com/nowo-tech/CookieConsentBundle/releases/tag/v1.3.5
+
 ## [1.3.4] - 2026-07-22
 
 ### Changed

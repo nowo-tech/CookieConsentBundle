@@ -22,6 +22,8 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\Routing\Exception\RouteNotFoundException;
 use Symfony\Component\Routing\RouterInterface;
+use Symfony\Component\Translation\Loader\ArrayLoader;
+use Symfony\Component\Translation\Translator;
 use Symfony\Contracts\Translation\TranslatorInterface;
 use Twig\Environment;
 
@@ -87,8 +89,8 @@ final class CookieConsentControllerTest extends TestCase
             true,
         );
 
-        $translator = new \Symfony\Component\Translation\Translator('en');
-        $translator->addLoader('array', new \Symfony\Component\Translation\Loader\ArrayLoader());
+        $translator = new Translator('en');
+        $translator->addLoader('array', new ArrayLoader());
 
         $router = $this->createMock(RouterInterface::class);
         $router->method('generate')->willReturn('/en/cookie-consent/config');

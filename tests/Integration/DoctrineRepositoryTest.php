@@ -8,13 +8,15 @@ use Doctrine\DBAL\DriverManager;
 use Doctrine\ORM\Configuration;
 use Doctrine\ORM\EntityManager;
 use Doctrine\ORM\ORMSetup;
+use Doctrine\ORM\Tools\SchemaTool;
 use Doctrine\Persistence\ManagerRegistry;
 use Nowo\CookieConsentBundle\Entity\CookieConsentConfig;
 use Nowo\CookieConsentBundle\Entity\CookieConsentConfigTranslation;
+use Nowo\CookieConsentBundle\Entity\CookieDefinition;
 use Nowo\CookieConsentBundle\Repository\CookieConsentConfigRepository;
 use Nowo\CookieConsentBundle\Repository\CookieConsentConfigTranslationRepository;
+use Nowo\CookieConsentBundle\Repository\CookieDefinitionRepository;
 use PHPUnit\Framework\TestCase;
-use RuntimeException;
 
 use function dirname;
 
@@ -28,7 +30,7 @@ final class DoctrineRepositoryTest extends TestCase
     {
         $this->entityManager = $this->createEntityManager();
 
-        $schemaTool = new \Doctrine\ORM\Tools\SchemaTool($this->entityManager);
+        $schemaTool = new SchemaTool($this->entityManager);
         $schemaTool->createSchema($this->entityManager->getMetadataFactory()->getAllMetadata());
     }
 
@@ -53,10 +55,6 @@ final class DoctrineRepositoryTest extends TestCase
     {
         if (PHP_VERSION_ID < 80400) {
             return;
-        }
-
-        if (!method_exists($config, 'enableNativeLazyObjects')) {
-            throw new RuntimeException('Doctrine ORM 3.4+ is required on PHP 8.4+ for integration tests (missing enableNativeLazyObjects).');
         }
 
         $config->enableNativeLazyObjects(true);
@@ -118,11 +116,11 @@ final class DoctrineRepositoryTest extends TestCase
     {
         $config = (new CookieConsentConfig())->setEnabled(true)->setDefault(true);
 
-        $first = (new \Nowo\CookieConsentBundle\Entity\CookieDefinition())
+        $first = (new CookieDefinition())
             ->setName('_ga')
             ->setSortOrder(2)
             ->setConfig($config);
-        $second = (new \Nowo\CookieConsentBundle\Entity\CookieDefinition())
+        $second = (new CookieDefinition())
             ->setName('_fbp')
             ->setSortOrder(1)
             ->setConfig($config);
@@ -132,7 +130,7 @@ final class DoctrineRepositoryTest extends TestCase
         $this->entityManager->persist($second);
         $this->entityManager->flush();
 
-        $repository = new \Nowo\CookieConsentBundle\Repository\CookieDefinitionRepository($this->createRegistry());
+        $repository = new CookieDefinitionRepository($this->createRegistry());
         $ordered    = $repository->findByConfigOrdered($config);
 
         self::assertCount(2, $ordered);

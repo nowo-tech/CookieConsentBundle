@@ -6,7 +6,9 @@ namespace Nowo\CookieConsentBundle\Tests\Unit\DependencyInjection;
 
 use Nowo\CookieConsentBundle\DependencyInjection\NowoCookieConsentExtension;
 use Nowo\CookieConsentBundle\DependencyInjection\TablePrefixListener;
+use Nowo\CookieConsentBundle\EventSubscriber\CookieConsentConfigTranslationSubscriber;
 use PHPUnit\Framework\TestCase;
+use Symfony\Bundle\FrameworkBundle\DependencyInjection\FrameworkExtension;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 
 final class NowoCookieConsentExtensionTest extends TestCase
@@ -42,7 +44,7 @@ final class NowoCookieConsentExtensionTest extends TestCase
         $extension->load([['use_database_config' => true]], $container);
 
         self::assertTrue($container->hasDefinition('nowo_cookie_consent.translation.loader.array'));
-        self::assertTrue($container->hasDefinition(\Nowo\CookieConsentBundle\EventSubscriber\CookieConsentConfigTranslationSubscriber::class));
+        self::assertTrue($container->hasDefinition(CookieConsentConfigTranslationSubscriber::class));
     }
 
     public function testDatabaseConfigDisabledRemovesTranslationSubscriber(): void
@@ -51,7 +53,7 @@ final class NowoCookieConsentExtensionTest extends TestCase
         $extension = new NowoCookieConsentExtension();
         $extension->load([['use_database_config' => false]], $container);
 
-        self::assertFalse($container->hasDefinition(\Nowo\CookieConsentBundle\EventSubscriber\CookieConsentConfigTranslationSubscriber::class));
+        self::assertFalse($container->hasDefinition(CookieConsentConfigTranslationSubscriber::class));
     }
 
     public function testGetAlias(): void
@@ -62,7 +64,7 @@ final class NowoCookieConsentExtensionTest extends TestCase
     public function testPrependConfiguresAssets(): void
     {
         $container = new ContainerBuilder();
-        $container->registerExtension(new \Symfony\Bundle\FrameworkBundle\DependencyInjection\FrameworkExtension());
+        $container->registerExtension(new FrameworkExtension());
         (new NowoCookieConsentExtension())->prepend($container);
         $configs = $container->getExtensionConfig('framework');
         self::assertSame('/bundles/nowocookieconsent', $configs[0]['assets']['packages']['nowo_cookie_consent']['base_path']);

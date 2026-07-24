@@ -18,6 +18,7 @@ use Nowo\CookieConsentBundle\Twig\CookieConsentTwigExtension;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\RequestStack;
+use Twig\TwigFunction;
 
 final class CookieConsentTwigExtensionTest extends TestCase
 {
@@ -152,7 +153,7 @@ final class CookieConsentTwigExtensionTest extends TestCase
     public function testGetFunctionsRegistersTwigCallbacks(): void
     {
         $extension = $this->createExtension($this->createChecker(false));
-        $names     = array_map(static fn (\Twig\TwigFunction $function): string => $function->getName(), $extension->getFunctions());
+        $names     = array_map(static fn (TwigFunction $function): string => $function->getName(), $extension->getFunctions());
 
         self::assertContains('nowo_cookie_consent_is_saved', $names);
         self::assertContains('nowo_cookie_consent_locale', $names);
@@ -298,13 +299,13 @@ final class CookieConsentTwigExtensionTest extends TestCase
     {
         $extension = $this->createExtension($this->createChecker(false));
 
-        self::assertIsBool($extension->isDisableTransitions());
-        self::assertIsBool($extension->isDisablePageInteraction());
-        self::assertIsBool($extension->isTwoStepModal());
-        self::assertIsBool($extension->isOpenPreferencesModal());
-        self::assertIsBool($extension->isManageIframePlaceholders());
-        self::assertIsArray($extension->getPreferenceSections());
-        self::assertIsString($extension->getPreferencesBubblePosition());
+        self::assertFalse($extension->isDisableTransitions());
+        self::assertFalse($extension->isDisablePageInteraction());
+        self::assertFalse($extension->isTwoStepModal());
+        self::assertFalse($extension->isOpenPreferencesModal());
+        self::assertFalse($extension->isManageIframePlaceholders());
+        self::assertSame([], $extension->getPreferenceSections());
+        self::assertSame('bottom-right', $extension->getPreferencesBubblePosition());
     }
 
     public function testDiagnosticReportFlagsExceptRoute(): void
@@ -335,6 +336,8 @@ final class CookieConsentTwigExtensionTest extends TestCase
 
     /**
      * @param list<string> $yamlRoutes
+     * @param list<string> $disabledRoutes
+     * @param list<array<string, mixed>> $inventory
      */
     private function createExtension(
         CookieChecker $checker,

@@ -11,6 +11,21 @@ This guide provides step-by-step instructions for upgrading Cookie Consent Bundl
 5. **Rebuild assets** if you ship the bundled JS: `php bin/console assets:install`
 6. **Test** the consent modal and logging in your environments
 
+## To 1.3.5
+
+```bash
+composer update nowo-tech/cookie-consent-bundle
+php bin/console cache:clear
+```
+
+Patch release: PHPStan FrankenPHP rules (REQ-CS-005), empty baseline, type/DI hygiene, and CS Fixer import symbols. **No configuration or public API breaking changes** for bundle consumers.
+
+If you replace `CookieConsentFormSubscriber` via a compiler pass / `setClass`, `$useLogger` is now an explicit service argument (same parameter `%nowo_cookie_consent.use_logger%`); no app YAML change is required when using the default definition.
+
+### Breaking changes
+
+None.
+
 ## To 1.3.4
 
 ```bash

@@ -8,6 +8,7 @@ use DateTimeImmutable;
 use Doctrine\ORM\EntityManagerInterface;
 use Nowo\CookieConsentBundle\Entity\CookieConsentLog;
 use RuntimeException;
+use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\RequestStack;
 
 use function strlen;
@@ -17,7 +18,7 @@ use function strlen;
  */
 class CookieLogger
 {
-    private readonly ?\Symfony\Component\HttpFoundation\Request $request;
+    private readonly ?Request $request;
 
     /**
      * Creates a new cookie consent logger.
@@ -37,10 +38,12 @@ class CookieLogger
      *
      * @param array<string, bool|string> $categories The submitted category values
      * @param string $key The anonymous consent key
+     *
+     * @return void
      */
     public function log(array $categories, string $key): void
     {
-        if (!$this->request instanceof \Symfony\Component\HttpFoundation\Request) {
+        if (!$this->request instanceof Request) {
             throw new RuntimeException('No request found');
         }
 
