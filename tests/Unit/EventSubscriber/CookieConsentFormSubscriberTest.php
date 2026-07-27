@@ -162,4 +162,35 @@ final class CookieConsentFormSubscriberTest extends TestCase
             new Response(),
         ));
     }
+
+    public function testSkipsEmptyGranularCookieNames(): void
+    {
+        $handler = $this->createMock(CookieHandler::class);
+        $handler->expects(self::once())->method('save')->with(
+            self::anything(),
+            self::anything(),
+            self::anything(),
+            ['_ga' => true],
+        );
+
+        $form = $this->createMock(FormInterface::class);
+        $form->method('handleRequest');
+        $form->method('isSubmitted')->willReturn(true);
+        $form->method('isValid')->willReturn(true);
+        $form->method('getData')->willReturn([
+            'required' => true,
+            'cookies'  => ['' => true, '_ga' => '1'],
+        ]);
+
+        $formFactory = $this->createMock(FormFactoryInterface::class);
+        $formFactory->method('create')->willReturn($form);
+
+        $subscriber = new CookieConsentFormSubscriber($formFactory, $this->createMock(CookieLogger::class), $handler, false);
+        $subscriber->onResponse(new ResponseEvent(
+            $this->createMock(HttpKernelInterface::class),
+            Request::create('/', 'POST'),
+            HttpKernelInterface::MAIN_REQUEST,
+            new Response(),
+        ));
+    }
 }

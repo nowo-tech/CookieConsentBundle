@@ -104,6 +104,43 @@ final class CookieCheckerTest extends TestCase
         self::assertSame(['_ga' => true], $checker->getGranularPreferences());
     }
 
+    public function testGranularPreferencesReturnNullWithoutRequest(): void
+    {
+        $checker = new CookieChecker(new RequestStack());
+
+        self::assertNull($checker->getGranularPreferences());
+    }
+
+    public function testGranularPreferencesReturnNullForEmptyCookie(): void
+    {
+        $request = Request::create('/');
+        $request->cookies->set(CookieNameEnum::COOKIE_CONSENT_GRANULAR_NAME, '');
+
+        $checker = new CookieChecker($this->createRequestStack($request));
+
+        self::assertNull($checker->getGranularPreferences());
+    }
+
+    public function testGranularPreferencesReturnNullWhenJsonIsNotObject(): void
+    {
+        $request = Request::create('/');
+        $request->cookies->set(CookieNameEnum::COOKIE_CONSENT_GRANULAR_NAME, 'true');
+
+        $checker = new CookieChecker($this->createRequestStack($request));
+
+        self::assertNull($checker->getGranularPreferences());
+    }
+
+    public function testGranularPreferencesSkipIntegerKeysFromJsonArray(): void
+    {
+        $request = Request::create('/');
+        $request->cookies->set(CookieNameEnum::COOKIE_CONSENT_GRANULAR_NAME, '[true]');
+
+        $checker = new CookieChecker($this->createRequestStack($request));
+
+        self::assertSame([], $checker->getGranularPreferences());
+    }
+
     private function createRequestStack(Request $request): RequestStack
     {
         $stack = new RequestStack();

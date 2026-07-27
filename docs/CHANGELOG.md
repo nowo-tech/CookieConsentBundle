@@ -7,6 +7,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.3.6] - 2026-07-27
+
+### Added
+
+- FrankenPHP Friendly Worker Mode banner in README + `docs/images/frankenphp-friendly.png` (**REQ-DOCS-017**)
+- Demo `restart` targets; root `down-dev` alias; `demo/Makefile` aggregate `up` / `down` / `update-bundle` (**REQ-MAKE-003**, **REQ-MAKE-007**)
+
+### Changed
+
+- Split multi-class PHPUnit files so granular/marketing/translation tests are discovered (**211** tests)
+- Expanded unit coverage to **≥99.95%** PHP line coverage (**REQ-TEST-003**)
+- English-only sample strings in `docs/CONFIGURATION.md` translation override example (**REQ-DOCS-016**)
+
+No configuration or public API breaking changes for bundle consumers.
+
+### Documentation
+
+- [UPGRADING.md](UPGRADING.md) — upgrade path from 1.3.5
+- [RELEASE.md](RELEASE.md) — release history entry; coverage goals aligned to ≥99% PHP lines
+- [README.md](../README.md) — coverage badge and Tests section percentages
+
+[1.3.6]: https://github.com/nowo-tech/CookieConsentBundle/releases/tag/v1.3.6
+
 ## [1.3.5] - 2026-07-24
 
 ### Added

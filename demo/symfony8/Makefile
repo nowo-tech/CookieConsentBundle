@@ -9,6 +9,7 @@ help:
 	@echo ""
 	@echo "  make up             Start containers"
 	@echo "  make down           Stop containers"
+	@echo "  make restart        Restart containers"
 	@echo "  make build          Build images (no cache)"
 	@echo "  make install        Install dependencies"
 	@echo "  make setup-db       Run Doctrine migrations"
@@ -31,6 +32,9 @@ up:
 
 down:
 	docker-compose down
+
+restart: ensure-up
+	docker-compose restart
 
 build:
 	docker-compose build --no-cache

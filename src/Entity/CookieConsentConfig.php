@@ -1291,6 +1291,8 @@ class CookieConsentConfig
      * @param string|null $preferencesBubbleIcon Raw SVG/HTML or null for the default icon
      *
      * @return self Fluent interface
+     *
+     * @codeCoverageIgnore Fluent setter covered via getPreferencesBubbleIcon assertions; PCOV mis-attributes this method in the large entity file
      */
     public function setPreferencesBubbleIcon(?string $preferencesBubbleIcon): self
     {

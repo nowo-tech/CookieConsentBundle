@@ -201,4 +201,56 @@ final class CookieInventoryProviderTest extends TestCase
 
         self::assertSame('Matomo', $inventory[0]['provider']);
     }
+
+    public function testHasDefinitionsTrueWhenDatabaseHasRows(): void
+    {
+        $config     = new CookieConsentConfig();
+        $definition = (new CookieDefinition())->setName('_pk_id')->setCategory('analytics');
+
+        $repository = $this->createMock(CookieDefinitionRepository::class);
+        $repository->method('findByConfigOrdered')->willReturn([$definition]);
+
+        $provider = new CookieInventoryProvider($repository, true, []);
+
+        self::assertTrue($provider->hasDefinitions($config));
+    }
+
+    public function testHasDefinitionsTrueWhenYamlInventoryPresent(): void
+    {
+        $provider = new CookieInventoryProvider(
+            $this->createMock(CookieDefinitionRepository::class),
+            true,
+            [[
+                'name'         => '_ga',
+                'duration'     => '2 years',
+                'category'     => 'analytics',
+                'type'         => CookieDefinition::TYPE_THIRD_PARTY,
+                'sort_order'   => 0,
+                'translations' => [],
+            ]],
+        );
+
+        self::assertTrue($provider->hasDefinitions());
+    }
+
+    public function testYamlFallsBackToEmptyProviderPurposeWhenNoTranslations(): void
+    {
+        $provider = new CookieInventoryProvider(
+            $this->createMock(CookieDefinitionRepository::class),
+            true,
+            [[
+                'name'         => '_ga',
+                'duration'     => '2 years',
+                'category'     => 'analytics',
+                'type'         => CookieDefinition::TYPE_THIRD_PARTY,
+                'sort_order'   => 0,
+                'translations' => [],
+            ]],
+        );
+
+        $inventory = $provider->listForLocale(null, 'fr');
+
+        self::assertSame('', $inventory[0]['provider']);
+        self::assertSame('', $inventory[0]['purpose']);
+    }
 }

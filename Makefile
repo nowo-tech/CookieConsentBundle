@@ -5,7 +5,7 @@ SERVICE_PHP = php
 BUNDLE_ROOT := $(abspath $(dir $(lastword $(MAKEFILE_LIST))))
 export DOCKER_CONFIG := $(BUNDLE_ROOT)/.docker
 
-.PHONY: help ensure-up up down build shell install assets assets-test test-ts test test-coverage test-with-db \
+.PHONY: help ensure-up up down down-dev build shell install assets assets-test test-ts test test-coverage test-with-db \
 	test-coverage-with-db cs-check cs-fix rector rector-dry phpstan validate-phpdoc qa release-check \
 	release-check-demos composer-sync clean update validate validate-translations \
 	setup-hooks check-no-cursor-coauthor strip-cursor-coauthor-from-history
@@ -15,7 +15,7 @@ help:
 	@echo ""
 	@echo "Usage: make <target>"
 	@echo ""
-	@echo "Container: up down build shell"
+	@echo "Container: up down down-dev build shell"
 	@echo "Dependencies: install assets"
 	@echo "Tests: test test-coverage test-with-db test-coverage-with-db test-ts"
 	@echo "Quality: cs-check cs-fix rector rector-dry phpstan qa validate-translations"
@@ -37,6 +37,8 @@ up:
 
 down:
 	@$(COMPOSE) down
+
+down-dev: down
 
 build:
 	@$(COMPOSE) build --no-cache

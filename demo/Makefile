@@ -1,18 +1,35 @@
 DEMOS := symfony8 symfony8-tailwind
 
-.PHONY: help up down test-all release-check release-verify clean
+.PHONY: help up down update-bundle test-all release-check release-verify clean
+.PHONY: up-symfony8 up-symfony8-tailwind down-symfony8 down-symfony8-tailwind
+.PHONY: test-symfony8 test-symfony8-tailwind update-bundle-symfony8 update-bundle-symfony8-tailwind
 
 help:
 	@echo "Cookie Consent Bundle - Demo Commands"
 	@echo ""
-	@echo "  make up-symfony8           Start Symfony 8 demo (Bootstrap)"
-	@echo "  make up-symfony8-tailwind  Start Symfony 8 demo (Tailwind)"
-	@echo "  make down-symfony8         Stop Symfony 8 demo"
-	@echo "  make down-symfony8-tailwind Stop Tailwind demo"
-	@echo "  make test-symfony8         Run Symfony 8 demo tests"
-	@echo "  make test-symfony8-tailwind Run Tailwind demo tests"
-	@echo "  make release-check         test-all + release-verify"
+	@echo "  make up DEMO=symfony8            Start a demo (default: symfony8)"
+	@echo "  make down DEMO=symfony8          Stop a demo"
+	@echo "  make update-bundle DEMO=symfony8 Refresh bundle in a demo"
+	@echo "  make up-symfony8                 Start Symfony 8 demo (Bootstrap)"
+	@echo "  make up-symfony8-tailwind        Start Symfony 8 demo (Tailwind)"
+	@echo "  make down-symfony8               Stop Symfony 8 demo"
+	@echo "  make down-symfony8-tailwind      Stop Tailwind demo"
+	@echo "  make test-symfony8               Run Symfony 8 demo tests"
+	@echo "  make test-symfony8-tailwind      Run Tailwind demo tests"
+	@echo "  make release-check               test-all + release-verify"
 	@echo ""
+
+# REQ-MAKE-003: aggregate targets expected on demo/Makefile
+DEMO ?= symfony8
+
+up:
+	@$(MAKE) -C $(DEMO) up
+
+down:
+	@$(MAKE) -C $(DEMO) down
+
+update-bundle:
+	@$(MAKE) -C $(DEMO) update-bundle
 
 up-symfony8:
 	@$(MAKE) -C symfony8 up
@@ -31,6 +48,12 @@ test-symfony8:
 
 test-symfony8-tailwind:
 	@$(MAKE) -C symfony8-tailwind test
+
+update-bundle-symfony8:
+	@$(MAKE) -C symfony8 update-bundle
+
+update-bundle-symfony8-tailwind:
+	@$(MAKE) -C symfony8-tailwind update-bundle
 
 # REQ-DEMO-007: update-bundle runs via each demo's test target before composer test
 test-all: test-symfony8 test-symfony8-tailwind

@@ -133,4 +133,71 @@ final class CookieConsentConfigPayloadFactoryTest extends TestCase
         self::assertNotEmpty($sections);
         self::assertArrayHasKey('cookieTable', $sections[0]);
     }
+
+    public function testBuildKeepsSectionsWithoutCategories(): void
+    {
+        $translator = $this->createMock(TranslatorInterface::class);
+        $translator->method('trans')->willReturnArgument(0);
+
+        $factory = new CookieConsentConfigPayloadFactory(
+            new CookieConsentConfigResolver(
+                new CookieConsentConfigSelector(
+                    $this->createMock(CookieConsentConfigRepository::class),
+                    new CookieConsentRoutePatternMatcher(),
+                ),
+                $this->createMock(CookieConsentConfigTranslationRepository::class),
+                false,
+            ),
+            $translator,
+            new CookieInventoryProvider($this->createMock(CookieDefinitionRepository::class), false, []),
+            ['analytics'],
+            [['title' => 'Intro', 'description' => 'About cookies', 'categories' => []]],
+        );
+
+        $payload  = $factory->build('en');
+        $sections = $payload['data']['language']['translations']['en']['preferencesModal']['sections'];
+
+        self::assertSame('Intro', $sections[0]['title']);
+        self::assertArrayNotHasKey('linkedCategory', $sections[0]);
+    }
+
+    public function testBuildSkipsCookieTableWhenCategoryHasNoInventoryRows(): void
+    {
+        $config = (new CookieConsentConfig())->setEnabled(true)->setDefault(true);
+
+        $configRepository = $this->createMock(CookieConsentConfigRepository::class);
+        $configRepository->method('findAllEnabledNonDefault')->willReturn([]);
+        $configRepository->method('findDefaultEnabled')->willReturn($config);
+
+        $translator = $this->createMock(TranslatorInterface::class);
+        $translator->method('trans')->willReturnArgument(0);
+
+        $factory = new CookieConsentConfigPayloadFactory(
+            new CookieConsentConfigResolver(
+                new CookieConsentConfigSelector($configRepository, new CookieConsentRoutePatternMatcher()),
+                $this->createMock(CookieConsentConfigTranslationRepository::class),
+                true,
+            ),
+            $translator,
+            new CookieInventoryProvider(
+                $this->createMock(CookieDefinitionRepository::class),
+                true,
+                [[
+                    'name'         => '_ga',
+                    'duration'     => '2 years',
+                    'category'     => 'analytics',
+                    'type'         => 'third_party',
+                    'sort_order'   => 0,
+                    'translations' => ['en' => ['provider' => 'Google', 'purpose' => 'Analytics']],
+                ]],
+            ),
+            ['marketing'],
+            [['title' => 'Marketing', 'categories' => ['marketing']]],
+        );
+
+        $payload  = $factory->build('en');
+        $sections = $payload['data']['language']['translations']['en']['preferencesModal']['sections'];
+
+        self::assertArrayNotHasKey('cookieTable', $sections[0]);
+    }
 }

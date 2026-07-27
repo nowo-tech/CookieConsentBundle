@@ -160,6 +160,24 @@ final class CmpUxOptionsResolverTest extends TestCase
         self::assertSame('<svg></svg>', $resolver->getPreferencesBubbleIcon());
     }
 
+    public function testDatabaseConfigEnabledFallsBackToYamlWithoutRequest(): void
+    {
+        $resolver = $this->createResolver(useDatabaseConfig: true);
+
+        self::assertSame('dark-turquoise', $resolver->getColorTheme());
+        self::assertNull($resolver->getPreferencesBubbleBorderColor());
+    }
+
+    public function testDatabaseConfigEnabledSkipsRequestWithoutResolvedAttribute(): void
+    {
+        $stack = new RequestStack();
+        $stack->push(Request::create('/'));
+
+        $resolver = $this->createResolver($stack, useDatabaseConfig: true);
+
+        self::assertSame('dark-turquoise', $resolver->getColorTheme());
+    }
+
     /**
      * @param list<array<string, mixed>> $yamlPreferenceSections
      */

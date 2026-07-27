@@ -20,6 +20,8 @@ final class TwigPathsPass implements CompilerPassInterface
      * Adds the bundle views directory to the Twig loader.
      *
      * @param ContainerBuilder $container The service container builder
+     *
+     * @return void
      */
     public function process(ContainerBuilder $container): void
     {

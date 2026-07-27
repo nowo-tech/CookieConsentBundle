@@ -20,6 +20,8 @@ class NowoCookieConsentBundle extends Bundle
      * Registers compiler passes for Twig paths and Doctrine entity mappings.
      *
      * @param ContainerBuilder $container The service container builder
+     *
+     * @return void
      */
     public function build(ContainerBuilder $container): void
     {

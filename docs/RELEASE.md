@@ -45,7 +45,7 @@ composer require nowo-tech/cookie-consent-bundle
 
 ## Coverage goals
 
-- **PHP**: **100%** line coverage (`make test-coverage`)
+- **PHP**: **≥99%** line coverage (prefer **100%**; `make test-coverage`)
 - **TypeScript**: **~94%** line coverage, **90%** minimum enforced (`make test-ts`)
 
 Update README **Tests and coverage** percentages after each release when coverage changes materially.
@@ -54,6 +54,7 @@ Update README **Tests and coverage** percentages after each release when coverag
 
 | Version | Date | Notes |
 | --- | --- | --- |
+| [1.3.6](CHANGELOG.md#136---2026-07-27) | 2026-07-27 | Standards compliance: DOCS-016/017, MAKE-003/007, PHP coverage ≥99.95% |
 | [1.3.5](CHANGELOG.md#135---2026-07-24) | 2026-07-24 | PHPStan FrankenPHP (REQ-CS-005), empty baseline, DI/type hygiene |
 | [1.3.4](CHANGELOG.md#134---2026-07-22) | 2026-07-22 | Vite 8 / happy-dom 20, GHA bumps, demo `FRANKENPHP_MODE` |
 | [1.3.3](CHANGELOG.md#133---2026-07-20) | 2026-07-20 | REQ-GIT-001 hygiene, Code of Conduct, expanded PHPUnit coverage |

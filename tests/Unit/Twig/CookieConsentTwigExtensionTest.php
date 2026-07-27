@@ -306,6 +306,55 @@ final class CookieConsentTwigExtensionTest extends TestCase
         self::assertFalse($extension->isManageIframePlaceholders());
         self::assertSame([], $extension->getPreferenceSections());
         self::assertSame('bottom-right', $extension->getPreferencesBubblePosition());
+        self::assertNull($extension->getPreferencesBubbleBorderColor());
+        self::assertNull($extension->getPreferencesBubbleIcon());
+        self::assertSame([], $extension->getCookieInventory());
+    }
+
+    public function testDiagnosticReportFlagsAutoShowDisabled(): void
+    {
+        $config = (new CookieConsentConfig())->setAutoShow(false);
+
+        $request = Request::create('/');
+        $request->attributes->set('nowo_cookie_consent_config', new ResolvedCookieConsentConfig($config, null));
+
+        $stack = new RequestStack();
+        $stack->push($request);
+
+        $extension = $this->createExtension($this->createChecker(false), $stack, true);
+        $report    = $extension->getDiagnosticReport('home');
+
+        self::assertContains('auto_show_disabled_in_config', $report['server']['open_blockers']);
+    }
+
+    public function testGetCookieInventoryReturnsRowsForResolvedConfig(): void
+    {
+        $config = (new CookieConsentConfig())->setEnabled(true);
+
+        $request = Request::create('/');
+        $request->attributes->set('nowo_cookie_consent_config', new ResolvedCookieConsentConfig($config, null));
+
+        $stack = new RequestStack();
+        $stack->push($request);
+
+        $extension = $this->createExtension(
+            $this->createChecker(false),
+            $stack,
+            true,
+            inventory: [[
+                'name'         => '_ga',
+                'duration'     => '2 years',
+                'category'     => 'analytics',
+                'type'         => 'third_party',
+                'sort_order'   => 0,
+                'translations' => ['en' => ['provider' => 'Google', 'purpose' => 'Analytics']],
+            ]],
+        );
+
+        $inventory = $extension->getCookieInventory();
+
+        self::assertNotEmpty($inventory);
+        self::assertSame('_ga', $inventory[0]['name']);
     }
 
     public function testDiagnosticReportFlagsExceptRoute(): void

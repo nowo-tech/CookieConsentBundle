@@ -42,23 +42,3 @@ final class CookieDefinitionTest extends TestCase
         self::assertNull($translation->getDefinition());
     }
 }
-
-final class CookieDefinitionTranslationTest extends TestCase
-{
-    public function testGettersSettersAndDefinitionRelation(): void
-    {
-        $definition  = new CookieDefinition();
-        $translation = new CookieDefinitionTranslation();
-
-        $translation
-            ->setLocale('fr')
-            ->setProvider('Provider')
-            ->setPurpose('Purpose')
-            ->setDefinition($definition);
-
-        self::assertSame('fr', $translation->getLocale());
-        self::assertSame('Provider', $translation->getProvider());
-        self::assertSame('Purpose', $translation->getPurpose());
-        self::assertSame($definition, $translation->getDefinition());
-    }
-}

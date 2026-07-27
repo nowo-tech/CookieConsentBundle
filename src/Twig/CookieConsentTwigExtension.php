@@ -195,7 +195,9 @@ class CookieConsentTwigExtension extends AbstractExtension
                 $blockers[] = match ($mode) {
                     CookieConsentRouteTargeting::MODE_ONLY   => 'route_not_in_only_list',
                     CookieConsentRouteTargeting::MODE_EXCEPT => 'route_in_except_list',
-                    default                                  => 'route_targeting_blocked',
+                    // @codeCoverageIgnoreStart
+                    default => 'route_targeting_blocked',
+                    // @codeCoverageIgnoreEnd
                 };
             } else {
                 $blockers[] = 'route_in_disabled_routes_list';

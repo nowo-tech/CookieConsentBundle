@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Nowo\CookieConsentBundle\Tests\Unit\Entity;
 
 use InvalidArgumentException;
+use Nowo\CookieConsentBundle\Config\PreferencesBubbleIconSanitizer;
 use Nowo\CookieConsentBundle\Entity\CookieConsentConfig;
 use Nowo\CookieConsentBundle\Entity\CookieConsentConfigTranslation;
 use PHPUnit\Framework\TestCase;
@@ -194,5 +195,33 @@ final class CookieConsentConfigTest extends TestCase
     public function testParseRouteListIgnoresBlankLines(): void
     {
         self::assertSame(['home'], CookieConsentConfig::parseRouteList("home\n\n  \n"));
+    }
+
+    public function testInvalidColorThemeThrows(): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+        (new CookieConsentConfig())->setColorTheme('not-a-theme');
+    }
+
+    public function testInvalidPreferencesBubblePositionThrows(): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+        (new CookieConsentConfig())->setPreferencesBubblePosition('middle-center');
+    }
+
+    public function testInvalidPreferencesBubbleBorderColorThrows(): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+        (new CookieConsentConfig())->setPreferencesBubbleBorderColor('red');
+    }
+
+    public function testPreferencesBubbleIconSanitizedOnSet(): void
+    {
+        $icon   = PreferencesBubbleIconSanitizer::DEMO_EMOJI_ICON_HTML;
+        $config = (new CookieConsentConfig())->setPreferencesBubbleIcon($icon);
+
+        self::assertSame($icon, $config->getPreferencesBubbleIcon());
+        self::assertNull((new CookieConsentConfig())->setPreferencesBubbleIcon(null)->getPreferencesBubbleIcon());
+        self::assertNull((new CookieConsentConfig())->setPreferencesBubbleIcon('')->getPreferencesBubbleIcon());
     }
 }

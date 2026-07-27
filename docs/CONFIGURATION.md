@@ -139,16 +139,16 @@ The bundle ships YAML files for `en`, `es`, `it`, `fr`, `de`, `pt`, `nl`, `pl`, 
    - `translations/NowoCookieConsentBundle.<locale>.yaml` (or `.xlf` if your project uses XLF).
 3. Override only the keys you need. Keys not defined in the app file use the bundle default.
 
-Example — Spanish override:
+Example — override for the Spanish locale file (English sample values; replace with your locale copy):
 
 ```yaml
 # translations/NowoCookieConsentBundle.es.yaml
 nowo_cookie_consent:
     consent_modal:
-        title: 'Configuración de cookies'
-        description: 'Usamos cookies para mejorar tu experiencia.'
+        title: 'Cookie settings'
+        description: 'We use cookies to improve your experience.'
     category:
-        analytics: 'Analíticas'
+        analytics: 'Analytics'
 ```
 
 4. Clear the Symfony cache in dev if translations do not appear: `php bin/console cache:clear`.

@@ -38,6 +38,8 @@ class CookieLogger
      *
      * @param array<string, bool|string> $categories The submitted category values
      * @param string $key The anonymous consent key
+     *
+     * @return void
      */
     public function log(array $categories, string $key): void
     {
