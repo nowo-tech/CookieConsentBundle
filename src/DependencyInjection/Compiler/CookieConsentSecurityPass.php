@@ -30,11 +30,7 @@ final class CookieConsentSecurityPass implements CompilerPassInterface
         $hasSecurity          = $container->has('security.authorization_checker');
 
         if (!$hasSecurity && !$allowUnauthenticated) {
-            throw new InvalidConfigurationException(
-                'nowo_cookie_consent admin UI requires symfony/security-bundle (security.authorization_checker), '
-                . 'or set nowo_cookie_consent.security.allow_unauthenticated: true '
-                . '(dev/demo only — never in production).',
-            );
+            throw new InvalidConfigurationException('nowo_cookie_consent admin UI requires symfony/security-bundle (security.authorization_checker), or set nowo_cookie_consent.security.allow_unauthenticated: true (dev/demo only — never in production).');
         }
 
         if ($allowUnauthenticated) {

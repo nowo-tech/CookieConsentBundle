@@ -7,6 +7,7 @@ namespace Nowo\CookieConsentBundle\Tests\Unit\DependencyInjection;
 use Nowo\CookieConsentBundle\DependencyInjection\NowoCookieConsentExtension;
 use Nowo\CookieConsentBundle\DependencyInjection\TablePrefixListener;
 use Nowo\CookieConsentBundle\EventSubscriber\CookieConsentConfigTranslationSubscriber;
+use Nowo\CookieConsentBundle\Security\CookieConsentAccessCheckerInterface;
 use PHPUnit\Framework\TestCase;
 use Symfony\Bundle\FrameworkBundle\DependencyInjection\FrameworkExtension;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
@@ -70,7 +71,7 @@ final class NowoCookieConsentExtensionTest extends TestCase
         self::assertSame(20, $container->getParameter('nowo_cookie_consent.web_ui.list_page_size'));
         self::assertSame(['ROLE_ADMIN'], $container->getParameter('nowo_cookie_consent.security.access_roles'));
         self::assertFalse($container->getParameter('nowo_cookie_consent.security.allow_unauthenticated'));
-        self::assertTrue($container->hasAlias(\Nowo\CookieConsentBundle\Security\CookieConsentAccessCheckerInterface::class));
+        self::assertTrue($container->hasAlias(CookieConsentAccessCheckerInterface::class));
     }
 
     public function testGetAlias(): void

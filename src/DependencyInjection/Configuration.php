@@ -9,6 +9,8 @@ use Nowo\CookieConsentBundle\Enum\DisabledRoutesEnum;
 use Symfony\Component\Config\Definition\Builder\TreeBuilder;
 use Symfony\Component\Config\Definition\ConfigurationInterface;
 
+use function is_string;
+
 /**
  * Defines the configuration tree for the cookie consent bundle.
  */
@@ -207,7 +209,7 @@ class Configuration implements ConfigurationInterface
                             ->cannotBeEmpty()
                             ->info('Documented URL path prefix for admin CRUD (host should lock with security.access_control).')
                             ->validate()
-                                ->ifTrue(static fn ($v): bool => !\is_string($v) || !str_starts_with($v, '/'))
+                                ->ifTrue(static fn ($v): bool => !is_string($v) || !str_starts_with($v, '/'))
                                 ->thenInvalid('path_prefix must be a string starting with /')
                             ->end()
                         ->end()
