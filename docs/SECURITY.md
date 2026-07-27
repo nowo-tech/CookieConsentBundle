@@ -59,13 +59,14 @@ The bundle does **not** expose a CLI that mutates production data, outbound HTTP
 | **Cookie flags** | `Secure` and configurable `HttpOnly` on consent cookies |
 | **PII in logs** | IP addresses anonymized (last octet masked) in `CookieConsentLog` |
 | **Invalid config IDs** | Admin controllers return 404 when config or definition does not belong to the profile |
+| **Admin authorization** | `CookieConsentAccessCheckerInterface` (default roles from `security.access_roles`) enforced by `CookieConsentAdminAccessSubscriber` on admin routes; keep `security.allow_unauthenticated: false` in production and lock `web_ui.path_prefix` with host `access_control` |
 | **Custom bubble icon HTML** | `PreferencesBubbleIconSanitizer` rejects `<script>`, event handlers, and dangerous tags before persisting `preferences_bubble_icon` |
 | **Required cookies** | Category `required` cannot be disabled; granular toggles exclude required cookies |
 | **Config API** | Read-only GET; returns display copy and GUI options, not secrets |
 
 Integrators should:
 
-- Protect admin routes with Symfony Security (roles, firewall).
+- Protect admin routes with Symfony Security (roles, firewall) **and** keep the bundle access checker enabled (`security.access_roles` / optional custom `access_checker`).
 - Keep `csrf_protection: true` in production.
 - Serve the site over HTTPS so `Secure` cookies are effective.
 - Review DB-backed modal copy before publishing (treat admins as trusted for HTML in descriptions if `|raw` is used in custom overrides).

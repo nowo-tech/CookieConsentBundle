@@ -7,6 +7,33 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.4.0] - 2026-07-27
+
+### Added
+
+- **Admin Web UI (REQ-UI-001 / REQ-UI-002)**: `web_ui` (`enabled`, `path_prefix`, `layout_template`, `css_framework`, `icon_set`, `list_page_size`), Twig globals, semantic `nowo-ui-*` hooks; `security.access_roles` + `CookieConsentAccessCheckerInterface` + admin access subscriber; host firewall guidance.
+- **Pagination (REQ-PERF-001)**: Cookie definition admin index paginated via `web_ui.list_page_size` (default `20`) with translation eager-loading.
+- **DI (REQ-DI-001)**: `psr/clock` + `SystemClock`; `CookieHandler` / `CookieLogger` use `ClockInterface`; optional PSR-3 logger on consent persist (no raw IP).
+- **Dependencies**: `psr/log`, `symfony/security-core`, `symfony/security-csrf` declared in `require`.
+- **CI**: Dedicated PHPStan job; `demo-smoke` workflow (REQ-TEST-011) wrapping `demo/Makefile` `release-verify`.
+
+### Changed
+
+- Configuration nodes `categories`, `disabled_routes`, `target_routes`, `enabled_locales`, and `preference_sections` are typed `arrayNode`s.
+- Admin controllers are `final`; settings admin unchanged functionally.
+- Demo configs set `security.allow_unauthenticated: true` (demo-only).
+- `make release-check-demos` fails when demo release-check fails (no longer swallowed with `|| true`).
+- Demo smoke (**REQ-TEST-011**) via `make demo-smoke` / `demo/Makefile` `release-verify` (HTTP 200) as part of `release-check`.
+
+### Documentation
+
+- [CONFIGURATION.md](CONFIGURATION.md) — Admin Web UI, security, Twig override table updates
+- [USAGE.md](USAGE.md) — `layout_template` / access control pointers
+- [UPGRADING.md](UPGRADING.md) — upgrade path from 1.3.6
+- [SECURITY.md](SECURITY.md) — bundle-level admin access checker
+
+[1.4.0]: https://github.com/nowo-tech/CookieConsentBundle/releases/tag/v1.4.0
+
 ## [1.3.6] - 2026-07-27
 
 ### Added

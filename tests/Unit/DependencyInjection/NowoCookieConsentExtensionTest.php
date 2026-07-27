@@ -56,6 +56,23 @@ final class NowoCookieConsentExtensionTest extends TestCase
         self::assertFalse($container->hasDefinition(CookieConsentConfigTranslationSubscriber::class));
     }
 
+    public function testLoadsWebUiAndSecurityDefaults(): void
+    {
+        $container = new ContainerBuilder();
+        $extension = new NowoCookieConsentExtension();
+        $extension->load([[]], $container);
+
+        self::assertTrue($container->getParameter('nowo_cookie_consent.web_ui.enabled'));
+        self::assertSame('/cookie-consent-config', $container->getParameter('nowo_cookie_consent.web_ui.path_prefix'));
+        self::assertSame('@NowoCookieConsentBundle/admin/layout.html.twig', $container->getParameter('nowo_cookie_consent.web_ui.layout_template'));
+        self::assertSame('bootstrap5', $container->getParameter('nowo_cookie_consent.web_ui.css_framework'));
+        self::assertSame('bootstrap-icons', $container->getParameter('nowo_cookie_consent.web_ui.icon_set'));
+        self::assertSame(20, $container->getParameter('nowo_cookie_consent.web_ui.list_page_size'));
+        self::assertSame(['ROLE_ADMIN'], $container->getParameter('nowo_cookie_consent.security.access_roles'));
+        self::assertFalse($container->getParameter('nowo_cookie_consent.security.allow_unauthenticated'));
+        self::assertTrue($container->hasAlias(\Nowo\CookieConsentBundle\Security\CookieConsentAccessCheckerInterface::class));
+    }
+
     public function testGetAlias(): void
     {
         self::assertSame('nowo_cookie_consent', (new NowoCookieConsentExtension())->getAlias());

@@ -11,6 +11,43 @@ This guide provides step-by-step instructions for upgrading Cookie Consent Bundl
 5. **Rebuild assets** if you ship the bundled JS: `php bin/console assets:install`
 6. **Test** the consent modal and logging in your environments
 
+## To 1.4.0
+
+```bash
+composer update nowo-tech/cookie-consent-bundle
+php bin/console cache:clear
+```
+
+Minor release: admin Web UI + security access checker (`web_ui.*`, `security.*`), paginated cookie definition lists, PSR Clock on cookie write/log paths, and typed array config nodes.
+
+### Configuration
+
+New optional keys (defaults preserve previous behavior for public consent modal):
+
+```yaml
+nowo_cookie_consent:
+    web_ui:
+        enabled: true
+        path_prefix: /cookie-consent-config
+        layout_template: '@NowoCookieConsentBundle/admin/layout.html.twig'
+        css_framework: bootstrap5
+        icon_set: bootstrap-icons
+        list_page_size: 20
+    security:
+        access_roles: [ROLE_ADMIN]
+        allow_unauthenticated: false
+```
+
+Production hosts **must** keep `security.allow_unauthenticated: false` and protect `web_ui.path_prefix` with `security.access_control`. Demos may set `allow_unauthenticated: true`.
+
+Admin Twig templates now extend `nowo_cookie_consent_layout_template`. Legacy `admin/cookie_definition/layout.html.twig` and `admin/config/layout.html.twig` remain as BC aliases.
+
+If you construct `CookieHandler` or `CookieLogger` manually, inject `Psr\Clock\ClockInterface` (and optionally `Psr\Log\LoggerInterface` for the logger).
+
+### Breaking changes
+
+None for typical YAML + autowired consumers. Manual service construction of `CookieHandler` / `CookieLogger` requires the new constructor arguments.
+
 ## To 1.3.6
 
 ```bash

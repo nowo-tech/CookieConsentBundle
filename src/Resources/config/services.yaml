@@ -21,6 +21,25 @@ services:
       - '../../DependencyInjection/'
       - '../../Entity/'
       - '../../NowoCookieConsentBundle.php'
+      - '../../EventSubscriber/CookieConsentAdminAccessSubscriber.php'
+      - '../../Security/AllowAllCookieConsentAccessChecker.php'
+      - '../../Security/ConfigurableCookieConsentAccessChecker.php'
+      - '../../Clock/'
+
+  Nowo\CookieConsentBundle\Clock\SystemClock: ~
+
+  Psr\Clock\ClockInterface:
+    alias: Nowo\CookieConsentBundle\Clock\SystemClock
+
+  Nowo\CookieConsentBundle\Cookie\CookieHandler:
+    arguments:
+      $httpOnly: '%nowo_cookie_consent.http_only%'
+      $clock: '@Psr\Clock\ClockInterface'
+
+  Nowo\CookieConsentBundle\Cookie\CookieLogger:
+    arguments:
+      $clock: '@Psr\Clock\ClockInterface'
+      $logger: '@?logger'
 
   # Explicit (not _defaults.bind): survives setClass overrides and avoids unused-bind
   # errors when the FormSubscriber definition is replaced by the host app.

@@ -49,6 +49,15 @@ final class ConfigurationTest extends TestCase
         self::assertNull($config['preferences_bubble_border_color']);
         self::assertNull($config['preferences_bubble_icon']);
         self::assertSame([], $config['preference_sections']);
+        self::assertTrue($config['web_ui']['enabled']);
+        self::assertSame('/cookie-consent-config', $config['web_ui']['path_prefix']);
+        self::assertSame('@NowoCookieConsentBundle/admin/layout.html.twig', $config['web_ui']['layout_template']);
+        self::assertSame('bootstrap5', $config['web_ui']['css_framework']);
+        self::assertSame('bootstrap-icons', $config['web_ui']['icon_set']);
+        self::assertSame(20, $config['web_ui']['list_page_size']);
+        self::assertNull($config['security']['access_checker']);
+        self::assertSame(['ROLE_ADMIN'], $config['security']['access_roles']);
+        self::assertFalse($config['security']['allow_unauthenticated']);
     }
 
     public function testDoctrineTablePrefixIsApplied(): void

@@ -1,3 +1,6 @@
+/**
+ * Applies remote or embedded cookie consent config payloads to the modal DOM.
+ */
 import {
   applyVisualConfigForStep,
   parseModalPosition,

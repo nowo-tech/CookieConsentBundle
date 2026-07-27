@@ -12,11 +12,15 @@ use Nowo\CookieConsentBundle\Form\CookieDefinitionType;
 use Nowo\CookieConsentBundle\Repository\CookieConsentConfigRepository;
 use Nowo\CookieConsentBundle\Repository\CookieDefinitionRepository;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Contracts\Translation\TranslatorInterface;
+
+use function ceil;
+use function max;
 
 #[Route(
     '/cookie-consent-config/{configId}/cookies',
@@ -26,7 +30,7 @@ use Symfony\Contracts\Translation\TranslatorInterface;
 /**
  * Admin CRUD controller for cookie inventory definitions linked to a consent profile.
  */
-class CookieDefinitionAdminController extends AbstractController
+final class CookieDefinitionAdminController extends AbstractController
 {
     /**
      * Creates a new cookie definition admin controller.
@@ -34,11 +38,13 @@ class CookieDefinitionAdminController extends AbstractController
      * @param CookieConsentConfigRepository $configRepository Repository for consent profiles
      * @param CookieDefinitionRepository $definitionRepository Repository for cookie definitions
      * @param TranslatorInterface $translator Symfony translator for flash messages
+     * @param ParameterBagInterface $parameterBag Container parameters (list page size)
      */
     public function __construct(
         private readonly CookieConsentConfigRepository $configRepository,
         private readonly CookieDefinitionRepository $definitionRepository,
         private readonly TranslatorInterface $translator,
+        private readonly ParameterBagInterface $parameterBag,
     ) {
     }
 
@@ -46,17 +52,29 @@ class CookieDefinitionAdminController extends AbstractController
      * Lists cookie definitions for a consent profile.
      *
      * @param int $configId The consent profile identifier
+     * @param Request $request The current HTTP request
      *
      * @return Response The rendered index page
      */
     #[Route('', name: 'index', methods: ['GET'])]
-    public function index(int $configId): Response
+    public function index(int $configId, Request $request): Response
     {
-        $config = $this->getConfig($configId);
+        $config   = $this->getConfig($configId);
+        $pageSize = max(1, (int) $this->parameterBag->get('nowo_cookie_consent.web_ui.list_page_size'));
+        $page     = max(1, $request->query->getInt('page', 1));
+        $total    = $this->definitionRepository->countByConfig($config);
+        $pages    = max(1, (int) ceil($total / $pageSize));
+        if ($page > $pages) {
+            $page = $pages;
+        }
 
         return $this->render('@NowoCookieConsentBundle/admin/cookie_definition/index.html.twig', [
             'config'      => $config,
-            'definitions' => $this->definitionRepository->findByConfigOrdered($config),
+            'definitions' => $this->definitionRepository->findByConfigOrderedPaginated($config, $page, $pageSize),
+            'page'        => $page,
+            'pages'       => $pages,
+            'total'       => $total,
+            'pageSize'    => $pageSize,
         ]);
     }
 

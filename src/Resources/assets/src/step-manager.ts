@@ -1,3 +1,6 @@
+/**
+ * Two-step modal navigation between the consent banner and preferences panel.
+ */
 import { applyVisualConfigForStep, type ModalVisualStep } from './apply-visual-config';
 
 function getStepElements(modalElement: HTMLElement): {

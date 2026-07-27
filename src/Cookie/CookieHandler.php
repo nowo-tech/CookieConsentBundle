@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace Nowo\CookieConsentBundle\Cookie;
 
 use DateInterval;
-use DateTime;
 use Nowo\CookieConsentBundle\Enum\CookieNameEnum;
+use Psr\Clock\ClockInterface;
 use Symfony\Component\HttpFoundation\Cookie;
 use Symfony\Component\HttpFoundation\Response;
 
@@ -21,9 +21,11 @@ class CookieHandler
      * Creates a new cookie handler.
      *
      * @param bool $httpOnly Whether consent cookies should be HttpOnly
+     * @param ClockInterface $clock Clock used for cookie expiration
      */
     public function __construct(
         private readonly bool $httpOnly,
+        private readonly ClockInterface $clock,
     ) {
     }
 
@@ -77,8 +79,7 @@ class CookieHandler
 
     protected function saveCookie(string $name, string $value, Response $response): void
     {
-        $expirationDate = new DateTime();
-        $expirationDate->add(new DateInterval('P1Y'));
+        $expirationDate = $this->clock->now()->add(new DateInterval('P1Y'));
 
         $response->headers->setCookie(
             new Cookie($name, $value, $expirationDate, '/', null, null, $this->httpOnly, true),

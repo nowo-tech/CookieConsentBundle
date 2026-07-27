@@ -4,3 +4,18 @@
 nowo_cookie_consent:
     use_logger: true
     # disable_page_interaction: false   # full-page overlay until consent (see docs/CONFIGURATION.md)
+
+    # Admin Web UI (layout / CSS hints / pagination). See docs/CONFIGURATION.md
+    # web_ui:
+    #     enabled: true
+    #     path_prefix: /cookie-consent-config
+    #     layout_template: '@NowoCookieConsentBundle/admin/layout.html.twig'
+    #     css_framework: bootstrap5
+    #     icon_set: bootstrap-icons
+    #     list_page_size: 20
+
+    # Admin security (REQ-UI-002). Production MUST keep allow_unauthenticated: false.
+    # security:
+    #     access_roles: [ROLE_ADMIN]
+    #     # access_checker: App\Security\CookieConsentAccessChecker
+    #     allow_unauthenticated: false

@@ -1,3 +1,6 @@
+/**
+ * Keeps per-cookie toggles in sync with their parent category toggle.
+ */
 function getCategoryToggleInput(categoryBlock: HTMLElement): HTMLInputElement | null {
   return categoryBlock.querySelector<HTMLInputElement>(
     '[data-nowo-toggle] .nowo-cookie-consent__toggle-input',

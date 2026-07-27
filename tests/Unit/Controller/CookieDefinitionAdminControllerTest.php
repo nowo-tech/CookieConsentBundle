@@ -15,6 +15,7 @@ use Nowo\CookieConsentBundle\Repository\CookieDefinitionRepository;
 use Nowo\CookieConsentBundle\Tests\Unit\Support\AbstractControllerTestCase;
 use ReflectionMethod;
 use ReflectionProperty;
+use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
 use Symfony\Component\Form\FormFactoryInterface;
 use Symfony\Component\Form\FormInterface;
 use Symfony\Component\Form\FormView;
@@ -24,26 +25,6 @@ use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Symfony\Contracts\Translation\TranslatorInterface;
 
-/**
- * @internal test double overriding CSRF validation without security-bundle
- */
-final class TestableCookieDefinitionAdminController extends CookieDefinitionAdminController
-{
-    public function __construct(
-        CookieConsentConfigRepository $configRepository,
-        CookieDefinitionRepository $definitionRepository,
-        TranslatorInterface $translator,
-        private readonly bool $csrfValid = true,
-    ) {
-        parent::__construct($configRepository, $definitionRepository, $translator);
-    }
-
-    protected function isCsrfTokenValid(string $tokenId, ?string $token): bool
-    {
-        return $this->csrfValid;
-    }
-}
-
 final class CookieDefinitionAdminControllerTest extends AbstractControllerTestCase
 {
     public function testIndexRendersDefinitions(): void
@@ -51,12 +32,16 @@ final class CookieDefinitionAdminControllerTest extends AbstractControllerTestCa
         $config = $this->createEnabledConfig(1);
         $repo   = $this->createMock(CookieDefinitionRepository::class);
         $repo->expects(self::once())
-            ->method('findByConfigOrdered')
+            ->method('countByConfig')
             ->with($config)
+            ->willReturn(0);
+        $repo->expects(self::once())
+            ->method('findByConfigOrderedPaginated')
+            ->with($config, 1, 20)
             ->willReturn([]);
 
         $controller = $this->createDefinitionController(config: $config, definitionRepository: $repo);
-        $response   = $controller->index(1);
+        $response   = $controller->index(1, Request::create('/'));
 
         self::assertSame(200, $response->getStatusCode());
         self::assertSame('rendered', (string) $response->getContent());
@@ -139,11 +124,12 @@ final class CookieDefinitionAdminControllerTest extends AbstractControllerTestCa
             $configRepository,
             $this->createMock(CookieDefinitionRepository::class),
             $this->createMock(TranslatorInterface::class),
+            $this->createParameterBag(),
         );
         $this->configureController($controller);
 
         $this->expectException(NotFoundHttpException::class);
-        $controller->index(99);
+        $controller->index(99, Request::create('/'));
     }
 
     public function testEditAddsTranslationWhenMissing(): void
@@ -273,7 +259,7 @@ final class CookieDefinitionAdminControllerTest extends AbstractControllerTestCa
         ?CookieDefinitionRepository $definitionRepository = null,
         ?FormFactoryInterface $formFactory = null,
         bool $csrfValid = true,
-    ): TestableCookieDefinitionAdminController {
+    ): CookieDefinitionAdminController {
         $config ??= $this->createEnabledConfig(1);
 
         $configRepository = $this->createMock(CookieConsentConfigRepository::class);
@@ -284,18 +270,29 @@ final class CookieDefinitionAdminControllerTest extends AbstractControllerTestCa
         $translator = $this->createMock(TranslatorInterface::class);
         $translator->method('trans')->willReturn('translated');
 
-        $controller = new TestableCookieDefinitionAdminController(
+        $controller = new CookieDefinitionAdminController(
             $configRepository,
             $definitionRepository,
             $translator,
-            $csrfValid,
+            $this->createParameterBag(),
         );
         $this->configureController(
             $controller,
             formFactory: $formFactory,
+            csrfTokenManager: $this->createCsrfTokenManager($csrfValid),
         );
 
         return $controller;
+    }
+
+    private function createParameterBag(int $listPageSize = 20): ParameterBagInterface
+    {
+        $parameterBag = $this->createMock(ParameterBagInterface::class);
+        $parameterBag->method('get')
+            ->with('nowo_cookie_consent.web_ui.list_page_size')
+            ->willReturn($listPageSize);
+
+        return $parameterBag;
     }
 
     private function createEnabledConfig(int $id): CookieConsentConfig

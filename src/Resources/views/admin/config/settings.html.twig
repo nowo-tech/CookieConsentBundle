@@ -1,9 +1,9 @@
-{% extends '@NowoCookieConsentBundle/admin/config/layout.html.twig' %}
+{% extends nowo_cookie_consent_layout_template|default('@NowoCookieConsentBundle/admin/layout.html.twig') %}
 
 {% block title %}{{ 'nowo_cookie_consent.admin.config.settings.title'|trans({}, 'NowoCookieConsentBundle') }} — {{ config.displayName }}{% endblock %}
 
 {% block body %}
-    <div class="card shadow-sm">
+    <div class="card shadow-sm nowo-ui-form-wrap">
         <div class="card-body p-4">
             <h1 class="h4 mb-2">
                 {{ 'nowo_cookie_consent.admin.config.settings.title'|trans({}, 'NowoCookieConsentBundle') }} — {{ config.displayName }}
@@ -11,7 +11,7 @@
 
             {% for label, messages in app.flashes %}
                 {% for message in messages %}
-                    <div class="alert alert-{{ label == 'success' ? 'success' : label }} mt-3 mb-0" role="alert">
+                    <div class="alert alert-{{ label == 'success' ? 'success' : label }} mt-3 mb-0 nowo-ui-flash" role="alert">
                         {{ message }}
                     </div>
                 {% endfor %}
@@ -86,7 +86,7 @@
                     {{ form_row(form.autoShowRoutesText) }}
                 </section>
 
-                <button type="submit" class="btn btn-primary">{{ 'nowo_cookie_consent.admin.config.settings.save'|trans({}, 'NowoCookieConsentBundle') }}</button>
+                <button type="submit" class="btn btn-primary nowo-ui-action-save">{{ 'nowo_cookie_consent.admin.config.settings.save'|trans({}, 'NowoCookieConsentBundle') }}</button>
             {{ form_end(form) }}
         </div>
     </div>

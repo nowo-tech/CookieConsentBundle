@@ -12,6 +12,8 @@
 - [Page interaction overlay](#page-interaction-overlay)
 - [Preferences bubble](#preferences-bubble)
 - [Config API (GET)](#config-api-get)
+- [Admin Web UI](#admin-web-ui)
+- [Admin security](#admin-security)
 - [Twig overrides](#twig-overrides)
 - [Twig helpers](#twig-helpers)
 
@@ -232,7 +234,7 @@ nowo_cookie_consent:
                   purpose: Keeps your session active.
               es:
                   provider: Este sitio
-                  purpose: Mantiene activa tu sesión.
+                  purpose: Keeps your session active.
         - name: _ga
           duration: 2 years
           category: analytics
@@ -356,6 +358,50 @@ Response shape:
 
 The frontend script reads `data-nowo-config-url` on the modal, performs a `GET`, and applies the payload before opening the modal.
 
+## Admin Web UI
+
+Admin pages extend `web_ui.layout_template` (Twig global `nowo_cookie_consent_layout_template`). Prefer pointing that at your project layout (or a thin bridge that maps `nowo_ui_content` into your `body` block) instead of copying list/form templates.
+
+| Option | Default | Description |
+| --- | --- | --- |
+| `web_ui.enabled` | `true` | Registers admin access enforcement when security is configured |
+| `web_ui.path_prefix` | `/cookie-consent-config` | Documented URL prefix for host `access_control` |
+| `web_ui.layout_template` | `@NowoCookieConsentBundle/admin/layout.html.twig` | Twig layout extended by admin pages |
+| `web_ui.css_framework` | `bootstrap5` | Host CSS stack hint |
+| `web_ui.icon_set` | `bootstrap-icons` | Icon hint |
+| `web_ui.list_page_size` | `20` | Page size for cookie definition admin lists |
+
+```yaml
+nowo_cookie_consent:
+    web_ui:
+        layout_template: 'base.html.twig'
+        css_framework: bootstrap5
+        list_page_size: 20
+```
+
+When using the project layout, load host CSS/JS in that layout. Semantic hooks use `nowo-ui-*` classes. Legacy templates under `admin/cookie_definition/layout.html.twig` and `admin/config/layout.html.twig` remain as BC aliases that extend `admin/layout.html.twig`.
+
+## Admin security
+
+```yaml
+nowo_cookie_consent:
+    security:
+        access_roles: [ROLE_ADMIN]
+        # access_checker: App\Security\CookieConsentAccessChecker
+        allow_unauthenticated: false
+```
+
+Also lock the path in the host firewall:
+
+```yaml
+# config/packages/security.yaml
+security:
+    access_control:
+        - { path: ^/cookie-consent-config, roles: ROLE_ADMIN }
+```
+
+`allow_unauthenticated: true` is for demos/CI only. Production must keep it `false` and require `symfony/security-bundle`. The default `CookieConsentAccessCheckerInterface` implementation grants access when any configured role is granted; set a custom `security.access_checker` service id to replace it.
+
 ## Twig overrides
 
 Application templates under `templates/bundles/NowoCookieConsentBundle/` **always win** over the copies inside the package. The bundle registers paths via `TwigPathsPass` so Symfony resolves app overrides first.
@@ -389,11 +435,13 @@ Controllers and Twig use logical names such as `@NowoCookieConsentBundle/cookie_
 | `_preference_sections.html.twig` | Preferences step category blocks |
 | `_preferences_intro.html.twig` | Intro text on the preferences step |
 | `_diagnostics_script.html.twig` | Optional diagnostics script partial |
-| `admin/cookie_definition/layout.html.twig` | Admin CRUD layout shell |
+| `admin/layout.html.twig` | Default admin shell (`web_ui.layout_template`); preferred override target via config |
+| `admin/_pagination.html.twig` | Cookie definition list pagination partial |
+| `admin/cookie_definition/layout.html.twig` | Admin CRUD layout shell (BC alias of `admin/layout.html.twig`) |
 | `admin/cookie_definition/index.html.twig` | Cookie definition list |
 | `admin/cookie_definition/form.html.twig` | Create/edit cookie definition form |
 | `admin/cookie_definition/_table.html.twig` | Admin list table partial |
-| `admin/config/layout.html.twig` | Profile settings admin layout shell |
+| `admin/config/layout.html.twig` | Profile settings admin layout shell (BC alias) |
 | `admin/config/settings.html.twig` | Profile settings form (overlay, theme, bubble, layout) |
 
 Theme selection follows `ui_theme` (`bootstrap` or `tailwind`); override the modal and form theme rows that match your active theme.

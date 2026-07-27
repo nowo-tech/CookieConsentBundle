@@ -4,9 +4,10 @@ declare(strict_types=1);
 
 namespace Nowo\CookieConsentBundle\Cookie;
 
-use DateTimeImmutable;
 use Doctrine\ORM\EntityManagerInterface;
 use Nowo\CookieConsentBundle\Entity\CookieConsentLog;
+use Psr\Clock\ClockInterface;
+use Psr\Log\LoggerInterface;
 use RuntimeException;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\RequestStack;
@@ -25,10 +26,14 @@ class CookieLogger
      *
      * @param EntityManagerInterface $entityManager The Doctrine entity manager
      * @param RequestStack $requestStack The HTTP request stack
+     * @param ClockInterface $clock Clock used for consent timestamps
+     * @param LoggerInterface|null $logger Optional PSR logger (never receives raw IP)
      */
     public function __construct(
         private readonly EntityManagerInterface $entityManager,
         RequestStack $requestStack,
+        private readonly ClockInterface $clock,
+        private readonly ?LoggerInterface $logger = null,
     ) {
         $this->request = $requestStack->getMainRequest();
     }
@@ -45,18 +50,25 @@ class CookieLogger
             throw new RuntimeException('No request found');
         }
 
-        $ip = $this->anonymizeIp($this->request->getClientIp());
+        $ip               = $this->anonymizeIp($this->request->getClientIp());
+        $loggedCategories = [];
 
         foreach ($categories as $category => $value) {
             if ($category === 'required') {
                 continue;
             }
 
-            $boolValue = $value === true || $value === 'true';
+            $loggedCategories[] = (string) $category;
+            $boolValue          = $value === true || $value === 'true';
             $this->persistCookieConsentLog((string) $category, $boolValue, $ip, $key);
         }
 
         $this->entityManager->flush();
+
+        $this->logger?->info('Cookie consent choices persisted.', [
+            'consent_key' => $key,
+            'categories'  => $loggedCategories,
+        ]);
     }
 
     protected function persistCookieConsentLog(string $category, bool $value, string $ip, string $key): void
@@ -66,7 +78,7 @@ class CookieLogger
             ->setCookieConsentKey($key)
             ->setCookieName($category)
             ->setCookieValue($value)
-            ->setTimestamp(new DateTimeImmutable());
+            ->setTimestamp($this->clock->now());
 
         $this->entityManager->persist($cookieConsentLog);
     }

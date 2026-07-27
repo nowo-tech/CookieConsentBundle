@@ -6,13 +6,20 @@ namespace Nowo\CookieConsentBundle\DependencyInjection;
 
 use Nowo\CookieConsentBundle\Config\CookieInventoryNormalizer;
 use Nowo\CookieConsentBundle\EventSubscriber\CookieConsentConfigTranslationSubscriber;
+use Nowo\CookieConsentBundle\Security\AllowAllCookieConsentAccessChecker;
+use Nowo\CookieConsentBundle\Security\ConfigurableCookieConsentAccessChecker;
+use Nowo\CookieConsentBundle\Security\CookieConsentAccessCheckerInterface;
+use Nowo\CookieConsentBundle\Twig\CookieConsentAdminTwigExtension;
 use Symfony\Component\Config\FileLocator;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\Definition;
 use Symfony\Component\DependencyInjection\Extension\Extension;
 use Symfony\Component\DependencyInjection\Extension\PrependExtensionInterface;
 use Symfony\Component\DependencyInjection\Loader\YamlFileLoader;
+use Symfony\Component\DependencyInjection\Reference;
 use Symfony\Component\Translation\Loader\ArrayLoader;
+
+use function is_string;
 
 /**
  * Loads bundle configuration and registers services in the container.
@@ -71,8 +78,29 @@ class NowoCookieConsentExtension extends Extension implements PrependExtensionIn
         $container->setParameter('nowo_cookie_consent.preferences_bubble_icon', $config['preferences_bubble_icon']);
         $container->setParameter('nowo_cookie_consent.preference_sections', $config['preference_sections']);
 
+        $webUi = $config['web_ui'];
+        $container->setParameter('nowo_cookie_consent.web_ui.enabled', $webUi['enabled']);
+        $container->setParameter('nowo_cookie_consent.web_ui.path_prefix', $webUi['path_prefix']);
+        $container->setParameter('nowo_cookie_consent.web_ui.layout_template', $webUi['layout_template']);
+        $container->setParameter('nowo_cookie_consent.web_ui.css_framework', $webUi['css_framework']);
+        $container->setParameter('nowo_cookie_consent.web_ui.icon_set', $webUi['icon_set']);
+        $container->setParameter('nowo_cookie_consent.web_ui.list_page_size', $webUi['list_page_size']);
+
+        $security = $config['security'];
+        $container->setParameter('nowo_cookie_consent.security.access_roles', $security['access_roles']);
+        $container->setParameter('nowo_cookie_consent.security.allow_unauthenticated', $security['allow_unauthenticated']);
+
         $loader = new YamlFileLoader($container, new FileLocator(__DIR__ . '/../Resources/config'));
         $loader->load('services.yaml');
+
+        if ($container->hasDefinition(CookieConsentAdminTwigExtension::class)) {
+            $container->getDefinition(CookieConsentAdminTwigExtension::class)
+                ->setArgument('$layoutTemplate', $webUi['layout_template'])
+                ->setArgument('$cssFramework', $webUi['css_framework'])
+                ->setArgument('$iconSet', $webUi['icon_set']);
+        }
+
+        $this->registerAccessChecker($container, $security);
 
         if ($tablePrefix !== '') {
             $container->setDefinition(
@@ -89,6 +117,42 @@ class NowoCookieConsentExtension extends Extension implements PrependExtensionIn
             $container->register('nowo_cookie_consent.translation.loader.array', ArrayLoader::class)
                 ->addTag('translation.loader', ['alias' => 'array']);
         }
+    }
+
+    /**
+     * @param array{access_checker: ?string, access_roles: list<string>, allow_unauthenticated: bool} $security
+     */
+    private function registerAccessChecker(ContainerBuilder $container, array $security): void
+    {
+        $accessCheckerId = $security['access_checker'] ?? null;
+        if (is_string($accessCheckerId) && $accessCheckerId !== '') {
+            $container->setAlias(CookieConsentAccessCheckerInterface::class, $accessCheckerId);
+
+            return;
+        }
+
+        $hasAuthorizationChecker = $container->hasDefinition('security.authorization_checker')
+            || $container->hasAlias('security.authorization_checker');
+
+        if ($security['allow_unauthenticated'] && !$hasAuthorizationChecker) {
+            $accessCheckerId = 'nowo_cookie_consent.access_checker.allow_all';
+            $container->setDefinition($accessCheckerId, new Definition(AllowAllCookieConsentAccessChecker::class));
+            $container->setAlias(CookieConsentAccessCheckerInterface::class, $accessCheckerId);
+
+            return;
+        }
+
+        $accessCheckerId = 'nowo_cookie_consent.access_checker.default';
+        $definition      = new Definition(ConfigurableCookieConsentAccessChecker::class);
+        $definition->setArgument('$accessRoles', $security['access_roles']);
+        if ($hasAuthorizationChecker) {
+            $definition->setArgument('$authorizationChecker', new Reference('security.authorization_checker'));
+        } else {
+            // Placeholder until SecurityBundle registers the checker; SecurityPass fails compile if still missing.
+            $definition->setAutowired(true);
+        }
+        $container->setDefinition($accessCheckerId, $definition);
+        $container->setAlias(CookieConsentAccessCheckerInterface::class, $accessCheckerId);
     }
 
     /**

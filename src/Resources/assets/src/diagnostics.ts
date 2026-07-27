@@ -1,3 +1,6 @@
+/**
+ * Collects and publishes lightweight client diagnostics for the consent modal.
+ */
 declare global {
   interface Window {
     __NOWO_COOKIE_CONSENT_DIAGNOSTIC__?: Record<string, unknown>;

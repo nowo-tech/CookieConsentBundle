@@ -1,3 +1,6 @@
+/**
+ * Color theme helpers for the consent modal (light/dark modifiers and transitions).
+ */
 export interface ThemeOptions {
   colorTheme?: string;
   darkModeEnabled?: boolean;

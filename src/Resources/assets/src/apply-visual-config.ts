@@ -1,3 +1,6 @@
+/**
+ * Layout, position, and page-interaction visual options for banner/preferences steps.
+ */
 export interface VisualConfigOptions {
   layout?: string;
   variant?: string;

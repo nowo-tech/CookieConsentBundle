@@ -184,3 +184,6 @@ nowo_cookie_consent.admin.config.settings.bubble_position.bottom_right: 'Bottom 
 nowo_cookie_consent.admin.config.settings.bubble_position.bottom_left: 'Bottom left'
 nowo_cookie_consent.admin.config.settings.bubble_position.top_right: 'Top right'
 nowo_cookie_consent.admin.config.settings.bubble_position.top_left: 'Top left'
+nowo_cookie_consent.admin.pagination.summary: 'Page %page% of %pages% (%total% items)'
+nowo_cookie_consent.admin.pagination.prev: 'Previous'
+nowo_cookie_consent.admin.pagination.next: 'Next'

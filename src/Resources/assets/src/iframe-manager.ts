@@ -1,3 +1,6 @@
+/**
+ * Activates iframe placeholders after the user allows matching cookie categories.
+ */
 const ACTIVATED_ATTRIBUTE = 'data-nowo-activated';
 
 function parseCategoryFromInputName(name: string): string | null {

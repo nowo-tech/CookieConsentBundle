@@ -22,7 +22,7 @@ use Symfony\Contracts\Translation\TranslatorInterface;
 /**
  * Admin controller for editing CookieConsentConfig profile settings (including page overlay).
  */
-class CookieConsentConfigSettingsAdminController extends AbstractController
+final class CookieConsentConfigSettingsAdminController extends AbstractController
 {
     /**
      * Creates a new config settings admin controller.
