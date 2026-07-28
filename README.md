@@ -1,6 +1,6 @@
 # Cookie Consent Bundle
 
-[![CI](https://github.com/nowo-tech/CookieConsentBundle/actions/workflows/ci.yml/badge.svg)](https://github.com/nowo-tech/CookieConsentBundle/actions/workflows/ci.yml) [![Packagist Version](https://img.shields.io/packagist/v/nowo-tech/cookie-consent-bundle.svg?style=flat)](https://packagist.org/packages/nowo-tech/cookie-consent-bundle) [![Packagist Downloads](https://img.shields.io/packagist/dt/nowo-tech/cookie-consent-bundle.svg)](https://packagist.org/packages/nowo-tech/cookie-consent-bundle) [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE) [![PHP](https://img.shields.io/badge/PHP-8.1%2B-777BB4?logo=php)](https://php.net) [![Symfony](https://img.shields.io/badge/Symfony-6%2B%20%7C%207.4%20%7C%208.0%20%7C%208.1%2B-000000?logo=symfony)](https://symfony.com) [![GitHub stars](https://img.shields.io/github/stars/nowo-tech/cookie-consent-bundle.svg?style=social&label=Star)](https://github.com/nowo-tech/CookieConsentBundle) [![Coverage](https://img.shields.io/badge/Coverage-99.95%25-brightgreen)](#tests-and-coverage)
+[![CI](https://github.com/nowo-tech/CookieConsentBundle/actions/workflows/ci.yml/badge.svg)](https://github.com/nowo-tech/CookieConsentBundle/actions/workflows/ci.yml) [![Packagist Version](https://img.shields.io/packagist/v/nowo-tech/cookie-consent-bundle.svg?style=flat)](https://packagist.org/packages/nowo-tech/cookie-consent-bundle) [![Packagist Downloads](https://img.shields.io/packagist/dt/nowo-tech/cookie-consent-bundle.svg)](https://packagist.org/packages/nowo-tech/cookie-consent-bundle) [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE) [![PHP](https://img.shields.io/badge/PHP-8.1%2B-777BB4?logo=php)](https://php.net) [![Symfony](https://img.shields.io/badge/Symfony-6%2B%20%7C%207.4%20%7C%208.0%20%7C%208.1%2B-000000?logo=symfony)](https://symfony.com) [![GitHub stars](https://img.shields.io/github/stars/nowo-tech/cookie-consent-bundle.svg?style=social&label=Star)](https://github.com/nowo-tech/CookieConsentBundle) [![Coverage](https://img.shields.io/badge/Coverage-100%25-brightgreen)](#tests-and-coverage)
 
 > ⭐ **Found this useful?** [Install from Packagist](https://packagist.org/packages/nowo-tech/cookie-consent-bundle) · Give it a **star** on [GitHub](https://github.com/nowo-tech/CookieConsentBundle) so more developers can find it.
 
@@ -78,15 +78,15 @@ See [Demo with FrankenPHP](docs/DEMO-FRANKENPHP.md) for development vs. producti
 
 | Language | Lines (approx.) | Command |
 | --- | --- | --- |
-| PHP | ≥99% (currently 99.95%) | `make test-coverage` |
+| PHP | **100%** line coverage on `src/` (run `make coverage-check` to refresh). See [`docs/COVERAGE.md`](docs/COVERAGE.md). | `make coverage-check` |
 | TypeScript | ~94% | `make test-ts` |
 
 ```bash
 make test
-make test-coverage
+make coverage-check
 make test-ts
 make assets
 make release-check
 ```
 
-PHP coverage target is **≥99%** lines (prefer 100%; see [Release](docs/RELEASE.md)). Justified exclusions use PHPUnit `@codeCoverageIgnore` (e.g. unreachable `match` default arms). TypeScript coverage enforces a minimum of 90% (Vitest thresholds + `.scripts/ts-coverage-percent.sh`).
+PHP coverage target is **≥99%** lines (prefer 100%; see [Release](docs/RELEASE.md) and [`docs/COVERAGE.md`](docs/COVERAGE.md)). TypeScript coverage enforces a minimum of 90% (Vitest thresholds + `.scripts/ts-coverage-percent.sh`).

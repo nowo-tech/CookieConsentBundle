@@ -34,7 +34,7 @@ final class LocaleRoutingTest extends WebTestCase
         self::assertResponseIsSuccessful();
 
         foreach (['en', 'es', 'it', 'fr', 'de', 'pt', 'nl', 'pl', 'ca'] as $locale) {
-            self::assertSelectorExists(sprintf('a.dropdown-item[href="/%s/demo/admin/cookie-consent-config"]', $locale));
+            self::assertSelectorExists(sprintf('a[href="/%s/demo/admin/cookie-consent-config"]', $locale));
         }
     }
 

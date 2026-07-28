@@ -7,10 +7,13 @@ namespace Nowo\CookieConsentBundle\Tests\Unit\DependencyInjection;
 use Nowo\CookieConsentBundle\DependencyInjection\NowoCookieConsentExtension;
 use Nowo\CookieConsentBundle\DependencyInjection\TablePrefixListener;
 use Nowo\CookieConsentBundle\EventSubscriber\CookieConsentConfigTranslationSubscriber;
+use Nowo\CookieConsentBundle\Security\AllowAllCookieConsentAccessChecker;
+use Nowo\CookieConsentBundle\Security\ConfigurableCookieConsentAccessChecker;
 use Nowo\CookieConsentBundle\Security\CookieConsentAccessCheckerInterface;
 use PHPUnit\Framework\TestCase;
 use Symfony\Bundle\FrameworkBundle\DependencyInjection\FrameworkExtension;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
+use Symfony\Component\DependencyInjection\Definition;
 
 final class NowoCookieConsentExtensionTest extends TestCase
 {
@@ -72,6 +75,57 @@ final class NowoCookieConsentExtensionTest extends TestCase
         self::assertSame(['ROLE_ADMIN'], $container->getParameter('nowo_cookie_consent.security.access_roles'));
         self::assertFalse($container->getParameter('nowo_cookie_consent.security.allow_unauthenticated'));
         self::assertTrue($container->hasAlias(CookieConsentAccessCheckerInterface::class));
+    }
+
+    public function testUsesCustomAccessCheckerServiceId(): void
+    {
+        $container = new ContainerBuilder();
+        $container->setDefinition('app.custom_access_checker', new Definition(AllowAllCookieConsentAccessChecker::class));
+        $extension = new NowoCookieConsentExtension();
+        $extension->load([[
+            'security' => [
+                'access_checker' => 'app.custom_access_checker',
+            ],
+        ]], $container);
+
+        self::assertTrue($container->hasAlias(CookieConsentAccessCheckerInterface::class));
+        self::assertSame(
+            'app.custom_access_checker',
+            (string) $container->getAlias(CookieConsentAccessCheckerInterface::class),
+        );
+    }
+
+    public function testAllowUnauthenticatedWithoutSecurityUsesAllowAllChecker(): void
+    {
+        $container = new ContainerBuilder();
+        $extension = new NowoCookieConsentExtension();
+        $extension->load([[
+            'security' => [
+                'allow_unauthenticated' => true,
+            ],
+        ]], $container);
+
+        self::assertTrue($container->hasDefinition('nowo_cookie_consent.access_checker.allow_all'));
+        self::assertSame(
+            AllowAllCookieConsentAccessChecker::class,
+            $container->getDefinition('nowo_cookie_consent.access_checker.allow_all')->getClass(),
+        );
+        self::assertSame(
+            'nowo_cookie_consent.access_checker.allow_all',
+            (string) $container->getAlias(CookieConsentAccessCheckerInterface::class),
+        );
+    }
+
+    public function testDefaultAccessCheckerWiresAuthorizationCheckerWhenPresent(): void
+    {
+        $container = new ContainerBuilder();
+        $container->setDefinition('security.authorization_checker', new Definition());
+        $extension = new NowoCookieConsentExtension();
+        $extension->load([[]], $container);
+
+        $definition = $container->getDefinition('nowo_cookie_consent.access_checker.default');
+        self::assertSame(ConfigurableCookieConsentAccessChecker::class, $definition->getClass());
+        self::assertArrayHasKey('$authorizationChecker', $definition->getArguments());
     }
 
     public function testGetAlias(): void

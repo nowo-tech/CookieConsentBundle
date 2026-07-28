@@ -81,7 +81,8 @@
     "prefer-stable": true,
     "scripts": {
         "test": "phpunit",
-        "test-coverage": "phpunit --coverage-html coverage --coverage-clover coverage.xml --coverage-text",
+        "test-coverage": "phpunit --coverage-html coverage --coverage-clover coverage.xml --coverage-text=coverage-output.txt",
+        "coverage-check": "phpunit --colors=always --coverage-text=coverage-output.txt --coverage-clover coverage.xml && sh .scripts/coverage-fail-under.sh coverage-output.txt 99",
         "cs-check": "php-cs-fixer fix --dry-run --diff",
         "cs-fix": "php-cs-fixer fix",
         "rector": "rector process",
@@ -96,6 +97,7 @@
     "scripts-descriptions": {
         "test": "Run PHPUnit tests",
         "test-coverage": "Run PHPUnit tests with code coverage",
+        "coverage-check": "Run PHPUnit with coverage and fail under 99% lines",
         "cs-check": "Check code style with PHP-CS-Fixer",
         "cs-fix": "Fix code style with PHP-CS-Fixer",
         "rector": "Apply Rector refactoring",

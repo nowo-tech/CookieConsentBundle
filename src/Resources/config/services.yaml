@@ -7,7 +7,6 @@ services:
     public: false
     bind:
       $cookieCategories: '%nowo_cookie_consent.categories%'
-      $httpOnly: '%nowo_cookie_consent.http_only%'
       $formAction: '%nowo_cookie_consent.form_action%'
       $csrfProtection: '%nowo_cookie_consent.csrf_protection%'
       $cookieConsentDisabledRoutes: '%nowo_cookie_consent.disabled_routes%'

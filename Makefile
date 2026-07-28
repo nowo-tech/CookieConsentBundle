@@ -6,9 +6,9 @@ BUNDLE_ROOT := $(abspath $(dir $(lastword $(MAKEFILE_LIST))))
 export DOCKER_CONFIG := $(BUNDLE_ROOT)/.docker
 
 .PHONY: help ensure-up up down down-dev build shell install assets assets-test test-ts test test-coverage test-with-db \
-	test-coverage-with-db cs-check cs-fix rector rector-dry phpstan validate-phpdoc qa release-check \
+	test-coverage-with-db coverage-check cs-check cs-fix rector rector-dry phpstan validate-phpdoc qa release-check \
 	release-check-demos demo-smoke composer-sync clean update validate validate-translations \
-	setup-hooks check-no-cursor-coauthor strip-cursor-coauthor-from-history
+	setup-hooks check-no-cursor-coauthor check-open-prs strip-cursor-coauthor-from-history
 
 help:
 	@echo "Cookie Consent Bundle - Development Commands"
@@ -70,6 +70,10 @@ test-coverage: ensure-up
 	@$(COMPOSE) exec -T $(SERVICE_PHP) composer test-coverage | tee coverage-php.txt
 	@./.scripts/php-coverage-percent.sh coverage-php.txt
 
+coverage-check: ensure-up
+	@$(COMPOSE) exec -T $(SERVICE_PHP) sh -lc 'composer test-coverage | tee coverage-php.txt'
+	@./.scripts/coverage-fail-under.sh coverage-output.txt 99
+
 test-coverage-with-db: test-coverage
 
 cs-check: ensure-up
@@ -96,7 +100,7 @@ validate-translations: ensure-up
 
 qa: cs-check test test-ts
 
-release-check: check-no-cursor-coauthor ensure-up assets composer-sync cs-fix cs-check rector-dry phpstan validate-phpdoc test-coverage test-ts release-check-demos
+release-check: check-no-cursor-coauthor check-open-prs ensure-up assets composer-sync cs-fix cs-check rector-dry phpstan validate-phpdoc coverage-check test-ts release-check-demos
 
 release-check-demos:
 	@if [ -f demo/Makefile ]; then $(MAKE) -C demo release-check; else true; fi
@@ -130,6 +134,10 @@ include $(BUNDLE_ROOT)/../.scripts/Makefile.update-deps.mk
 check-no-cursor-coauthor:
 	@chmod +x .scripts/check-no-cursor-coauthor.sh
 	@./.scripts/check-no-cursor-coauthor.sh HEAD
+
+check-open-prs:
+	@chmod +x .scripts/check-open-prs.sh
+	@./.scripts/check-open-prs.sh
 
 strip-cursor-coauthor-from-history:
 	@chmod +x .scripts/strip-cursor-coauthor-from-history.sh

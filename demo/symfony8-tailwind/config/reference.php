@@ -962,7 +962,7 @@ use Symfony\Component\Config\Loader\ParamConfigurator as Param;
  *         table_prefix?: scalar|Param|null, // Prefix prepended to table names (dashboard_cookie_log, dashboard_cookie_config, …). Empty = no prefix. // Default: ""
  *     },
  *     table_prefix?: scalar|Param|null, // Deprecated: Use doctrine.table_prefix instead. // Deprecated. Use doctrine.table_prefix (e.g. "app_" yields app_dashboard_cookie_log). // Default: ""
- *     categories?: mixed, // Cookie categories shown in the consent modal (excluding "required"). // Default: ["analytics","marketing","preferences"]
+ *     categories?: list<scalar|Param|null>,
  *     use_logger?: bool|Param, // Persist consent choices to the database when true. // Default: true
  *     use_database_config?: bool|Param, // Load modal copy and display settings from CookieConsentConfig entities when true. // Default: false
  *     use_cookie_inventory?: bool|Param, // Expose cookie definitions (name, category/block, duration, provider, purpose) in the preferences modal and legal pages. // Default: false
@@ -983,11 +983,11 @@ use Symfony\Component\Config\Loader\ParamConfigurator as Param;
  *     http_only?: bool|Param, // Set HttpOnly flag on consent cookies. // Default: true
  *     form_action?: scalar|Param|null, // Optional route name used as the form action URL. // Default: null
  *     csrf_protection?: bool|Param, // Enable CSRF protection on the consent form. // Default: true
- *     disabled_routes?: mixed, // Route names where the modal must not open automatically. // Default: ["privacy","imprint"]
+ *     disabled_routes?: list<scalar|Param|null>,
  *     route_targeting_mode?: "all"|"only"|"except"|Param, // Controls where the modal auto-opens: all pages, only listed routes, or all except listed routes. // Default: "all"
- *     target_routes?: mixed, // Route names used with route_targeting_mode (Symfony route names, one per line in the admin UI). // Default: []
+ *     target_routes?: list<scalar|Param|null>,
  *     default_locale?: scalar|Param|null, // Fallback locale when no supported language can be detected. // Default: "en"
- *     enabled_locales?: mixed, // Locales supported by the cookie consent UI and locale detection. // Default: ["en","es","it","fr","de","pt","nl","pl","ca"]
+ *     enabled_locales?: list<scalar|Param|null>,
  *     detect_locale_from_accept_language?: bool|Param, // Use the Accept-Language request header when no explicit locale is available. // Default: true
  *     ui_theme?: "bootstrap"|"tailwind"|Param, // UI framework used by the bundled cookie consent modal templates. // Default: "bootstrap"
  *     color_theme?: "light"|"dark"|"dark-turquoise"|"light-funky"|"elegant-black"|Param, // Default: "light"
@@ -1002,7 +1002,24 @@ use Symfony\Component\Config\Loader\ParamConfigurator as Param;
  *     preferences_bubble_position?: "bottom-right"|"bottom-left"|"top-right"|"top-left"|Param, // Screen corner for the floating preferences bubble. // Default: "bottom-right"
  *     preferences_bubble_border_color?: scalar|Param|null, // Hex color for the preferences bubble border and cookie icon (e.g. #30363c). // Default: null
  *     preferences_bubble_icon?: scalar|Param|null, // Custom HTML or SVG markup for the preferences bubble icon. Leave empty for the default cookie SVG. // Default: null
- *     preference_sections?: mixed, // Default: []
+ *     preference_sections?: list<array{ // Default: []
+ *         title?: scalar|Param|null, // Default: ""
+ *         description?: scalar|Param|null, // Default: ""
+ *         categories?: list<scalar|Param|null>,
+ *     }>,
+ *     web_ui?: array{
+ *         enabled?: bool|Param, // When false, admin access subscriber is not registered (routes still load; prefer security firewall). // Default: true
+ *         path_prefix?: scalar|Param|null, // Documented URL path prefix for admin CRUD (host should lock with security.access_control). // Default: "/cookie-consent-config"
+ *         layout_template?: scalar|Param|null, // Twig layout extended by admin pages (global nowo_cookie_consent_layout_template). Set to your app layout or a one-file bridge. // Default: "@NowoCookieConsentBundle/admin/layout.html.twig"
+ *         css_framework?: "bootstrap"|"bootstrap4"|"bootstrap5"|"tailwind"|"foundation"|"custom"|"tabler"|"none"|Param, // Host CSS stack hint: bootstrap5 | bootstrap4 | bootstrap | tailwind | foundation | tabler | custom | none. // Default: "bootstrap5"
+ *         icon_set?: "bootstrap-icons"|"tabler-icons"|"ux_icon"|"svg_inline"|"none"|Param, // Default: "bootstrap-icons"
+ *         list_page_size?: int|Param, // Default page size for admin cookie definition lists. // Default: 20
+ *     },
+ *     security?: array{
+ *         access_checker?: scalar|Param|null, // Optional service id implementing CookieConsentAccessCheckerInterface. // Default: null
+ *         access_roles?: list<scalar|Param|null>,
+ *         allow_unauthenticated?: bool|Param, // DEV/DEMO ONLY. When true, admin UI may load without SecurityBundle / without login. Production MUST keep false. // Default: false
+ *     },
  * }
  * @psalm-type NowoTwigInspectorConfig = array{
  *     enabled_extensions?: list<scalar|Param|null>,

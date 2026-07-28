@@ -1,8 +1,11 @@
 {% form_theme form '@NowoCookieConsentBundle/form/cookie_consent_theme.tailwind.html.twig' %}
 
 {% set ui = display_config is defined and display_config ? display_config.config : null %}
-
+{% set preference_sections = nowo_cookie_consent_preference_sections() %}
 {% set two_step = nowo_cookie_consent_two_step_modal() %}
+{% set show_preferences_label = 'nowo_cookie_consent.show_preferences'|trans({}, 'NowoCookieConsentBundle') %}
+{% set preferences_title = 'nowo_cookie_consent.preferences.title'|trans({}, 'NowoCookieConsentBundle') %}
+{% set preferences_close_label = 'nowo_cookie_consent.preferences.close'|trans({}, 'NowoCookieConsentBundle') %}
 
 <div id="cookieconsent"
      class="nowo-cookie-consent fixed inset-0 z-50 hidden p-4{% if two_step %} nowo-cookie-consent--two-step{% endif %}"
@@ -39,46 +42,84 @@
      role="dialog">
     <div class="nowo-cookie-consent__dialog w-full max-w-4xl{% if ui %} nowo-cookie-consent__dialog--{{ ui.consentModalLayout }}{% endif %}">
         <div class="nowo-cookie-consent__panel overflow-hidden rounded-xl border border-slate-200 bg-white shadow-2xl">
-            {% block title %}
-                <div class="border-b border-slate-200 px-6 py-4">
-                    <h2 id="nowoCookieConsentTitle" class="nowo-cookie-consent__title text-lg font-semibold text-slate-900">
-                        {{ 'nowo_cookie_consent.title'|trans({}, 'NowoCookieConsentBundle') }}
-                    </h2>
-                </div>
-            {% endblock %}
-            <div class="nowo-cookie-consent__scrollable px-6 py-5">
-                {% block intro %}
-                    <p class="nowo-cookie-consent__intro text-sm text-slate-600">{{ 'nowo_cookie_consent.intro'|trans({}, 'NowoCookieConsentBundle') }}</p>
-                {% endblock %}
+            {{ form_start(form, {attr: {class: 'nowo-cookie-consent__form'}}) }}
 
-                {% block read_more %}
-                    {% set privacy_route = 'nowo_cookie_consent.privacy_route'|trans({}, 'NowoCookieConsentBundle') %}
-                    {% if privacy_route %}
-                        <a class="nowo-cookie-consent__read-more mt-2 inline-flex text-sm font-medium text-indigo-600 hover:text-indigo-500"
-                           href="{% block read_more_link %}{{ path(privacy_route) }}{% endblock %}">
-                            {{ 'nowo_cookie_consent.read_more'|trans({}, 'NowoCookieConsentBundle') }}
-                        </a>
-                    {% else %}
-                        <p class="mt-2 text-sm text-slate-600">{{ 'nowo_cookie_consent.read_more'|trans({}, 'NowoCookieConsentBundle') }}</p>
-                    {% endif %}
-                {% endblock %}
-
-                {{ form_start(form, {attr: {class: 'nowo-cookie-consent__form mt-6'}}) }}
-                    <div class="nowo-cookie-consent__category-group divide-y divide-slate-200 border-y border-slate-200">
-                        <div class="grid gap-4 py-4 sm:grid-cols-2 lg:grid-cols-3">
+            {% if two_step %}
+                <div class="nowo-cookie-consent__step nowo-cookie-consent__step--banner nowo-cookie-consent__step--active" data-nowo-step="banner">
+                    <div class="border-b border-slate-200 px-6 py-4">
+                        <h2 id="nowoCookieConsentTitle" class="nowo-cookie-consent__title text-lg font-semibold text-slate-900">
+                            {{ 'nowo_cookie_consent.title'|trans({}, 'NowoCookieConsentBundle') }}
+                        </h2>
+                    </div>
+                    <div class="px-6 py-5">
+                        <p class="nowo-cookie-consent__intro text-sm text-slate-600">{{ 'nowo_cookie_consent.intro'|trans({}, 'NowoCookieConsentBundle') }}</p>
+                        <div class="nowo-cookie-consent__btn-group nowo-cookie-consent__btn-group--banner mt-5 flex flex-wrap gap-2">
+                            <button type="button" class="nowo-cookie-consent__btn nowo-cookie-consent__btn--secondary inline-flex items-center rounded-md bg-white px-4 py-2 text-sm font-semibold text-slate-700 shadow-sm ring-1 ring-inset ring-slate-300 hover:bg-slate-50" data-nowo-show-preferences>
+                                {{ show_preferences_label }}
+                            </button>
                             {% for child in form %}
-                                {% if child.vars.block_prefixes[0] != 'button' %}
+                                {% if child.vars.name == 'use_only_functional_cookies' %}
+                                    {{ form_row(child) }}
+                                {% endif %}
+                            {% endfor %}
+                            {% for child in form %}
+                                {% if child.vars.name == 'use_all_cookies' %}
                                     {{ form_row(child) }}
                                 {% endif %}
                             {% endfor %}
                         </div>
                     </div>
-
-                    <div class="nowo-cookie-consent__btn-group mt-5 flex flex-wrap justify-end gap-2">
-                        {{ form_rest(form) }}
+                </div>
+                <div class="nowo-cookie-consent__step nowo-cookie-consent__step--preferences" data-nowo-step="preferences">
+                    <div class="nowo-cookie-consent__preferences-header flex items-center justify-between border-b border-slate-200 px-6 py-4">
+                        <h2 class="nowo-cookie-consent__title text-lg font-semibold text-slate-900">{{ preferences_title }}</h2>
+                        <button type="button"
+                                class="nowo-cookie-consent__close-preferences rounded p-1 text-slate-500 hover:bg-slate-100 hover:text-slate-800"
+                                data-nowo-hide-preferences
+                                aria-label="{{ preferences_close_label }}">
+                            <span class="nowo-cookie-consent__close-preferences-icon text-xl leading-none" aria-hidden="true">&times;</span>
+                        </button>
                     </div>
-                {{ form_end(form) }}
-            </div>
+                    <div class="nowo-cookie-consent__preferences-body nowo-cookie-consent__scrollable px-6 py-5">
+                        {% include '@NowoCookieConsentBundle/_preference_sections.html.twig' with {form: form, preference_sections: preference_sections} %}
+                    </div>
+                    <div class="nowo-cookie-consent__btn-group flex flex-wrap justify-end gap-2 border-t border-slate-200 px-6 py-4">
+                        {% for child in form %}
+                            {% if child.vars.name == 'save' %}
+                                {{ form_row(child) }}
+                            {% endif %}
+                        {% endfor %}
+                    </div>
+                </div>
+            {% else %}
+                <div class="border-b border-slate-200 px-6 py-4">
+                    <h2 id="nowoCookieConsentTitle" class="nowo-cookie-consent__title text-lg font-semibold text-slate-900">
+                        {{ 'nowo_cookie_consent.title'|trans({}, 'NowoCookieConsentBundle') }}
+                    </h2>
+                </div>
+                <div class="nowo-cookie-consent__scrollable px-6 py-5">
+                    <p class="nowo-cookie-consent__intro text-sm text-slate-600">{{ 'nowo_cookie_consent.intro'|trans({}, 'NowoCookieConsentBundle') }}</p>
+                    {% set privacy_route = 'nowo_cookie_consent.privacy_route'|trans({}, 'NowoCookieConsentBundle') %}
+                    {% if privacy_route %}
+                        <a class="nowo-cookie-consent__read-more mt-2 inline-flex text-sm font-medium text-indigo-600 hover:text-indigo-500" href="{{ path(privacy_route) }}">
+                            {{ 'nowo_cookie_consent.read_more'|trans({}, 'NowoCookieConsentBundle') }}
+                        </a>
+                    {% endif %}
+                    <div class="mt-6">
+                        {% include '@NowoCookieConsentBundle/_preference_sections.html.twig' with {form: form, preference_sections: preference_sections} %}
+                    </div>
+                </div>
+                <div class="nowo-cookie-consent__btn-group flex flex-wrap justify-end gap-2 border-t border-slate-200 px-6 py-4">
+                    {% for child in form %}
+                        {% if child.vars.block_prefixes[0] == 'button' %}
+                            {{ form_row(child) }}
+                        {% endif %}
+                    {% endfor %}
+                </div>
+            {% endif %}
+
+            {{ form_widget(form._token) }}
+            {{ form_end(form, {render_rest: false}) }}
         </div>
     </div>
 </div>

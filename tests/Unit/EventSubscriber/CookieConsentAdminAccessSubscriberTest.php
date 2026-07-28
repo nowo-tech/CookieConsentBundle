@@ -10,10 +10,19 @@ use PHPUnit\Framework\TestCase;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpKernel\Event\ControllerEvent;
 use Symfony\Component\HttpKernel\HttpKernelInterface;
+use Symfony\Component\HttpKernel\KernelEvents;
 use Symfony\Component\Security\Core\Exception\AccessDeniedException;
 
 final class CookieConsentAdminAccessSubscriberTest extends TestCase
 {
+    public function testSubscribesToKernelController(): void
+    {
+        self::assertArrayHasKey(
+            KernelEvents::CONTROLLER,
+            CookieConsentAdminAccessSubscriber::getSubscribedEvents(),
+        );
+    }
+
     public function testIgnoresNonAdminRoutes(): void
     {
         $checker = $this->createMock(CookieConsentAccessCheckerInterface::class);

@@ -1,5 +1,17 @@
 # Usage
 
+## Table of contents
+
+- [Embed the modal](#embed-the-modal)
+- [Conditional scripts](#conditional-scripts)
+- [Cookie inventory in the modal](#cookie-inventory-in-the-modal)
+- [Cookie inventory admin](#cookie-inventory-admin)
+- [Profile settings admin (overlay, theme, layout)](#profile-settings-admin-overlay-theme-layout)
+- [Preferences bubble icon](#preferences-bubble-icon)
+- [AJAX submission](#ajax-submission)
+- [Consent logging](#consent-logging)
+- [Demo](#demo)
+
 ## Embed the modal
 
 Render the consent fragment when the user has not saved preferences yet, or when the floating bubble is enabled (so the modal can be reopened):

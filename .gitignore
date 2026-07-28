@@ -38,3 +38,4 @@ __pycache__/
 
 # Cursor local sandbox (machine-specific; REQ-IDE-005)
 .cursor/sandbox.json
+/coverage-output.txt

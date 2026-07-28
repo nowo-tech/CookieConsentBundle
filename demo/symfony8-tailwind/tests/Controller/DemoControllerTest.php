@@ -15,7 +15,7 @@ final class DemoControllerTest extends WebTestCase
 
         self::assertResponseIsSuccessful();
         self::assertSelectorTextContains('h1', 'Cookie Consent Bundle');
-        self::assertSelectorExists('a.nav-link[href="/en/demo/admin/cookie-consent-config"]');
+        self::assertSelectorExists('a[href="/en/demo/admin/cookie-consent-config"]');
     }
 
     public function testCookieConsentFragmentIsRenderedWhenConsentMissing(): void
@@ -37,7 +37,7 @@ final class DemoControllerTest extends WebTestCase
 
         $client->followRedirect();
         self::assertResponseIsSuccessful();
-        self::assertSelectorTextContains('.alert-success', 'Consent cookies cleared');
+        self::assertSelectorTextContains('[role="alert"]', 'Consent cookies cleared');
         self::assertSelectorExists('#cookieconsent');
     }
 }

@@ -2,6 +2,21 @@
 
 This document describes how the **Cookie Consent Bundle** demo applications run under **FrankenPHP** in Docker, and how to reproduce **development** (no worker, changes visible on refresh) and **production** (worker mode, cache enabled) configurations.
 
+## Table of contents
+
+- [Overview](#overview)
+- [What the demos include](#what-the-demos-include)
+- [Development configuration](#development-configuration)
+  - [Caddyfile (development)](#caddyfile-development)
+  - [PHP and Twig (development)](#php-and-twig-development)
+  - [Start (development)](#start-development)
+- [Production configuration](#production-configuration)
+- [Switching classic vs worker (`FRANKENPHP_MODE`)](#switching-classic-vs-worker-frankenphp_mode)
+- [Troubleshooting](#troubleshooting)
+  - [Twig or PHP changes do not appear](#twig-or-php-changes-do-not-appear)
+  - [Demo does not start](#demo-does-not-start)
+  - [Database / config admin empty](#database-config-admin-empty)
+
 ## Contents
 
 - [Overview](#overview)

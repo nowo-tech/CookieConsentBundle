@@ -51,6 +51,8 @@ GDPR **cookie consent** for Symfony: modal with category toggles, granular per-c
 - **FR-CFG-001**: `Configuration` — doctrine connection/prefix, categories, logger, route targeting, visual/theme, admin, CMP options.
 - **FR-CFG-002**: `NowoCookieConsentExtension`, `TablePrefixListener`, `TwigPathsPass`.
 - **FR-CFG-003**: Config resolver stack (`CookieConsentConfigSelector`, route pattern matcher, inventory provider/normalizer).
+- **FR-DI-002**: `SystemClock` implements `Psr\Clock\ClockInterface` when the host does not provide a clock.
+- **FR-SEC-001**: Admin access checker interface + configurable/allow-all implementations; `CookieConsentSecurityPass`; `CookieConsentAdminAccessSubscriber` enforces roles on admin CRUD (demo may use allow-all).
 
 ### Entities & repositories
 
@@ -72,7 +74,7 @@ GDPR **cookie consent** for Symfony: modal with category toggles, granular per-c
 
 ### Twig
 
-- **FR-TWIG-001**: Path pass; `CookieConsentTwigExtension`, `CmpUxTwigExtension`.
+- **FR-TWIG-001**: Path pass; `CookieConsentTwigExtension`, `CmpUxTwigExtension`, `CookieConsentAdminTwigExtension`.
 - **FR-TWIG-003**: Bootstrap/Tailwind modal, admin views, form themes.
 
 ### Frontend (TypeScript)

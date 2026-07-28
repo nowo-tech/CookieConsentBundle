@@ -5,7 +5,98 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## Table of contents
+
+- [[Unreleased]](#unreleased)
+- [[1.4.1] - 2026-07-28](#141-2026-07-28)
+  - [Added](#added)
+  - [Changed](#changed)
+  - [Fixed](#fixed)
+  - [Documentation](#documentation)
+- [[1.4.0] - 2026-07-27](#140-2026-07-27)
+  - [Added](#added)
+  - [Changed](#changed)
+  - [Documentation](#documentation)
+- [[1.3.6] - 2026-07-27](#136-2026-07-27)
+  - [Added](#added)
+  - [Changed](#changed)
+  - [Documentation](#documentation)
+- [[1.3.5] - 2026-07-24](#135-2026-07-24)
+  - [Added](#added)
+  - [Changed](#changed)
+  - [Fixed](#fixed)
+  - [Documentation](#documentation)
+- [[1.3.4] - 2026-07-22](#134-2026-07-22)
+  - [Changed](#changed)
+  - [Documentation](#documentation)
+- [[1.3.3] - 2026-07-20](#133-2026-07-20)
+  - [Added](#added)
+  - [Changed](#changed)
+- [[1.3.2] - 2026-07-13](#132-2026-07-13)
+  - [Added](#added)
+  - [Changed](#changed)
+  - [Fixed](#fixed)
+  - [Documentation](#documentation)
+- [[1.3.1] - 2026-07-09](#131-2026-07-09)
+  - [Added](#added)
+  - [Changed](#changed)
+  - [Fixed](#fixed)
+  - [Documentation](#documentation)
+- [[1.3.0] - 2026-07-05](#130-2026-07-05)
+  - [Changed](#changed)
+  - [Migration](#migration)
+  - [Documentation](#documentation)
+- [[1.2.0] - 2026-06-15](#120-2026-06-15)
+  - [Added](#added)
+  - [Changed](#changed)
+  - [Fixed](#fixed)
+  - [Documentation](#documentation)
+- [[1.1.1] - 2026-06-15](#111-2026-06-15)
+  - [Added](#added)
+  - [Changed](#changed)
+  - [Fixed](#fixed)
+  - [Documentation](#documentation)
+- [[1.1.0] - 2026-06-15](#110-2026-06-15)
+  - [Added](#added)
+  - [Changed](#changed)
+  - [Documentation](#documentation)
+- [[1.0.0] - 2026-06-15](#100-2026-06-15)
+  - [Added](#added)
+  - [Changed](#changed)
+  - [Documentation](#documentation)
+
 ## [Unreleased]
+
+## [1.4.1] - 2026-07-28
+
+### Added
+
+- **Docs (REQ-DOCS-005 / REQ-TEST-003)**: Table of contents on long docs; `docs/COVERAGE.md` documents the PHPUnit coverage gate (100% lines on `src/`).
+- **Spec Kit (REQ-SPECKIT-001 / REQ-SPECKIT-003)**: Full `src/` inventory (~107 files); `FR-SEC-001` / Twig admin / DI clock notes in baseline `spec.md`.
+- **Tooling (REQ-REL-003 / REQ-MAKE-002 / REQ-TEST-003)**: `make check-open-prs`, `make coverage-check` (fail-under 99%), wired into `release-check`.
+- **Tests**: Unit coverage for `CookieConsentSecurityPass`, access-checker DI branches, admin access subscriber events, definition pagination/count, admin index page clamp.
+
+### Changed
+
+- **CI / PHPUnit (REQ-SF-005)**: `SYMFONY_DEPRECATIONS_HELPER=max[direct]=0` in `phpunit.xml.dist` and CI test jobs.
+- **Demos (REQ-DEMO-010 / REQ-GITIGNORE-003)**: `/.pnpm-store` in demo `.gitignore` files; demo locks pull `psr/clock`; `release-verify` follows redirects (`curl -sL`) for locale root; Tailwind migrations use `demo_tailwind_dashboard_*` table names; demo functional tests updated for DomCrawler checkboxes, playground copy, and Tailwind selectors.
+- **DI**: Drop unused `_defaults.bind` `$httpOnly` (explicit on `CookieHandler`).
+- **Tooling**: `check-open-prs` resolves `owner/repo` from `origin` when `gh` cannot map the git remote; `make coverage-check` reads `coverage-output.txt`.
+- **Dependencies**: Closed Dependabot PRs #15 / #16 (conflicted happy-dom; TypeScript major) pending a deliberate upgrade path.
+- README coverage badge and Tests section aligned to **100%** PHP lines on `src/` (`make coverage-check`).
+- **Rector**: `CookieDefinitionAdminController::delete` return type narrowed to `RedirectResponse`.
+
+### Fixed
+
+- Tailwind consent modal no longer double-renders the `cookies` form field when granular selection is enabled (aligns with Bootstrap template + `_preference_sections`).
+
+### Documentation
+
+- [COVERAGE.md](COVERAGE.md) — PHPUnit coverage gate
+- [UPGRADING.md](UPGRADING.md) — upgrade path from 1.4.0
+- [RELEASE.md](RELEASE.md) — release history entry; TOC
+
+[1.4.1]: https://github.com/nowo-tech/CookieConsentBundle/releases/tag/v1.4.1
 
 ## [1.4.0] - 2026-07-27
 

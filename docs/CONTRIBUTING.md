@@ -2,6 +2,18 @@
 
 Thank you for your interest in contributing to Cookie Consent Bundle! This document provides guidelines for contributing to the project.
 
+## Table of contents
+
+- [Code of Conduct](#code-of-conduct)
+- [How Can I Contribute?](#how-can-i-contribute)
+  - [Reporting Bugs](#reporting-bugs)
+  - [Suggesting Enhancements](#suggesting-enhancements)
+  - [Contributing Code](#contributing-code)
+- [Pull requests](#pull-requests)
+- [Documentation](#documentation)
+- [License](#license)
+- [Git hooks (REQ-GIT-001)](#git-hooks-req-git-001)
+
 ## Code of Conduct
 
 This project adheres to a code of conduct. By participating, you are expected to uphold this code. Please report unacceptable behavior to hectorfranco@nowo.tech.

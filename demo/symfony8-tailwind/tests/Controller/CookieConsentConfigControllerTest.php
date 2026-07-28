@@ -30,9 +30,9 @@ final class CookieConsentConfigControllerTest extends WebTestCase
 
         self::assertResponseIsSuccessful();
         self::assertSelectorTextContains('h1', 'Cookie Consent Bundle');
-        self::assertSelectorTextContains('.list-group-item', 'Consenso salvato');
+        self::assertSelectorTextContains('main li', 'Consenso salvato');
         self::assertSelectorTextContains('.nowo-cookie-consent__title', 'Impostazioni cookie');
-        self::assertSelectorTextContains('.nowo-cookie-consent__category-title', 'Analitici');
+        self::assertSelectorTextContains('.nowo-cookie-consent__category-title', 'Necessari');
     }
 
     public function testCreateEditAndDeleteConfiguration(): void
@@ -88,7 +88,7 @@ final class CookieConsentConfigControllerTest extends WebTestCase
         $client->request('GET', '/en/');
 
         self::assertResponseIsSuccessful();
-        self::assertSelectorExists('a.nav-link[href="/en/demo/admin/cookie-consent-config"]');
+        self::assertSelectorExists('a[href="/en/demo/admin/cookie-consent-config"]');
 
         $client->clickLink('Cookie consent config');
         self::assertResponseIsSuccessful();
@@ -112,17 +112,11 @@ final class CookieConsentConfigControllerTest extends WebTestCase
             'cookie_consent_config_settings[default]' => '1',
             'cookie_consent_config_settings[autoShow]' => '1',
             'cookie_consent_config_settings[revision]' => '0',
-            'cookie_consent_config_settings[manageScriptTags]' => '',
-            'cookie_consent_config_settings[autoClearCookies]' => '',
             'cookie_consent_config_settings[hideFromBots]' => '1',
-            'cookie_consent_config_settings[disablePageInteraction]' => '',
-            'cookie_consent_config_settings[lazyHtmlGeneration]' => '',
             'cookie_consent_config_settings[consentModalLayout]' => 'box',
             'cookie_consent_config_settings[consentModalVariant]' => 'wide',
             'cookie_consent_config_settings[consentModalPositionY]' => 'bottom',
             'cookie_consent_config_settings[consentModalPositionX]' => 'center',
-            'cookie_consent_config_settings[consentModalEqualWeightButtons]' => '',
-            'cookie_consent_config_settings[consentModalFlipButtons]' => '',
             'cookie_consent_config_settings[autoShowRouteMode]' => 'except',
             'cookie_consent_config_settings[autoShowRoutesText]' => "demo_cookie_consent_config_*",
         ]);
@@ -152,25 +146,18 @@ final class CookieConsentConfigControllerTest extends WebTestCase
             'cookie_consent_config_settings[name]' => 'Admin profile',
             'cookie_consent_config_settings[routePatternsText]' => 'demo_cookie_consent_config_*',
             'cookie_consent_config_settings[priority]' => '10',
-            'cookie_consent_config_settings[default]' => '',
             'cookie_consent_config_settings[autoShow]' => '1',
             'cookie_consent_config_settings[revision]' => '0',
-            'cookie_consent_config_settings[manageScriptTags]' => '',
-            'cookie_consent_config_settings[autoClearCookies]' => '',
             'cookie_consent_config_settings[hideFromBots]' => '1',
-            'cookie_consent_config_settings[disablePageInteraction]' => '',
-            'cookie_consent_config_settings[lazyHtmlGeneration]' => '',
             'cookie_consent_config_settings[consentModalLayout]' => 'bar',
             'cookie_consent_config_settings[consentModalVariant]' => 'wide',
             'cookie_consent_config_settings[consentModalPositionY]' => 'bottom',
             'cookie_consent_config_settings[consentModalPositionX]' => 'center',
-            'cookie_consent_config_settings[consentModalEqualWeightButtons]' => '',
-            'cookie_consent_config_settings[consentModalFlipButtons]' => '',
             'cookie_consent_config_settings[autoShowRouteMode]' => 'all',
             'cookie_consent_config_settings[autoShowRoutesText]' => '',
         ]);
 
-        self::assertResponseIsSuccessful();
+        self::assertResponseRedirects();
 
         $client->request('GET', '/en/demo/admin/cookie-consent-config');
         self::assertResponseIsSuccessful();
@@ -185,9 +172,9 @@ final class CookieConsentConfigControllerTest extends WebTestCase
     {
         $client = static::createClient();
         $this->ensureDatabaseSchema($client);
-        $this->getDefaultConfigId($client);
+        $configId = $this->getDefaultConfigId($client);
 
-        $client->request('GET', '/it/demo/admin/cookie-consent-config/settings');
+        $client->request('GET', sprintf('/it/demo/admin/cookie-consent-config/%d/settings', $configId));
 
         self::assertResponseIsSuccessful();
         self::assertSelectorTextContains('h1', 'Impostazioni di visualizzazione');

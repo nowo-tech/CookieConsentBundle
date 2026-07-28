@@ -32,7 +32,7 @@ final class CookieConsentConfigControllerTest extends WebTestCase
         self::assertSelectorTextContains('h1', 'Cookie Consent Bundle');
         self::assertSelectorTextContains('.list-group-item', 'Consenso salvato');
         self::assertSelectorTextContains('.nowo-cookie-consent__title', 'Impostazioni cookie');
-        self::assertSelectorTextContains('.nowo-cookie-consent__category-title', 'Analitici');
+        self::assertSelectorTextContains('.nowo-cookie-consent__category-title', 'Necessari');
     }
 
     public function testCreateEditAndDeleteConfiguration(): void
@@ -142,7 +142,7 @@ final class CookieConsentConfigControllerTest extends WebTestCase
             'cookie_consent_config_settings[consentModalPositionY]' => 'bottom',
         ]));
 
-        self::assertResponseIsSuccessful();
+        self::assertResponseRedirects();
 
         $client->request('GET', '/en/demo/admin/cookie-consent-config');
         self::assertResponseIsSuccessful();
@@ -157,9 +157,9 @@ final class CookieConsentConfigControllerTest extends WebTestCase
     {
         $client = static::createClient();
         $this->ensureDatabaseSchema($client);
-        $this->getDefaultConfigId($client);
+        $configId = $this->getDefaultConfigId($client);
 
-        $client->request('GET', '/it/demo/admin/cookie-consent-config/settings');
+        $client->request('GET', sprintf('/it/demo/admin/cookie-consent-config/%d/settings', $configId));
 
         self::assertResponseIsSuccessful();
         self::assertSelectorTextContains('h1', 'Impostazioni di visualizzazione');
@@ -216,7 +216,29 @@ final class CookieConsentConfigControllerTest extends WebTestCase
      */
     private function buildSettingsFormData(array $overrides = []): array
     {
-        return array_merge([
+        $checkboxFields = [
+            'cookie_consent_config_settings[enabled]' => true,
+            'cookie_consent_config_settings[default]' => true,
+            'cookie_consent_config_settings[autoShow]' => true,
+            'cookie_consent_config_settings[manageScriptTags]' => true,
+            'cookie_consent_config_settings[autoClearCookies]' => true,
+            'cookie_consent_config_settings[hideFromBots]' => true,
+            'cookie_consent_config_settings[disablePageInteraction]' => true,
+            'cookie_consent_config_settings[lazyHtmlGeneration]' => true,
+            'cookie_consent_config_settings[darkModeEnabled]' => true,
+            'cookie_consent_config_settings[disableTransitions]' => true,
+            'cookie_consent_config_settings[twoStepModal]' => true,
+            'cookie_consent_config_settings[openPreferencesModal]' => true,
+            'cookie_consent_config_settings[manageIframePlaceholders]' => true,
+            'cookie_consent_config_settings[granularCookieSelection]' => true,
+            'cookie_consent_config_settings[preferencesBubbleEnabled]' => true,
+            'cookie_consent_config_settings[consentModalEqualWeightButtons]' => true,
+            'cookie_consent_config_settings[consentModalFlipButtons]' => true,
+            'cookie_consent_config_settings[preferencesModalEqualWeightButtons]' => true,
+            'cookie_consent_config_settings[preferencesModalFlipButtons]' => true,
+        ];
+
+        $data = array_merge([
             'cookie_consent_config_settings[enabled]' => '1',
             'cookie_consent_config_settings[name]' => 'Default',
             'cookie_consent_config_settings[routePatternsText]' => '',
@@ -253,6 +275,14 @@ final class CookieConsentConfigControllerTest extends WebTestCase
             'cookie_consent_config_settings[autoShowRouteMode]' => 'all',
             'cookie_consent_config_settings[autoShowRoutesText]' => '',
         ], $overrides);
+
+        foreach (array_keys($data) as $key) {
+            if (isset($checkboxFields[$key]) && $data[$key] === '') {
+                unset($data[$key]);
+            }
+        }
+
+        return $data;
     }
 
     private function ensureDatabaseSchema(\Symfony\Bundle\FrameworkBundle\KernelBrowser $client): void

@@ -1,5 +1,17 @@
 # Installation
 
+## Table of contents
+
+- [Requirements](#requirements)
+- [Composer](#composer)
+- [Enable the bundle](#enable-the-bundle)
+  - [With Symfony Flex](#with-symfony-flex)
+  - [Without Flex](#without-flex)
+- [Routes](#routes)
+- [Assets](#assets)
+  - [AssetMapper](#assetmapper)
+- [Database](#database)
+
 ## Requirements
 
 - PHP `>=8.1` (<8.6). Symfony **8.0** and **8.1** require **PHP 8.4+**.

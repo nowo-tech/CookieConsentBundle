@@ -74,6 +74,8 @@ class CookieDefinitionRepository extends ServiceEntityRepository
 
     /**
      * Counts cookie definitions for a configuration profile.
+     *
+     * @return int
      */
     public function countByConfig(CookieConsentConfig $config): int
     {

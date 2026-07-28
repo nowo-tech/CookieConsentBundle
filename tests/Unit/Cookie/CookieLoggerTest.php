@@ -46,11 +46,9 @@ final class CookieLoggerTest extends TestCase
         $psrLogger = $this->createMock(LoggerInterface::class);
         $psrLogger->expects(self::once())->method('info')->with(
             'Cookie consent choices persisted.',
-            self::callback(static function (array $context): bool {
-                return $context['consent_key'] === 'consent-key'
-                    && $context['categories'] === ['analytics', 'marketing']
-                    && !isset($context['ip']);
-            }),
+            self::callback(static fn (array $context): bool => $context['consent_key'] === 'consent-key'
+                && $context['categories'] === ['analytics', 'marketing']
+                && !isset($context['ip'])),
         );
 
         $logger = new CookieLogger($entityManager, $stack, new SystemClock(), $psrLogger);

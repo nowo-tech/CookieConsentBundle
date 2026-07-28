@@ -2,6 +2,15 @@
 
 This checklist helps maintainers prepare and publish a release safely.
 
+## Table of contents
+
+- [Pre-release](#pre-release)
+- [Security checklist (12.4.1)](#security-checklist-1241)
+- [Tag and publish](#tag-and-publish)
+- [Post-release checks](#post-release-checks)
+- [Coverage goals](#coverage-goals)
+- [Release history](#release-history)
+
 ## Pre-release
 
 Run the full release pipeline:
@@ -54,6 +63,7 @@ Update README **Tests and coverage** percentages after each release when coverag
 
 | Version | Date | Notes |
 | --- | --- | --- |
+| [1.4.1](CHANGELOG.md#141---2026-07-28) | 2026-07-28 | Coverage gate docs/tooling, Spec Kit inventory, deprecation CI gate, demo lock/migration fixes |
 | [1.4.0](CHANGELOG.md#140---2026-07-27) | 2026-07-27 | Admin `web_ui` / `security`, pagination, PSR Clock, PHPStan + demo-smoke CI |
 | [1.3.6](CHANGELOG.md#136---2026-07-27) | 2026-07-27 | Standards compliance: DOCS-016/017, MAKE-003/007, PHP coverage ≥99.95% |
 | [1.3.5](CHANGELOG.md#135---2026-07-24) | 2026-07-24 | PHPStan FrankenPHP (REQ-CS-005), empty baseline, DI/type hygiene |

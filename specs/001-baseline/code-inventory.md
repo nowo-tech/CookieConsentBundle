@@ -2,7 +2,7 @@
 
 **Baseline spec**: [`spec.md`](spec.md)  
 **Package**: `nowo-tech/cookie-consent-bundle`  
-**Last audited**: 2026-07-07
+**Last audited**: 2026-07-28
 
 ## TypeScript production (`src/Resources/assets/src/`)
 
@@ -63,6 +63,8 @@ Co-located Vitest sources under `src/` (compiled/tested in CI; not shipped to Pa
 | `Resources/views/_preference_sections.html.twig` | Preferences partial | FR-TWIG-003 |
 | `Resources/views/_preferences_bubble_icon_default.html.twig` | Bubble icon partial | FR-TWIG-003 |
 | `Resources/views/_preferences_intro.html.twig` | Intro partial | FR-TWIG-003 |
+| `Resources/views/admin/_pagination.html.twig` | Admin pagination | FR-TWIG-003 |
+| `Resources/views/admin/layout.html.twig` | Admin shell layout | FR-TWIG-003 |
 | `Resources/views/admin/config/layout.html.twig` | Admin layout | FR-TWIG-003 |
 | `Resources/views/admin/config/settings.html.twig` | Admin settings | FR-TWIG-003 |
 | `Resources/views/admin/cookie_definition/_table.html.twig` | Admin table | FR-TWIG-003 |
@@ -94,6 +96,8 @@ Co-located Vitest sources under `src/` (compiled/tested in CI; not shipped to Pa
 | `Cookie/CookieChecker.php` | Cookie handling | FR-COOKIE-001 |
 | `Cookie/CookieHandler.php` | Cookie handling | FR-COOKIE-001 |
 | `Cookie/CookieLogger.php` | Cookie handling | FR-COOKIE-001 |
+| `Clock/SystemClock.php` | Default PSR-20 clock | FR-DI-002 |
+| `DependencyInjection/Compiler/CookieConsentSecurityPass.php` | Security wiring | FR-SEC-001 |
 | `DependencyInjection/Compiler/TwigPathsPass.php` | Compiler pass | FR-TWIG-001 |
 | `DependencyInjection/Configuration.php` | Config tree | FR-CFG-001 |
 | `DependencyInjection/NowoCookieConsentExtension.php` | DI extension | FR-CFG-002 |
@@ -106,6 +110,7 @@ Co-located Vitest sources under `src/` (compiled/tested in CI; not shipped to Pa
 | `Enum/CategoryEnum.php` | Enum | FR-ENUM-001 |
 | `Enum/CookieNameEnum.php` | Enum | FR-ENUM-001 |
 | `Enum/DisabledRoutesEnum.php` | Enum | FR-ENUM-001 |
+| `EventSubscriber/CookieConsentAdminAccessSubscriber.php` | Admin access gate | FR-SEC-001 |
 | `EventSubscriber/CookieConsentConfigTranslationSubscriber.php` | Events | FR-EVT-001 |
 | `EventSubscriber/CookieConsentFormSubscriber.php` | Events | FR-EVT-001 |
 | `Form/CookieConsentConfigSettingsType.php` | Form type | FR-FORM-001 |
@@ -118,7 +123,11 @@ Co-located Vitest sources under `src/` (compiled/tested in CI; not shipped to Pa
 | `Repository/CookieConsentConfigTranslationRepository.php` | Repository | FR-ORM-002 |
 | `Repository/CookieDefinitionRepository.php` | Repository | FR-ORM-002 |
 | `Repository/CookieDefinitionTranslationRepository.php` | Repository | FR-ORM-002 |
+| `Security/CookieConsentAccessCheckerInterface.php` | Admin access contract | FR-SEC-001 |
+| `Security/ConfigurableCookieConsentAccessChecker.php` | Role-based checker | FR-SEC-001 |
+| `Security/AllowAllCookieConsentAccessChecker.php` | Demo allow-all checker | FR-SEC-001 |
 | `Twig/CmpUxTwigExtension.php` | Twig extension | FR-TWIG-002 |
+| `Twig/CookieConsentAdminTwigExtension.php` | Admin Twig globals | FR-TWIG-002 |
 | `Twig/CookieConsentTwigExtension.php` | Twig extension | FR-TWIG-002 |
 
 ## Coverage summary
@@ -127,6 +136,6 @@ Co-located Vitest sources under `src/` (compiled/tested in CI; not shipped to Pa
 | --- | ---: | ---: |
 | TypeScript production | 13 | 13 |
 | TypeScript tests (Vitest) | 11 | 11 |
-| Resources (YAML/CSS/JS/i18n/Twig) | 31 | 31 |
-| PHP classes | 43 | 43 |
-| **Total production sources** | **98** | **98** |
+| Resources (YAML/CSS/JS/i18n/Twig) | 33 | 33 |
+| PHP classes | 50 | 50 |
+| **Total production sources** | **107** | **107** |

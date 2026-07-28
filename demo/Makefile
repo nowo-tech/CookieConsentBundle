@@ -63,7 +63,7 @@ release-verify:
 	@sleep 10
 	@PORT=$$(grep '^PORT=' symfony8/.env 2>/dev/null | cut -d= -f2 | tr -d '\r'); \
 	[ -z "$$PORT" ] && PORT=$$(grep '^PORT=' symfony8/.env.example | cut -d= -f2 | tr -d '\r'); \
-	code=$$(curl -s -o /dev/null -w "%{http_code}" http://127.0.0.1:$$PORT 2>/dev/null || echo "000"); \
+	code=$$(curl -sL -o /dev/null -w "%{http_code}" http://127.0.0.1:$$PORT 2>/dev/null || echo "000"); \
 	$(MAKE) down-symfony8; \
 	if [ "$$code" != "200" ]; then echo "Bootstrap demo healthcheck failed (HTTP $$code)"; exit 1; fi; \
 	echo "Symfony 8 Bootstrap demo OK (HTTP $$code)"
@@ -71,7 +71,7 @@ release-verify:
 	@sleep 10
 	@PORT=$$(grep '^PORT=' symfony8-tailwind/.env 2>/dev/null | cut -d= -f2 | tr -d '\r'); \
 	[ -z "$$PORT" ] && PORT=$$(grep '^PORT=' symfony8-tailwind/.env.example | cut -d= -f2 | tr -d '\r'); \
-	code=$$(curl -s -o /dev/null -w "%{http_code}" http://127.0.0.1:$$PORT 2>/dev/null || echo "000"); \
+	code=$$(curl -sL -o /dev/null -w "%{http_code}" http://127.0.0.1:$$PORT 2>/dev/null || echo "000"); \
 	$(MAKE) down-symfony8-tailwind; \
 	if [ "$$code" != "200" ]; then echo "Tailwind demo healthcheck failed (HTTP $$code)"; exit 1; fi; \
 	echo "Symfony 8 Tailwind demo OK (HTTP $$code)"

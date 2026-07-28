@@ -27,6 +27,8 @@ class CookieConsentConfigSettingsType extends AbstractType
      *
      * @param FormBuilderInterface<CookieConsentConfig|null> $builder The form builder
      * @param array<string, mixed> $options Resolved form options
+     *
+     * @return void
      */
     public function buildForm(FormBuilderInterface $builder, array $options): void
     {
@@ -292,6 +294,8 @@ class CookieConsentConfigSettingsType extends AbstractType
      * Configures default options for the consent profile settings form.
      *
      * @param OptionsResolver $resolver The options resolver
+     *
+     * @return void
      */
     public function configureOptions(OptionsResolver $resolver): void
     {

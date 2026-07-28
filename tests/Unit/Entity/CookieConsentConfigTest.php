@@ -17,6 +17,12 @@ final class CookieConsentConfigTest extends TestCase
         self::assertSame(['home', 'admin'], CookieConsentConfig::parseRouteList("home\nadmin, home"));
     }
 
+    public function testGetCookieDefinitionsReturnsCollection(): void
+    {
+        $config = new CookieConsentConfig();
+        self::assertCount(0, $config->getCookieDefinitions());
+    }
+
     public function testDisplayNameUsesNameDefaultOrId(): void
     {
         $named = (new CookieConsentConfig())->setName('Marketing');

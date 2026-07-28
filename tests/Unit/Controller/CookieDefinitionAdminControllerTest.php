@@ -47,6 +47,22 @@ final class CookieDefinitionAdminControllerTest extends AbstractControllerTestCa
         self::assertSame('rendered', (string) $response->getContent());
     }
 
+    public function testIndexClampsPageBeyondLast(): void
+    {
+        $config = $this->createEnabledConfig(1);
+        $repo   = $this->createMock(CookieDefinitionRepository::class);
+        $repo->method('countByConfig')->willReturn(5);
+        $repo->expects(self::once())
+            ->method('findByConfigOrderedPaginated')
+            ->with($config, 1, 20)
+            ->willReturn([]);
+
+        $controller = $this->createDefinitionController(config: $config, definitionRepository: $repo);
+        $response   = $controller->index(1, Request::create('/', 'GET', ['page' => 99]));
+
+        self::assertSame(200, $response->getStatusCode());
+    }
+
     public function testNewRendersFormOnGet(): void
     {
         $controller = $this->createDefinitionController();
@@ -92,7 +108,7 @@ final class CookieDefinitionAdminControllerTest extends AbstractControllerTestCa
         $request  = Request::create('/delete', 'POST', ['_token' => 'valid']);
         $response = $controller->delete(1, 5, $request, $entityManager);
 
-        self::assertInstanceOf(RedirectResponse::class, $response);
+        self::assertSame(302, $response->getStatusCode());
     }
 
     public function testDeleteRejectsInvalidCsrf(): void

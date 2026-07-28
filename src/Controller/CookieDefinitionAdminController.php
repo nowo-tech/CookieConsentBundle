@@ -13,6 +13,7 @@ use Nowo\CookieConsentBundle\Repository\CookieConsentConfigRepository;
 use Nowo\CookieConsentBundle\Repository\CookieDefinitionRepository;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
+use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
@@ -128,10 +129,10 @@ final class CookieDefinitionAdminController extends AbstractController
      * @param Request $request The current HTTP request
      * @param EntityManagerInterface $entityManager Doctrine entity manager
      *
-     * @return Response Redirect to the index page
+     * @return RedirectResponse Redirect to the index page
      */
     #[Route('/{id}/delete', name: 'delete', requirements: ['id' => '\d+'], methods: ['POST'])]
-    public function delete(int $configId, int $id, Request $request, EntityManagerInterface $entityManager): Response
+    public function delete(int $configId, int $id, Request $request, EntityManagerInterface $entityManager): RedirectResponse
     {
         $config     = $this->getConfig($configId);
         $definition = $this->getDefinition($config, $id);

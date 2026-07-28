@@ -2,6 +2,49 @@
 
 This guide provides step-by-step instructions for upgrading Cookie Consent Bundle between versions.
 
+## Table of contents
+
+- [General upgrade process](#general-upgrade-process)
+- [To 1.4.1](#to-141)
+  - [Breaking changes](#breaking-changes)
+- [To 1.4.0](#to-140)
+  - [Configuration](#configuration)
+  - [Breaking changes](#breaking-changes)
+- [To 1.3.6](#to-136)
+  - [Breaking changes](#breaking-changes)
+- [To 1.3.5](#to-135)
+  - [Breaking changes](#breaking-changes)
+- [To 1.3.4](#to-134)
+  - [Breaking changes](#breaking-changes)
+- [To 1.3.3](#to-133)
+  - [Breaking changes](#breaking-changes)
+- [To 1.3.2](#to-132)
+  - [Breaking changes](#breaking-changes)
+- [To 1.3.1](#to-131)
+  - [Breaking changes](#breaking-changes)
+- [To 1.3.0](#to-130)
+  - [Breaking changes](#breaking-changes)
+- [UI theme changes](#ui-theme-changes)
+- [To 1.2.0](#to-120)
+  - [New optional configuration](#new-optional-configuration)
+  - [Profile settings admin](#profile-settings-admin)
+  - [Frontend assets](#frontend-assets)
+  - [Breaking changes](#breaking-changes)
+- [To 1.1.1](#to-111)
+  - [Breaking changes](#breaking-changes)
+- [To 1.1.0](#to-110)
+  - [New optional configuration](#new-optional-configuration)
+  - [Cookie inventory entities](#cookie-inventory-entities)
+  - [Frontend assets](#frontend-assets)
+  - [Twig embed change (recommended)](#twig-embed-change-recommended)
+  - [Breaking changes](#breaking-changes)
+- [To 1.0.0 (initial release)](#to-100-initial-release)
+  - [Requirements](#requirements)
+  - [Enable and configure](#enable-and-configure)
+  - [Breaking changes](#breaking-changes)
+- [Future versions](#future-versions)
+- [Getting help](#getting-help)
+
 ## General upgrade process
 
 1. **Backup** your `config/packages/nowo_cookie_consent.yaml` (and any Doctrine config entities if you use `use_database_config`)
@@ -10,6 +53,21 @@ This guide provides step-by-step instructions for upgrading Cookie Consent Bundl
 4. **Clear cache**: `php bin/console cache:clear`
 5. **Rebuild assets** if you ship the bundled JS: `php bin/console assets:install`
 6. **Test** the consent modal and logging in your environments
+
+## To 1.4.1
+
+```bash
+composer update nowo-tech/cookie-consent-bundle
+php bin/console cache:clear
+```
+
+Patch release: documentation TOCs and `docs/COVERAGE.md`, Spec Kit inventory updates, `make check-open-prs` / `make coverage-check` in `release-check`, PHPUnit coverage for admin security/DI paths, Symfony deprecation gate (`max[direct]=0`), demo lock refresh for `psr/clock`, and a Tailwind modal fix for granular cookie fields. Removed unused DI `_defaults.bind` `$httpOnly` (still passed explicitly to `CookieHandler`). **No configuration or public API breaking changes** for bundle consumers.
+
+Maintainers: prefer `make coverage-check` (fail-under 99% lines) over bare `test-coverage` before tagging. Rebuild demos after lock refresh so `psr/clock` is present.
+
+### Breaking changes
+
+None.
 
 ## To 1.4.0
 
