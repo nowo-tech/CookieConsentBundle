@@ -63,6 +63,7 @@ Update README **Tests and coverage** percentages after each release when coverag
 
 | Version | Date | Notes |
 | --- | --- | --- |
+| [1.4.2](CHANGELOG.md#142---2026-07-29) | 2026-07-29 | Compose V2/V1 Makefile fallback; optional monorepo includes; WSL Compose shell helper |
 | [1.4.1](CHANGELOG.md#141---2026-07-28) | 2026-07-28 | Coverage gate docs/tooling, Spec Kit inventory, deprecation CI gate, demo lock/migration fixes |
 | [1.4.0](CHANGELOG.md#140---2026-07-27) | 2026-07-27 | Admin `web_ui` / `security`, pagination, PSR Clock, PHPStan + demo-smoke CI |
 | [1.3.6](CHANGELOG.md#136---2026-07-27) | 2026-07-27 | Standards compliance: DOCS-016/017, MAKE-003/007, PHP coverage ≥99.95% |

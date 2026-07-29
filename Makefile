@@ -1,4 +1,8 @@
-COMPOSE = docker compose
+# Prefer Compose V2 plugin (GitHub Actions / modern Docker Desktop); fall back to docker-compose V1 (REQ-MAKE-010).
+# Invoke simple recipes via shell when needed — Make's direct execve of the WSL Docker Desktop CLI symlink can return EACCES.
+COMPOSE_BIN := $(shell docker compose version >/dev/null 2>&1 && echo "docker compose" || echo "docker-compose")
+COMPOSE     := $(COMPOSE_BIN)
+dc = $(SHELL) -c '$(COMPOSE_BIN) $(1)'
 SERVICE_PHP = php
 
 # WSL: avoid broken docker-credential-desktop.exe when pulling public base images.
@@ -130,7 +134,8 @@ setup-hooks:
 	@echo "✅ Git hooks installed (.githooks — includes commit-msg for REQ-GIT-001)."
 
 # REQ-MAKE-008: update-deps (REQ-MAKE-008)
-include $(BUNDLE_ROOT)/../.scripts/Makefile.update-deps.mk
+# Optional: monorepo helper absent on standalone GitHub Actions checkout (REQ-MAKE-009).
+-include $(BUNDLE_ROOT)/../.scripts/Makefile.update-deps.mk
 check-no-cursor-coauthor:
 	@chmod +x .scripts/check-no-cursor-coauthor.sh
 	@./.scripts/check-no-cursor-coauthor.sh HEAD

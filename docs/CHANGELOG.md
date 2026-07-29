@@ -8,6 +8,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## Table of contents
 
 - [[Unreleased]](#unreleased)
+- [[1.4.2] - 2026-07-29](#142-2026-07-29)
+  - [Changed](#changed)
+  - [Documentation](#documentation)
 - [[1.4.1] - 2026-07-28](#141-2026-07-28)
   - [Added](#added)
   - [Changed](#changed)
@@ -66,6 +69,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - [Documentation](#documentation)
 
 ## [Unreleased]
+
+## [1.4.2] - 2026-07-29
+
+### Changed
+
+- **Tooling (REQ-MAKE-010)**: Root and demo Makefiles prefer `docker compose` (V2) and fall back to `docker-compose` (V1); demo recipes invoke Compose via a shell helper to avoid WSL Make `execve` EACCES on the Docker Desktop CLI symlink.
+- **Tooling (REQ-MAKE-009)**: Monorepo `update-deps` Makefile includes are optional (`-include`) so standalone GitHub Actions checkouts do not fail.
+
+### Documentation
+
+- [UPGRADING.md](UPGRADING.md) — upgrade path from 1.4.1
+- [RELEASE.md](RELEASE.md) — release history entry
+
+[1.4.2]: https://github.com/nowo-tech/CookieConsentBundle/releases/tag/v1.4.2
 
 ## [1.4.1] - 2026-07-28
 

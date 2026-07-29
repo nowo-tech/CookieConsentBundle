@@ -5,6 +5,8 @@ This guide provides step-by-step instructions for upgrading Cookie Consent Bundl
 ## Table of contents
 
 - [General upgrade process](#general-upgrade-process)
+- [To 1.4.2](#to-142)
+  - [Breaking changes](#breaking-changes)
 - [To 1.4.1](#to-141)
   - [Breaking changes](#breaking-changes)
 - [To 1.4.0](#to-140)
@@ -53,6 +55,19 @@ This guide provides step-by-step instructions for upgrading Cookie Consent Bundl
 4. **Clear cache**: `php bin/console cache:clear`
 5. **Rebuild assets** if you ship the bundled JS: `php bin/console assets:install`
 6. **Test** the consent modal and logging in your environments
+
+## To 1.4.2
+
+```bash
+composer update nowo-tech/cookie-consent-bundle
+php bin/console cache:clear
+```
+
+Patch release: maintainer/demo Makefile Compose V2 preference with V1 fallback (REQ-MAKE-010), shell-wrapped Compose helpers for WSL Make compatibility, and optional monorepo `update-deps` includes for standalone CI checkouts (REQ-MAKE-009). **No configuration or public API breaking changes** for bundle consumers.
+
+### Breaking changes
+
+None.
 
 ## To 1.4.1
 
