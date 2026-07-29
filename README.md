@@ -5,32 +5,11 @@
 > ⭐ **Found this useful?** [Install from Packagist](https://packagist.org/packages/nowo-tech/cookie-consent-bundle) · Give it a **star** on [GitHub](https://github.com/nowo-tech/CookieConsentBundle) so more developers can find it.
 
 Symfony bundle that renders a GDPR cookie consent modal with category toggles, optional per-cookie selection, cookie inventory, AJAX form submission, optional consent logging, and configurable Doctrine table prefix.
-
 Frontend behavior is implemented in TypeScript and built with Vite (`make assets` → `src/Resources/public/nowo-consent-modal.js`).
 
 ![FrankenPHP Friendly Worker Mode](docs/images/frankenphp-friendly.png)
 
 This bundle is **FrankenPHP worker mode friendly**.
-
-## Documentation
-
-- [GitHub Actions CI requirements](docs/GITHUB_CI.md)
-- [Installation](docs/INSTALLATION.md)
-- [Configuration](docs/CONFIGURATION.md)
-- [Usage](docs/USAGE.md)
-- [Contributing](docs/CONTRIBUTING.md)
-- [Code of Conduct](CODE_OF_CONDUCT.md)
-- [Changelog](docs/CHANGELOG.md)
-- [Upgrading](docs/UPGRADING.md)
-- [Release](docs/RELEASE.md)
-- [Security](docs/SECURITY.md)
-- [Engram](docs/ENGRAM.md)
-- [Spec-driven development](docs/SPEC-DRIVEN-DEVELOPMENT.md)
-- [GitHub Spec Kit](docs/SPEC-KIT.md)
-
-### Additional documentation
-
-- [Demo with FrankenPHP](docs/DEMO-FRANKENPHP.md)
 
 ## Quick start
 
@@ -73,6 +52,26 @@ make -C demo up-symfony8-tailwind
 - `demo/symfony8-tailwind/` — same demo with Tailwind CSS and `ui_theme: tailwind`
 
 See [Demo with FrankenPHP](docs/DEMO-FRANKENPHP.md) for development vs. production worker mode.
+
+## Documentation
+
+- [GitHub Actions CI requirements](docs/GITHUB_CI.md)
+- [Installation](docs/INSTALLATION.md)
+- [Configuration](docs/CONFIGURATION.md)
+- [Usage](docs/USAGE.md)
+- [Contributing](docs/CONTRIBUTING.md)
+- [Code of Conduct](CODE_OF_CONDUCT.md)
+- [Changelog](docs/CHANGELOG.md)
+- [Upgrading](docs/UPGRADING.md)
+- [Release](docs/RELEASE.md)
+- [Security](docs/SECURITY.md)
+- [Engram](docs/ENGRAM.md)
+- [Spec-driven development](docs/SPEC-DRIVEN-DEVELOPMENT.md)
+- [GitHub Spec Kit](docs/SPEC-KIT.md)
+
+### Additional documentation
+
+- [Demo with FrankenPHP](docs/DEMO-FRANKENPHP.md)
 
 ## Tests and coverage
 
