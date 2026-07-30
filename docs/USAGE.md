@@ -95,7 +95,7 @@ When `use_logger: true`, each submission creates rows in `CookieConsentLog` with
 
 ## Overriding templates (REQ-TWIG-001)
 
-The bundle registers the Twig namespace **`@NowoCookieConsentBundle/`**. Application files under **`templates/bundles/NowoCookieConsentBundle/`** **always win** over the copies inside the package (`TwigPathsPass` registers the bundle views path so app overrides are resolved first).
+The bundle registers the Twig namespace **`@NowoCookieConsentBundle/`**. Application files under **`templates/bundles/NowoCookieConsentBundle/`** **always win** over the copies inside the package (`TwigPathsPass` prepends that directory when it exists, then adds the bundle views path).
 
 **Freeze rule:** a full-file override hides vendor updates for that `<subpath>` until you delete or manually merge it. Prefer surgical overrides (a single partial) or config such as **`nowo_cookie_consent.web_ui.layout_template`** for upgrade-safe customisation — see [CONFIGURATION.md — Admin Web UI](CONFIGURATION.md#admin-web-ui).
 

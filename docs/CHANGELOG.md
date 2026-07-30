@@ -8,6 +8,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## Table of contents
 
 - [[Unreleased]](#unreleased)
+- [[1.4.5] - 2026-07-30](#145-2026-07-30)
+  - [Changed](#changed)
+  - [Documentation](#documentation)
 - [[1.4.4] - 2026-07-30](#144-2026-07-30)
   - [Changed](#changed)
   - [Documentation](#documentation)
@@ -76,6 +79,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - [Documentation](#documentation)
 
 ## [Unreleased]
+
+## [1.4.5] - 2026-07-30
+
+### Changed
+
+- **Twig overrides (REQ-TWIG-001)**: `TwigPathsPass` now `prependPath`s `templates/bundles/NowoCookieConsentBundle/` when present (AuthKit-compatible), so hosts no longer need a manual `twig.paths` entry for the namespace.
+- **Tailwind modal / form theme**: dropped hard-coded indigo/slate/white utility colors; buttons and chrome use BEM + `--nowo-cc-*` tokens from the inlined `cookie-consent.css` (including `--nowo-cc-link` and panel/section borders).
+
+### Documentation
+
+- [USAGE.md](USAGE.md) — clarify `prependPath` behaviour for app overrides
+- [UPGRADING.md](UPGRADING.md) — To 1.4.5 notes
+- [RELEASE.md](RELEASE.md) — release history row
 
 ## [1.4.4] - 2026-07-30
 

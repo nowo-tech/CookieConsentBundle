@@ -10,6 +10,8 @@ use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\Definition;
 use Twig\Loader\FilesystemLoader;
 
+use function dirname;
+
 final class TwigPathsPassTest extends TestCase
 {
     public function testAddsBundleViewsPathToNativeLoader(): void
@@ -25,6 +27,31 @@ final class TwigPathsPassTest extends TestCase
         self::assertSame('addPath', $calls[0][0]);
         self::assertSame('NowoCookieConsentBundle', $calls[0][1][1]);
         self::assertStringEndsWith('/Resources/views', $calls[0][1][0]);
+    }
+
+    public function testPrependsApplicationOverridePathWhenPresent(): void
+    {
+        $projectDir   = sys_get_temp_dir() . '/cookie-consent-twig-' . uniqid();
+        $overridePath = $projectDir . '/templates/bundles/NowoCookieConsentBundle';
+        mkdir($overridePath, 0777, true);
+
+        $loader    = new Definition(FilesystemLoader::class);
+        $container = new ContainerBuilder();
+        $container->setParameter('kernel.project_dir', $projectDir);
+        $container->setDefinition('twig.loader.native', $loader);
+
+        (new TwigPathsPass())->process($container);
+
+        $calls = $loader->getMethodCalls();
+        self::assertSame('prependPath', $calls[0][0]);
+        self::assertSame($overridePath, $calls[0][1][0]);
+        self::assertSame('NowoCookieConsentBundle', $calls[0][1][1]);
+        self::assertSame('addPath', $calls[1][0]);
+
+        rmdir($overridePath);
+        rmdir(dirname($overridePath));
+        rmdir(dirname($overridePath, 2));
+        rmdir($projectDir);
     }
 
     public function testNoOpWhenTwigLoaderMissing(): void
@@ -57,5 +84,28 @@ final class TwigPathsPassTest extends TestCase
         (new TwigPathsPass())->process($container);
 
         self::assertNotEmpty($loader->getMethodCalls());
+    }
+
+    public function testResolvesMultiHopNativeLoaderAliasChain(): void
+    {
+        $loader    = new Definition(FilesystemLoader::class);
+        $container = new ContainerBuilder();
+        $container->setDefinition('custom.native.loader', $loader);
+        $container->setAlias('intermediate.loader', 'custom.native.loader');
+        $container->setAlias('twig.loader.native', 'intermediate.loader');
+
+        (new TwigPathsPass())->process($container);
+
+        self::assertNotEmpty($loader->getMethodCalls());
+    }
+
+    public function testReturnsNullWhenAliasDoesNotResolveToDefinition(): void
+    {
+        $container = new ContainerBuilder();
+        $container->setAlias('twig.loader.native', 'missing.loader');
+
+        (new TwigPathsPass())->process($container);
+
+        self::assertFalse($container->hasDefinition('missing.loader'));
     }
 }

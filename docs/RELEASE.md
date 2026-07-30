@@ -63,6 +63,7 @@ Update README **Tests and coverage** percentages after each release when coverag
 
 | Version | Date | Notes |
 | --- | --- | --- |
+| [1.4.5](CHANGELOG.md#145---2026-07-30) | 2026-07-30 | Twig `prependPath` for app overrides; Tailwind theme uses `--nowo-cc-*` (no indigo/slate utilities) |
 | [1.4.4](CHANGELOG.md#144---2026-07-30) | 2026-07-30 | Composer locks: Symfony 7.4.15 / demo 8.1.2 |
 | [1.4.3](CHANGELOG.md#143---2026-07-30) | 2026-07-30 | Admin `base.html.twig`, Twig override docs in USAGE (REQ-TWIG-001), README docs links |
 | [1.4.2](CHANGELOG.md#142---2026-07-29) | 2026-07-29 | Compose V2/V1 Makefile fallback; optional monorepo includes; WSL Compose shell helper |

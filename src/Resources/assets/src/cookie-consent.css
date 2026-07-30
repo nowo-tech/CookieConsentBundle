@@ -12,6 +12,7 @@
   --nowo-cc-btn-secondary-color: #2c2f31;
   --nowo-cc-btn-secondary-hover-bg: #d4dae0;
   --nowo-cc-btn-secondary-hover-color: #000000;
+  --nowo-cc-link: #30363c;
   --nowo-cc-separator: #f0f4f7;
   --nowo-cc-footer-bg: #eaeff2;
   --nowo-cc-footer-border: #e4eaed;
@@ -108,6 +109,7 @@
 .nowo-cookie-consent .modal-content,
 .nowo-cookie-consent .nowo-cookie-consent__panel {
   background-color: var(--nowo-cc-bg);
+  border: 1px solid var(--nowo-cc-separator);
   border-radius: var(--nowo-cc-modal-radius);
   color: var(--nowo-cc-primary);
   display: flex;
@@ -116,6 +118,16 @@
   max-height: calc(100dvh - 2rem);
   min-height: 0;
   overflow: hidden;
+}
+
+.nowo-cookie-consent .nowo-cookie-consent__read-more {
+  color: var(--nowo-cc-link, var(--nowo-cc-btn-primary-bg));
+  text-decoration: none;
+}
+
+.nowo-cookie-consent .nowo-cookie-consent__read-more:hover,
+.nowo-cookie-consent .nowo-cookie-consent__read-more:focus-visible {
+  color: var(--nowo-cc-btn-primary-hover-bg);
 }
 
 .nowo-cookie-consent .nowo-cookie-consent__form {
@@ -247,7 +259,15 @@
   max-height: calc(100dvh - 2rem);
 }
 
-.nowo-cookie-consent[data-nowo-ui-theme='tailwind'] .nowo-cookie-consent__panel > .border-b {
+.nowo-cookie-consent[data-nowo-ui-theme='tailwind'] .nowo-cookie-consent__panel > .border-b,
+.nowo-cookie-consent[data-nowo-ui-theme='tailwind'] .nowo-cookie-consent__section-header {
+  border-color: var(--nowo-cc-separator);
+  flex-shrink: 0;
+}
+
+.nowo-cookie-consent[data-nowo-ui-theme='tailwind'] .nowo-cookie-consent__section-footer,
+.nowo-cookie-consent[data-nowo-ui-theme='tailwind'] .nowo-cookie-consent__btn-group.border-t {
+  border-color: var(--nowo-cc-separator);
   flex-shrink: 0;
 }
 
@@ -349,6 +369,7 @@ body.nowo-cookie-consent-page-blocked {
   --nowo-cc-btn-secondary-color: #2c2f31;
   --nowo-cc-btn-secondary-hover-bg: #d4dae0;
   --nowo-cc-btn-secondary-hover-color: #000000;
+  --nowo-cc-link: #30363c;
   --nowo-cc-separator: #f0f4f7;
   --nowo-cc-footer-bg: #eaeff2;
   --nowo-cc-footer-border: #e4eaed;
@@ -380,6 +401,7 @@ body.nowo-cookie-consent-page-blocked {
   --nowo-cc-btn-secondary-color: #ebf3f6;
   --nowo-cc-btn-secondary-hover-bg: #32383e;
   --nowo-cc-btn-secondary-hover-color: #ebf3f6;
+  --nowo-cc-link: #c2d0e0;
   --nowo-cc-separator: #22282c;
   --nowo-cc-footer-bg: #252b30;
   --nowo-cc-footer-border: #22282c;

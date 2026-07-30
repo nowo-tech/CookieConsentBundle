@@ -60,11 +60,8 @@
 
 {% block submit_row %}
     {% if form.parent is not null and form.parent.vars.name == 'cookie_consent' %}
-        {% if 'nowo-cookie-consent__btn--secondary' in attr.class %}
-            {%- set attr = attr|merge({class: (attr.class|default('') ~ ' nowo-cookie-consent__btn inline-flex items-center rounded-md bg-indigo-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600')|trim}) -%}
-        {% else %}
-            {%- set attr = attr|merge({class: (attr.class|default('') ~ ' nowo-cookie-consent__btn inline-flex items-center rounded-md bg-white px-4 py-2 text-sm font-semibold text-slate-700 shadow-sm ring-1 ring-inset ring-slate-300 hover:bg-slate-50')|trim}) -%}
-        {% endif %}
+        {# Colors come from --nowo-cc-* (cookie-consent.css); keep BEM modifiers only. #}
+        {%- set attr = attr|merge({class: (attr.class|default('') ~ ' nowo-cookie-consent__btn')|trim}) -%}
         {{ block('button_widget') }}
     {% else %}
         {{ parent() }}

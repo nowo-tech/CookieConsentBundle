@@ -5,6 +5,8 @@ This guide provides step-by-step instructions for upgrading Cookie Consent Bundl
 ## Table of contents
 
 - [General upgrade process](#general-upgrade-process)
+- [To 1.4.5](#to-145)
+  - [Breaking changes](#breaking-changes)
 - [To 1.4.4](#to-144)
   - [Breaking changes](#breaking-changes)
 - [To 1.4.3](#to-143)
@@ -59,6 +61,25 @@ This guide provides step-by-step instructions for upgrading Cookie Consent Bundl
 4. **Clear cache**: `php bin/console cache:clear`
 5. **Rebuild assets** if you ship the bundled JS: `php bin/console assets:install`
 6. **Test** the consent modal and logging in your environments
+
+## To 1.4.5
+
+```bash
+composer update nowo-tech/cookie-consent-bundle
+php bin/console cache:clear
+php bin/console assets:install
+```
+
+Patch release: Twig app overrides via `prependPath`, and Tailwind modal/form theme colors driven by `--nowo-cc-*` instead of indigo/slate utility classes. **No configuration or public API breaking changes**.
+
+Optional cleanup for hosts that worked around earlier gaps:
+
+- Remove a manual `twig.paths` entry that only registered `templates/bundles/NowoCookieConsentBundle` for the `NowoCookieConsentBundle` namespace.
+- Drop a full-file override of `form/cookie_consent_theme.tailwind.html.twig` if it only stripped Tailwind button color utilities.
+
+### Breaking changes
+
+None.
 
 ## To 1.4.4
 
