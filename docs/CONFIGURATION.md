@@ -404,49 +404,7 @@ security:
 
 ## Twig overrides
 
-Application templates under `templates/bundles/NowoCookieConsentBundle/` **always win** over the copies inside the package. The bundle registers paths via `TwigPathsPass` so Symfony resolves app overrides first.
-
-### Procedure
-
-1. Identify the `<subpath>` from the table below (path relative to `src/Resources/views/` inside the bundle).
-2. Create in your application: `templates/bundles/NowoCookieConsentBundle/<subpath>.html.twig` (same relative path and filename).
-3. Clear the cache in dev if needed: `php bin/console cache:clear`.
-
-Example — override the Bootstrap modal shell:
-
-```
-templates/bundles/NowoCookieConsentBundle/cookie_consent.html.twig
-```
-
-Controllers and Twig use logical names such as `@NowoCookieConsentBundle/cookie_consent.html.twig`, never absolute filesystem paths.
-
-### Overridable templates
-
-| Subpath | Purpose |
-| --- | --- |
-| `cookie_consent.html.twig` | Main consent modal (Bootstrap theme) |
-| `cookie_consent.tailwind.html.twig` | Main consent modal (Tailwind theme) |
-| `form/cookie_consent_theme.html.twig` | Symfony form theme for consent fields (Bootstrap) |
-| `form/cookie_consent_theme.tailwind.html.twig` | Form theme (Tailwind) |
-| `cookie_consent_preferences_bubble.html.twig` | Floating “cookie settings” bubble button |
-| `_preferences_bubble_icon_default.html.twig` | Default cookie SVG for the preferences bubble |
-| `cookie_consent_manage_link.html.twig` | Inline link to reopen preferences |
-| `_category_cookie_table.html.twig` | Per-category cookie inventory table (granular mode) |
-| `_preference_sections.html.twig` | Preferences step category blocks |
-| `_preferences_intro.html.twig` | Intro text on the preferences step |
-| `_diagnostics_script.html.twig` | Optional diagnostics script partial |
-| `admin/layout.html.twig` | Default admin shell (`web_ui.layout_template`); preferred override target via config |
-| `admin/_pagination.html.twig` | Cookie definition list pagination partial |
-| `admin/cookie_definition/layout.html.twig` | Admin CRUD layout shell (BC alias of `admin/layout.html.twig`) |
-| `admin/cookie_definition/index.html.twig` | Cookie definition list |
-| `admin/cookie_definition/form.html.twig` | Create/edit cookie definition form |
-| `admin/cookie_definition/_table.html.twig` | Admin list table partial |
-| `admin/config/layout.html.twig` | Profile settings admin layout shell (BC alias) |
-| `admin/config/settings.html.twig` | Profile settings form (overlay, theme, bubble, layout) |
-
-Theme selection follows `ui_theme` (`bootstrap` or `tailwind`); override the modal and form theme rows that match your active theme.
-
-See also [UI theme](#ui-theme) for theme-specific override paths.
+**REQ-TWIG-001.** Namespace: **`NowoCookieConsentBundle`**. Full procedure, freeze rule, and the overridable `<subpath>` table: [USAGE.md — Overriding templates](USAGE.md#overriding-templates-req-twig-001). Theme-specific modal/form paths: [UI theme](#ui-theme). Prefer `web_ui.layout_template` over copying admin pages — [Admin Web UI](#admin-web-ui).
 
 ## Twig helpers
 

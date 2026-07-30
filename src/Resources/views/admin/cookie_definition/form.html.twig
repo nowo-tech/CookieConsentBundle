@@ -1,4 +1,4 @@
-{% extends nowo_cookie_consent_layout_template|default('@NowoCookieConsentBundle/admin/layout.html.twig') %}
+{% extends '@NowoCookieConsentBundle/admin/base.html.twig' %}
 {% form_theme form with ['bootstrap_5_layout.html.twig'] %}
 
 {% block title %}{{ isNew ? 'nowo_cookie_consent.admin.cookie_definition.new_title'|trans({}, 'NowoCookieConsentBundle') : 'nowo_cookie_consent.admin.cookie_definition.edit_title'|trans({'%name%': definition.name}, 'NowoCookieConsentBundle') }}{% endblock %}

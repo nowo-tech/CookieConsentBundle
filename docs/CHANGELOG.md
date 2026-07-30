@@ -8,6 +8,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## Table of contents
 
 - [[Unreleased]](#unreleased)
+- [[1.4.3] - 2026-07-30](#143-2026-07-30)
+  - [Added](#added)
+  - [Changed](#changed)
+  - [Documentation](#documentation)
 - [[1.4.2] - 2026-07-29](#142-2026-07-29)
   - [Changed](#changed)
   - [Documentation](#documentation)
@@ -69,6 +73,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - [Documentation](#documentation)
 
 ## [Unreleased]
+
+## [1.4.3] - 2026-07-30
+
+### Added
+
+- **Admin Twig (REQ-UI-001 / REQ-TWIG-001)**: `admin/base.html.twig` intermediate shell; admin pages extend it so host chrome stays on `web_ui.layout_template`.
+
+### Changed
+
+- Admin CRUD/settings templates extend `@NowoCookieConsentBundle/admin/base.html.twig` instead of inlining the layout global.
+- README documentation links moved below Quick start / FrankenPHP demo.
+
+### Documentation
+
+- [USAGE.md](USAGE.md) — Overriding templates (REQ-TWIG-001) procedure, freeze rule, and overridable `<subpath>` table (includes `admin/base.html.twig`)
+- [CONFIGURATION.md](CONFIGURATION.md) — Twig overrides section points to USAGE
+- [UPGRADING.md](UPGRADING.md) — upgrade path from 1.4.2
+- [RELEASE.md](RELEASE.md) — release history entry
+
+[1.4.3]: https://github.com/nowo-tech/CookieConsentBundle/releases/tag/v1.4.3
 
 ## [1.4.2] - 2026-07-29
 

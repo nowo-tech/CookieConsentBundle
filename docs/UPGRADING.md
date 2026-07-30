@@ -5,6 +5,8 @@ This guide provides step-by-step instructions for upgrading Cookie Consent Bundl
 ## Table of contents
 
 - [General upgrade process](#general-upgrade-process)
+- [To 1.4.3](#to-143)
+  - [Breaking changes](#breaking-changes)
 - [To 1.4.2](#to-142)
   - [Breaking changes](#breaking-changes)
 - [To 1.4.1](#to-141)
@@ -55,6 +57,21 @@ This guide provides step-by-step instructions for upgrading Cookie Consent Bundl
 4. **Clear cache**: `php bin/console cache:clear`
 5. **Rebuild assets** if you ship the bundled JS: `php bin/console assets:install`
 6. **Test** the consent modal and logging in your environments
+
+## To 1.4.3
+
+```bash
+composer update nowo-tech/cookie-consent-bundle
+php bin/console cache:clear
+```
+
+Patch release: admin pages extend `admin/base.html.twig` (still resolves `web_ui.layout_template`), Twig override docs consolidated under [USAGE.md](USAGE.md) (REQ-TWIG-001), and README documentation links reordered. **No configuration or public API breaking changes** for bundle consumers.
+
+If you fully override admin page templates in the app, keep extending `@NowoCookieConsentBundle/admin/base.html.twig` (or your own layout) so `web_ui.layout_template` continues to apply. Prefer `web_ui.layout_template` over copying entire admin pages.
+
+### Breaking changes
+
+None.
 
 ## To 1.4.2
 
