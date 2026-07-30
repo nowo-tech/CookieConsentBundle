@@ -54,7 +54,7 @@ The bundle does **not** expose a CLI that mutates production data, outbound HTTP
 | Threat | Control |
 | --- | --- |
 | **XSS in modal copy** | Twig auto-escaping; Symfony Form component for consent fields; integrators must escape custom admin fields in their layouts |
-| **CSRF on consent form** | `csrf_protection: true` by default on `CookieConsentType`; disable only with care |
+| **CSRF on consent form** | `csrf_protection: true` by default on `CookieConsentType`. The bundled `nowo-consent-modal.js` prepares Symfony SameOrigin double-submit (cookie + `csrf-token` header) before XHR because native `submit` never fires. Do not disable CSRF in production. |
 | **CSRF on admin delete** | `isCsrfTokenValid()` on delete action in `CookieDefinitionAdminController` |
 | **Cookie flags** | `Secure` and configurable `HttpOnly` on consent cookies |
 | **PII in logs** | IP addresses anonymized (last octet masked) in `CookieConsentLog` |
@@ -67,7 +67,7 @@ The bundle does **not** expose a CLI that mutates production data, outbound HTTP
 Integrators should:
 
 - Protect admin routes with Symfony Security (roles, firewall) **and** keep the bundle access checker enabled (`security.access_roles` / optional custom `access_checker`).
-- Keep `csrf_protection: true` in production.
+- Keep `csrf_protection: true` in production. Hosts that use Symfony SameOrigin CSRF (`framework.csrf_protection.stateless_token_ids` including the form token id, typically `submit`) rely on the bundle JS double-submit path for XHR consent posts.
 - Serve the site over HTTPS so `Secure` cookies are effective.
 - Review DB-backed modal copy before publishing (treat admins as trusted for HTML in descriptions if `|raw` is used in custom overrides).
 

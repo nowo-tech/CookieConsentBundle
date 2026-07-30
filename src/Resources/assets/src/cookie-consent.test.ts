@@ -106,6 +106,7 @@ describe('cookie-consent entrypoint', () => {
     document.body.innerHTML = `
       <div id="cookieconsent" class="modal nowo-cookie-consent" data-nowo-open="false" aria-hidden="true">
         <form class="nowo-cookie-consent__form" action="/consent">
+          <input type="hidden" name="_token" value="csrf-token" data-controller="csrf-protection" />
           <input type="checkbox" name="analytics" value="1" checked />
           <button type="submit" class="nowo-cookie-consent__btn" name="save">Save</button>
         </form>
@@ -128,7 +129,11 @@ describe('cookie-consent entrypoint', () => {
 
     expect(xhrOpen).toHaveBeenCalledWith('POST', expect.stringContaining('/consent'));
     expect(xhrSetHeader).toHaveBeenCalledWith('Content-Type', 'application/x-www-form-urlencoded');
+    expect(xhrSetHeader).toHaveBeenCalledWith('csrf-token', expect.stringMatching(/^[-_/+a-zA-Z0-9]{24,}$/));
     expect(xhrSend).toHaveBeenCalled();
+    const payload = String(xhrSend.mock.calls[0]?.[0] ?? '');
+    expect(payload).toMatch(/_token=/);
+    expect(payload).not.toContain('_token=csrf-token');
     expect(successListener).toHaveBeenCalledTimes(1);
 
     const modal = document.getElementById('cookieconsent');

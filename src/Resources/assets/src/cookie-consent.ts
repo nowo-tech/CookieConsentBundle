@@ -9,6 +9,7 @@ import { applyThemeOptionsFromElement } from './apply-theme';
 import { applyVisualConfigFromElement, setPageInteractionBlocked } from './apply-visual-config';
 import { collectClientDiagnostics, publishClientDiagnostics } from './diagnostics';
 import { installCustomEventPolyfill } from './custom-event-polyfill';
+import { prepareCsrfForRequest } from './csrf';
 import { serializeForm } from './form-serializer';
 import { activateIframesForConsent, readAllowedCategoriesFromModal } from './iframe-manager';
 import { createBundleLogger, setBundleLogger } from './logger';
@@ -178,6 +179,13 @@ export function initCookieConsent(): void {
 
       xhr.open('POST', formAction);
       xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+
+      // XHR never fires native submit, so Symfony's csrf-protection Stimulus never runs.
+      const csrfToken = prepareCsrfForRequest(cookieConsentForm);
+      if (csrfToken) {
+        xhr.setRequestHeader('csrf-token', csrfToken);
+      }
+
       xhr.send(serializeForm(cookieConsentForm, button));
 
       document.body.style.marginBottom = '';

@@ -5,6 +5,7 @@ This guide provides step-by-step instructions for upgrading Cookie Consent Bundl
 ## Table of contents
 
 - [General upgrade process](#general-upgrade-process)
+- [To 1.4.8](#to-148)
 - [To 1.4.5](#to-145)
   - [Breaking changes](#breaking-changes)
 - [To 1.4.4](#to-144)
@@ -61,6 +62,22 @@ This guide provides step-by-step instructions for upgrading Cookie Consent Bundl
 4. **Clear cache**: `php bin/console cache:clear`
 5. **Rebuild assets** if you ship the bundled JS: `php bin/console assets:install`
 6. **Test** the consent modal and logging in your environments
+
+## To 1.4.8
+
+```bash
+composer update nowo-tech/cookie-consent-bundle
+php bin/console cache:clear
+php bin/console assets:install
+```
+
+Patch release: the bundled `nowo-consent-modal.js` prepares Symfony SameOrigin CSRF (double-submit cookie + `csrf-token` header) before XHR, because native `submit` never fires on modal buttons.
+
+**Recommended:** set `nowo_cookie_consent.csrf_protection: true` (the default). Hosts that disabled CSRF only to make XHR work can re-enable it after upgrading. **No public API breaking changes**.
+
+### Breaking changes
+
+None.
 
 ## To 1.4.5
 

@@ -63,6 +63,9 @@ Update README **Tests and coverage** percentages after each release when coverag
 
 | Version | Date | Notes |
 | --- | --- | --- |
+| [1.4.8](CHANGELOG.md#148---2026-07-30) | 2026-07-30 | Modal JS SameOrigin CSRF double-submit for XHR (`csrf_protection: true` safe with Stimulus-less posts) |
+| [1.4.7](CHANGELOG.md#147---2026-07-30) | 2026-07-30 | Twig CSRF field via `form.children._token` |
+| [1.4.6](CHANGELOG.md#146---2026-07-30) | 2026-07-30 | Skip CSRF widget when consent form has no `_token` |
 | [1.4.5](CHANGELOG.md#145---2026-07-30) | 2026-07-30 | Twig `prependPath` for app overrides; Tailwind theme uses `--nowo-cc-*` (no indigo/slate utilities) |
 | [1.4.4](CHANGELOG.md#144---2026-07-30) | 2026-07-30 | Composer locks: Symfony 7.4.15 / demo 8.1.2 |
 | [1.4.3](CHANGELOG.md#143---2026-07-30) | 2026-07-30 | Admin `base.html.twig`, Twig override docs in USAGE (REQ-TWIG-001), README docs links |

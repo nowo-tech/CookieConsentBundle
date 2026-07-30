@@ -58,6 +58,7 @@ nowo_cookie_consent:
     # Optional route name used as form action
     form_action: null
 
+    # Keep enabled. Modal JS double-submits SameOrigin CSRF for XHR (no native submit).
     csrf_protection: true
 
     # Routes where the modal must not auto-open

@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## Table of contents
 
 - [[Unreleased]](#unreleased)
+- [[1.4.8] - 2026-07-30](#148-2026-07-30)
 - [[1.4.7] - 2026-07-30](#147-2026-07-30)
 - [[1.4.6] - 2026-07-30](#146-2026-07-30)
 - [[1.4.5] - 2026-07-30](#145-2026-07-30)
@@ -81,6 +82,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - [Documentation](#documentation)
 
 ## [Unreleased]
+
+## [1.4.8] - 2026-07-30
+
+### Fixed
+
+- Consent modal JS: prepare Symfony SameOrigin CSRF (double-submit cookie + `csrf-token` header) before XHR so hosts can keep `csrf_protection: true` without relying on native `submit` / Stimulus.
+
+### Documentation
+
+- [SECURITY.md](SECURITY.md), [USAGE.md](USAGE.md), [CONFIGURATION.md](CONFIGURATION.md) — document XHR CSRF double-submit path
 
 ## [1.4.7] - 2026-07-30
 
