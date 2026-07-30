@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## Table of contents
 
 - [[Unreleased]](#unreleased)
+- [[1.4.7] - 2026-07-30](#147-2026-07-30)
 - [[1.4.6] - 2026-07-30](#146-2026-07-30)
 - [[1.4.5] - 2026-07-30](#145-2026-07-30)
   - [Changed](#changed)
@@ -80,6 +81,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - [Documentation](#documentation)
 
 ## [Unreleased]
+
+## [1.4.7] - 2026-07-30
+
+### Fixed
+
+- Consent modal Twig: detect CSRF via `form.children._token` (Twig `form._token is defined` still accesses the missing field).
 
 ## [1.4.6] - 2026-07-30
 

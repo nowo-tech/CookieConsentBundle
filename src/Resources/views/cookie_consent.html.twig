@@ -115,8 +115,8 @@
                 </div>
             {% endif %}
 
-            {% if form._token is defined %}
-                {% if form._token is defined %}{{ form_widget(form._token) }}{% endif %}
+            {% if form.children._token is defined %}
+                {{ form_widget(form.children._token) }}
             {% endif %}
             {{ form_end(form, {render_rest: false}) }}
         </div>
