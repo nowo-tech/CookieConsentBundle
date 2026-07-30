@@ -8,6 +8,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## Table of contents
 
 - [[Unreleased]](#unreleased)
+- [[1.4.4] - 2026-07-30](#144-2026-07-30)
+  - [Changed](#changed)
+  - [Documentation](#documentation)
 - [[1.4.3] - 2026-07-30](#143-2026-07-30)
   - [Added](#added)
   - [Changed](#changed)
@@ -73,6 +76,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - [Documentation](#documentation)
 
 ## [Unreleased]
+
+## [1.4.4] - 2026-07-30
+
+### Changed
+
+- **Dependencies**: Root and demo `composer.lock` refreshed (Symfony components **7.4.15** / demo apps **8.1.2**); demo `config/reference.php` regenerated.
+
+### Documentation
+
+- [UPGRADING.md](UPGRADING.md) — upgrade path from 1.4.3
+- [RELEASE.md](RELEASE.md) — release history entry
+
+[1.4.4]: https://github.com/nowo-tech/CookieConsentBundle/releases/tag/v1.4.4
 
 ## [1.4.3] - 2026-07-30
 

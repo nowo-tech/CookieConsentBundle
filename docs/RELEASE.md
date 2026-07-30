@@ -63,6 +63,7 @@ Update README **Tests and coverage** percentages after each release when coverag
 
 | Version | Date | Notes |
 | --- | --- | --- |
+| [1.4.4](CHANGELOG.md#144---2026-07-30) | 2026-07-30 | Composer locks: Symfony 7.4.15 / demo 8.1.2 |
 | [1.4.3](CHANGELOG.md#143---2026-07-30) | 2026-07-30 | Admin `base.html.twig`, Twig override docs in USAGE (REQ-TWIG-001), README docs links |
 | [1.4.2](CHANGELOG.md#142---2026-07-29) | 2026-07-29 | Compose V2/V1 Makefile fallback; optional monorepo includes; WSL Compose shell helper |
 | [1.4.1](CHANGELOG.md#141---2026-07-28) | 2026-07-28 | Coverage gate docs/tooling, Spec Kit inventory, deprecation CI gate, demo lock/migration fixes |

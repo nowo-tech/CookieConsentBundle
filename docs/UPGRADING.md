@@ -5,6 +5,8 @@ This guide provides step-by-step instructions for upgrading Cookie Consent Bundl
 ## Table of contents
 
 - [General upgrade process](#general-upgrade-process)
+- [To 1.4.4](#to-144)
+  - [Breaking changes](#breaking-changes)
 - [To 1.4.3](#to-143)
   - [Breaking changes](#breaking-changes)
 - [To 1.4.2](#to-142)
@@ -57,6 +59,19 @@ This guide provides step-by-step instructions for upgrading Cookie Consent Bundl
 4. **Clear cache**: `php bin/console cache:clear`
 5. **Rebuild assets** if you ship the bundled JS: `php bin/console assets:install`
 6. **Test** the consent modal and logging in your environments
+
+## To 1.4.4
+
+```bash
+composer update nowo-tech/cookie-consent-bundle
+php bin/console cache:clear
+```
+
+Patch release: development and demo Composer locks refreshed to Symfony **7.4.15** / **8.1.2**. **No configuration or public API breaking changes** for bundle consumers.
+
+### Breaking changes
+
+None.
 
 ## To 1.4.3
 
