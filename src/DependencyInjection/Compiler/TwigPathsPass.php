@@ -23,8 +23,6 @@ final class TwigPathsPass implements CompilerPassInterface
      * Registers app `templates/bundles/` overrides (prepend) then bundle views.
      *
      * @param ContainerBuilder $container The service container builder
-     *
-     * @return void
      */
     public function process(ContainerBuilder $container): void
     {
