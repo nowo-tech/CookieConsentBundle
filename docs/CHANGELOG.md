@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## Table of contents
 
 - [[Unreleased]](#unreleased)
+- [[1.5.0] - 2026-08-01](#150-2026-08-01)
 - [[1.4.9] - 2026-08-01](#149-2026-08-01)
 - [[1.4.8] - 2026-07-30](#148-2026-07-30)
 - [[1.4.7] - 2026-07-30](#147-2026-07-30)
@@ -83,6 +84,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - [Documentation](#documentation)
 
 ## [Unreleased]
+
+## [1.5.0] - 2026-08-01
+
+### Added
+
+- **Route-based settings sections** — `/cookie-consent-config/{id}/settings/{section}` (`nowo_cookie_consent_config_settings_section`) for Profile, Behavior, Appearance, Consent modal, Preferences modal, and Auto-show targeting. `CookieConsentConfigSettingsType` accepts a required `section` option and builds only that section’s fields.
+- Admin area nav partial `admin/_admin_area_nav.html.twig` (Settings | Cookie inventory) and section tabs `admin/config/_settings_section_tabs.html.twig`.
+- Semantic `.nowo-ui-tabs` styles in `nowo-ui.css` for hosts using `web_ui.css_framework: custom` / `tailwind` / `none`.
+
+### Changed
+
+- `GET /cookie-consent-config/{id}/settings` (`nowo_cookie_consent_config_settings_edit`) now **redirects** to `/settings/profile` (BC for existing bookmarks and host links).
+- Settings Twig uses a **single** form card with the save button inside; section navigation is outside the card (no nested section cards).
+
+### Documentation
+
+- [CONFIGURATION.md](CONFIGURATION.md) / [UPGRADING.md](UPGRADING.md) — canonical settings URLs and host upgrade notes.
 
 ## [1.4.9] - 2026-08-01
 

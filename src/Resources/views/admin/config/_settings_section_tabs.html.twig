@@ -1,0 +1,14 @@
+{# Settings section tabs — one route per section. Expects config, section, sections. #}
+{% set active = section.value %}
+<nav class="nowo-ui-tabs nowo-ui-tabs--sections mb-4" aria-label="{{ 'nowo_cookie_consent.admin.config.settings.section_tabs_label'|trans({}, 'NowoCookieConsentBundle') }}" data-turbo="false">
+    <div class="nowo-ui-tabs__list">
+        {% for item in sections %}
+            {% set is_current = item.value == active %}
+            <a
+                class="nowo-ui-tabs__item{{ is_current ? ' is-active' : '' }}"
+                href="{{ path('nowo_cookie_consent_config_settings_section', {configId: config.id, section: item.value}) }}"
+                {% if is_current %}aria-current="page"{% endif %}
+            >{{ ('nowo_cookie_consent.admin.config.settings.section.' ~ item.translationSuffix())|trans({}, 'NowoCookieConsentBundle') }}</a>
+        {% endfor %}
+    </div>
+</nav>

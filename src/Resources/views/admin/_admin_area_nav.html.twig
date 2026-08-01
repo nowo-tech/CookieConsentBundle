@@ -1,0 +1,21 @@
+{# Settings | Cookie inventory — route-based area tabs (REQ-UI-001). #}
+{% set route = app.request.attributes.get('_route')|default('') %}
+{% set config_id = config.id|default(app.request.attributes.get('configId')) %}
+{% if config_id %}
+    {% set on_cookies = route starts with 'nowo_cookie_consent_cookie_definitions_' %}
+    {% set on_settings = route starts with 'nowo_cookie_consent_config_settings_' %}
+    <nav class="nowo-ui-tabs nowo-ui-tabs--area mb-3" aria-label="{{ 'nowo_cookie_consent.admin.area_nav.label'|trans({}, 'NowoCookieConsentBundle') }}" data-turbo="false">
+        <div class="nowo-ui-tabs__list">
+            <a
+                class="nowo-ui-tabs__item{{ on_settings ? ' is-active' : '' }}"
+                href="{{ path('nowo_cookie_consent_config_settings_edit', {configId: config_id}) }}"
+                {% if on_settings %}aria-current="page"{% endif %}
+            >{{ 'nowo_cookie_consent.admin.area_nav.settings'|trans({}, 'NowoCookieConsentBundle') }}</a>
+            <a
+                class="nowo-ui-tabs__item{{ on_cookies ? ' is-active' : '' }}"
+                href="{{ path('nowo_cookie_consent_cookie_definitions_index', {configId: config_id}) }}"
+                {% if on_cookies %}aria-current="page"{% endif %}
+            >{{ 'nowo_cookie_consent.admin.area_nav.cookies'|trans({}, 'NowoCookieConsentBundle') }}</a>
+        </div>
+    </nav>
+{% endif %}

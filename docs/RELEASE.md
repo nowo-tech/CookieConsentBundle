@@ -63,6 +63,7 @@ Update README **Tests and coverage** percentages after each release when coverag
 
 | Version | Date | Notes |
 | --- | --- | --- |
+| [1.5.0](CHANGELOG.md#150---2026-08-01) | 2026-08-01 | Route-based settings sections + admin area/section tabs; single form card |
 | [1.4.8](CHANGELOG.md#148---2026-07-30) | 2026-07-30 | Modal JS SameOrigin CSRF double-submit for XHR (`csrf_protection: true` safe with Stimulus-less posts) |
 | [1.4.7](CHANGELOG.md#147---2026-07-30) | 2026-07-30 | Twig CSRF field via `form.children._token` |
 | [1.4.6](CHANGELOG.md#146---2026-07-30) | 2026-07-30 | Skip CSRF widget when consent form has no `_token` |

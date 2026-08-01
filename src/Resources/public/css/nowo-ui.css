@@ -379,6 +379,61 @@ section.border.rounded-3 {
 .nowo-ui-action-prev,
 .nowo-ui-action-next { /* inherits .btn variants; no extra styles */ }
 
+/* Form footer (save inside card) */
+.nowo-ui-form-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    align-items: center;
+}
+.nowo-ui-form-actions.border-top {
+    border-top: 1px solid var(--nowo-ui-border) !important;
+}
+
+/* Route-based admin tabs (area + settings sections) */
+.nowo-ui-tabs {
+    margin: 0 0 var(--nowo-ui-spacer);
+}
+.nowo-ui-tabs__list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+.nowo-ui-tabs__item {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.5rem 1rem;
+    font-size: var(--nowo-ui-font-size-sm);
+    font-weight: 500;
+    line-height: 1.25;
+    color: var(--nowo-ui-text);
+    text-decoration: none;
+    background-color: var(--nowo-ui-surface);
+    border: 1px solid var(--nowo-ui-border);
+    border-radius: var(--nowo-ui-border-radius);
+    transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+}
+.nowo-ui-tabs__item:hover {
+    border-color: color-mix(in srgb, var(--nowo-ui-primary) 40%, var(--nowo-ui-border));
+    background-color: var(--nowo-ui-surface);
+    color: var(--nowo-ui-text);
+    text-decoration: none;
+}
+.nowo-ui-tabs__item.is-active,
+.nowo-ui-tabs__item[aria-current="page"] {
+    border-color: color-mix(in srgb, var(--nowo-ui-primary) 45%, var(--nowo-ui-border));
+    background-color: color-mix(in srgb, var(--nowo-ui-primary) 12%, var(--nowo-ui-surface));
+    color: var(--nowo-ui-primary);
+    font-weight: 600;
+}
+.nowo-ui-tabs--area {
+    margin-bottom: 1rem;
+}
+.nowo-ui-tabs--sections {
+    margin-bottom: 1.5rem;
+}
+
 /* Body / main */
 .nowo-ui-body { /* overrides base background */ }
 .nowo-ui-main { /* container styles already applied via .container */ }

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Nowo\CookieConsentBundle\Tests\Unit\Controller;
 
 use Doctrine\ORM\EntityManagerInterface;
+use Nowo\CookieConsentBundle\Admin\CookieConsentConfigSettingsSection;
 use Nowo\CookieConsentBundle\Controller\CookieConsentConfigSettingsAdminController;
 use Nowo\CookieConsentBundle\Entity\CookieConsentConfig;
 use Nowo\CookieConsentBundle\Form\CookieConsentConfigSettingsType;
@@ -21,16 +22,30 @@ use Symfony\Contracts\Translation\TranslatorInterface;
 
 final class CookieConsentConfigSettingsAdminControllerTest extends AbstractControllerTestCase
 {
-    public function testEditRendersFormOnGet(): void
+    public function testEditRedirectsToProfileSection(): void
     {
         $controller = $this->createSettingsController();
-        $response   = $controller->edit(1, Request::create('/settings', 'GET'), $this->createMock(EntityManagerInterface::class));
+        $response   = $controller->edit(1);
+
+        self::assertInstanceOf(RedirectResponse::class, $response);
+        self::assertSame('/redirect', $response->getTargetUrl());
+    }
+
+    public function testSectionRendersFormOnGet(): void
+    {
+        $controller = $this->createSettingsController();
+        $response   = $controller->section(
+            1,
+            CookieConsentConfigSettingsSection::Profile->value,
+            Request::create('/settings/profile', 'GET'),
+            $this->createMock(EntityManagerInterface::class),
+        );
 
         self::assertSame(200, $response->getStatusCode());
         self::assertSame('rendered', (string) $response->getContent());
     }
 
-    public function testEditRedirectsAfterValidSubmit(): void
+    public function testSectionRedirectsAfterValidSubmit(): void
     {
         $config = (new CookieConsentConfig())->setEnabled(true)->setDefault(true);
         $this->setEntityId($config, 1);
@@ -49,7 +64,13 @@ final class CookieConsentConfigSettingsAdminControllerTest extends AbstractContr
         $form->method('handleRequest');
 
         $formFactory = $this->createMock(FormFactoryInterface::class);
-        $formFactory->method('create')->with(CookieConsentConfigSettingsType::class)->willReturn($form);
+        $formFactory->method('create')->with(
+            CookieConsentConfigSettingsType::class,
+            $config,
+            self::callback(static function (array $options): bool {
+                return ($options['section'] ?? null) === CookieConsentConfigSettingsSection::Profile;
+            }),
+        )->willReturn($form);
 
         $entityManager = $this->createMock(EntityManagerInterface::class);
         $entityManager->expects(self::once())->method('flush');
@@ -60,13 +81,18 @@ final class CookieConsentConfigSettingsAdminControllerTest extends AbstractContr
         $controller = new CookieConsentConfigSettingsAdminController($configRepository, $translator);
         $this->configureController($controller, formFactory: $formFactory);
 
-        $response = $controller->edit(1, Request::create('/settings', 'POST'), $entityManager);
+        $response = $controller->section(
+            1,
+            CookieConsentConfigSettingsSection::Profile->value,
+            Request::create('/settings/profile', 'POST'),
+            $entityManager,
+        );
 
         self::assertInstanceOf(RedirectResponse::class, $response);
         self::assertFalse($otherDefault->isDefault());
     }
 
-    public function testEditRendersWhenConfigDisabledThrows(): void
+    public function testSectionThrowsWhenConfigDisabled(): void
     {
         $config = (new CookieConsentConfig())->setEnabled(false);
         $this->setEntityId($config, 1);
@@ -81,7 +107,25 @@ final class CookieConsentConfigSettingsAdminControllerTest extends AbstractContr
         $this->configureController($controller);
 
         $this->expectException(NotFoundHttpException::class);
-        $controller->edit(1, Request::create('/settings'), $this->createMock(EntityManagerInterface::class));
+        $controller->section(
+            1,
+            CookieConsentConfigSettingsSection::Profile->value,
+            Request::create('/settings/profile'),
+            $this->createMock(EntityManagerInterface::class),
+        );
+    }
+
+    public function testSectionThrowsForUnknownSectionSlug(): void
+    {
+        $controller = $this->createSettingsController();
+
+        $this->expectException(NotFoundHttpException::class);
+        $controller->section(
+            1,
+            'not-a-section',
+            Request::create('/settings/not-a-section'),
+            $this->createMock(EntityManagerInterface::class),
+        );
     }
 
     private function createSettingsController(): CookieConsentConfigSettingsAdminController

@@ -177,12 +177,13 @@ Enable the full-page overlay and scroll lock per consent profile:
 
 1. Set `use_database_config: true` in `config/packages/nowo_cookie_consent.yaml`.
 2. Open profile settings in the admin UI:
-   - **Bundle admin** (import bundle routes): `/cookie-consent-config/{id}/settings` — route `nowo_cookie_consent_config_settings_edit`
+   - **Bundle admin** (import bundle routes): `/cookie-consent-config/{id}/settings` redirects to `/settings/profile` — routes `nowo_cookie_consent_config_settings_edit` (redirect) and `nowo_cookie_consent_config_settings_section` (section form)
+   - Section slugs: `profile`, `behavior`, `appearance`, `consent-modal`, `preferences-modal`, `route-targeting`
    - **Symfony 8 demo**: **Admin → Cookie consent config → profile → Settings**
-3. In **Appearance**, enable **Disable page interaction** (`disablePageInteraction`).
+3. Open the **Appearance** tab, enable **Disable page interaction** (`disablePageInteraction`).
 4. Adjust overlay intensity with **Color theme** on the same screen (`--nowo-cc-overlay` in CSS).
 
-The bundle ships `CookieConsentConfigSettingsType`, `CookieConsentConfigSettingsAdminController`, and Bootstrap templates under `@NowoCookieConsentBundle/admin/config/`. Wire routes via `@NowoCookieConsentBundle/Resources/config/routing.yaml` (same as cookie inventory admin).
+The bundle ships `CookieConsentConfigSettingsType` (option `section`), `CookieConsentConfigSettingsAdminController`, area/section tab partials, and Bootstrap templates under `@NowoCookieConsentBundle/admin/config/`. Wire routes via `@NowoCookieConsentBundle/Resources/config/routing.yaml` (same as cookie inventory admin).
 
 The database value overrides the global YAML default when both are set. Twig helper: `nowo_cookie_consent_disable_page_interaction()`.
 
