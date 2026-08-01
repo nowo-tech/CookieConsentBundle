@@ -83,6 +83,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- Admin `base.html.twig` injects `nowo-ui.css` via host `stylesheets` / `parent()` when `web_ui.css_framework` is non-Bootstrap (host `layout_template` path).
 ### Added
 
 - `src/Resources/public/css/nowo-ui.css` — standalone admin stylesheet activated when `web_ui.css_framework` is `custom`, `tailwind`, or `none`. Provides `--nowo-ui-*` CSS custom properties and semantic fallback styles for all Bootstrap class names used in admin templates (`.btn`, `.table`, `.card`, `.alert`, `.form-control`, `.badge`, `.container`, pagination, flex utilities) so the admin UI is usable without the Bootstrap CDN.
