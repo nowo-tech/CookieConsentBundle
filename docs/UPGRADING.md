@@ -72,17 +72,19 @@ php bin/console cache:clear
 php bin/console assets:install
 ```
 
-Settings admin is split into **route-based sections**:
+Settings admin is split into **route-based sections**, each with its own FormType:
 
 - `GET /cookie-consent-config/{id}/settings` still works and redirects to `/settings/profile` (`nowo_cookie_consent_config_settings_edit`).
 - Each section is edited at `/cookie-consent-config/{id}/settings/{section}` (`nowo_cookie_consent_config_settings_section`).
-- `CookieConsentConfigSettingsType` now scopes fields via the `section` form option (enum or slug). Creating the form without options still defaults to **profile**.
+- Use `CookieConsentConfigSettingsSection::formType()` to resolve the FormType class (e.g. `CookieConsentConfigProfileSettingsType`, `…BehaviorSettingsType`, …).
+- `CookieConsentConfigSettingsType` remains as a **deprecated** alias of `CookieConsentConfigFullSettingsType` (all sections on one form) for demos / legacy single-page editors.
 
 Hosts that forked `admin/config/settings.html.twig` should rebase on the new single-card + tab partials, or drop the fork and restyle `.nowo-ui-tabs` / `.nowo-ui-form-wrap` from the host layout.
 
 ### Breaking changes
 
-- Submitting the old monolithic settings form in one POST is no longer possible (fields are per section). Deep links that assumed a single scrollable page should point at the relevant `{section}` slug instead.
+- Bundle admin no longer submits every settings field in one POST (fields are per section / FormType). Deep links that assumed a single scrollable page should point at the relevant `{section}` slug instead.
+- There is no `section` form option; pick the FormType via the enum instead.
 
 ## To 1.4.8
 

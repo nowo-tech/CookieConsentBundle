@@ -4,20 +4,31 @@ declare(strict_types=1);
 
 namespace Nowo\CookieConsentBundle\Admin;
 
+use Nowo\CookieConsentBundle\Entity\CookieConsentConfig;
+use Nowo\CookieConsentBundle\Form\Settings\CookieConsentConfigAppearanceSettingsType;
+use Nowo\CookieConsentBundle\Form\Settings\CookieConsentConfigBehaviorSettingsType;
+use Nowo\CookieConsentBundle\Form\Settings\CookieConsentConfigConsentModalSettingsType;
+use Nowo\CookieConsentBundle\Form\Settings\CookieConsentConfigPreferencesModalSettingsType;
+use Nowo\CookieConsentBundle\Form\Settings\CookieConsentConfigProfileSettingsType;
+use Nowo\CookieConsentBundle\Form\Settings\CookieConsentConfigRouteTargetingSettingsType;
+use Symfony\Component\Form\FormTypeInterface;
+
 /**
- * Admin settings UI sections (route slugs + form field groups).
+ * Admin settings UI sections (route slugs + FormType class per tab).
  */
 enum CookieConsentConfigSettingsSection: string
 {
-    case Profile           = 'profile';
-    case Behavior          = 'behavior';
-    case Appearance        = 'appearance';
-    case ConsentModal      = 'consent-modal';
-    case PreferencesModal  = 'preferences-modal';
-    case RouteTargeting    = 'route-targeting';
+    case Profile          = 'profile';
+    case Behavior         = 'behavior';
+    case Appearance       = 'appearance';
+    case ConsentModal     = 'consent-modal';
+    case PreferencesModal = 'preferences-modal';
+    case RouteTargeting   = 'route-targeting';
 
     /**
      * Translation key suffix under nowo_cookie_consent.admin.config.settings.section.*.
+     *
+     * @return string
      */
     public function translationSuffix(): string
     {
@@ -32,65 +43,26 @@ enum CookieConsentConfigSettingsSection: string
     }
 
     /**
-     * @return list<string> Symfony form field names for this section
+     * Symfony FormType FQCN for this section.
+     *
+     * @return class-string<FormTypeInterface<CookieConsentConfig>>
      */
-    public function formFields(): array
+    public function formType(): string
     {
         return match ($this) {
-            self::Profile => [
-                'enabled',
-                'name',
-                'routePatternsText',
-                'priority',
-                'default',
-            ],
-            self::Behavior => [
-                'autoShow',
-                'revision',
-                'manageScriptTags',
-                'autoClearCookies',
-                'hideFromBots',
-                'lazyHtmlGeneration',
-                'manageIframePlaceholders',
-                'granularCookieSelection',
-                'preferencesBubbleEnabled',
-                'preferencesBubblePosition',
-                'preferencesBubbleBorderColor',
-                'preferencesBubbleIcon',
-            ],
-            self::Appearance => [
-                'colorTheme',
-                'disablePageInteraction',
-                'darkModeEnabled',
-                'disableTransitions',
-                'twoStepModal',
-                'openPreferencesModal',
-            ],
-            self::ConsentModal => [
-                'consentModalLayout',
-                'consentModalVariant',
-                'consentModalPositionY',
-                'consentModalPositionX',
-                'consentModalEqualWeightButtons',
-                'consentModalFlipButtons',
-            ],
-            self::PreferencesModal => [
-                'preferencesModalLayout',
-                'preferencesModalVariant',
-                'preferencesModalPositionY',
-                'preferencesModalPositionX',
-                'preferencesModalEqualWeightButtons',
-                'preferencesModalFlipButtons',
-            ],
-            self::RouteTargeting => [
-                'autoShowRouteMode',
-                'autoShowRoutesText',
-            ],
+            self::Profile          => CookieConsentConfigProfileSettingsType::class,
+            self::Behavior         => CookieConsentConfigBehaviorSettingsType::class,
+            self::Appearance       => CookieConsentConfigAppearanceSettingsType::class,
+            self::ConsentModal     => CookieConsentConfigConsentModalSettingsType::class,
+            self::PreferencesModal => CookieConsentConfigPreferencesModalSettingsType::class,
+            self::RouteTargeting   => CookieConsentConfigRouteTargetingSettingsType::class,
         };
     }
 
     /**
      * Route requirement pattern for {section}.
+     *
+     * @return string
      */
     public static function routeRequirement(): string
     {

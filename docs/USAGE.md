@@ -65,8 +65,8 @@ The Symfony 8 demo implements a full CRUD at `/demo/admin/cookie-consent-config/
 
 When `use_database_config: true`, edit `CookieConsentConfig` profiles with:
 
-- **Form:** `Nowo\CookieConsentBundle\Form\CookieConsentConfigSettingsType`
-- **Controller:** `CookieConsentConfigSettingsAdminController` — `GET/POST /cookie-consent-config/{configId}/settings`
+- **Forms:** one class per tab under `Nowo\CookieConsentBundle\Form\Settings\` (e.g. `CookieConsentConfigProfileSettingsType`); resolve with `CookieConsentConfigSettingsSection::formType()`
+- **Controller:** `CookieConsentConfigSettingsAdminController` — `GET/POST /cookie-consent-config/{configId}/settings/{section}`
 - **Template:** `@NowoCookieConsentBundle/admin/config/settings.html.twig`
 
 Set `nowo_cookie_consent.web_ui.layout_template` to your project layout (or a one-file bridge) so admin pages inherit host chrome without copying list/form templates. See [CONFIGURATION.md — Admin Web UI](CONFIGURATION.md#admin-web-ui). Protect admin routes with `security.access_roles` / host `access_control` ([Admin security](CONFIGURATION.md#admin-security)).
@@ -76,10 +76,13 @@ Import bundle routes (`config/routes/nowo_cookie_consent.yaml` → `@NowoCookieC
 Example in your controller:
 
 ```php
-$form = $this->createForm(CookieConsentConfigSettingsType::class, $config);
+use Nowo\CookieConsentBundle\Admin\CookieConsentConfigSettingsSection;
+
+$section = CookieConsentConfigSettingsSection::Appearance;
+$form = $this->createForm($section->formType(), $config);
 ```
 
-The demo reuses this form with demo-specific route placeholders in its own admin shell. Bubble icon, border color, overlay, theme, and modal layout can all be edited from this screen when using database-backed config.
+For a single-page editor (all sections at once), use `CookieConsentConfigFullSettingsType` (or the deprecated `CookieConsentConfigSettingsType` alias). The demos do that with demo-specific label prefixes and route placeholders.
 
 ## Preferences bubble icon
 

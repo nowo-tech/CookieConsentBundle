@@ -8,7 +8,7 @@ use Doctrine\ORM\EntityManagerInterface;
 use Nowo\CookieConsentBundle\Admin\CookieConsentConfigSettingsSection;
 use Nowo\CookieConsentBundle\Controller\CookieConsentConfigSettingsAdminController;
 use Nowo\CookieConsentBundle\Entity\CookieConsentConfig;
-use Nowo\CookieConsentBundle\Form\CookieConsentConfigSettingsType;
+use Nowo\CookieConsentBundle\Form\Settings\CookieConsentConfigProfileSettingsType;
 use Nowo\CookieConsentBundle\Repository\CookieConsentConfigRepository;
 use Nowo\CookieConsentBundle\Tests\Unit\Support\AbstractControllerTestCase;
 use ReflectionProperty;
@@ -27,7 +27,6 @@ final class CookieConsentConfigSettingsAdminControllerTest extends AbstractContr
         $controller = $this->createSettingsController();
         $response   = $controller->edit(1);
 
-        self::assertInstanceOf(RedirectResponse::class, $response);
         self::assertSame('/redirect', $response->getTargetUrl());
     }
 
@@ -65,11 +64,8 @@ final class CookieConsentConfigSettingsAdminControllerTest extends AbstractContr
 
         $formFactory = $this->createMock(FormFactoryInterface::class);
         $formFactory->method('create')->with(
-            CookieConsentConfigSettingsType::class,
+            CookieConsentConfigProfileSettingsType::class,
             $config,
-            self::callback(static function (array $options): bool {
-                return ($options['section'] ?? null) === CookieConsentConfigSettingsSection::Profile;
-            }),
         )->willReturn($form);
 
         $entityManager = $this->createMock(EntityManagerInterface::class);

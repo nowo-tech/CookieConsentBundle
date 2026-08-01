@@ -89,7 +89,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- **Route-based settings sections** — `/cookie-consent-config/{id}/settings/{section}` (`nowo_cookie_consent_config_settings_section`) for Profile, Behavior, Appearance, Consent modal, Preferences modal, and Auto-show targeting. `CookieConsentConfigSettingsType` accepts a required `section` option and builds only that section’s fields.
+- **Route-based settings sections** — `/cookie-consent-config/{id}/settings/{section}` (`nowo_cookie_consent_config_settings_section`) for Profile, Behavior, Appearance, Consent modal, Preferences modal, and Auto-show targeting. Each tab has its own FormType under `Form/Settings/` (resolved via `CookieConsentConfigSettingsSection::formType()`).
 - Admin area nav partial `admin/_admin_area_nav.html.twig` (Settings | Cookie inventory) and section tabs `admin/config/_settings_section_tabs.html.twig`.
 - Semantic `.nowo-ui-tabs` styles in `nowo-ui.css` for hosts using `web_ui.css_framework: custom` / `tailwind` / `none`.
 
@@ -97,6 +97,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - `GET /cookie-consent-config/{id}/settings` (`nowo_cookie_consent_config_settings_edit`) now **redirects** to `/settings/profile` (BC for existing bookmarks and host links).
 - Settings Twig uses a **single** form card with the save button inside; section navigation is outside the card (no nested section cards).
+- `CookieConsentConfigSettingsType` is a **deprecated** alias of `CookieConsentConfigFullSettingsType` (all sections) for demos / legacy single-page editors. Full settings keep the form name `cookie_consent_config_settings` via `getBlockPrefix()`.
 
 ### Documentation
 

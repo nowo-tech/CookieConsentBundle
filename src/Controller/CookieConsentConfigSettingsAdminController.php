@@ -7,7 +7,6 @@ namespace Nowo\CookieConsentBundle\Controller;
 use Doctrine\ORM\EntityManagerInterface;
 use Nowo\CookieConsentBundle\Admin\CookieConsentConfigSettingsSection;
 use Nowo\CookieConsentBundle\Entity\CookieConsentConfig;
-use Nowo\CookieConsentBundle\Form\CookieConsentConfigSettingsType;
 use Nowo\CookieConsentBundle\Repository\CookieConsentConfigRepository;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\RedirectResponse;
@@ -82,9 +81,7 @@ final class CookieConsentConfigSettingsAdminController extends AbstractControlle
         }
 
         $config = $this->getConfig($configId);
-        $form   = $this->createForm(CookieConsentConfigSettingsType::class, $config, [
-            'section' => $sectionEnum,
-        ]);
+        $form   = $this->createForm($sectionEnum->formType(), $config);
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {

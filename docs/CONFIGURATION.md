@@ -183,7 +183,7 @@ Enable the full-page overlay and scroll lock per consent profile:
 3. Open the **Appearance** tab, enable **Disable page interaction** (`disablePageInteraction`).
 4. Adjust overlay intensity with **Color theme** on the same screen (`--nowo-cc-overlay` in CSS).
 
-The bundle ships `CookieConsentConfigSettingsType` (option `section`), `CookieConsentConfigSettingsAdminController`, area/section tab partials, and Bootstrap templates under `@NowoCookieConsentBundle/admin/config/`. Wire routes via `@NowoCookieConsentBundle/Resources/config/routing.yaml` (same as cookie inventory admin).
+The bundle ships one FormType per settings tab under `Nowo\CookieConsentBundle\Form\Settings\` (resolved via `CookieConsentConfigSettingsSection::formType()`), `CookieConsentConfigSettingsAdminController`, area/section tab partials, and Bootstrap templates under `@NowoCookieConsentBundle/admin/config/`. Wire routes via `@NowoCookieConsentBundle/Resources/config/routing.yaml` (same as cookie inventory admin).
 
 The database value overrides the global YAML default when both are set. Twig helper: `nowo_cookie_consent_disable_page_interaction()`.
 

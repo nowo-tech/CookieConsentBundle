@@ -9,7 +9,7 @@ use App\Form\CookieConsentConfigTranslationType;
 use Doctrine\ORM\EntityManagerInterface;
 use Nowo\CookieConsentBundle\Entity\CookieConsentConfig;
 use Nowo\CookieConsentBundle\Entity\CookieConsentConfigTranslation;
-use Nowo\CookieConsentBundle\Form\CookieConsentConfigSettingsType;
+use Nowo\CookieConsentBundle\Form\Settings\CookieConsentConfigFullSettingsType;
 use Nowo\CookieConsentBundle\Repository\CookieConsentConfigRepository;
 use Nowo\CookieConsentBundle\Repository\CookieConsentConfigTranslationRepository;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -209,7 +209,7 @@ class CookieConsentConfigController extends AbstractController
             $entityManager->persist($config);
         }
 
-        $form = $this->createForm(CookieConsentConfigSettingsType::class, $config, [
+        $form = $this->createForm(CookieConsentConfigFullSettingsType::class, $config, [
             'translation_domain'           => 'messages',
             'label_prefix'                 => 'demo.config.settings.fields.',
             'choice_label_prefix'          => 'demo.config.settings.',

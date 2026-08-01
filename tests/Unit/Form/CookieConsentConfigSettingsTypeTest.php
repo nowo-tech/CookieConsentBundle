@@ -6,55 +6,63 @@ namespace Nowo\CookieConsentBundle\Tests\Unit\Form;
 
 use Nowo\CookieConsentBundle\Admin\CookieConsentConfigSettingsSection;
 use Nowo\CookieConsentBundle\Form\CookieConsentConfigSettingsType;
-use InvalidArgumentException;
+use Nowo\CookieConsentBundle\Form\Settings\CookieConsentConfigAppearanceSettingsType;
+use Nowo\CookieConsentBundle\Form\Settings\CookieConsentConfigProfileSettingsType;
 use Symfony\Component\Form\Test\TypeTestCase;
+
+use function count;
+use function sprintf;
 
 final class CookieConsentConfigSettingsTypeTest extends TypeTestCase
 {
-    public function testBuildsOnlyProfileFieldsByDefault(): void
+    public function testDeprecatedAliasBuildsFullSettingsForm(): void
     {
         $form = $this->factory->create(CookieConsentConfigSettingsType::class);
         $view = $form->createView();
 
-        foreach (CookieConsentConfigSettingsSection::Profile->formFields() as $field) {
-            self::assertTrue($form->has($field), sprintf('Expected field "%s"', $field));
-        }
-
-        self::assertFalse($form->has('autoShow'));
-        self::assertFalse($form->has('colorTheme'));
-        self::assertFalse($form->has('consentModalLayout'));
+        self::assertTrue($form->has('enabled'));
+        self::assertTrue($form->has('autoShow'));
+        self::assertTrue($form->has('colorTheme'));
+        self::assertTrue($form->has('consentModalLayout'));
+        self::assertTrue($form->has('preferencesModalLayout'));
+        self::assertTrue($form->has('autoShowRouteMode'));
         self::assertSame('NowoCookieConsentBundle', $view->vars['translation_domain']);
     }
 
-    public function testBuildsAppearanceSectionFields(): void
+    public function testProfileSectionTypeBuildsOnlyProfileFields(): void
     {
-        $form = $this->factory->create(CookieConsentConfigSettingsType::class, null, [
-            'section' => CookieConsentConfigSettingsSection::Appearance,
-        ]);
+        $form = $this->factory->create(CookieConsentConfigProfileSettingsType::class);
 
-        foreach (CookieConsentConfigSettingsSection::Appearance->formFields() as $field) {
-            self::assertTrue($form->has($field), sprintf('Expected field "%s"', $field));
-        }
+        self::assertTrue($form->has('enabled'));
+        self::assertTrue($form->has('name'));
+        self::assertFalse($form->has('autoShow'));
+        self::assertFalse($form->has('colorTheme'));
+    }
 
+    public function testAppearanceSectionTypeBuildsOnlyAppearanceFields(): void
+    {
+        $form = $this->factory->create(CookieConsentConfigAppearanceSettingsType::class);
+
+        self::assertTrue($form->has('colorTheme'));
+        self::assertTrue($form->has('disablePageInteraction'));
         self::assertFalse($form->has('enabled'));
         self::assertFalse($form->has('consentModalLayout'));
     }
 
-    public function testAcceptsSectionSlugString(): void
+    public function testSectionEnumMapsToDedicatedFormTypes(): void
     {
-        $form = $this->factory->create(CookieConsentConfigSettingsType::class, null, [
-            'section' => 'behavior',
-        ]);
+        foreach (CookieConsentConfigSettingsSection::cases() as $section) {
+            $form = $this->factory->create($section->formType());
+            self::assertGreaterThan(0, count($form->all()), sprintf('Section "%s" form is empty', $section->value));
+        }
 
-        self::assertTrue($form->has('autoShow'));
-        self::assertFalse($form->has('enabled'));
-    }
-
-    public function testRejectsUnknownSection(): void
-    {
-        $this->expectException(InvalidArgumentException::class);
-        $this->factory->create(CookieConsentConfigSettingsType::class, null, [
-            'section' => 'unknown',
-        ]);
+        self::assertSame(
+            CookieConsentConfigProfileSettingsType::class,
+            CookieConsentConfigSettingsSection::Profile->formType(),
+        );
+        self::assertSame(
+            CookieConsentConfigAppearanceSettingsType::class,
+            CookieConsentConfigSettingsSection::Appearance->formType(),
+        );
     }
 }
