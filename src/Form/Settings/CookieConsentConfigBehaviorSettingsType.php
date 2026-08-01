@@ -20,8 +20,6 @@ final class CookieConsentConfigBehaviorSettingsType extends AbstractCookieConsen
     /**
      * @param FormBuilderInterface<CookieConsentConfig|null> $builder
      * @param array<string, mixed> $options
-     *
-     * @return void
      */
     public function buildForm(FormBuilderInterface $builder, array $options): void
     {
