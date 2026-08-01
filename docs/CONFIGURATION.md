@@ -363,12 +363,23 @@ The frontend script reads `data-nowo-config-url` on the modal, performs a `GET`,
 
 Admin pages extend `web_ui.layout_template` (Twig global `nowo_cookie_consent_layout_template`). Prefer pointing that at your project layout (or a thin bridge that maps `nowo_ui_content` into your `body` block) instead of copying list/form templates.
 
+> **`ui_theme` vs `web_ui.css_framework`**
+>
+> These are independent settings:
+>
+> | Setting | Scope | Default | Controls |
+> | --- | --- | --- | --- |
+> | `ui_theme` | **Public modal** | `bootstrap` | Markup variant for the GDPR consent modal rendered on the front-end (`bootstrap` or `tailwind`). Does not affect admin pages. |
+> | `web_ui.css_framework` | **Admin UI** | `bootstrap5` | CSS stack loaded in the bundle's admin layout. When set to `bootstrap`, `bootstrap4`, `bootstrap5`, or `tabler` the Bootstrap 5 CDN link is included automatically. For any other value (`custom`, `tailwind`, `none`, `foundation`) the bundle injects its own lightweight stylesheet (`nowo-ui.css`) instead. |
+>
+> Change `web_ui.css_framework` without affecting the public modal, and vice-versa.
+
 | Option | Default | Description |
 | --- | --- | --- |
 | `web_ui.enabled` | `true` | Registers admin access enforcement when security is configured |
 | `web_ui.path_prefix` | `/cookie-consent-config` | Documented URL prefix for host `access_control` |
 | `web_ui.layout_template` | `@NowoCookieConsentBundle/admin/layout.html.twig` | Twig layout extended by admin pages |
-| `web_ui.css_framework` | `bootstrap5` | Host CSS stack hint |
+| `web_ui.css_framework` | `bootstrap5` | Host CSS stack hint (`bootstrap` / `bootstrap4` / `bootstrap5` / `tabler` → Bootstrap CDN; `custom` / `tailwind` / `none` / `foundation` → bundled `nowo-ui.css`) |
 | `web_ui.icon_set` | `bootstrap-icons` | Icon hint |
 | `web_ui.list_page_size` | `20` | Page size for cookie definition admin lists |
 
@@ -376,9 +387,33 @@ Admin pages extend `web_ui.layout_template` (Twig global `nowo_cookie_consent_la
 nowo_cookie_consent:
     web_ui:
         layout_template: 'base.html.twig'
-        css_framework: bootstrap5
+        css_framework: bootstrap5   # change to custom/tailwind/none to drop Bootstrap CDN
         list_page_size: 20
 ```
+
+### Using a custom CSS framework (no Bootstrap CDN)
+
+Set `web_ui.css_framework: custom` (or `tailwind` / `none`) to remove the Bootstrap CDN dependency from the admin layout. The bundle then automatically links its own admin stylesheet (`nowo-ui.css`) from the `nowo_cookie_consent` asset package:
+
+```yaml
+nowo_cookie_consent:
+    web_ui:
+        css_framework: custom
+```
+
+`nowo-ui.css` ships semantic styles for all Bootstrap class names used in the admin templates (`.btn`, `.table`, `.card`, `.alert`, `.form-control`, `.badge`, `.container`, etc.) plus `--nowo-ui-*` CSS custom properties for easy token overrides. Override tokens in your host CSS:
+
+```css
+/* Override design tokens scoped to the admin root */
+.nowo-ui-root {
+    --nowo-ui-primary:       #6366f1;
+    --nowo-ui-primary-hover: #4f46e5;
+    --nowo-ui-bg:            #f9fafb;
+    --nowo-ui-border-radius: 0.5rem;
+}
+```
+
+If you supply your own host layout via `web_ui.layout_template`, load your CSS there and set `css_framework: custom` so the bundle does not inject its fallback stylesheet.
 
 When using the project layout, load host CSS/JS in that layout. Semantic hooks use `nowo-ui-*` classes. Legacy templates under `admin/cookie_definition/layout.html.twig` and `admin/config/layout.html.twig` remain as BC aliases that extend `admin/layout.html.twig`.
 

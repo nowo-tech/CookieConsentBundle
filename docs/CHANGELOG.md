@@ -83,6 +83,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- `src/Resources/public/css/nowo-ui.css` — standalone admin stylesheet activated when `web_ui.css_framework` is `custom`, `tailwind`, or `none`. Provides `--nowo-ui-*` CSS custom properties and semantic fallback styles for all Bootstrap class names used in admin templates (`.btn`, `.table`, `.card`, `.alert`, `.form-control`, `.badge`, `.container`, pagination, flex utilities) so the admin UI is usable without the Bootstrap CDN.
+- Admin `layout.html.twig` now links `nowo-ui.css` (via the existing `nowo_cookie_consent` asset package) for any `css_framework` value that is not `bootstrap`, `bootstrap4`, `bootstrap5`, or `tabler`.
+
+### Documentation
+
+- [CONFIGURATION.md](CONFIGURATION.md) — new **`ui_theme` vs `web_ui.css_framework`** callout clarifying that these two options are independent (`ui_theme` controls the public modal markup; `web_ui.css_framework` controls the admin CSS stack). New **Using a custom CSS framework** section documents the `custom`/`tailwind`/`none` path, asset injection, and `--nowo-ui-*` token overrides.
+
 ## [1.4.8] - 2026-07-30
 
 ### Fixed
