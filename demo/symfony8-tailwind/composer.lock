@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "55e5a12350290286fc52199c9628d8ef",
+    "content-hash": "22c5b4911ea17d75fb83bf26d9dc2760",
     "packages": [
         {
             "name": "doctrine/collections",
@@ -1122,7 +1122,7 @@
             "dist": {
                 "type": "path",
                 "url": "/var/cookie-consent-bundle",
-                "reference": "364e44f792a9557307ea6539baf2816ebc5f0d01"
+                "reference": "d0da480838c49594dfcf3ee28b09cc360cd611e1"
             },
             "require": {
                 "doctrine/doctrine-bundle": "^2.10 || ^3.0",
@@ -5670,11 +5670,17 @@
         },
         {
             "name": "nowo-tech/twig-inspector-bundle",
-            "version": "dev-main",
+            "version": "v1.0.41",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/nowo-tech/TwigInspectorBundle.git",
+                "reference": "aefd5ed0abe0ba265b09295d9cf4eccac7181efd"
+            },
             "dist": {
-                "type": "path",
-                "url": "/var/twig-inspector-bundle",
-                "reference": "0dbdec672a99d5a6ab1de2a3bc15b504f5bc1158"
+                "type": "zip",
+                "url": "https://api.github.com/repos/nowo-tech/TwigInspectorBundle/zipball/aefd5ed0abe0ba265b09295d9cf4eccac7181efd",
+                "reference": "aefd5ed0abe0ba265b09295d9cf4eccac7181efd",
+                "shasum": ""
             },
             "require": {
                 "php": ">=8.1 <8.6",
@@ -5710,50 +5716,7 @@
                     "Nowo\\TwigInspectorBundle\\": "src/"
                 }
             },
-            "autoload-dev": {
-                "psr-4": {
-                    "Nowo\\TwigInspectorBundle\\Tests\\": "tests/"
-                }
-            },
-            "archive": {
-                "exclude": [
-                    "/demo",
-                    "/.cursor"
-                ]
-            },
-            "scripts": {
-                "test": [
-                    "phpunit --colors=always"
-                ],
-                "test-coverage": [
-                    "phpunit --colors=always --coverage-html coverage --coverage-clover coverage.xml --coverage-text"
-                ],
-                "cs-check": [
-                    "php-cs-fixer fix --dry-run --diff"
-                ],
-                "cs-fix": [
-                    "php-cs-fixer fix"
-                ],
-                "rector": [
-                    "rector process"
-                ],
-                "rector-dry": [
-                    "rector process --dry-run --no-progress-bar"
-                ],
-                "phpstan": [
-                    "phpstan analyse --memory-limit=512M"
-                ],
-                "update": [
-                    "composer update --no-interaction"
-                ],
-                "validate": [
-                    "composer validate --strict"
-                ],
-                "qa": [
-                    "@cs-check",
-                    "@test"
-                ]
-            },
+            "notification-url": "https://packagist.org/downloads/",
             "license": [
                 "MIT"
             ],
@@ -5798,15 +5761,18 @@
                 "web-profiler"
             ],
             "support": {
-                "issues": "https://github.com/nowo-tech/TwigInspectorBundle/issues",
-                "source": "https://github.com/nowo-tech/TwigInspectorBundle",
+                "changelog": "https://github.com/nowo-tech/TwigInspectorBundle/blob/main/docs/CHANGELOG.md",
                 "docs": "https://github.com/nowo-tech/TwigInspectorBundle/tree/main/docs",
-                "changelog": "https://github.com/nowo-tech/TwigInspectorBundle/blob/main/docs/CHANGELOG.md"
+                "issues": "https://github.com/nowo-tech/TwigInspectorBundle/issues",
+                "source": "https://github.com/nowo-tech/TwigInspectorBundle"
             },
-            "transport-options": {
-                "symlink": true,
-                "relative": false
-            }
+            "funding": [
+                {
+                    "url": "https://github.com/HecFranco",
+                    "type": "github"
+                }
+            ],
+            "time": "2026-07-29T17:43:04+00:00"
         },
         {
             "name": "phar-io/manifest",
@@ -7640,8 +7606,7 @@
     ],
     "minimum-stability": "dev",
     "stability-flags": {
-        "nowo-tech/cookie-consent-bundle": 20,
-        "nowo-tech/twig-inspector-bundle": 20
+        "nowo-tech/cookie-consent-bundle": 20
     },
     "prefer-stable": true,
     "prefer-lowest": false,

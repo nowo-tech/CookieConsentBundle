@@ -72,7 +72,7 @@ Configured for local development and debugging:
 
 - **Symfony Web Profiler** — `dev` and `test` environments
 - **Symfony Debug bundle** — `dev` and `test`
-- **Nowo Twig Inspector Bundle** — mounted from sibling repo `TwigInspectorBundle` (optional for template debugging)
+- **Nowo Twig Inspector Bundle** — installed from Packagist (`require-dev`) for template debugging
 - **Cookie Consent Bundle** — the bundle under test; includes optional Doctrine config CRUD at `/demo/admin/cookie-consent-config`
 
 Example `config/bundles.php` (Symfony 8 Bootstrap demo):
@@ -172,7 +172,7 @@ Restart after env or Caddyfile changes: `docker-compose restart` or `make down &
 
 - Ensure `PORT` (8014 / 8015) is free
 - Check `docker-compose logs php`
-- Verify `TwigInspectorBundle` sibling path exists if compose mounts it
+- Confirm Docker Compose can pull Packagist packages (demo DNS is `8.8.8.8` / `8.8.4.4`)
 
 ### Database / config admin empty
 
