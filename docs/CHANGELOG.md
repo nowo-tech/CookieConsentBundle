@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## Table of contents
 
 - [[Unreleased]](#unreleased)
+- [[1.5.2] - 2026-08-03](#152-2026-08-03)
 - [[1.5.1] - 2026-08-03](#151-2026-08-03)
 - [[1.5.0] - 2026-08-01](#150-2026-08-01)
 - [[1.4.9] - 2026-08-01](#149-2026-08-01)
@@ -85,6 +86,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - [Documentation](#documentation)
 
 ## [Unreleased]
+
+## [1.5.2] - 2026-08-03
+
+### Fixed
+
+- Demo FrankenPHP stacks: install `nowo-tech/twig-inspector-bundle` from Packagist instead of a monorepo sibling path mount, so `make demo-smoke` / CI standalone checkouts no longer crash with `service "php" is not running` during entrypoint `composer install`.
+
+### Documentation
+
+- [DEMO-FRANKENPHP.md](DEMO-FRANKENPHP.md) — Twig Inspector via Packagist; drop sibling-path troubleshooting tip
+- [UPGRADING.md](UPGRADING.md) / [RELEASE.md](RELEASE.md) — 1.5.2 notes
 
 ## [1.5.1] - 2026-08-03
 

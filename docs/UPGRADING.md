@@ -5,6 +5,7 @@ This guide provides step-by-step instructions for upgrading Cookie Consent Bundl
 ## Table of contents
 
 - [General upgrade process](#general-upgrade-process)
+- [To 1.5.2](#to-152)
 - [To 1.5.1](#to-151)
 - [To 1.5.0](#to-150)
 - [To 1.4.8](#to-148)
@@ -64,6 +65,21 @@ This guide provides step-by-step instructions for upgrading Cookie Consent Bundl
 4. **Clear cache**: `php bin/console cache:clear`
 5. **Rebuild assets** if you ship the bundled JS: `php bin/console assets:install`
 6. **Test** the consent modal and logging in your environments
+
+## To 1.5.2
+
+```bash
+composer update nowo-tech/cookie-consent-bundle
+php bin/console cache:clear
+```
+
+Patch release for **demo / CI maintainers** (REQ-MAKE-009 / REQ-TEST-011): FrankenPHP demos resolve Twig Inspector from Packagist (`*`) instead of mounting a sibling `TwigInspectorBundle` path. Standalone GitHub Actions checkouts can run `make demo-smoke` without a monorepo layout.
+
+**No configuration or public API breaking changes** for bundle consumers. Host apps that do not run the bundled demos need no action beyond a normal `composer update` if they track this package.
+
+### Breaking changes
+
+None.
 
 ## To 1.5.1
 
