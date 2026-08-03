@@ -133,14 +133,14 @@ Controllers and Twig use logical names such as `@NowoCookieConsentBundle/cookie_
 | `_preference_sections.html.twig` | Preferences step category blocks |
 | `_preferences_intro.html.twig` | Intro text on the preferences step |
 | `_diagnostics_script.html.twig` | Optional diagnostics script partial |
-| `admin/base.html.twig` | Intermediate shell admin pages extend (points at `web_ui.layout_template`) |
-| `admin/layout.html.twig` | Default admin demo shell (`web_ui.layout_template` default); preferred override target via config |
+| `admin/base.html.twig` | Intermediate shell admin pages extend (points at `web_ui.layout_template`; stacks `stylesheets` / `javascripts` with `parent()`) |
+| `admin/layout.html.twig` | Default admin demo full HTML root (`web_ui.layout_template` default); preferred override target via config |
 | `admin/_pagination.html.twig` | Cookie definition list pagination partial |
-| `admin/cookie_definition/layout.html.twig` | Admin CRUD layout shell (BC alias of `admin/layout.html.twig`) |
+| `admin/cookie_definition/layout.html.twig` | Admin CRUD layout shell (BC alias of `admin/base.html.twig`) |
 | `admin/cookie_definition/index.html.twig` | Cookie definition list |
 | `admin/cookie_definition/form.html.twig` | Create/edit cookie definition form |
 | `admin/cookie_definition/_table.html.twig` | Admin list table partial |
-| `admin/config/layout.html.twig` | Profile settings admin layout shell (BC alias) |
+| `admin/config/layout.html.twig` | Profile settings admin layout shell (BC alias of `admin/base.html.twig`) |
 | `admin/config/settings.html.twig` | Profile settings form (overlay, theme, bubble, layout) |
 
 Theme selection follows `ui_theme` (`bootstrap` or `tailwind`); override the modal and form theme rows that match your active theme. See also [CONFIGURATION.md — UI theme](CONFIGURATION.md#ui-theme).

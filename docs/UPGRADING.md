@@ -206,7 +206,7 @@ nowo_cookie_consent:
 
 Production hosts **must** keep `security.allow_unauthenticated: false` and protect `web_ui.path_prefix` with `security.access_control`. Demos may set `allow_unauthenticated: true`.
 
-Admin Twig templates now extend `nowo_cookie_consent_layout_template`. Legacy `admin/cookie_definition/layout.html.twig` and `admin/config/layout.html.twig` remain as BC aliases.
+Admin Twig templates now extend `nowo_cookie_consent_layout_template`. Legacy `admin/cookie_definition/layout.html.twig` and `admin/config/layout.html.twig` remain as BC aliases (they now extend `admin/base.html.twig` so host `layout_template` stacking still applies).
 
 If you construct `CookieHandler` or `CookieLogger` manually, inject `Psr\Clock\ClockInterface` (and optionally `Psr\Log\LoggerInterface` for the logger).
 

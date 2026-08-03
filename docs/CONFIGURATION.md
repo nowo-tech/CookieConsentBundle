@@ -362,7 +362,7 @@ The frontend script reads `data-nowo-config-url` on the modal, performs a `GET`,
 
 ## Admin Web UI
 
-Admin pages extend `web_ui.layout_template` (Twig global `nowo_cookie_consent_layout_template`). Prefer pointing that at your project layout (or a thin bridge that maps `nowo_ui_content` into your `body` block) instead of copying list/form templates.
+Admin pages extend `@NowoCookieConsentBundle/admin/base.html.twig`, which extends `web_ui.layout_template` (Twig global `nowo_cookie_consent_layout_template`) and stacks `stylesheets` / `javascripts` with `{{ parent() }}` (REQ-UI-001). Prefer pointing `layout_template` at your project layout (or a thin bridge that maps `nowo_ui_content` into your `body` block) instead of copying list/form templates. The default `admin/layout.html.twig` is a full HTML document (no `parent()`).
 
 > **`ui_theme` vs `web_ui.css_framework`**
 >
@@ -379,7 +379,7 @@ Admin pages extend `web_ui.layout_template` (Twig global `nowo_cookie_consent_la
 | --- | --- | --- |
 | `web_ui.enabled` | `true` | Registers admin access enforcement when security is configured |
 | `web_ui.path_prefix` | `/cookie-consent-config` | Documented URL prefix for host `access_control` |
-| `web_ui.layout_template` | `@NowoCookieConsentBundle/admin/layout.html.twig` | Twig layout extended by admin pages |
+| `web_ui.layout_template` | `@NowoCookieConsentBundle/admin/layout.html.twig` | Root Twig layout extended by `admin/base.html.twig` |
 | `web_ui.css_framework` | `bootstrap5` | Host CSS stack hint (`bootstrap` / `bootstrap4` / `bootstrap5` / `tabler` → Bootstrap CDN; `custom` / `tailwind` / `none` / `foundation` → bundled `nowo-ui.css`) |
 | `web_ui.icon_set` | `bootstrap-icons` | Icon hint |
 | `web_ui.list_page_size` | `20` | Page size for cookie definition admin lists |
@@ -416,7 +416,7 @@ nowo_cookie_consent:
 
 If you supply your own host layout via `web_ui.layout_template`, load your CSS there and set `css_framework: custom` so the bundle does not inject its fallback stylesheet.
 
-When using the project layout, load host CSS/JS in that layout. Semantic hooks use `nowo-ui-*` classes. Legacy templates under `admin/cookie_definition/layout.html.twig` and `admin/config/layout.html.twig` remain as BC aliases that extend `admin/layout.html.twig`.
+When using the project layout, load host CSS/JS in that layout; `admin/base.html.twig` stacks them with `{{ parent() }}` on both `stylesheets` and `javascripts`. Semantic hooks use `nowo-ui-*` classes. Legacy templates under `admin/cookie_definition/layout.html.twig` and `admin/config/layout.html.twig` remain as BC aliases that extend `admin/base.html.twig`.
 
 ## Admin security
 

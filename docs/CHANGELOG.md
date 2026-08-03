@@ -85,6 +85,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- **REQ-UI-001**: `admin/base.html.twig` stacks host `javascripts` with `{{ parent() }}` (stylesheets already did); legacy `admin/*/layout.html.twig` BC aliases extend `admin/base.html.twig` instead of hardcoding the demo layout.
+
+### Changed
+
+- Demo `admin/layout.html.twig` keeps CDN Bootstrap in `stylesheets` / `javascripts` directly so `parent()` stacking from `admin/base.html.twig` does not drop host or demo assets.
+
+### Documentation
+
+- [CONFIGURATION.md](CONFIGURATION.md) / [USAGE.md](USAGE.md) — base shell stacking on both asset blocks; BC alias targets.
+
 ## [1.5.0] - 2026-08-01
 
 ### Added

@@ -1,5 +1,5 @@
 {# Admin pages extend this shell; configure web_ui.layout_template for host chrome (REQ-UI-001).
-   When the host sets layout_template, stack nowo-ui.css via parent() (same pattern as Menu/Breadcrumb). #}
+   When the host sets layout_template, stack assets via parent() (same pattern as ContactForm). #}
 {% extends nowo_cookie_consent_layout_template|default('@NowoCookieConsentBundle/admin/layout.html.twig') %}
 
 {% block stylesheets %}
@@ -9,4 +9,9 @@
             <link rel="stylesheet" href="{{ asset('css/nowo-ui.css', 'nowo_cookie_consent') }}">
         {% endif %}
     {% endblock %}
+{% endblock %}
+
+{% block javascripts %}
+    {{ parent() }}
+    {% block nowo_ui_scripts %}{% endblock %}
 {% endblock %}
