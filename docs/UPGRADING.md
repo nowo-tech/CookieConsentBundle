@@ -5,6 +5,7 @@ This guide provides step-by-step instructions for upgrading Cookie Consent Bundl
 ## Table of contents
 
 - [General upgrade process](#general-upgrade-process)
+- [To 1.5.1](#to-151)
 - [To 1.5.0](#to-150)
 - [To 1.4.8](#to-148)
 - [To 1.4.5](#to-145)
@@ -63,6 +64,21 @@ This guide provides step-by-step instructions for upgrading Cookie Consent Bundl
 4. **Clear cache**: `php bin/console cache:clear`
 5. **Rebuild assets** if you ship the bundled JS: `php bin/console assets:install`
 6. **Test** the consent modal and logging in your environments
+
+## To 1.5.1
+
+```bash
+composer update nowo-tech/cookie-consent-bundle
+php bin/console cache:clear
+```
+
+Patch for host admin layouts (REQ-UI-001):
+
+- `admin/base.html.twig` now calls `{{ parent() }}` on **both** `stylesheets` and `javascripts`, so host JS is not dropped when `web_ui.layout_template` points at your project layout.
+- Legacy BC aliases `admin/config/layout.html.twig` and `admin/cookie_definition/layout.html.twig` extend `admin/base.html.twig` (not the demo root layout).
+- If you forked `admin/base.html.twig` or those BC aliases, rebase or drop the fork so stacking still applies.
+
+**No public PHP API breaking changes.**
 
 ## To 1.5.0
 

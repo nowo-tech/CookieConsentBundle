@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## Table of contents
 
 - [[Unreleased]](#unreleased)
+- [[1.5.1] - 2026-08-03](#151-2026-08-03)
 - [[1.5.0] - 2026-08-01](#150-2026-08-01)
 - [[1.4.9] - 2026-08-01](#149-2026-08-01)
 - [[1.4.8] - 2026-07-30](#148-2026-07-30)
@@ -85,13 +86,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.5.1] - 2026-08-03
+
 ### Fixed
 
 - **REQ-UI-001**: `admin/base.html.twig` stacks host `javascripts` with `{{ parent() }}` (stylesheets already did); legacy `admin/*/layout.html.twig` BC aliases extend `admin/base.html.twig` instead of hardcoding the demo layout.
 
 ### Changed
 
-- Demo `admin/layout.html.twig` keeps CDN Bootstrap in `stylesheets` / `javascripts` directly so `parent()` stacking from `admin/base.html.twig` does not drop host or demo assets.
+- Default `admin/layout.html.twig` keeps CDN Bootstrap in `stylesheets` / `javascripts` directly so `parent()` stacking from `admin/base.html.twig` does not drop host or demo assets.
 
 ### Documentation
 

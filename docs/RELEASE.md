@@ -63,6 +63,7 @@ Update README **Tests and coverage** percentages after each release when coverag
 
 | Version | Date | Notes |
 | --- | --- | --- |
+| [1.5.1](CHANGELOG.md#151---2026-08-03) | 2026-08-03 | REQ-UI-001: stack host `javascripts` via `parent()` in `admin/base.html.twig`; BC layout aliases extend base |
 | [1.5.0](CHANGELOG.md#150---2026-08-01) | 2026-08-01 | Route-based settings sections; one FormType per tab under `Form/Settings/`; admin area/section tabs; single form card |
 | [1.4.9](CHANGELOG.md#149---2026-08-01) | 2026-08-01 | `nowo-ui.css` for custom/tailwind/none admin; inject from base when using host layout |
 | [1.4.8](CHANGELOG.md#148---2026-07-30) | 2026-07-30 | Modal JS SameOrigin CSRF double-submit for XHR (`csrf_protection: true` safe with Stimulus-less posts) |
