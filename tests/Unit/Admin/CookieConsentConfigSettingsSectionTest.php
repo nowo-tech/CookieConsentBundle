@@ -17,7 +17,8 @@ final class CookieConsentConfigSettingsSectionTest extends TestCase
         foreach (CookieConsentConfigSettingsSection::cases() as $section) {
             self::assertStringContainsString($section->value, $requirement);
             self::assertNotSame('', $section->translationSuffix());
-            self::assertTrue(is_a($section->formType(), AbstractCookieConsentConfigSettingsType::class, true));
+            self::assertTrue(class_exists($section->formType()));
+            self::assertTrue(is_subclass_of($section->formType(), AbstractCookieConsentConfigSettingsType::class));
         }
     }
 }

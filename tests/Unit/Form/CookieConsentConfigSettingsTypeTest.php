@@ -7,7 +7,12 @@ namespace Nowo\CookieConsentBundle\Tests\Unit\Form;
 use Nowo\CookieConsentBundle\Admin\CookieConsentConfigSettingsSection;
 use Nowo\CookieConsentBundle\Form\CookieConsentConfigSettingsType;
 use Nowo\CookieConsentBundle\Form\Settings\CookieConsentConfigAppearanceSettingsType;
+use Nowo\CookieConsentBundle\Form\Settings\CookieConsentConfigBehaviorSettingsType;
+use Nowo\CookieConsentBundle\Form\Settings\CookieConsentConfigConsentModalSettingsType;
+use Nowo\CookieConsentBundle\Form\Settings\CookieConsentConfigPreferencesModalSettingsType;
 use Nowo\CookieConsentBundle\Form\Settings\CookieConsentConfigProfileSettingsType;
+use Nowo\CookieConsentBundle\Form\Settings\CookieConsentConfigRouteTargetingSettingsType;
+use Nowo\CookieConsentBundle\Tests\Support\FormKitTestSupport;
 use Symfony\Component\Form\Test\TypeTestCase;
 
 use function count;
@@ -15,6 +20,22 @@ use function sprintf;
 
 final class CookieConsentConfigSettingsTypeTest extends TypeTestCase
 {
+    /**
+     * @return list<object>
+     */
+    protected function getTypes(): array
+    {
+        return [
+            FormKitTestSupport::withMerger(new CookieConsentConfigSettingsType()),
+            FormKitTestSupport::withMerger(new CookieConsentConfigProfileSettingsType()),
+            FormKitTestSupport::withMerger(new CookieConsentConfigBehaviorSettingsType()),
+            FormKitTestSupport::withMerger(new CookieConsentConfigAppearanceSettingsType()),
+            FormKitTestSupport::withMerger(new CookieConsentConfigConsentModalSettingsType()),
+            FormKitTestSupport::withMerger(new CookieConsentConfigPreferencesModalSettingsType()),
+            FormKitTestSupport::withMerger(new CookieConsentConfigRouteTargetingSettingsType()),
+        ];
+    }
+
     public function testDeprecatedAliasBuildsFullSettingsForm(): void
     {
         $form = $this->factory->create(CookieConsentConfigSettingsType::class);

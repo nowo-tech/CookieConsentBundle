@@ -1,3 +1,5 @@
+{% import '@NowoUiKitBundle/macros/ui.html.twig' as ui %}
+{% set _css_fw = nowo_cookie_consent_css_framework|default('bootstrap5') %}
 <div class="table-responsive">
     <table class="table table-striped mb-0 align-middle nowo-ui-table">
         <thead>
@@ -14,6 +16,7 @@
         <tbody>
             {% for definition in definitions %}
                 {% set translation = definition.findTranslation(app.request.locale) ?? definition.findTranslation('en') %}
+                {% set confirm_id = 'delete-cookie-definition-' ~ definition.id %}
                 <tr>
                     <td><code>{{ definition.name }}</code></td>
                     <td>{{ translation ? translation.provider : '' }}</td>
@@ -22,11 +25,41 @@
                     <td>{{ definition.duration }}</td>
                     <td>{{ definition.allowedByDefault ? 'nowo_cookie_consent.admin.cookie_definition.yes'|trans({}, 'NowoCookieConsentBundle') : 'nowo_cookie_consent.admin.cookie_definition.no'|trans({}, 'NowoCookieConsentBundle') }}</td>
                     <td class="text-end">
-                        <a class="btn btn-sm btn-outline-secondary nowo-ui-action-edit" href="{{ path('nowo_cookie_consent_cookie_definitions_edit', { configId: config.id, id: definition.id }) }}">{{ 'nowo_cookie_consent.admin.cookie_definition.edit'|trans({}, 'NowoCookieConsentBundle') }}</a>
-                        <form method="post" action="{{ path('nowo_cookie_consent_cookie_definitions_delete', { configId: config.id, id: definition.id }) }}" class="d-inline" onsubmit="return confirm('{{ 'nowo_cookie_consent.admin.cookie_definition.delete_confirm'|trans({'%name%': definition.name}, 'NowoCookieConsentBundle')|e('js') }}');">
-                            <input type="hidden" name="_token" value="{{ csrf_token('delete-cookie-definition-' ~ definition.id) }}">
-                            <button type="submit" class="btn btn-sm btn-outline-danger nowo-ui-action-delete">{{ 'nowo_cookie_consent.admin.cookie_definition.delete'|trans({}, 'NowoCookieConsentBundle') }}</button>
-                        </form>
+                        {% include '@NowoUiKitBundle/partials/_row_actions.html.twig' with {
+                            framework: _css_fw,
+                            display: 'text',
+                            actions: [
+                                {
+                                    kind: 'edit',
+                                    href: path('nowo_cookie_consent_cookie_definitions_edit', { configId: config.id, id: definition.id }),
+                                    label: 'nowo_cookie_consent.admin.cookie_definition.edit'|trans({}, 'NowoCookieConsentBundle')
+                                },
+                                {
+                                    kind: 'delete',
+                                    tag: 'button',
+                                    confirm_id: confirm_id,
+                                    label: 'nowo_cookie_consent.admin.cookie_definition.delete'|trans({}, 'NowoCookieConsentBundle')
+                                }
+                            ]
+                        } %}
+                        {% set confirm_footer %}
+                            <button type="button" class="{{ ui.btn('secondary', 'sm', _css_fw) }}" {{ ui.confirm_dismiss_attrs() }}>
+                                {{ 'nowo_cookie_consent.admin.cookie_definition.cancel'|trans({}, 'NowoCookieConsentBundle') }}
+                            </button>
+                            <form method="post" action="{{ path('nowo_cookie_consent_cookie_definitions_delete', { configId: config.id, id: definition.id }) }}" class="d-inline">
+                                <input type="hidden" name="_token" value="{{ csrf_token('delete-cookie-definition-' ~ definition.id) }}">
+                                <button type="submit" class="{{ ui.btn('danger', 'sm', _css_fw) }}">
+                                    {{ 'nowo_cookie_consent.admin.cookie_definition.delete'|trans({}, 'NowoCookieConsentBundle') }}
+                                </button>
+                            </form>
+                        {% endset %}
+                        {% include '@NowoUiKitBundle/partials/_confirm.html.twig' with {
+                            id: confirm_id,
+                            title: 'nowo_cookie_consent.admin.cookie_definition.delete'|trans({}, 'NowoCookieConsentBundle'),
+                            body: '<p>' ~ 'nowo_cookie_consent.admin.cookie_definition.delete_confirm'|trans({'%name%': definition.name}, 'NowoCookieConsentBundle')|e ~ '</p>',
+                            footer: confirm_footer,
+                            framework: _css_fw,
+                        } %}
                     </td>
                 </tr>
             {% else %}

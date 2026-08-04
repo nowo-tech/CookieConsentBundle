@@ -14,6 +14,8 @@
 
 ## Requirements
 
+- **FormKitBundle** (`nowo-tech/form-kit-bundle` ^2.0) — dashboard/admin Symfony forms (`FormOptionsTrait`, profile `cookie_consent`). Register `NowoFormKitBundle` in `config/bundles.php` (Flex / demo). Optional host YAML: `config/packages/nowo_form_kit.yaml`.
+
 - PHP `>=8.1` (<8.6). Symfony **8.0** and **8.1** require **PHP 8.4+**.
 - Symfony **7.4**, **8.0**, or **8.1** (minimum tested minors). The bundle also supports Symfony 6.x and 7.0–7.3 when constraints resolve.
 - Doctrine ORM (when `use_logger: true` or `use_database_config: true`)
@@ -90,3 +92,30 @@ When `use_database_config` and `use_cookie_inventory` are enabled, also create:
 - `{prefix}dashboard_cookie_config_translation`
 - `{prefix}dashboard_cookie_definition`
 - `{prefix}dashboard_cookie_definition_translation`
+
+## Twig Extra Bundle (REQ-TWIG-004)
+
+This package ships Twig templates. Host applications **must** install and enable Twig Extra:
+
+```bash
+composer require twig/extra-bundle twig/string-extra
+```
+
+Register `Twig\Extra\TwigExtraBundle\TwigExtraBundle` in `config/bundles.php` (Flex usually does this). Demos already include the same stack. The package `release-check` runs `make check-twig-extra` to guard this contract.
+
+## UiKit Bundle (REQ-UI-001)
+
+Admin pages compose **[UiKitBundle](https://github.com/nowo-tech/UiKitBundle)** (`nowo-tech/ui-kit-bundle` `^1.4`, required by this package). Hosts get it transitively; register the bundle when not using Flex auto-discovery:
+
+```php
+// config/bundles.php
+Nowo\UiKitBundle\NowoUiKitBundle::class => ['all' => true],
+```
+
+Then install public assets (UiKit `nowo_ui_kit` package + this bundle’s modal assets):
+
+```bash
+php bin/console assets:install
+```
+
+Admin shells load UiKit `nowo-ui.css` / `nowo-ui-confirm.js` via `admin/base.html.twig`. Cookie-consent modal CSS/JS stay on the `nowo_cookie_consent` asset package.

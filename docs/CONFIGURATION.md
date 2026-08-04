@@ -371,7 +371,7 @@ Admin pages extend `@NowoCookieConsentBundle/admin/base.html.twig`, which extend
 > | Setting | Scope | Default | Controls |
 > | --- | --- | --- | --- |
 > | `ui_theme` | **Public modal** | `bootstrap` | Markup variant for the GDPR consent modal rendered on the front-end (`bootstrap` or `tailwind`). Does not affect admin pages. |
-> | `web_ui.css_framework` | **Admin UI** | `bootstrap5` | CSS stack loaded in the bundle's admin layout. When set to `bootstrap`, `bootstrap4`, `bootstrap5`, or `tabler` the Bootstrap 5 CDN link is included automatically. For any other value (`custom`, `tailwind`, `none`, `foundation`) the bundle injects its own lightweight stylesheet (`nowo-ui.css`) instead. |
+> | `web_ui.css_framework` | **Admin UI** | `bootstrap5` | CSS stack loaded in the bundle's admin layout. When set to `bootstrap`, `bootstrap4`, `bootstrap5`, or `tabler` the Bootstrap 5 CDN link is included automatically. For any other value (`custom`, `tailwind`, `none`, `foundation`) the layout injects UiKit `nowo-ui.css` via package `nowo_ui_kit`. |
 >
 > Change `web_ui.css_framework` without affecting the public modal, and vice-versa.
 
@@ -380,7 +380,7 @@ Admin pages extend `@NowoCookieConsentBundle/admin/base.html.twig`, which extend
 | `web_ui.enabled` | `true` | Registers admin access enforcement when security is configured |
 | `web_ui.path_prefix` | `/cookie-consent-config` | Documented URL prefix for host `access_control` |
 | `web_ui.layout_template` | `@NowoCookieConsentBundle/admin/layout.html.twig` | Root Twig layout extended by `admin/base.html.twig` |
-| `web_ui.css_framework` | `bootstrap5` | Host CSS stack hint (`bootstrap` / `bootstrap4` / `bootstrap5` / `tabler` → Bootstrap CDN; `custom` / `tailwind` / `none` / `foundation` → bundled `nowo-ui.css`) |
+| `web_ui.css_framework` | `bootstrap5` | Host CSS stack hint (`bootstrap` / `bootstrap4` / `bootstrap5` / `tabler` → Bootstrap CDN; `custom` / `tailwind` / `none` / `foundation` → UiKit `nowo-ui.css` via `nowo_ui_kit`) |
 | `web_ui.icon_set` | `bootstrap-icons` | Icon hint |
 | `web_ui.list_page_size` | `20` | Page size for cookie definition admin lists |
 
@@ -394,7 +394,7 @@ nowo_cookie_consent:
 
 ### Using a custom CSS framework (no Bootstrap CDN)
 
-Set `web_ui.css_framework: custom` (or `tailwind` / `none`) to remove the Bootstrap CDN dependency from the admin layout. The bundle then automatically links its own admin stylesheet (`nowo-ui.css`) from the `nowo_cookie_consent` asset package:
+Set `web_ui.css_framework: custom` (or `tailwind` / `none`) to remove the Bootstrap CDN dependency from the admin layout. The bundle then automatically links UiKit admin stylesheet (`nowo-ui.css`) from the `nowo_ui_kit` asset package:
 
 ```yaml
 nowo_cookie_consent:
@@ -402,7 +402,7 @@ nowo_cookie_consent:
         css_framework: custom
 ```
 
-`nowo-ui.css` ships semantic styles for all Bootstrap class names used in the admin templates (`.btn`, `.table`, `.card`, `.alert`, `.form-control`, `.badge`, `.container`, etc.) plus `--nowo-ui-*` CSS custom properties for easy token overrides. Override tokens in your host CSS:
+UiKit `nowo-ui.css` ships semantic styles plus `--nowo-ui-*` CSS custom properties for easy token overrides. Override tokens in your host CSS:
 
 ```css
 /* Override design tokens scoped to the admin root */

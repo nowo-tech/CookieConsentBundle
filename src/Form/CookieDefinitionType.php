@@ -6,12 +6,10 @@ namespace Nowo\CookieConsentBundle\Form;
 
 use Nowo\CookieConsentBundle\Entity\CookieDefinition;
 use Nowo\CookieConsentBundle\Enum\CategoryEnum;
+use Nowo\FormKitBundle\Attribute\FormKitConfig;
+use Nowo\FormKitBundle\Form\FormOptionsTrait;
 use Symfony\Component\Form\AbstractType;
-use Symfony\Component\Form\Extension\Core\Type\CheckboxType;
-use Symfony\Component\Form\Extension\Core\Type\ChoiceType;
 use Symfony\Component\Form\Extension\Core\Type\CollectionType;
-use Symfony\Component\Form\Extension\Core\Type\IntegerType;
-use Symfony\Component\Form\Extension\Core\Type\TextType;
 use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 
@@ -20,13 +18,18 @@ use Symfony\Component\OptionsResolver\OptionsResolver;
  *
  * @extends AbstractType<CookieDefinition>
  */
+#[FormKitConfig('cookie_consent')]
 class CookieDefinitionType extends AbstractType
 {
+    use FormOptionsTrait;
+
     /**
      * Builds the cookie definition form fields.
      *
      * @param FormBuilderInterface<CookieDefinition|null> $builder The form builder
      * @param array<string, mixed> $options Resolved form options
+     *
+     * @return void
      */
     public function buildForm(FormBuilderInterface $builder, array $options): void
     {
@@ -43,47 +46,48 @@ class CookieDefinitionType extends AbstractType
             $options['type_label_prefix'] . 'third_party' => CookieDefinition::TYPE_THIRD_PARTY,
         ];
 
-        $builder
-            ->add('name', TextType::class, [
-                'label' => $options['label_prefix'] . 'name',
-            ])
-            ->add('duration', TextType::class, [
-                'label' => $options['label_prefix'] . 'duration',
-                'help'  => $options['label_prefix'] . 'duration_help',
-            ])
-            ->add('category', ChoiceType::class, [
-                'label'   => $options['label_prefix'] . 'category',
-                'choices' => $categoryChoices,
-            ])
-            ->add('type', ChoiceType::class, [
-                'label'   => $options['label_prefix'] . 'type',
-                'choices' => $typeChoices,
-            ])
-            ->add('sortOrder', IntegerType::class, [
-                'label' => $options['label_prefix'] . 'sort_order',
-            ])
-            ->add('allowedByDefault', CheckboxType::class, [
-                'label'    => $options['label_prefix'] . 'allowed_by_default',
-                'help'     => $options['label_prefix'] . 'allowed_by_default_help',
-                'required' => false,
-            ])
-            ->add('translations', CollectionType::class, [
-                'entry_type'    => CookieDefinitionTranslationType::class,
-                'allow_add'     => true,
-                'allow_delete'  => true,
-                'by_reference'  => false,
-                'label'         => $options['label_prefix'] . 'translations',
-                'entry_options' => [
-                    'label_prefix'       => $options['label_prefix'],
-                    'translation_domain' => $options['translation_domain'],
-                ],
-            ]);
+        $this->addText($builder, 'name', [
+            'label' => $options['label_prefix'] . 'name',
+        ]);
+        $this->addText($builder, 'duration', [
+            'label' => $options['label_prefix'] . 'duration',
+            'help'  => $options['label_prefix'] . 'duration_help',
+        ]);
+        $this->addChoice($builder, 'category', [
+            'label'   => $options['label_prefix'] . 'category',
+            'choices' => $categoryChoices,
+        ]);
+        $this->addChoice($builder, 'type', [
+            'label'   => $options['label_prefix'] . 'type',
+            'choices' => $typeChoices,
+        ]);
+        $this->addInteger($builder, 'sortOrder', [
+            'label' => $options['label_prefix'] . 'sort_order',
+        ]);
+        $this->addCheckbox($builder, 'allowedByDefault', [
+            'label'    => $options['label_prefix'] . 'allowed_by_default',
+            'help'     => $options['label_prefix'] . 'allowed_by_default_help',
+            'required' => false,
+        ]);
+        $this->addWithDefaults($builder, 'translations', CollectionType::class, [
+            'entry_type'    => CookieDefinitionTranslationType::class,
+            'allow_add'     => true,
+            'allow_delete'  => true,
+            'by_reference'  => false,
+            'label'         => $options['label_prefix'] . 'translations',
+            'entry_options' => [
+                'label_prefix'       => $options['label_prefix'],
+                'translation_domain' => $options['translation_domain'],
+            ],
+        ]);
     }
 
     /**
      * Configures default options for the cookie definition form.
      *
      * @param OptionsResolver $resolver The options resolver
+     *
+     * @return void
      */
     public function configureOptions(OptionsResolver $resolver): void
     {

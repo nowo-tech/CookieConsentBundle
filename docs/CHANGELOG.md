@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## Table of contents
 
 - [[Unreleased]](#unreleased)
+- [[1.6.0] - 2026-08-04](#160-2026-08-04)
 - [[1.5.2] - 2026-08-03](#152-2026-08-03)
 - [[1.5.1] - 2026-08-03](#151-2026-08-03)
 - [[1.5.0] - 2026-08-01](#150-2026-08-01)
@@ -86,6 +87,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - [Documentation](#documentation)
 
 ## [Unreleased]
+
+## [1.6.0] - 2026-08-04
+
+### Changed
+
+- **FormKitBundle:** depend on [`nowo-tech/form-kit-bundle`](https://github.com/nowo-tech/FormKitBundle) ^2.0. Admin form types use `FormOptionsTrait` + profile `cookie_consent` (`#[FormKitConfig]`). Extension prepends that profile when missing; form types are tagged `form.type` so `FormOptionsMerger` is injected.
+- **UiKit:** Admin templates use `ui.btn` / `ui.row_actions` macros with `nowo_cookie_consent_css_framework` instead of hard-coded Bootstrap button classes.
+
+### Added
+- **REQ-TWIG-004:** require `twig/extra-bundle` + `twig/string-extra`; `make check-twig-extra` in `release-check`; demos register `TwigExtraBundle`.
+- **Twig-CS-Fixer:** `vincentlanglet/twig-cs-fixer`, `.twig-cs-fixer.php`, `composer twig:lint` / `twig:fix`.
+
+### Changed
+
+- **REQ-UI-001-kit:** Admin `nowo-ui.css` now loads from UiKit (`asset('css/nowo-ui.css', 'nowo_ui_kit')`). Removed the forked `src/Resources/public/css/nowo-ui.css`. Requires `nowo-tech/ui-kit-bundle` `^1.4`. Cookie-consent modal assets (`cookieconsent.css`, `nowo-cc-themes.css`, `nowo-consent-modal.js`) stay on the `nowo_cookie_consent` package. Extension seeds `nowo_ui_kit` defaults from `web_ui.css_framework` / `icon_set` when the host has not configured UiKit. Admin `base.html.twig` imports `@NowoUiKitBundle/macros/ui.html.twig` (flashes via `ui.flash`, cookie-definition index create via `ui.btn`); duplicate inline flash loops removed from child templates.
+- **REQ-UI-001 feedback:** Cookie inventory delete uses UiKit `_confirm.html.twig` + `nowo-ui-confirm.js` (POST+CSRF in dialog footer) instead of native `confirm()`.
+- **REQ-TWIG-003:** Cookie definition admin form renders fields via `{% for child in form %}` / `form_row(child)`.
+
+[1.6.0]: https://github.com/nowo-tech/CookieConsentBundle/releases/tag/v1.6.0
 
 ## [1.5.2] - 2026-08-03
 

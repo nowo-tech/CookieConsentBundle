@@ -6,11 +6,12 @@
     "minimum-stability": "dev",
     "prefer-stable": true,
     "require": {
-        "php": ">=8.4.1,<8.6",
         "doctrine/doctrine-bundle": "^3.2",
         "doctrine/doctrine-migrations-bundle": "^3.3",
         "doctrine/orm": "^3.4",
         "nowo-tech/cookie-consent-bundle": "dev-master as 1.0.99",
+        "nowo-tech/form-kit-bundle": "^2.0",
+        "php": ">=8.4.1,<8.6",
         "symfony/asset": "^8.1",
         "symfony/console": "^8.1",
         "symfony/dotenv": "^8.1",
@@ -23,7 +24,9 @@
         "symfony/twig-bundle": "^8.1",
         "symfony/validator": "^8.1",
         "symfony/web-profiler-bundle": "^8.1",
-        "symfony/yaml": "^8.1"
+        "symfony/yaml": "^8.1",
+        "twig/extra-bundle": "^3.12",
+        "twig/string-extra": "^3.12"
     },
     "require-dev": {
         "nowo-tech/twig-inspector-bundle": "*",
@@ -47,7 +50,10 @@
         "psr-4": {
             "App\\": "src/",
             "App\\Demo\\": "shared/Demo/",
-            "App\\Command\\": ["src/Command/", "shared/Command/"]
+            "App\\Command\\": [
+                "src/Command/",
+                "shared/Command/"
+            ]
         }
     },
     "autoload-dev": {

@@ -14,6 +14,7 @@ use PHPUnit\Framework\TestCase;
 use Symfony\Bundle\FrameworkBundle\DependencyInjection\FrameworkExtension;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\Definition;
+use Symfony\Component\DependencyInjection\Extension\Extension;
 
 final class NowoCookieConsentExtensionTest extends TestCase
 {
@@ -147,5 +148,190 @@ final class NowoCookieConsentExtensionTest extends TestCase
         $container = new ContainerBuilder();
         (new NowoCookieConsentExtension())->prepend($container);
         self::assertFalse($container->hasExtension('framework'));
+    }
+
+    public function testPrependAlignsUiKitDefaultsFromWebUiWhenHostUnset(): void
+    {
+        $container = new ContainerBuilder();
+        $container->registerExtension(new class extends Extension {
+            public function getAlias(): string
+            {
+                return 'nowo_ui_kit';
+            }
+
+            public function load(array $configs, ContainerBuilder $container): void
+            {
+            }
+        });
+        $container->prependExtensionConfig('nowo_cookie_consent', [
+            'web_ui' => [
+                'css_framework' => 'tailwind',
+                'icon_set'      => 'tabler-icons',
+            ],
+        ]);
+
+        (new NowoCookieConsentExtension())->prepend($container);
+
+        $found = false;
+        foreach ($container->getExtensionConfig('nowo_ui_kit') as $cfg) {
+            if (($cfg['css_framework'] ?? null) === 'tailwind'
+                && ($cfg['icon_set'] ?? null) === 'tabler-icons'
+            ) {
+                $found = true;
+                break;
+            }
+        }
+        self::assertTrue($found, 'Expected nowo_ui_kit defaults from web_ui config.');
+    }
+
+    public function testPrependNormalizesBootstrapAliasForUiKit(): void
+    {
+        $container = new ContainerBuilder();
+        $container->registerExtension(new class extends Extension {
+            public function getAlias(): string
+            {
+                return 'nowo_ui_kit';
+            }
+
+            public function load(array $configs, ContainerBuilder $container): void
+            {
+            }
+        });
+        $container->prependExtensionConfig('nowo_cookie_consent', [
+            'web_ui' => [
+                'css_framework' => 'bootstrap',
+            ],
+        ]);
+
+        (new NowoCookieConsentExtension())->prepend($container);
+
+        $found = false;
+        foreach ($container->getExtensionConfig('nowo_ui_kit') as $cfg) {
+            if (($cfg['css_framework'] ?? null) === 'bootstrap5') {
+                $found = true;
+                break;
+            }
+        }
+        self::assertTrue($found);
+    }
+
+    public function testPrependDoesNotOverrideExplicitUiKitHostConfig(): void
+    {
+        $container = new ContainerBuilder();
+        $container->registerExtension(new class extends Extension {
+            public function getAlias(): string
+            {
+                return 'nowo_ui_kit';
+            }
+
+            public function load(array $configs, ContainerBuilder $container): void
+            {
+            }
+        });
+        $container->prependExtensionConfig('nowo_ui_kit', [
+            'css_framework' => 'custom',
+            'icon_set'      => 'ux_icon',
+        ]);
+        $container->prependExtensionConfig('nowo_cookie_consent', [
+            'web_ui' => [
+                'css_framework' => 'tailwind',
+                'icon_set'      => 'tabler-icons',
+            ],
+        ]);
+
+        (new NowoCookieConsentExtension())->prepend($container);
+
+        foreach ($container->getExtensionConfig('nowo_ui_kit') as $cfg) {
+            if (($cfg['css_framework'] ?? null) === 'tailwind'
+                || ($cfg['icon_set'] ?? null) === 'tabler-icons'
+            ) {
+                self::fail('web_ui must not prepend UiKit defaults when host set nowo_ui_kit explicitly.');
+            }
+        }
+        $uiKitConfigs = $container->getExtensionConfig('nowo_ui_kit');
+        self::assertSame('custom', $uiKitConfigs[0]['css_framework'] ?? null);
+        self::assertSame('ux_icon', $uiKitConfigs[0]['icon_set'] ?? null);
+    }
+
+    public function testPrependSkipsUiKitWhenExtensionMissing(): void
+    {
+        $container = new ContainerBuilder();
+        (new NowoCookieConsentExtension())->prepend($container);
+
+        self::assertSame([], $container->getExtensionConfig('nowo_ui_kit'));
+    }
+
+    public function testPrependAlignsFormKitDefaultsWhenHostUnset(): void
+    {
+        $container = new ContainerBuilder();
+        $container->registerExtension(new class extends Extension {
+            public function getAlias(): string
+            {
+                return 'nowo_form_kit';
+            }
+
+            public function load(array $configs, ContainerBuilder $container): void
+            {
+            }
+        });
+
+        (new NowoCookieConsentExtension())->prepend($container);
+
+        $foundCss     = false;
+        $foundProfile = false;
+        foreach ($container->getExtensionConfig('nowo_form_kit') as $cfg) {
+            if (($cfg['css_framework'] ?? null) === 'bootstrap') {
+                $foundCss = true;
+            }
+            if (isset($cfg['profiles']['cookie_consent'])) {
+                $foundProfile = true;
+            }
+        }
+        self::assertTrue($foundCss);
+        self::assertTrue($foundProfile);
+    }
+
+    public function testPrependDoesNotOverrideExplicitFormKitHostConfig(): void
+    {
+        $container = new ContainerBuilder();
+        $container->registerExtension(new class extends Extension {
+            public function getAlias(): string
+            {
+                return 'nowo_form_kit';
+            }
+
+            public function load(array $configs, ContainerBuilder $container): void
+            {
+            }
+        });
+        $container->prependExtensionConfig('nowo_form_kit', [
+            'css_framework' => 'tailwind',
+            'profiles'      => [
+                'cookie_consent' => [
+                    'alias' => 'cookie_consent',
+                ],
+            ],
+        ]);
+
+        (new NowoCookieConsentExtension())->prepend($container);
+
+        foreach ($container->getExtensionConfig('nowo_form_kit') as $cfg) {
+            if (($cfg['css_framework'] ?? null) === 'bootstrap') {
+                self::fail('Must not prepend FormKit css_framework when host already set it.');
+            }
+            if (isset($cfg['profiles']['cookie_consent']['translation_domain'])) {
+                self::fail('Must not prepend FormKit cookie_consent profile when host already set it.');
+            }
+        }
+        $configs = $container->getExtensionConfig('nowo_form_kit');
+        self::assertSame('tailwind', $configs[0]['css_framework'] ?? null);
+    }
+
+    public function testPrependSkipsFormKitWhenExtensionMissing(): void
+    {
+        $container = new ContainerBuilder();
+        (new NowoCookieConsentExtension())->prepend($container);
+
+        self::assertSame([], $container->getExtensionConfig('nowo_form_kit'));
     }
 }

@@ -5,6 +5,7 @@ This guide provides step-by-step instructions for upgrading Cookie Consent Bundl
 ## Table of contents
 
 - [General upgrade process](#general-upgrade-process)
+- [To 1.6.0](#to-160)
 - [To 1.5.2](#to-152)
 - [To 1.5.1](#to-151)
 - [To 1.5.0](#to-150)
@@ -65,6 +66,39 @@ This guide provides step-by-step instructions for upgrading Cookie Consent Bundl
 4. **Clear cache**: `php bin/console cache:clear`
 5. **Rebuild assets** if you ship the bundled JS: `php bin/console assets:install`
 6. **Test** the consent modal and logging in your environments
+
+## To 1.6.0
+
+```bash
+composer update nowo-tech/cookie-consent-bundle
+php bin/console cache:clear
+php bin/console assets:install
+```
+
+### UiKit composition (REQ-UI-001-kit)
+
+Admin `nowo-ui.css` now comes from **UiKitBundle** (`asset('css/nowo-ui.css', 'nowo_ui_kit')`). Hosts that linked the old `nowo_cookie_consent` CSS path for admin chrome must switch the asset package name (or rely on `admin/base.html.twig`). Modal assets remain on `nowo_cookie_consent`. This package requires `nowo-tech/ui-kit-bundle` `^1.4`. Admin templates import `@NowoUiKitBundle/macros/ui.html.twig` for `ui.flash` / `ui.btn` / confirm dialogs (`nowo-ui-confirm.js`); remove duplicate flash markup and native `confirm()` from forked child templates.
+
+### Twig Extra Bundle (REQ-TWIG-004)
+
+Hosts that render this bundle's Twig templates must install:
+
+```bash
+composer require twig/extra-bundle twig/string-extra
+```
+
+and enable `Twig\Extra\TwigExtraBundle\TwigExtraBundle`. Flex recipes usually register it automatically.
+
+### FormKitBundle
+
+Admin form types use FormKit `FormOptionsTrait` + profile `cookie_consent`. Require `nowo-tech/form-kit-bundle` `^2.0` (pulled in by this package).
+
+### Twig-CS-Fixer (maintainers)
+
+Package maintainers: `composer twig:lint` / `composer twig:fix` use `.twig-cs-fixer.php` over `src/` (and `templates/` when present).
+
+**No public PHP API breaking changes** beyond the admin CSS asset package path and UiKit dependency.
+
 
 ## To 1.5.2
 

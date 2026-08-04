@@ -101,3 +101,9 @@ services:
     class: Symfony\Component\Translation\Loader\ArrayLoader
     tags:
       - { name: translation.loader, alias: array }
+
+  # Form Kit injects FormOptionsMerger into tagged form types (FormOptionsMergerInjectorCompilerPass).
+  Nowo\CookieConsentBundle\Form\:
+    resource: '../../Form/'
+    exclude: '../../Form/DataTransformer/'
+    tags: ['form.type']

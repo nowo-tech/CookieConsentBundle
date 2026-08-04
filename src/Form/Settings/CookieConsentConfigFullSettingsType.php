@@ -18,6 +18,8 @@ class CookieConsentConfigFullSettingsType extends AbstractCookieConsentConfigSet
     /**
      * Keep the pre-1.5.0 form name for demos / hosts that submit field names under
      * `cookie_consent_config_settings[...]`.
+     *
+     * @return string
      */
     public function getBlockPrefix(): string
     {
@@ -27,14 +29,18 @@ class CookieConsentConfigFullSettingsType extends AbstractCookieConsentConfigSet
     /**
      * @param FormBuilderInterface<CookieConsentConfig|null> $builder
      * @param array<string, mixed> $options
+     *
+     * @return void
      */
     public function buildForm(FormBuilderInterface $builder, array $options): void
     {
+        $this->rememberTranslationDomain($options);
+
         foreach (CookieConsentConfigSettingsSection::cases() as $section) {
             $typeClass = $section->formType();
             /** @var AbstractCookieConsentConfigSettingsType $type */
             $type = new $typeClass();
-            $type->buildForm($builder, $options);
+            $this->withFormKit($type)->buildForm($builder, $options);
         }
     }
 }

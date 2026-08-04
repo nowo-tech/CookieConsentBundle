@@ -5,9 +5,9 @@ declare(strict_types=1);
 namespace Nowo\CookieConsentBundle\Form;
 
 use Nowo\CookieConsentBundle\Entity\CookieDefinitionTranslation;
+use Nowo\FormKitBundle\Attribute\FormKitConfig;
+use Nowo\FormKitBundle\Form\FormOptionsTrait;
 use Symfony\Component\Form\AbstractType;
-use Symfony\Component\Form\Extension\Core\Type\TextareaType;
-use Symfony\Component\Form\Extension\Core\Type\TextType;
 use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 
@@ -16,35 +16,41 @@ use Symfony\Component\OptionsResolver\OptionsResolver;
  *
  * @extends AbstractType<CookieDefinitionTranslation>
  */
+#[FormKitConfig('cookie_consent')]
 class CookieDefinitionTranslationType extends AbstractType
 {
+    use FormOptionsTrait;
+
     /**
      * Builds the translation form fields.
      *
      * @param FormBuilderInterface<CookieDefinitionTranslation|null> $builder The form builder
      * @param array<string, mixed> $options Resolved form options
+     *
+     * @return void
      */
     public function buildForm(FormBuilderInterface $builder, array $options): void
     {
-        $builder
-            ->add('locale', TextType::class, [
-                'label' => $options['label_prefix'] . 'locale',
-                'help'  => $options['label_prefix'] . 'locale_help',
-                'attr'  => ['placeholder' => 'en'],
-            ])
-            ->add('provider', TextType::class, [
-                'label' => $options['label_prefix'] . 'provider',
-            ])
-            ->add('purpose', TextareaType::class, [
-                'label' => $options['label_prefix'] . 'purpose',
-                'attr'  => ['rows' => 3],
-            ]);
+        $this->addText($builder, 'locale', [
+            'label' => $options['label_prefix'] . 'locale',
+            'help'  => $options['label_prefix'] . 'locale_help',
+            'attr'  => ['placeholder' => 'en'],
+        ]);
+        $this->addText($builder, 'provider', [
+            'label' => $options['label_prefix'] . 'provider',
+        ]);
+        $this->addTextarea($builder, 'purpose', [
+            'label' => $options['label_prefix'] . 'purpose',
+            'attr'  => ['rows' => 3],
+        ]);
     }
 
     /**
      * Configures default options for the translation form.
      *
      * @param OptionsResolver $resolver The options resolver
+     *
+     * @return void
      */
     public function configureOptions(OptionsResolver $resolver): void
     {

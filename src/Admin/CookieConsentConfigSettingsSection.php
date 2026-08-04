@@ -4,14 +4,13 @@ declare(strict_types=1);
 
 namespace Nowo\CookieConsentBundle\Admin;
 
-use Nowo\CookieConsentBundle\Entity\CookieConsentConfig;
+use Nowo\CookieConsentBundle\Form\Settings\AbstractCookieConsentConfigSettingsType;
 use Nowo\CookieConsentBundle\Form\Settings\CookieConsentConfigAppearanceSettingsType;
 use Nowo\CookieConsentBundle\Form\Settings\CookieConsentConfigBehaviorSettingsType;
 use Nowo\CookieConsentBundle\Form\Settings\CookieConsentConfigConsentModalSettingsType;
 use Nowo\CookieConsentBundle\Form\Settings\CookieConsentConfigPreferencesModalSettingsType;
 use Nowo\CookieConsentBundle\Form\Settings\CookieConsentConfigProfileSettingsType;
 use Nowo\CookieConsentBundle\Form\Settings\CookieConsentConfigRouteTargetingSettingsType;
-use Symfony\Component\Form\FormTypeInterface;
 
 /**
  * Admin settings UI sections (route slugs + FormType class per tab).
@@ -27,6 +26,8 @@ enum CookieConsentConfigSettingsSection: string
 
     /**
      * Translation key suffix under nowo_cookie_consent.admin.config.settings.section.*.
+     *
+     * @return string
      */
     public function translationSuffix(): string
     {
@@ -43,7 +44,7 @@ enum CookieConsentConfigSettingsSection: string
     /**
      * Symfony FormType FQCN for this section.
      *
-     * @return class-string<FormTypeInterface<CookieConsentConfig>>
+     * @return class-string<AbstractCookieConsentConfigSettingsType>
      */
     public function formType(): string
     {
@@ -59,6 +60,8 @@ enum CookieConsentConfigSettingsSection: string
 
     /**
      * Route requirement pattern for {section}.
+     *
+     * @return string
      */
     public static function routeRequirement(): string
     {

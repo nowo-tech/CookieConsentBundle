@@ -17,6 +17,7 @@ use Nowo\CookieConsentBundle\Form\CookieConsentType;
 use Nowo\CookieConsentBundle\Repository\CookieConsentConfigRepository;
 use Nowo\CookieConsentBundle\Repository\CookieConsentConfigTranslationRepository;
 use Nowo\CookieConsentBundle\Repository\CookieDefinitionRepository;
+use Nowo\CookieConsentBundle\Tests\Support\FormKitTestSupport;
 use ReflectionMethod;
 use Symfony\Component\Form\FormEvent;
 use Symfony\Component\Form\FormEvents;
@@ -96,7 +97,7 @@ final class CookieConsentTypeSavedConsentTest extends TypeTestCase
         $stack->push($request);
 
         return [
-            new CookieConsentType(
+            FormKitTestSupport::withMerger(new CookieConsentType(
                 new CookieChecker($stack),
                 new CookieConsentConfigResolver(
                     new CookieConsentConfigSelector(
@@ -139,7 +140,7 @@ final class CookieConsentTypeSavedConsentTest extends TypeTestCase
                 $stack,
                 ['analytics'],
                 true,
-            ),
+            )),
         ];
     }
 }

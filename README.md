@@ -55,7 +55,6 @@ See [Demo with FrankenPHP](docs/DEMO-FRANKENPHP.md) for development vs. producti
 
 ## Documentation
 
-- [GitHub Actions CI requirements](docs/GITHUB_CI.md)
 - [Installation](docs/INSTALLATION.md)
 - [Configuration](docs/CONFIGURATION.md)
 - [Usage](docs/USAGE.md)
@@ -72,6 +71,7 @@ See [Demo with FrankenPHP](docs/DEMO-FRANKENPHP.md) for development vs. producti
 ### Additional documentation
 
 - [Demo with FrankenPHP](docs/DEMO-FRANKENPHP.md)
+- [GitHub Actions CI requirements](docs/GITHUB_CI.md)
 
 ## Tests and coverage
 
@@ -89,3 +89,7 @@ make release-check
 ```
 
 PHP coverage target is **≥99%** lines (prefer 100%; see [Release](docs/RELEASE.md) and [`docs/COVERAGE.md`](docs/COVERAGE.md)). TypeScript coverage enforces a minimum of 90% (Vitest thresholds + `.scripts/ts-coverage-percent.sh`).
+
+## License
+
+This bundle is released under the [MIT License](LICENSE).

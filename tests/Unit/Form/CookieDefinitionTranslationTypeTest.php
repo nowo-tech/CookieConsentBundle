@@ -6,10 +6,21 @@ namespace Nowo\CookieConsentBundle\Tests\Unit\Form;
 
 use Nowo\CookieConsentBundle\Entity\CookieDefinitionTranslation;
 use Nowo\CookieConsentBundle\Form\CookieDefinitionTranslationType;
+use Nowo\CookieConsentBundle\Tests\Support\FormKitTestSupport;
 use Symfony\Component\Form\Test\TypeTestCase;
 
 final class CookieDefinitionTranslationTypeTest extends TypeTestCase
 {
+    /**
+     * @return list<object>
+     */
+    protected function getTypes(): array
+    {
+        return [
+            FormKitTestSupport::withMerger(new CookieDefinitionTranslationType()),
+        ];
+    }
+
     public function testBuildsTranslationFields(): void
     {
         $translation = (new CookieDefinitionTranslation())

@@ -9,6 +9,8 @@ use Nowo\CookieConsentBundle\Config\CookieInventoryProvider;
 use Nowo\CookieConsentBundle\Config\ResolvedCookieConsentConfig;
 use Nowo\CookieConsentBundle\Cookie\CookieChecker;
 use Nowo\CookieConsentBundle\Entity\CookieConsentConfig;
+use Nowo\FormKitBundle\Attribute\FormKitConfig;
+use Nowo\FormKitBundle\Form\FormOptionsTrait;
 use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\Extension\Core\Type\CheckboxType;
 use Symfony\Component\Form\Extension\Core\Type\FormType;
@@ -29,8 +31,11 @@ use function is_string;
  *
  * @extends AbstractType<array<string, mixed>|null>
  */
+#[FormKitConfig('cookie_consent')]
 class CookieConsentType extends AbstractType
 {
+    use FormOptionsTrait;
+
     /**
      * Creates a new cookie consent form type.
      *
@@ -51,13 +56,17 @@ class CookieConsentType extends AbstractType
      *
      * @param FormBuilderInterface<array<string, mixed>|null> $builder The form builder
      * @param array<string, mixed> $options The form options
+     *
+     * @return void
      */
     public function buildForm(FormBuilderInterface $builder, array $options): void
     {
-        $builder->add('required', CheckboxType::class, [
-            'label'    => false,
-            'disabled' => true,
-            'data'     => true,
+        $this->addCheckbox($builder, 'required', [
+            'label'       => false,
+            'help'        => false,
+            'placeholder' => false,
+            'disabled'    => true,
+            'data'        => true,
         ]);
 
         $inventory = $this->resolveOptionalCookieInventory();
@@ -85,17 +94,23 @@ class CookieConsentType extends AbstractType
             $builder->add($cookiesBuilder);
         }
 
-        $builder->add('save', SubmitType::class, [
-            'label' => 'nowo_cookie_consent.save',
-            'attr'  => ['class' => 'btn nowo-cookie-consent__btn nowo-cookie-consent__btn--secondary'],
+        $this->addWithDefaults($builder, 'save', SubmitType::class, [
+            'label'       => 'nowo_cookie_consent.save',
+            'help'        => false,
+            'placeholder' => false,
+            'attr'        => ['class' => 'btn nowo-cookie-consent__btn nowo-cookie-consent__btn--secondary'],
         ]);
-        $builder->add('use_only_functional_cookies', SubmitType::class, [
-            'label' => 'nowo_cookie_consent.use_only_functional_cookies',
-            'attr'  => ['class' => 'btn nowo-cookie-consent__btn nowo-cookie-consent__btn--secondary'],
+        $this->addWithDefaults($builder, 'use_only_functional_cookies', SubmitType::class, [
+            'label'       => 'nowo_cookie_consent.use_only_functional_cookies',
+            'help'        => false,
+            'placeholder' => false,
+            'attr'        => ['class' => 'btn nowo-cookie-consent__btn nowo-cookie-consent__btn--secondary'],
         ]);
-        $builder->add('use_all_cookies', SubmitType::class, [
-            'label' => 'nowo_cookie_consent.use_all_cookies',
-            'attr'  => ['class' => 'btn nowo-cookie-consent__btn'],
+        $this->addWithDefaults($builder, 'use_all_cookies', SubmitType::class, [
+            'label'       => 'nowo_cookie_consent.use_all_cookies',
+            'help'        => false,
+            'placeholder' => false,
+            'attr'        => ['class' => 'btn nowo-cookie-consent__btn'],
         ]);
 
         $builder->addEventListener(FormEvents::PRE_SUBMIT, function (FormEvent $event) use ($inventory): void {
@@ -265,6 +280,8 @@ class CookieConsentType extends AbstractType
      * Configures default options for the consent form type.
      *
      * @param OptionsResolver $resolver The options resolver
+     *
+     * @return void
      */
     public function configureOptions(OptionsResolver $resolver): void
     {
