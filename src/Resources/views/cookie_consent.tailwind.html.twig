@@ -2,6 +2,7 @@
 
 {% set ui = display_config is defined and display_config ? display_config.config : null %}
 {% set preference_sections = nowo_cookie_consent_preference_sections() %}
+{% set cookie_inventory = nowo_cookie_consent_cookie_inventory() %}
 {% set two_step = nowo_cookie_consent_two_step_modal() %}
 {% set show_preferences_label = 'nowo_cookie_consent.show_preferences'|trans({}, 'NowoCookieConsentBundle') %}
 {% set preferences_title = 'nowo_cookie_consent.preferences.title'|trans({}, 'NowoCookieConsentBundle') %}

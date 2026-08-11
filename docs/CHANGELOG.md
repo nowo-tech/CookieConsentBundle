@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## Table of contents
 
 - [[Unreleased]](#unreleased)
+- [[1.6.2] - 2026-08-11](#162---2026-08-11)
 - [[1.6.1] - 2026-08-11](#161---2026-08-11)
 - [[1.6.0] - 2026-08-04](#160-2026-08-04)
 - [[1.5.2] - 2026-08-03](#152-2026-08-03)
@@ -88,6 +89,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - [Documentation](#documentation)
 
 ## [Unreleased]
+
+## [1.6.2] - 2026-08-11
+
+### Fixed
+
+- Cookie inventory Doctrine queries: memoize `listForLocale` / definition loads per request, use `existsByConfig` (COUNT) for presence checks instead of loading all rows twice, attach inventory once on the consent form view, and filter category tables from that list in form themes.
+
+### Documentation
+
+- Noted inventory query reduction in UPGRADING / RELEASE history.
+
+[1.6.2]: https://github.com/nowo-tech/CookieConsentBundle/releases/tag/v1.6.2
 
 ## [1.6.1] - 2026-08-11
 

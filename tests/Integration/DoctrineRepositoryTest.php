@@ -137,6 +137,7 @@ final class DoctrineRepositoryTest extends TestCase
         self::assertSame('_fbp', $ordered[0]->getName());
         self::assertSame('_ga', $ordered[1]->getName());
         self::assertSame(2, $repository->countByConfig($config));
+        self::assertTrue($repository->existsByConfig($config));
 
         $page = $repository->findByConfigOrderedPaginated($config, 1, 1);
         self::assertCount(1, $page);

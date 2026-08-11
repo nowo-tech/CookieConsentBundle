@@ -18,6 +18,8 @@ use Symfony\Component\Form\Extension\Core\Type\SubmitType;
 use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\Form\FormEvent;
 use Symfony\Component\Form\FormEvents;
+use Symfony\Component\Form\FormInterface;
+use Symfony\Component\Form\FormView;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\OptionsResolver\OptionsResolver;
@@ -189,7 +191,24 @@ class CookieConsentType extends AbstractType
     }
 
     /**
-     * @return list<array{name: string, category: string}>
+     * Full inventory rows for modal category tables (independent of granular selection).
+     *
+     * @return list<array{name: string, provider: string, purpose: string, duration: string, category: string, type: string, allowed_by_default: bool}>
+     */
+    private function resolveDisplayCookieInventory(): array
+    {
+        if (!$this->inventoryProvider->isEnabled()) {
+            return [];
+        }
+
+        $config = $this->resolveActiveConfig();
+        $locale = $this->requestStack->getMainRequest()?->getLocale() ?? 'en';
+
+        return $this->inventoryProvider->listForLocale($config, $locale);
+    }
+
+    /**
+     * @return list<array{name: string, category: string, allowed_by_default?: bool}>
      */
     private function resolveOptionalCookieInventory(): array
     {
@@ -272,6 +291,23 @@ class CookieConsentType extends AbstractType
         }
 
         return false;
+    }
+
+    /**
+     * Attaches the full cookie inventory once on category fields for form themes.
+     *
+     * @param FormInterface<array<string, mixed>|null> $form
+     * @param array<string, mixed> $options
+     */
+    public function finishView(FormView $view, FormInterface $form, array $options): void
+    {
+        $inventory = $this->resolveDisplayCookieInventory();
+
+        $view->vars['cookie_inventory'] = $inventory;
+
+        foreach ($view->children as $child) {
+            $child->vars['cookie_inventory'] = $inventory;
+        }
     }
 
     /**

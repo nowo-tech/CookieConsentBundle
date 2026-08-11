@@ -36,7 +36,8 @@
                     {% if granular %}
                         <p class="nowo-cookie-consent__granular-help">{{ 'nowo_cookie_consent.granular.help'|trans({}, 'NowoCookieConsentBundle') }}</p>
                     {% endif %}
-                    {% set cookie_rows = nowo_cookie_consent_cookie_inventory()|filter(row => row.category == name) %}
+                    {% set cookie_inventory = cookie_inventory|default(nowo_cookie_consent_cookie_inventory()) %}
+                    {% set cookie_rows = cookie_inventory|filter(row => row.category == name) %}
                     {% include '@NowoCookieConsentBundle/_category_cookie_table.html.twig' with {
                         rows: cookie_rows,
                         consent_form: consent_form,

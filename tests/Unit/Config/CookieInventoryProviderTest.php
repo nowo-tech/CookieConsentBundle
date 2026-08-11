@@ -204,15 +204,40 @@ final class CookieInventoryProviderTest extends TestCase
 
     public function testHasDefinitionsTrueWhenDatabaseHasRows(): void
     {
-        $config     = new CookieConsentConfig();
-        $definition = (new CookieDefinition())->setName('_pk_id')->setCategory('analytics');
+        $config = new CookieConsentConfig();
 
         $repository = $this->createMock(CookieDefinitionRepository::class);
-        $repository->method('findByConfigOrdered')->willReturn([$definition]);
+        $repository->expects(self::once())->method('existsByConfig')->with($config)->willReturn(true);
+        $repository->expects(self::never())->method('findByConfigOrdered');
 
         $provider = new CookieInventoryProvider($repository, true, []);
 
         self::assertTrue($provider->hasDefinitions($config));
+    }
+
+    public function testListForLocaleCachesDatabaseDefinitions(): void
+    {
+        $config     = new CookieConsentConfig();
+        $definition = (new CookieDefinition())
+            ->setName('_pk_id')
+            ->setDuration('13 months')
+            ->setCategory('analytics')
+            ->setType(CookieDefinition::TYPE_FIRST_PARTY)
+            ->addTranslation(
+                (new CookieDefinitionTranslation())
+                    ->setLocale('en')
+                    ->setProvider('Matomo')
+                    ->setPurpose('Visitor id'),
+            );
+
+        $repository = $this->createMock(CookieDefinitionRepository::class);
+        $repository->expects(self::once())->method('findByConfigOrdered')->willReturn([$definition]);
+
+        $provider = new CookieInventoryProvider($repository, true, []);
+
+        self::assertSame('_pk_id', $provider->listForLocale($config, 'en')[0]['name']);
+        self::assertSame('_pk_id', $provider->listForLocale($config, 'en')[0]['name']);
+        self::assertSame('Matomo', $provider->buildCookieTableBody($config, 'en', 'analytics')[0]['domain']);
     }
 
     public function testHasDefinitionsTrueWhenYamlInventoryPresent(): void

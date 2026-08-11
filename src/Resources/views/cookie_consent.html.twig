@@ -4,6 +4,7 @@
 {% set translation = display_config is defined and display_config ? display_config.translation : null %}
 {% set two_step = nowo_cookie_consent_two_step_modal() %}
 {% set preference_sections = nowo_cookie_consent_preference_sections() %}
+{% set cookie_inventory = nowo_cookie_consent_cookie_inventory() %}
 {% set show_preferences_label = translation and translation.consentModalShowPreferencesBtn ? translation.consentModalShowPreferencesBtn : 'nowo_cookie_consent.show_preferences'|trans({}, 'NowoCookieConsentBundle') %}
 {% set preferences_title = translation and translation.preferencesModalTitle ? translation.preferencesModalTitle : 'nowo_cookie_consent.preferences.title'|trans({}, 'NowoCookieConsentBundle') %}
 {% set preferences_close_label = translation and translation.preferencesModalCloseIconLabel ? translation.preferencesModalCloseIconLabel : 'nowo_cookie_consent.preferences.close'|trans({}, 'NowoCookieConsentBundle') %}

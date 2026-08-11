@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Nowo\CookieConsentBundle\Config;
 
 use Nowo\CookieConsentBundle\Entity\CookieConsentConfig;
+use Nowo\CookieConsentBundle\Entity\CookieDefinition;
 use Nowo\CookieConsentBundle\Repository\CookieDefinitionRepository;
 
 /**
@@ -13,6 +14,9 @@ use Nowo\CookieConsentBundle\Repository\CookieDefinitionRepository;
  * Sources (in order):
  * 1. {@see CookieDefinition} entities linked to the active profile (database)
  * 2. Static entries from bundle YAML ({@see Configuration::cookie_inventory})
+ *
+ * Database definitions and locale rows are memoized for the service lifetime (typically one request)
+ * so Twig category loops and form builders do not re-query Doctrine.
  */
 final class CookieInventoryProvider
 {
@@ -28,6 +32,29 @@ final class CookieInventoryProvider
      * }>|null
      */
     private ?array $normalizedYamlInventory = null;
+
+    /**
+     * @var array<string, list<CookieDefinition>>
+     */
+    private array $definitionsByConfigKey = [];
+
+    /**
+     * @var array<string, list<array{
+     *     name: string,
+     *     provider: string,
+     *     purpose: string,
+     *     duration: string,
+     *     category: string,
+     *     type: string,
+     *     allowed_by_default: bool
+     * }>>
+     */
+    private array $localeListCache = [];
+
+    /**
+     * @var array<string, bool>
+     */
+    private array $hasDatabaseDefinitionsCache = [];
 
     /**
      * Creates a new cookie inventory provider.
@@ -75,11 +102,21 @@ final class CookieInventoryProvider
             return [];
         }
 
-        if ($config instanceof CookieConsentConfig && $this->hasDatabaseDefinitions($config)) {
-            return $this->listFromDatabase($config, $locale);
+        $cacheKey = $this->configCacheKey($config) . '|' . $locale;
+
+        if (isset($this->localeListCache[$cacheKey])) {
+            return $this->localeListCache[$cacheKey];
         }
 
-        return $this->listFromYaml($locale);
+        if ($config instanceof CookieConsentConfig) {
+            $definitions = $this->loadDefinitions($config);
+
+            if ($definitions !== []) {
+                return $this->localeListCache[$cacheKey] = $this->mapDefinitionsToLocale($definitions, $locale);
+            }
+        }
+
+        return $this->localeListCache[$cacheKey] = $this->listFromYaml($locale);
     }
 
     /**
@@ -131,6 +168,38 @@ final class CookieInventoryProvider
     }
 
     /**
+     * @return list<CookieDefinition>
+     */
+    private function loadDefinitions(CookieConsentConfig $config): array
+    {
+        $key = $this->configCacheKey($config);
+
+        if (!isset($this->definitionsByConfigKey[$key])) {
+            $this->definitionsByConfigKey[$key]      = $this->definitionRepository->findByConfigOrdered($config);
+            $this->hasDatabaseDefinitionsCache[$key] = $this->definitionsByConfigKey[$key] !== [];
+        }
+
+        return $this->definitionsByConfigKey[$key];
+    }
+
+    private function hasDatabaseDefinitions(CookieConsentConfig $config): bool
+    {
+        $key = $this->configCacheKey($config);
+
+        if (isset($this->hasDatabaseDefinitionsCache[$key])) {
+            return $this->hasDatabaseDefinitionsCache[$key];
+        }
+
+        if (isset($this->definitionsByConfigKey[$key])) {
+            return $this->hasDatabaseDefinitionsCache[$key] = $this->definitionsByConfigKey[$key] !== [];
+        }
+
+        return $this->hasDatabaseDefinitionsCache[$key] = $this->definitionRepository->existsByConfig($config);
+    }
+
+    /**
+     * @param list<CookieDefinition> $definitions
+     *
      * @return list<array{
      *     name: string,
      *     provider: string,
@@ -141,11 +210,11 @@ final class CookieInventoryProvider
      *     allowed_by_default: bool
      * }>
      */
-    private function listFromDatabase(CookieConsentConfig $config, string $locale): array
+    private function mapDefinitionsToLocale(array $definitions, string $locale): array
     {
         $inventory = [];
 
-        foreach ($this->definitionRepository->findByConfigOrdered($config) as $definition) {
+        foreach ($definitions as $definition) {
             $translation = $definition->findTranslation($locale)
                 ?? $definition->findTranslation('en');
 
@@ -217,8 +286,14 @@ final class CookieInventoryProvider
         return $this->normalizedYamlInventory;
     }
 
-    private function hasDatabaseDefinitions(CookieConsentConfig $config): bool
+    private function configCacheKey(?CookieConsentConfig $config): string
     {
-        return $this->definitionRepository->findByConfigOrdered($config) !== [];
+        if (!$config instanceof CookieConsentConfig) {
+            return 'yaml';
+        }
+
+        $id = $config->getId();
+
+        return $id !== null ? 'id:' . $id : 'obj:' . spl_object_id($config);
     }
 }

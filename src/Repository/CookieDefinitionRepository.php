@@ -73,6 +73,16 @@ class CookieDefinitionRepository extends ServiceEntityRepository
     }
 
     /**
+     * Returns whether at least one cookie definition exists for a configuration profile.
+     *
+     * Prefer this over loading the full inventory when only presence matters.
+     */
+    public function existsByConfig(CookieConsentConfig $config): bool
+    {
+        return $this->countByConfig($config) > 0;
+    }
+
+    /**
      * Counts cookie definitions for a configuration profile.
      */
     public function countByConfig(CookieConsentConfig $config): int
