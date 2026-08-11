@@ -51,4 +51,21 @@ final class CookieConsentRouteTargeting
             default           => true,
         };
     }
+
+    /**
+     * Returns whether the consent fragment must not be rendered for the current route.
+     *
+     * @param string $currentRoute The current (main) request route name
+     * @param list<string> $skipRenderRoutes Route name patterns that skip the fragment entirely
+     *
+     * @return bool True when hosts should omit the consent markup and the controller returns empty
+     */
+    public function shouldSkipRender(string $currentRoute, array $skipRenderRoutes): bool
+    {
+        if ($currentRoute === '' || $skipRenderRoutes === []) {
+            return false;
+        }
+
+        return $this->routePatternMatcher->matches($currentRoute, $skipRenderRoutes);
+    }
 }

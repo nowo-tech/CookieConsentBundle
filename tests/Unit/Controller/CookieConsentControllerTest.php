@@ -7,6 +7,7 @@ namespace Nowo\CookieConsentBundle\Tests\Unit\Controller;
 use Nowo\CookieConsentBundle\Config\CookieConsentConfigResolver;
 use Nowo\CookieConsentBundle\Config\CookieConsentConfigSelector;
 use Nowo\CookieConsentBundle\Config\CookieConsentRoutePatternMatcher;
+use Nowo\CookieConsentBundle\Config\CookieConsentRouteTargeting;
 use Nowo\CookieConsentBundle\Controller\CookieConsentController;
 use Nowo\CookieConsentBundle\Entity\CookieConsentConfig;
 use Nowo\CookieConsentBundle\Entity\CookieConsentConfigTranslation;
@@ -40,6 +41,29 @@ final class CookieConsentControllerTest extends TestCase
         self::assertSame(200, $response->getStatusCode());
         self::assertStringContainsString('rendered-bootstrap', (string) $response->getContent());
         self::assertTrue($response->headers->has('Cache-Control'));
+    }
+
+    public function testShowReturnsEmptyWhenMainRouteMatchesSkipRenderRoutes(): void
+    {
+        $mainRequest = Request::create('/staff/orgs');
+        $mainRequest->attributes->set('_route', 'staff_orgs');
+
+        $stack = new RequestStack();
+        $stack->push($mainRequest);
+
+        $twig = $this->createMock(Environment::class);
+        $twig->expects(self::never())->method('render');
+
+        $controller = $this->createController(
+            twig: $twig,
+            requestStack: $stack,
+            skipRenderRoutes: ['staff_*'],
+        );
+
+        $response = $controller->show(Request::create('/cookie_consent'));
+
+        self::assertSame(200, $response->getStatusCode());
+        self::assertSame('', (string) $response->getContent());
     }
 
     public function testShowUsesTailwindTemplate(): void
@@ -163,6 +187,9 @@ final class CookieConsentControllerTest extends TestCase
         $controller->show(Request::create('/cookie_consent'));
     }
 
+    /**
+     * @param list<string> $skipRenderRoutes
+     */
     private function createController(
         ?Environment $twig = null,
         ?FormFactoryInterface $formFactory = null,
@@ -173,6 +200,7 @@ final class CookieConsentControllerTest extends TestCase
         bool $fetchConfigViaApi = false,
         string $uiTheme = 'bootstrap',
         ?string $formAction = null,
+        array $skipRenderRoutes = [],
     ): CookieConsentController {
         $twig ??= $this->createTwig();
         $formFactory ??= $this->createFormFactory();
@@ -196,10 +224,12 @@ final class CookieConsentControllerTest extends TestCase
             $requestStack,
             $configResolver,
             $translator,
+            new CookieConsentRouteTargeting(new CookieConsentRoutePatternMatcher()),
             $fetchConfigViaApi,
             $uiTheme,
             $formAction,
             ['privacy'],
+            $skipRenderRoutes,
         );
     }
 

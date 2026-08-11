@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Nowo\CookieConsentBundle\Controller;
 
 use Nowo\CookieConsentBundle\Config\CookieConsentConfigResolver;
+use Nowo\CookieConsentBundle\Config\CookieConsentRouteTargeting;
 use Nowo\CookieConsentBundle\Config\ResolvedCookieConsentConfig;
 use Nowo\CookieConsentBundle\Form\CookieConsentType;
 use Nowo\CookieConsentBundle\Locale\LocaleResolver;
@@ -31,6 +32,7 @@ class CookieConsentController
      * Creates a new cookie consent controller.
      *
      * @param list<string> $cookieConsentDisabledRoutes
+     * @param list<string> $skipRenderRoutes
      */
     public function __construct(
         private readonly Environment $twigEnvironment,
@@ -40,10 +42,12 @@ class CookieConsentController
         private readonly RequestStack $requestStack,
         private readonly CookieConsentConfigResolver $configResolver,
         private readonly TranslatorInterface $translator,
+        private readonly CookieConsentRouteTargeting $routeTargeting,
         private readonly bool $fetchConfigViaApi = false,
         private readonly string $uiTheme = 'bootstrap',
         private readonly ?string $formAction = null,
         private readonly array $cookieConsentDisabledRoutes = [],
+        private readonly array $skipRenderRoutes = [],
     ) {
     }
 
@@ -57,6 +61,10 @@ class CookieConsentController
     #[Route('/cookie_consent', name: 'nowo_cookie_consent.show')]
     public function show(Request $request): Response
     {
+        if ($this->shouldSkipRender()) {
+            return $this->emptyPrivateResponse();
+        }
+
         $this->setLocale($request);
         $resolvedConfig = $this->applyDatabaseConfig($request);
 
@@ -139,6 +147,27 @@ class CookieConsentController
         $request->attributes->set('nowo_cookie_consent_config', $resolved);
 
         return $resolved;
+    }
+
+    private function shouldSkipRender(): bool
+    {
+        $mainRequest = $this->requestStack->getMainRequest();
+        $route       = '';
+
+        if ($mainRequest instanceof Request) {
+            $route = $this->resolvePageRoute($mainRequest) ?? '';
+        }
+
+        return $this->routeTargeting->shouldSkipRender($route, $this->skipRenderRoutes);
+    }
+
+    private function emptyPrivateResponse(): Response
+    {
+        $response = new Response('');
+        $response->setPrivate();
+        $response->setMaxAge(0);
+
+        return $response;
     }
 
     private function resolveConfigApiUrl(Request $request): ?string

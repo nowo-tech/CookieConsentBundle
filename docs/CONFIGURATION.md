@@ -66,6 +66,12 @@ nowo_cookie_consent:
         - privacy
         - imprint
 
+    # Route name patterns where the consent fragment is not rendered at all
+    # (empty response; no Doctrine inventory/config work). Wildcards via fnmatch.
+    # skip_render_routes:
+    #     - staff_*
+    #     - admin_*
+
     # Locale detection for the consent modal
     default_locale: en
     enabled_locales:

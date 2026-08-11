@@ -43,6 +43,7 @@ final class ConfigurationTest extends TestCase
         self::assertFalse($config['open_preferences_modal']);
         self::assertFalse($config['manage_iframe_placeholders']);
         self::assertFalse($config['use_cookie_inventory']);
+        self::assertSame([], $config['skip_render_routes']);
         self::assertSame([], $config['cookie_inventory']);
         self::assertFalse($config['preferences_bubble_enabled']);
         self::assertSame('bottom-right', $config['preferences_bubble_position']);

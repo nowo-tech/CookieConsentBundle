@@ -25,6 +25,16 @@ Render the consent fragment when the user has not saved preferences yet, or when
 
 When the bubble is disabled, the legacy check is equivalent to `not nowo_cookie_consent_is_saved()`.
 
+To omit the consent fragment entirely on authenticated dashboards (no ESI sub-request, no inventory queries), configure `skip_render_routes` and optionally guard the embed:
+
+```twig
+{% if nowo_cookie_consent_should_render() %}
+    {{ render(path('nowo_cookie_consent.show')) }}
+{% endif %}
+```
+
+`CookieConsentController::show` also returns an empty response when the main request route matches `skip_render_routes`, even if the host forgets the Twig guard.
+
 The bundle detects the locale from the current request (and `Accept-Language` when enabled). You do not need to pass `locale` manually unless you want to force a specific language.
 
 The modal uses Bootstrap 5 markup (or Tailwind when `ui_theme: tailwind`). Include the matching CSS/JS in your layout, or rely on the bundle fallback that toggles `.show` on the modal element.

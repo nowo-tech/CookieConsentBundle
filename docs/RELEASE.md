@@ -63,6 +63,7 @@ Update README **Tests and coverage** percentages after each release when coverag
 
 | Version | Date | Notes |
 | --- | --- | --- |
+| [1.6.1](CHANGELOG.md#161---2026-08-11) | 2026-08-11 | `skip_render_routes` + `nowo_cookie_consent_should_render()` |
 | [1.6.0](CHANGELOG.md#160---2026-08-04) | 2026-08-04 | UiKit ^1.4 composition; FormKit ^2; Twig Extra gate; Twig-CS-Fixer; confirm dialog for inventory delete |
 | [1.5.2](CHANGELOG.md#152---2026-08-03) | 2026-08-03 | Demo Twig Inspector from Packagist (fix `demo-smoke` on standalone CI checkout) |
 | [1.5.1](CHANGELOG.md#151---2026-08-03) | 2026-08-03 | REQ-UI-001: stack host `javascripts` via `parent()` in `admin/base.html.twig`; BC layout aliases extend base |

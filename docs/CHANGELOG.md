@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## Table of contents
 
 - [[Unreleased]](#unreleased)
+- [[1.6.1] - 2026-08-11](#161---2026-08-11)
 - [[1.6.0] - 2026-08-04](#160-2026-08-04)
 - [[1.5.2] - 2026-08-03](#152-2026-08-03)
 - [[1.5.1] - 2026-08-03](#151-2026-08-03)
@@ -87,6 +88,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - [Documentation](#documentation)
 
 ## [Unreleased]
+
+## [1.6.1] - 2026-08-11
+
+### Added
+
+- `skip_render_routes`: route name patterns (fnmatch wildcards) where `CookieConsentController::show` returns an empty private response and skips config/form/inventory work. Twig helper `nowo_cookie_consent_should_render()` lets hosts omit the ESI/`render()` sub-request on authenticated dashboards.
+
+### Documentation
+
+- Documented `skip_render_routes` in CONFIGURATION and UPGRADING.
+
+[1.6.1]: https://github.com/nowo-tech/CookieConsentBundle/releases/tag/v1.6.1
 
 ## [1.6.0] - 2026-08-04
 

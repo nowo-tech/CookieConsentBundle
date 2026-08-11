@@ -38,4 +38,13 @@ final class CookieConsentRouteTargetingTest extends TestCase
         self::assertFalse($this->targeting->shouldOpenOnRoute('demo_admin_index', [], CookieConsentRouteTargeting::MODE_EXCEPT, ['demo_admin_*']));
         self::assertTrue($this->targeting->shouldOpenOnRoute('demo_home', [], CookieConsentRouteTargeting::MODE_EXCEPT, ['demo_admin_*']));
     }
+
+    public function testShouldSkipRenderMatchesWildcards(): void
+    {
+        self::assertTrue($this->targeting->shouldSkipRender('staff_orgs', ['staff_*']));
+        self::assertTrue($this->targeting->shouldSkipRender('admin_hub', ['admin_*', 'staff_*']));
+        self::assertFalse($this->targeting->shouldSkipRender('nowo_auth_kit_login', ['staff_*']));
+        self::assertFalse($this->targeting->shouldSkipRender('staff_orgs', []));
+        self::assertFalse($this->targeting->shouldSkipRender('', ['staff_*']));
+    }
 }

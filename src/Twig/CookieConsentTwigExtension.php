@@ -28,6 +28,7 @@ class CookieConsentTwigExtension extends AbstractExtension
      *
      * @param list<string> $yamlTargetRoutes
      * @param list<string> $cookieConsentDisabledRoutes
+     * @param list<string> $skipRenderRoutes
      */
     public function __construct(
         private readonly CookieChecker $cookieChecker,
@@ -41,6 +42,7 @@ class CookieConsentTwigExtension extends AbstractExtension
         private readonly array $cookieConsentDisabledRoutes,
         private readonly CmpUxOptionsResolver $cmpUxOptionsResolver,
         private readonly CookieInventoryProvider $inventoryProvider,
+        private readonly array $skipRenderRoutes = [],
     ) {
     }
 
@@ -68,6 +70,7 @@ class CookieConsentTwigExtension extends AbstractExtension
             new TwigFunction('nowo_cookie_consent_preference_sections', $this->getPreferenceSections(...)),
             new TwigFunction('nowo_cookie_consent_cookie_inventory', $this->getCookieInventory(...)),
             new TwigFunction('nowo_cookie_consent_should_embed_modal', $this->shouldEmbedModal(...)),
+            new TwigFunction('nowo_cookie_consent_should_render', $this->shouldRenderConsent(...)),
             new TwigFunction('nowo_cookie_consent_preferences_bubble_enabled', $this->isPreferencesBubbleEnabled(...)),
             new TwigFunction('nowo_cookie_consent_preferences_bubble_position', $this->getPreferencesBubblePosition(...)),
             new TwigFunction('nowo_cookie_consent_preferences_bubble_border_color', $this->getPreferencesBubbleBorderColor(...)),
@@ -411,6 +414,19 @@ class CookieConsentTwigExtension extends AbstractExtension
     }
 
     /**
+     * Returns whether the consent fragment should be rendered for the main request route.
+     *
+     * Hosts can wrap `{{ render(path('nowo_cookie_consent.show')) }}` with this check to avoid
+     * an ESI/sub-request on dashboards listed in `skip_render_routes`.
+     *
+     * @return bool True when the consent markup may be rendered
+     */
+    public function shouldRenderConsent(): bool
+    {
+        return !$this->routeTargeting->shouldSkipRender($this->resolveMainRouteName(), $this->skipRenderRoutes);
+    }
+
+    /**
      * Returns whether the consent modal should remain embedded after consent is saved.
      *
      * @return bool True when the modal markup should stay in the DOM
@@ -459,5 +475,18 @@ class CookieConsentTwigExtension extends AbstractExtension
     public function getPreferencesBubbleIcon(): ?string
     {
         return $this->cmpUxOptionsResolver->getPreferencesBubbleIcon();
+    }
+
+    private function resolveMainRouteName(): string
+    {
+        $request = $this->requestStack->getMainRequest() ?? $this->requestStack->getCurrentRequest();
+
+        if (!$request instanceof Request) {
+            return '';
+        }
+
+        $route = $request->attributes->get('_route');
+
+        return is_string($route) ? $route : '';
     }
 }

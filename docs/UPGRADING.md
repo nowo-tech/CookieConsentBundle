@@ -5,6 +5,7 @@ This guide provides step-by-step instructions for upgrading Cookie Consent Bundl
 ## Table of contents
 
 - [General upgrade process](#general-upgrade-process)
+- [To 1.6.1](#to-161)
 - [To 1.6.0](#to-160)
 - [To 1.5.2](#to-152)
 - [To 1.5.1](#to-151)
@@ -66,6 +67,32 @@ This guide provides step-by-step instructions for upgrading Cookie Consent Bundl
 4. **Clear cache**: `php bin/console cache:clear`
 5. **Rebuild assets** if you ship the bundled JS: `php bin/console assets:install`
 6. **Test** the consent modal and logging in your environments
+
+## To 1.6.1
+
+```bash
+composer update nowo-tech/cookie-consent-bundle
+php bin/console cache:clear
+```
+
+### Optional: skip consent fragment on dashboards
+
+Set `skip_render_routes` (route name patterns, `fnmatch` wildcards) so authenticated shells do not load the consent modal markup or hit inventory Doctrine queries:
+
+```yaml
+nowo_cookie_consent:
+    skip_render_routes:
+        - staff_*
+        - admin_*
+```
+
+Hosts may also wrap the embed:
+
+```twig
+{% if nowo_cookie_consent_should_render() %}
+    {{ render(path('nowo_cookie_consent.show')) }}
+{% endif %}
+```
 
 ## To 1.6.0
 

@@ -383,10 +383,26 @@ final class CookieConsentTwigExtensionTest extends TestCase
         self::assertTrue($report['server']['fetch_config_via_api']);
     }
 
+    public function testShouldRenderConsentRespectsSkipRenderRoutes(): void
+    {
+        $main = Request::create('/staff');
+        $main->attributes->set('_route', 'staff_orgs');
+        $stack = new RequestStack();
+        $stack->push($main);
+
+        $extension = $this->createExtension($this->createChecker(false), stack: $stack, skipRenderRoutes: ['staff_*']);
+
+        self::assertFalse($extension->shouldRenderConsent());
+
+        $extension = $this->createExtension($this->createChecker(false), stack: $stack, skipRenderRoutes: []);
+        self::assertTrue($extension->shouldRenderConsent());
+    }
+
     /**
-     * @param list<string> $yamlRoutes
-     * @param list<string> $disabledRoutes
+     * @param list<string>               $yamlRoutes
+     * @param list<string>               $disabledRoutes
      * @param list<array<string, mixed>> $inventory
+     * @param list<string>               $skipRenderRoutes
      */
     private function createExtension(
         CookieChecker $checker,
@@ -397,6 +413,7 @@ final class CookieConsentTwigExtensionTest extends TestCase
         bool $fetchConfigViaApi = false,
         array $disabledRoutes = ['privacy'],
         array $inventory = [],
+        array $skipRenderRoutes = [],
     ): CookieConsentTwigExtension {
         $stack ??= new RequestStack();
 
@@ -412,6 +429,7 @@ final class CookieConsentTwigExtensionTest extends TestCase
             $disabledRoutes,
             new CmpUxOptionsResolver($stack, 'light', false, false, false, false, false, false, false, false, 'bottom-right', null, null, [], $useDatabaseConfig),
             new CookieInventoryProvider($this->createMock(CookieDefinitionRepository::class), $inventory !== [], $inventory),
+            $skipRenderRoutes,
         );
     }
 
