@@ -72,6 +72,16 @@ nowo_cookie_consent:
     #     - staff_*
     #     - admin_*
 
+    # When non-empty: render ONLY on these public route patterns (whitelist)
+    # render_routes:
+    #     - home
+    #     - home_locale
+    #     - guest_*
+    #     - legal_*
+    #     - nowo_auth_kit_*
+    #     - health_*
+    #     - nowo_pwa_*
+
     # Locale detection for the consent modal
     default_locale: en
     enabled_locales:

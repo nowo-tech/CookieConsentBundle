@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## Table of contents
 
 - [[Unreleased]](#unreleased)
+- [[1.6.3] - 2026-08-11](#163---2026-08-11)
 - [[1.6.2] - 2026-08-11](#162---2026-08-11)
 - [[1.6.1] - 2026-08-11](#161---2026-08-11)
 - [[1.6.0] - 2026-08-04](#160-2026-08-04)
@@ -89,6 +90,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - [Documentation](#documentation)
 
 ## [Unreleased]
+
+## [1.6.3] - 2026-08-11
+
+### Added
+
+- `render_routes`: optional whitelist of route name patterns; when non-empty the consent fragment renders only on matches (ideal for public-only shells). Still respects `skip_render_routes` (deny wins).
+
+### Documentation
+
+- Documented public whitelist usage in CONFIGURATION and UPGRADING.
+
+[1.6.3]: https://github.com/nowo-tech/CookieConsentBundle/releases/tag/v1.6.3
 
 ## [1.6.2] - 2026-08-11
 

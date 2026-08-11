@@ -403,6 +403,7 @@ final class CookieConsentTwigExtensionTest extends TestCase
      * @param list<string> $disabledRoutes
      * @param list<array<string, mixed>> $inventory
      * @param list<string> $skipRenderRoutes
+     * @param list<string> $renderRoutes
      */
     private function createExtension(
         CookieChecker $checker,
@@ -414,6 +415,7 @@ final class CookieConsentTwigExtensionTest extends TestCase
         array $disabledRoutes = ['privacy'],
         array $inventory = [],
         array $skipRenderRoutes = [],
+        array $renderRoutes = [],
     ): CookieConsentTwigExtension {
         $stack ??= new RequestStack();
 
@@ -430,6 +432,7 @@ final class CookieConsentTwigExtensionTest extends TestCase
             new CmpUxOptionsResolver($stack, 'light', false, false, false, false, false, false, false, false, 'bottom-right', null, null, [], $useDatabaseConfig),
             new CookieInventoryProvider($this->createMock(CookieDefinitionRepository::class), $inventory !== [], $inventory),
             $skipRenderRoutes,
+            $renderRoutes,
         );
     }
 

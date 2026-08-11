@@ -5,6 +5,7 @@ This guide provides step-by-step instructions for upgrading Cookie Consent Bundl
 ## Table of contents
 
 - [General upgrade process](#general-upgrade-process)
+- [To 1.6.3](#to-163)
 - [To 1.6.2](#to-162)
 - [To 1.6.1](#to-161)
 - [To 1.6.0](#to-160)
@@ -68,6 +69,30 @@ This guide provides step-by-step instructions for upgrading Cookie Consent Bundl
 4. **Clear cache**: `php bin/console cache:clear`
 5. **Rebuild assets** if you ship the bundled JS: `php bin/console assets:install`
 6. **Test** the consent modal and logging in your environments
+
+## To 1.6.3
+
+```bash
+composer update nowo-tech/cookie-consent-bundle
+php bin/console cache:clear
+```
+
+### Optional: public-only consent fragment
+
+Prefer a whitelist over a growing deny list:
+
+```yaml
+nowo_cookie_consent:
+    render_routes:
+        - home
+        - home_locale
+        - guest_*
+        - legal_*
+        - nowo_auth_kit_*
+        - health_*
+        - nowo_pwa_*
+    skip_render_routes: []
+```
 
 ## To 1.6.2
 

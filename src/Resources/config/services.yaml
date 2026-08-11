@@ -11,6 +11,7 @@ services:
       $csrfProtection: '%nowo_cookie_consent.csrf_protection%'
       $cookieConsentDisabledRoutes: '%nowo_cookie_consent.disabled_routes%'
       $skipRenderRoutes: '%nowo_cookie_consent.skip_render_routes%'
+      $renderRoutes: '%nowo_cookie_consent.render_routes%'
       $useDatabaseConfig: '%nowo_cookie_consent.use_database_config%'
       $fetchConfigViaApi: '%nowo_cookie_consent.fetch_config_via_api%'
       $uiTheme: '%nowo_cookie_consent.ui_theme%'

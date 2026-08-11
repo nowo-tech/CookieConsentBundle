@@ -47,4 +47,12 @@ final class CookieConsentRouteTargetingTest extends TestCase
         self::assertFalse($this->targeting->shouldSkipRender('staff_orgs', []));
         self::assertFalse($this->targeting->shouldSkipRender('', ['staff_*']));
     }
+
+    public function testShouldSkipRenderRespectsRenderRoutesWhitelist(): void
+    {
+        self::assertFalse($this->targeting->shouldSkipRender('home', [], ['home', 'legal_*']));
+        self::assertFalse($this->targeting->shouldSkipRender('legal_privacy', [], ['home', 'legal_*']));
+        self::assertTrue($this->targeting->shouldSkipRender('staff_orgs', [], ['home', 'legal_*']));
+        self::assertTrue($this->targeting->shouldSkipRender('home', ['home'], ['home', 'legal_*']));
+    }
 }

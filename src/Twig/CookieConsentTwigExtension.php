@@ -29,6 +29,7 @@ class CookieConsentTwigExtension extends AbstractExtension
      * @param list<string> $yamlTargetRoutes
      * @param list<string> $cookieConsentDisabledRoutes
      * @param list<string> $skipRenderRoutes
+     * @param list<string> $renderRoutes
      */
     public function __construct(
         private readonly CookieChecker $cookieChecker,
@@ -43,6 +44,7 @@ class CookieConsentTwigExtension extends AbstractExtension
         private readonly CmpUxOptionsResolver $cmpUxOptionsResolver,
         private readonly CookieInventoryProvider $inventoryProvider,
         private readonly array $skipRenderRoutes = [],
+        private readonly array $renderRoutes = [],
     ) {
     }
 
@@ -417,13 +419,13 @@ class CookieConsentTwigExtension extends AbstractExtension
      * Returns whether the consent fragment should be rendered for the main request route.
      *
      * Hosts can wrap `{{ render(path('nowo_cookie_consent.show')) }}` with this check to avoid
-     * an ESI/sub-request on dashboards listed in `skip_render_routes`.
+     * an ESI/sub-request outside `render_routes` / on `skip_render_routes`.
      *
      * @return bool True when the consent markup may be rendered
      */
     public function shouldRenderConsent(): bool
     {
-        return !$this->routeTargeting->shouldSkipRender($this->resolveMainRouteName(), $this->skipRenderRoutes);
+        return !$this->routeTargeting->shouldSkipRender($this->resolveMainRouteName(), $this->skipRenderRoutes, $this->renderRoutes);
     }
 
     /**

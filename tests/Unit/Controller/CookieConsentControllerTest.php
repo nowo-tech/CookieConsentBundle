@@ -66,6 +66,28 @@ final class CookieConsentControllerTest extends TestCase
         self::assertSame('', (string) $response->getContent());
     }
 
+    public function testShowReturnsEmptyWhenMainRouteOutsideRenderRoutes(): void
+    {
+        $mainRequest = Request::create('/staff/orgs');
+        $mainRequest->attributes->set('_route', 'staff_orgs');
+
+        $stack = new RequestStack();
+        $stack->push($mainRequest);
+
+        $twig = $this->createMock(Environment::class);
+        $twig->expects(self::never())->method('render');
+
+        $controller = $this->createController(
+            twig: $twig,
+            requestStack: $stack,
+            renderRoutes: ['home', 'legal_*', 'nowo_auth_kit_*'],
+        );
+
+        $response = $controller->show(Request::create('/cookie_consent'));
+
+        self::assertSame('', (string) $response->getContent());
+    }
+
     public function testShowUsesTailwindTemplate(): void
     {
         $controller = $this->createController(uiTheme: 'tailwind');
@@ -189,6 +211,7 @@ final class CookieConsentControllerTest extends TestCase
 
     /**
      * @param list<string> $skipRenderRoutes
+     * @param list<string> $renderRoutes
      */
     private function createController(
         ?Environment $twig = null,
@@ -201,6 +224,7 @@ final class CookieConsentControllerTest extends TestCase
         string $uiTheme = 'bootstrap',
         ?string $formAction = null,
         array $skipRenderRoutes = [],
+        array $renderRoutes = [],
     ): CookieConsentController {
         $twig ??= $this->createTwig();
         $formFactory ??= $this->createFormFactory();
@@ -230,6 +254,7 @@ final class CookieConsentControllerTest extends TestCase
             $formAction,
             ['privacy'],
             $skipRenderRoutes,
+            $renderRoutes,
         );
     }
 

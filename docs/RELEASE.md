@@ -63,6 +63,7 @@ Update README **Tests and coverage** percentages after each release when coverag
 
 | Version | Date | Notes |
 | --- | --- | --- |
+| [1.6.3](CHANGELOG.md#163---2026-08-11) | 2026-08-11 | `render_routes` public whitelist |
 | [1.6.2](CHANGELOG.md#162---2026-08-11) | 2026-08-11 | Inventory query memoization / single form attach |
 | [1.6.1](CHANGELOG.md#161---2026-08-11) | 2026-08-11 | `skip_render_routes` + `nowo_cookie_consent_should_render()` |
 | [1.6.0](CHANGELOG.md#160---2026-08-04) | 2026-08-04 | UiKit ^1.4 composition; FormKit ^2; Twig Extra gate; Twig-CS-Fixer; confirm dialog for inventory delete |

@@ -33,6 +33,7 @@ class CookieConsentController
      *
      * @param list<string> $cookieConsentDisabledRoutes
      * @param list<string> $skipRenderRoutes
+     * @param list<string> $renderRoutes
      */
     public function __construct(
         private readonly Environment $twigEnvironment,
@@ -48,6 +49,7 @@ class CookieConsentController
         private readonly ?string $formAction = null,
         private readonly array $cookieConsentDisabledRoutes = [],
         private readonly array $skipRenderRoutes = [],
+        private readonly array $renderRoutes = [],
     ) {
     }
 
@@ -158,7 +160,7 @@ class CookieConsentController
             $route = $this->resolvePageRoute($mainRequest) ?? '';
         }
 
-        return $this->routeTargeting->shouldSkipRender($route, $this->skipRenderRoutes);
+        return $this->routeTargeting->shouldSkipRender($route, $this->skipRenderRoutes, $this->renderRoutes);
     }
 
     private function emptyPrivateResponse(): Response

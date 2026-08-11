@@ -57,12 +57,21 @@ final class CookieConsentRouteTargeting
      *
      * @param string $currentRoute The current (main) request route name
      * @param list<string> $skipRenderRoutes Route name patterns that skip the fragment entirely
+     * @param list<string> $renderRoutes When non-empty, only these patterns may render (whitelist)
      *
      * @return bool True when hosts should omit the consent markup and the controller returns empty
      */
-    public function shouldSkipRender(string $currentRoute, array $skipRenderRoutes): bool
+    public function shouldSkipRender(string $currentRoute, array $skipRenderRoutes, array $renderRoutes = []): bool
     {
-        if ($currentRoute === '' || $skipRenderRoutes === []) {
+        if ($currentRoute === '') {
+            return false;
+        }
+
+        if ($renderRoutes !== [] && !$this->routePatternMatcher->matches($currentRoute, $renderRoutes)) {
+            return true;
+        }
+
+        if ($skipRenderRoutes === []) {
             return false;
         }
 

@@ -33,7 +33,7 @@ To omit the consent fragment entirely on authenticated dashboards (no ESI sub-re
 {% endif %}
 ```
 
-`CookieConsentController::show` also returns an empty response when the main request route matches `skip_render_routes`, even if the host forgets the Twig guard.
+`CookieConsentController::show` also returns an empty response when the main request route is outside `render_routes` (whitelist) or matches `skip_render_routes`, even if the host forgets the Twig guard.
 
 The bundle detects the locale from the current request (and `Accept-Language` when enabled). You do not need to pass `locale` manually unless you want to force a specific language.
 

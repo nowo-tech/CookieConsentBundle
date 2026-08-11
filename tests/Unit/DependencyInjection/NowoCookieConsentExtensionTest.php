@@ -27,6 +27,7 @@ final class NowoCookieConsentExtensionTest extends TestCase
         self::assertSame('', $container->getParameter('nowo_cookie_consent.table_prefix'));
         self::assertSame('en', $container->getParameter('nowo_cookie_consent.default_locale'));
         self::assertSame([], $container->getParameter('nowo_cookie_consent.skip_render_routes'));
+        self::assertSame([], $container->getParameter('nowo_cookie_consent.render_routes'));
         self::assertSame(['en', 'es', 'it', 'fr', 'de', 'pt', 'nl', 'pl', 'ca'], $container->getParameter('nowo_cookie_consent.enabled_locales'));
         self::assertSame('bootstrap', $container->getParameter('nowo_cookie_consent.ui_theme'));
         self::assertFalse($container->hasDefinition(TablePrefixListener::class));
