@@ -399,10 +399,10 @@ final class CookieConsentTwigExtensionTest extends TestCase
     }
 
     /**
-     * @param list<string>               $yamlRoutes
-     * @param list<string>               $disabledRoutes
+     * @param list<string> $yamlRoutes
+     * @param list<string> $disabledRoutes
      * @param list<array<string, mixed>> $inventory
-     * @param list<string>               $skipRenderRoutes
+     * @param list<string> $skipRenderRoutes
      */
     private function createExtension(
         CookieChecker $checker,
