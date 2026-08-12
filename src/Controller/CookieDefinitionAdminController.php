@@ -9,6 +9,7 @@ use Nowo\CookieConsentBundle\Entity\CookieConsentConfig;
 use Nowo\CookieConsentBundle\Entity\CookieDefinition;
 use Nowo\CookieConsentBundle\Entity\CookieDefinitionTranslation;
 use Nowo\CookieConsentBundle\Form\CookieDefinitionType;
+use Nowo\CookieConsentBundle\Form\DeleteCookieDefinitionType;
 use Nowo\CookieConsentBundle\Repository\CookieConsentConfigRepository;
 use Nowo\CookieConsentBundle\Repository\CookieDefinitionRepository;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -69,13 +70,16 @@ final class CookieDefinitionAdminController extends AbstractController
             $page = $pages;
         }
 
+        $definitions = $this->definitionRepository->findByConfigOrderedPaginated($config, $page, $pageSize);
+
         return $this->render('@NowoCookieConsentBundle/admin/cookie_definition/index.html.twig', [
-            'config'      => $config,
-            'definitions' => $this->definitionRepository->findByConfigOrderedPaginated($config, $page, $pageSize),
-            'page'        => $page,
-            'pages'       => $pages,
-            'total'       => $total,
-            'pageSize'    => $pageSize,
+            'config'       => $config,
+            'definitions'  => $definitions,
+            'delete_forms' => $this->createDeleteForms($configId, $definitions),
+            'page'         => $page,
+            'pages'        => $pages,
+            'total'        => $total,
+            'pageSize'     => $pageSize,
         ]);
     }
 
@@ -149,6 +153,35 @@ final class CookieDefinitionAdminController extends AbstractController
         return $this->redirectToRoute('nowo_cookie_consent_cookie_definitions_index', [
             'configId' => $configId,
         ]);
+    }
+
+    /**
+     * Builds CSRF-protected delete forms for each cookie definition row.
+     *
+     * @param int $configId The consent profile identifier
+     * @param list<CookieDefinition> $definitions The current page of cookie definitions
+     *
+     * @return array<int, mixed> Delete form views keyed by cookie definition id
+     */
+    private function createDeleteForms(int $configId, array $definitions): array
+    {
+        $forms = [];
+
+        foreach ($definitions as $definition) {
+            if (null === $definition->getId()) {
+                continue;
+            }
+
+            $forms[$definition->getId()] = $this->createForm(DeleteCookieDefinitionType::class, null, [
+                'action' => $this->generateUrl('nowo_cookie_consent_cookie_definitions_delete', [
+                    'configId' => $configId,
+                    'id' => $definition->getId(),
+                ]),
+                'csrf_token_id' => 'delete-cookie-definition-' . $definition->getId(),
+            ])->createView();
+        }
+
+        return $forms;
     }
 
     private function handleForm(
