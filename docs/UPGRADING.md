@@ -5,6 +5,7 @@ This guide provides step-by-step instructions for upgrading Cookie Consent Bundl
 ## Table of contents
 
 - [General upgrade process](#general-upgrade-process)
+- [To 1.8.0](#to-180)
 - [To 1.7.0](#to-170)
 - [To 1.6.3](#to-163)
 - [To 1.6.2](#to-162)
@@ -70,6 +71,15 @@ This guide provides step-by-step instructions for upgrading Cookie Consent Bundl
 4. **Clear cache**: `php bin/console cache:clear`
 5. **Rebuild assets** if you ship the bundled JS: `php bin/console assets:install`
 6. **Test** the consent modal and logging in your environments
+
+## To 1.8.0
+
+```bash
+composer update nowo-tech/cookie-consent-bundle
+php bin/console cache:clear
+```
+
+No configuration change required. After SiteBackup reports the MySQL schema exists, Cookie Consent probes `dashboard_cookie_config` and sets `_nowo_cookie_consent_schema_ready=false` until migrations create that table — so `/setup` does not 500 mid-wizard.
 
 ## To 1.7.0
 

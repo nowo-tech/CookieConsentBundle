@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## Table of contents
 
 - [[Unreleased]](#unreleased)
+- [[1.8.0] - 2026-08-15](#180---2026-08-15)
 - [[1.7.0] - 2026-08-15](#170---2026-08-15)
 - [[1.6.3] - 2026-08-11](#163---2026-08-11)
 - [[1.6.2] - 2026-08-11](#162---2026-08-11)
@@ -92,6 +93,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.8.0] - 2026-08-15
+
+### Added
+- **`CookieConsentSchemaReadySubscriber`**: when SiteBackup reports the MySQL schema exists but `dashboard_cookie_config` is missing (post-`database_create`, pre-migrations), sets `_nowo_cookie_consent_schema_ready=false` so Twig/listeners skip Doctrine-backed consent.
+- `CookieConsentConfig::TABLE_NAME` constant for schema probes.
+
+### Documentation
+- UPGRADING / CHANGELOG notes for mid-migration cold-start.
+
 ## [1.7.0] - 2026-08-15
 
 ### Added
@@ -111,6 +121,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Documentation
 
 - Documented public whitelist usage in CONFIGURATION and UPGRADING.
+
+[1.8.0]: https://github.com/nowo-tech/CookieConsentBundle/releases/tag/v1.8.0
 
 [1.7.0]: https://github.com/nowo-tech/CookieConsentBundle/releases/tag/v1.7.0
 

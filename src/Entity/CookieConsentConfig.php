@@ -22,6 +22,8 @@ use function sprintf;
  */
 class CookieConsentConfig
 {
+    public const TABLE_NAME = 'dashboard_cookie_config';
+
     public const CONSENT_MODAL_LAYOUT_TYPES = ['box', 'cloud', 'bar'];
 
     public const COLOR_THEMES = ['light', 'dark', 'dark-turquoise', 'light-funky', 'elegant-black'];
