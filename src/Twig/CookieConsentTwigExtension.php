@@ -10,6 +10,7 @@ use Nowo\CookieConsentBundle\Config\CookieInventoryProvider;
 use Nowo\CookieConsentBundle\Config\ResolvedCookieConsentConfig;
 use Nowo\CookieConsentBundle\Cookie\CookieChecker;
 use Nowo\CookieConsentBundle\Entity\CookieConsentConfig;
+use Nowo\CookieConsentBundle\Http\ColdStartRequestAttributes;
 use Nowo\CookieConsentBundle\Locale\LocaleResolver;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\RequestStack;
@@ -425,6 +426,12 @@ class CookieConsentTwigExtension extends AbstractExtension
      */
     public function shouldRenderConsent(): bool
     {
+        $request = $this->requestStack->getCurrentRequest() ?? $this->requestStack->getMainRequest();
+
+        if ($request instanceof Request && ColdStartRequestAttributes::shouldSkipDatabaseAccess($request)) {
+            return false;
+        }
+
         return !$this->routeTargeting->shouldSkipRender($this->resolveMainRouteName(), $this->skipRenderRoutes, $this->renderRoutes);
     }
 

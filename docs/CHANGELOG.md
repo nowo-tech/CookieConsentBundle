@@ -91,6 +91,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Cold-start skip for database-backed consent: when the main request carries `_nowo_site_backup_schema_exists: false` (shared with Site Backup Bundle) or `_nowo_cookie_consent_schema_ready: false`, config resolution, form handling, and `nowo_cookie_consent_should_render()` skip Doctrine work. See `Nowo\CookieConsentBundle\Http\ColdStartRequestAttributes`.
+
+### Documentation
+
+- Site Backup interoperability and cold-start attributes documented in UPGRADING, CONFIGURATION, and USAGE.
+
 ## [1.6.3] - 2026-08-11
 
 ### Added

@@ -12,6 +12,7 @@ use Nowo\CookieConsentBundle\Config\ResolvedCookieConsentConfig;
 use Nowo\CookieConsentBundle\Cookie\CookieChecker;
 use Nowo\CookieConsentBundle\Entity\CookieConsentConfig;
 use Nowo\CookieConsentBundle\Enum\CookieNameEnum;
+use Nowo\CookieConsentBundle\Http\ColdStartRequestAttributes;
 use Nowo\CookieConsentBundle\Locale\LocaleResolver;
 use Nowo\CookieConsentBundle\Repository\CookieDefinitionRepository;
 use Nowo\CookieConsentBundle\Twig\CookieConsentTwigExtension;
@@ -396,6 +397,34 @@ final class CookieConsentTwigExtensionTest extends TestCase
 
         $extension = $this->createExtension($this->createChecker(false), stack: $stack, skipRenderRoutes: []);
         self::assertTrue($extension->shouldRenderConsent());
+    }
+
+    public function testShouldRenderConsentReturnsFalseDuringColdStart(): void
+    {
+        $main = Request::create('/');
+        $main->attributes->set('_route', 'home');
+        $main->attributes->set(ColdStartRequestAttributes::SITE_BACKUP_SCHEMA_EXISTS, false);
+
+        $stack = new RequestStack();
+        $stack->push($main);
+
+        $extension = $this->createExtension($this->createChecker(false), stack: $stack);
+
+        self::assertFalse($extension->shouldRenderConsent());
+    }
+
+    public function testShouldRenderConsentReturnsFalseWhenCookieConsentSchemaReadyIsFalse(): void
+    {
+        $main = Request::create('/');
+        $main->attributes->set('_route', 'home');
+        $main->attributes->set(ColdStartRequestAttributes::COOKIE_CONSENT_SCHEMA_READY, false);
+
+        $stack = new RequestStack();
+        $stack->push($main);
+
+        $extension = $this->createExtension($this->createChecker(false), stack: $stack);
+
+        self::assertFalse($extension->shouldRenderConsent());
     }
 
     /**

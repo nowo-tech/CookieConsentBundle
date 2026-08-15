@@ -5,6 +5,7 @@ This guide provides step-by-step instructions for upgrading Cookie Consent Bundl
 ## Table of contents
 
 - [General upgrade process](#general-upgrade-process)
+- [To 1.7.0](#to-170)
 - [To 1.6.3](#to-163)
 - [To 1.6.2](#to-162)
 - [To 1.6.1](#to-161)
@@ -69,6 +70,29 @@ This guide provides step-by-step instructions for upgrading Cookie Consent Bundl
 4. **Clear cache**: `php bin/console cache:clear`
 5. **Rebuild assets** if you ship the bundled JS: `php bin/console assets:install`
 6. **Test** the consent modal and logging in your environments
+
+## To 1.7.0
+
+```bash
+composer update nowo-tech/cookie-consent-bundle
+php bin/console cache:clear
+```
+
+### Site Backup interoperability (cold start)
+
+When [Site Backup Bundle](https://github.com/nowo-tech/SiteBackupBundle) (or another bootstrap layer) runs before the application schema exists, it can set request attribute `_nowo_site_backup_schema_exists` to `false`. Cookie Consent Bundle then skips Doctrine-backed config resolution, response form handling, and returns `false` from `nowo_cookie_consent_should_render()` on the main request.
+
+Hosts may also set `_nowo_cookie_consent_schema_ready: false` on a request to force the same skip without Site Backup.
+
+Attribute names are public constants on `Nowo\CookieConsentBundle\Http\ColdStartRequestAttributes`. No configuration change is required when Site Backup already publishes the shared attribute.
+
+Recommended Twig guard during cold start (unchanged pattern):
+
+```twig
+{% if nowo_cookie_consent_should_render() %}
+    {{ render(path('nowo_cookie_consent.show')) }}
+{% endif %}
+```
 
 ## To 1.6.3
 

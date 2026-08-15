@@ -8,6 +8,7 @@ use Nowo\CookieConsentBundle\Cookie\CookieHandler;
 use Nowo\CookieConsentBundle\Cookie\CookieLogger;
 use Nowo\CookieConsentBundle\Enum\CookieNameEnum;
 use Nowo\CookieConsentBundle\EventSubscriber\CookieConsentFormSubscriber;
+use Nowo\CookieConsentBundle\Http\ColdStartRequestAttributes;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Form\FormFactoryInterface;
 use Symfony\Component\Form\FormInterface;
@@ -189,6 +190,52 @@ final class CookieConsentFormSubscriberTest extends TestCase
         $subscriber->onResponse(new ResponseEvent(
             $this->createMock(HttpKernelInterface::class),
             Request::create('/', 'POST'),
+            HttpKernelInterface::MAIN_REQUEST,
+            new Response(),
+        ));
+    }
+
+    public function testSkipsWhenSiteBackupSchemaDoesNotExist(): void
+    {
+        $formFactory = $this->createMock(FormFactoryInterface::class);
+        $formFactory->expects(self::never())->method('create');
+
+        $subscriber = new CookieConsentFormSubscriber(
+            $formFactory,
+            $this->createMock(CookieLogger::class),
+            $this->createMock(CookieHandler::class),
+            true,
+        );
+
+        $request = Request::create('/');
+        $request->attributes->set(ColdStartRequestAttributes::SITE_BACKUP_SCHEMA_EXISTS, false);
+
+        $subscriber->onResponse(new ResponseEvent(
+            $this->createMock(HttpKernelInterface::class),
+            $request,
+            HttpKernelInterface::MAIN_REQUEST,
+            new Response(),
+        ));
+    }
+
+    public function testSkipsWhenCookieConsentSchemaReadyIsFalse(): void
+    {
+        $formFactory = $this->createMock(FormFactoryInterface::class);
+        $formFactory->expects(self::never())->method('create');
+
+        $subscriber = new CookieConsentFormSubscriber(
+            $formFactory,
+            $this->createMock(CookieLogger::class),
+            $this->createMock(CookieHandler::class),
+            true,
+        );
+
+        $request = Request::create('/');
+        $request->attributes->set(ColdStartRequestAttributes::COOKIE_CONSENT_SCHEMA_READY, false);
+
+        $subscriber->onResponse(new ResponseEvent(
+            $this->createMock(HttpKernelInterface::class),
+            $request,
             HttpKernelInterface::MAIN_REQUEST,
             new Response(),
         ));

@@ -63,6 +63,7 @@ Update README **Tests and coverage** percentages after each release when coverag
 
 | Version | Date | Notes |
 | --- | --- | --- |
+| [1.7.0](CHANGELOG.md#unreleased) | (pending) | Cold-start schema skip; Site Backup attribute contract |
 | [1.6.3](CHANGELOG.md#163---2026-08-11) | 2026-08-11 | `render_routes` public whitelist |
 | [1.6.2](CHANGELOG.md#162---2026-08-11) | 2026-08-11 | Inventory query memoization / single form attach |
 | [1.6.1](CHANGELOG.md#161---2026-08-11) | 2026-08-11 | `skip_render_routes` + `nowo_cookie_consent_should_render()` |

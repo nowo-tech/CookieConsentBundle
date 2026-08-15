@@ -16,6 +16,7 @@
 - [Admin security](#admin-security)
 - [Twig overrides](#twig-overrides)
 - [Twig helpers](#twig-helpers)
+- [Cold start / Site Backup](#cold-start--site-backup)
 
 Extension alias: `nowo_cookie_consent`
 
@@ -470,8 +471,28 @@ security:
 - `nowo_cookie_consent_granular_cookie_selection()`
 - `nowo_cookie_consent_disable_page_interaction()`
 - `nowo_cookie_consent_should_embed_modal()`
+- `nowo_cookie_consent_should_render()`
 - `nowo_cookie_consent_preferences_bubble_enabled()`
 - `nowo_cookie_consent_preferences_bubble_position()`
 - `nowo_cookie_consent_preferences_bubble_border_color()`
 - `nowo_cookie_consent_preferences_bubble_icon()`
 - `nowo_cookie_consent_two_step_modal()`
+
+## Cold start / Site Backup
+
+When the application database schema is not ready (for example during Site Backup Bundle cold start), set one of these **main-request** attributes to `false`:
+
+| Attribute | Constant |
+| --- | --- |
+| `_nowo_site_backup_schema_exists` | `ColdStartRequestAttributes::SITE_BACKUP_SCHEMA_EXISTS` (shared with Site Backup Bundle) |
+| `_nowo_cookie_consent_schema_ready` | `ColdStartRequestAttributes::COOKIE_CONSENT_SCHEMA_READY` (local override) |
+
+Effects on the main request:
+
+- `CookieConsentConfigTranslationSubscriber` skips config resolution.
+- `CookieConsentFormSubscriber` skips consent form handling.
+- `nowo_cookie_consent_should_render()` returns `false`.
+
+If Doctrine is still unreachable, subscribers log at debug and soft-skip on `Doctrine\DBAL\Exception` / `Doctrine\ORM\Exception\ORMException` only.
+
+No bundle configuration keys are required when Site Backup already publishes `_nowo_site_backup_schema_exists`.

@@ -4,10 +4,14 @@ declare(strict_types=1);
 
 namespace Nowo\CookieConsentBundle\EventSubscriber;
 
+use Doctrine\DBAL\Exception as DBALException;
+use Doctrine\ORM\Exception\ORMException;
 use Nowo\CookieConsentBundle\Cookie\CookieHandler;
 use Nowo\CookieConsentBundle\Cookie\CookieLogger;
 use Nowo\CookieConsentBundle\Enum\CookieNameEnum;
 use Nowo\CookieConsentBundle\Form\CookieConsentType;
+use Nowo\CookieConsentBundle\Http\ColdStartRequestAttributes;
+use Psr\Log\LoggerInterface;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use Symfony\Component\Form\FormFactoryInterface;
 use Symfony\Component\Form\FormInterface;
@@ -37,6 +41,7 @@ class CookieConsentFormSubscriber implements EventSubscriberInterface
         private readonly CookieLogger $cookieLogger,
         private readonly CookieHandler $cookieHandler,
         private readonly bool $useLogger,
+        private readonly ?LoggerInterface $logger = null,
     ) {
     }
 
@@ -66,13 +71,24 @@ class CookieConsentFormSubscriber implements EventSubscriberInterface
         $request  = $event->getRequest();
         $response = $event->getResponse();
 
-        $form = $this->createCookieConsentForm();
-        $form->handleRequest($request);
+        if (ColdStartRequestAttributes::shouldSkipDatabaseAccess($request)) {
+            return;
+        }
 
-        if ($form->isSubmitted() && $form->isValid()) {
-            /** @var array<string, bool|string> $data */
-            $data = $form->getData();
-            $this->handleFormSubmit($data, $request, $response);
+        try {
+            $form = $this->createCookieConsentForm();
+            $form->handleRequest($request);
+
+            if ($form->isSubmitted() && $form->isValid()) {
+                /** @var array<string, bool|string> $data */
+                $data = $form->getData();
+                $this->handleFormSubmit($data, $request, $response);
+            }
+        } catch (DBALException|ORMException $exception) {
+            $this->logger?->debug(
+                'Skipping cookie consent form handling during cold start.',
+                ['exception' => $exception],
+            );
         }
     }
 

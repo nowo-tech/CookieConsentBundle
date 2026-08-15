@@ -4,8 +4,12 @@ declare(strict_types=1);
 
 namespace Nowo\CookieConsentBundle\EventSubscriber;
 
+use Doctrine\DBAL\Exception as DBALException;
+use Doctrine\ORM\Exception\ORMException;
 use Nowo\CookieConsentBundle\Config\CookieConsentConfigResolver;
 use Nowo\CookieConsentBundle\Config\ResolvedCookieConsentConfig;
+use Nowo\CookieConsentBundle\Http\ColdStartRequestAttributes;
+use Psr\Log\LoggerInterface;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use Symfony\Component\HttpKernel\Event\RequestEvent;
 use Symfony\Component\HttpKernel\KernelEvents;
@@ -28,6 +32,7 @@ final class CookieConsentConfigTranslationSubscriber implements EventSubscriberI
     public function __construct(
         private readonly CookieConsentConfigResolver $configResolver,
         private readonly TranslatorInterface $translator,
+        private readonly ?LoggerInterface $logger = null,
     ) {
     }
 
@@ -50,29 +55,45 @@ final class CookieConsentConfigTranslationSubscriber implements EventSubscriberI
      */
     public function onKernelRequest(RequestEvent $event): void
     {
-        $request  = $event->getRequest();
-        $locale   = $request->getLocale();
-        $route    = $request->attributes->get('_route');
-        $resolved = $this->configResolver->resolve(
-            $locale,
-            is_string($route) && $route !== '' ? $route : null,
-        );
-
-        if (!$resolved instanceof ResolvedCookieConsentConfig) {
+        if (!$event->isMainRequest()) {
             return;
         }
 
-        $messages = $resolved->getTranslationMessages();
+        $request = $event->getRequest();
 
-        if ($messages !== [] && $this->translator instanceof Translator) {
-            $this->translator->addResource(
-                'array',
-                $messages,
-                $locale,
-                'NowoCookieConsentBundle',
-            );
+        if (ColdStartRequestAttributes::shouldSkipDatabaseAccess($request)) {
+            return;
         }
 
-        $request->attributes->set('nowo_cookie_consent_config', $resolved);
+        try {
+            $locale   = $request->getLocale();
+            $route    = $request->attributes->get('_route');
+            $resolved = $this->configResolver->resolve(
+                $locale,
+                is_string($route) && $route !== '' ? $route : null,
+            );
+
+            if (!$resolved instanceof ResolvedCookieConsentConfig) {
+                return;
+            }
+
+            $messages = $resolved->getTranslationMessages();
+
+            if ($messages !== [] && $this->translator instanceof Translator) {
+                $this->translator->addResource(
+                    'array',
+                    $messages,
+                    $locale,
+                    'NowoCookieConsentBundle',
+                );
+            }
+
+            $request->attributes->set('nowo_cookie_consent_config', $resolved);
+        } catch (DBALException|ORMException $exception) {
+            $this->logger?->debug(
+                'Skipping cookie consent config resolution during cold start.',
+                ['exception' => $exception],
+            );
+        }
     }
 }

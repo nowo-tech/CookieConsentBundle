@@ -11,6 +11,7 @@ use Nowo\CookieConsentBundle\Config\ResolvedCookieConsentConfig;
 use Nowo\CookieConsentBundle\Entity\CookieConsentConfig;
 use Nowo\CookieConsentBundle\Entity\CookieConsentConfigTranslation;
 use Nowo\CookieConsentBundle\EventSubscriber\CookieConsentConfigTranslationSubscriber;
+use Nowo\CookieConsentBundle\Http\ColdStartRequestAttributes;
 use Nowo\CookieConsentBundle\Repository\CookieConsentConfigRepository;
 use Nowo\CookieConsentBundle\Repository\CookieConsentConfigTranslationRepository;
 use PHPUnit\Framework\TestCase;
@@ -84,6 +85,70 @@ final class CookieConsentConfigTranslationSubscriberTest extends TestCase
 
         self::assertInstanceOf(ResolvedCookieConsentConfig::class, $request->attributes->get('nowo_cookie_consent_config'));
         self::assertSame('Title', $translator->trans('nowo_cookie_consent.title', [], 'NowoCookieConsentBundle', 'en'));
+    }
+
+    public function testSkipsWhenSiteBackupSchemaDoesNotExist(): void
+    {
+        $configRepository = $this->createMock(CookieConsentConfigRepository::class);
+        $configRepository->expects(self::never())->method('findDefaultEnabled');
+
+        $resolver = new CookieConsentConfigResolver(
+            new CookieConsentConfigSelector($configRepository, new CookieConsentRoutePatternMatcher()),
+            $this->createMock(CookieConsentConfigTranslationRepository::class),
+            true,
+        );
+
+        $subscriber = new CookieConsentConfigTranslationSubscriber($resolver, $this->createTranslator());
+        $request    = Request::create('/');
+        $request->attributes->set(ColdStartRequestAttributes::SITE_BACKUP_SCHEMA_EXISTS, false);
+
+        $subscriber->onKernelRequest($this->createRequestEvent($request));
+
+        self::assertNull($request->attributes->get('nowo_cookie_consent_config'));
+    }
+
+    public function testSkipsWhenCookieConsentSchemaReadyIsFalse(): void
+    {
+        $configRepository = $this->createMock(CookieConsentConfigRepository::class);
+        $configRepository->expects(self::never())->method('findDefaultEnabled');
+
+        $resolver = new CookieConsentConfigResolver(
+            new CookieConsentConfigSelector($configRepository, new CookieConsentRoutePatternMatcher()),
+            $this->createMock(CookieConsentConfigTranslationRepository::class),
+            true,
+        );
+
+        $subscriber = new CookieConsentConfigTranslationSubscriber($resolver, $this->createTranslator());
+        $request    = Request::create('/');
+        $request->attributes->set(ColdStartRequestAttributes::COOKIE_CONSENT_SCHEMA_READY, false);
+
+        $subscriber->onKernelRequest($this->createRequestEvent($request));
+
+        self::assertNull($request->attributes->get('nowo_cookie_consent_config'));
+    }
+
+    public function testIgnoresSubRequests(): void
+    {
+        $configRepository = $this->createMock(CookieConsentConfigRepository::class);
+        $configRepository->expects(self::never())->method('findDefaultEnabled');
+
+        $resolver = new CookieConsentConfigResolver(
+            new CookieConsentConfigSelector($configRepository, new CookieConsentRoutePatternMatcher()),
+            $this->createMock(CookieConsentConfigTranslationRepository::class),
+            true,
+        );
+
+        $subscriber = new CookieConsentConfigTranslationSubscriber($resolver, $this->createTranslator());
+        $request    = Request::create('/');
+        $request->attributes->set(ColdStartRequestAttributes::SITE_BACKUP_SCHEMA_EXISTS, false);
+
+        $subscriber->onKernelRequest(new RequestEvent(
+            $this->createMock(HttpKernelInterface::class),
+            $request,
+            HttpKernelInterface::SUB_REQUEST,
+        ));
+
+        self::assertNull($request->attributes->get('nowo_cookie_consent_config'));
     }
 
     private function createTranslator(): Translator
