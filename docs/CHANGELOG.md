@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## Table of contents
 
 - [[Unreleased]](#unreleased)
+- [[1.7.0] - 2026-08-15](#170---2026-08-15)
 - [[1.6.3] - 2026-08-11](#163---2026-08-11)
 - [[1.6.2] - 2026-08-11](#162---2026-08-11)
 - [[1.6.1] - 2026-08-11](#161---2026-08-11)
@@ -91,6 +92,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.7.0] - 2026-08-15
+
 ### Added
 
 - Cold-start skip for database-backed consent: when the main request carries `_nowo_site_backup_schema_exists: false` (shared with Site Backup Bundle) or `_nowo_cookie_consent_schema_ready: false`, config resolution, form handling, and `nowo_cookie_consent_should_render()` skip Doctrine work. See `Nowo\CookieConsentBundle\Http\ColdStartRequestAttributes`.
@@ -108,6 +111,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Documentation
 
 - Documented public whitelist usage in CONFIGURATION and UPGRADING.
+
+[1.7.0]: https://github.com/nowo-tech/CookieConsentBundle/releases/tag/v1.7.0
 
 [1.6.3]: https://github.com/nowo-tech/CookieConsentBundle/releases/tag/v1.6.3
 

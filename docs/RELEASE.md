@@ -61,6 +61,8 @@ Update README **Tests and coverage** percentages after each release when coverag
 
 ## Release history
 
+- **v1.7.0** — Cold-start skip for Doctrine-backed consent (SiteBackup attribute).
+
 | Version | Date | Notes |
 | --- | --- | --- |
 | [1.7.0](CHANGELOG.md#unreleased) | (pending) | Cold-start schema skip; Site Backup attribute contract |
