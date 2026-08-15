@@ -24,7 +24,7 @@ final class CookieConsentSchemaReadySubscriberTest extends TestCase
         $connection->method('createSchemaManager')->willReturn($schemaManager);
 
         $subscriber = new CookieConsentSchemaReadySubscriber($connection);
-        $request = Request::create('/');
+        $request    = Request::create('/');
         $request->attributes->set(ColdStartRequestAttributes::SITE_BACKUP_SCHEMA_EXISTS, true);
         $event = new RequestEvent($this->createMock(HttpKernelInterface::class), $request, HttpKernelInterface::MAIN_REQUEST);
 
@@ -42,7 +42,7 @@ final class CookieConsentSchemaReadySubscriberTest extends TestCase
         $connection->method('createSchemaManager')->willReturn($schemaManager);
 
         $subscriber = new CookieConsentSchemaReadySubscriber($connection);
-        $request = Request::create('/');
+        $request    = Request::create('/');
         $request->attributes->set(ColdStartRequestAttributes::SITE_BACKUP_SCHEMA_EXISTS, true);
         $event = new RequestEvent($this->createMock(HttpKernelInterface::class), $request, HttpKernelInterface::MAIN_REQUEST);
 
@@ -57,7 +57,7 @@ final class CookieConsentSchemaReadySubscriberTest extends TestCase
         $connection->expects(self::never())->method('createSchemaManager');
 
         $subscriber = new CookieConsentSchemaReadySubscriber($connection);
-        $request = Request::create('/');
+        $request    = Request::create('/');
         $request->attributes->set(ColdStartRequestAttributes::SITE_BACKUP_SCHEMA_EXISTS, false);
         $event = new RequestEvent($this->createMock(HttpKernelInterface::class), $request, HttpKernelInterface::MAIN_REQUEST);
 
