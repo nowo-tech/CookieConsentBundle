@@ -134,6 +134,29 @@ nowo_cookie_consent:
 - `bootstrap` — Bootstrap 5 modal markup (load Bootstrap CSS/JS in your layout, or rely on the CSS fallback in `nowo-consent-modal.js`).
 - `tailwind` — Tailwind utility classes; load Tailwind in your layout (CDN or build). No Bootstrap required.
 
+### Modal CSS and CSP (style-src nonces)
+
+By default `nowo-consent-modal.js` injects `cookie-consent.css` as a `<style>` tag. Hosts with CSP **style nonces** should link the standalone file instead so styles are not dropped:
+
+```twig
+<link rel="stylesheet"
+      href="{{ asset('nowo-cookie-consent.css', 'nowo_cookie_consent') }}"
+      data-nowo-cookie-consent-css>
+```
+
+Markers that skip injection: `link[data-nowo-cookie-consent-css]`, `html[data-nowo-cookie-consent-external-css="true"]`, or `#cookieconsent[data-nowo-external-css="true"]`.
+
+### Recommended DB profile layout
+
+When `use_database_config: true`, modal **layout / position / equal-weight buttons** live on `CookieConsentConfig` (admin Profile settings), not YAML. Recommended defaults (new entity rows from 1.9.0):
+
+| Option | Recommended |
+|--------|-------------|
+| Consent modal | `box` + `wide` + **bottom** + **left** + equal-weight buttons |
+| Preferences modal | same corner + equal-weight buttons |
+
+Override `--nowo-cc-*` tokens in host CSS to match brand colors.
+
 Override templates per theme:
 
 | Theme | Modal | Form theme |

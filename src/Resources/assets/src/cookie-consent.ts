@@ -3,12 +3,12 @@
  * Opens the Bootstrap modal (or a CSS fallback), submits consent via AJAX, and hides on success.
  */
 
-import './cookie-consent.css';
 import { applyRemoteConfig, fetchRemoteConfig } from './apply-config';
 import { applyThemeOptionsFromElement } from './apply-theme';
 import { applyVisualConfigFromElement, setPageInteractionBlocked } from './apply-visual-config';
 import { collectClientDiagnostics, publishClientDiagnostics } from './diagnostics';
 import { installCustomEventPolyfill } from './custom-event-polyfill';
+import { injectCookieConsentStyles } from './inject-styles';
 import { prepareCsrfForRequest } from './csrf';
 import { serializeForm } from './form-serializer';
 import { activateIframesForConsent, readAllowedCategoriesFromModal } from './iframe-manager';
@@ -58,6 +58,7 @@ export function initCookieConsent(): void {
   installCustomEventPolyfill();
 
   const modalElement = document.getElementById('cookieconsent');
+  injectCookieConsentStyles(modalElement);
 
   if (!modalElement) {
     log.debug('Modal element not found, skipping Cookie Consent init', collectClientDiagnostics(null));

@@ -57,7 +57,7 @@ install: ensure-up
 assets: ensure-up
 	@$(COMPOSE) exec -T -e CI=true $(SERVICE_PHP) pnpm install
 	@$(COMPOSE) exec -T $(SERVICE_PHP) pnpm run build
-	@echo "Assets: src/Resources/public/nowo-consent-modal.js"
+	@echo "Assets: src/Resources/public/nowo-consent-modal.js + nowo-cookie-consent.css"
 
 test-ts: ensure-up
 	@$(COMPOSE) exec -T $(SERVICE_PHP) pnpm run test:coverage | tee coverage-ts.txt

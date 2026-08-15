@@ -61,11 +61,14 @@ Update README **Tests and coverage** percentages after each release when coverag
 
 ## Release history
 
+- **v1.9.0** — CSP-safe standalone modal CSS; Beacon skin upstream; bottom-left + equal-weight defaults for new profiles.
 - **v1.7.0** — Cold-start skip for Doctrine-backed consent (SiteBackup attribute).
 
 | Version | Date | Notes |
 | --- | --- | --- |
-| [1.7.0](CHANGELOG.md#unreleased) | (pending) | Cold-start schema skip; Site Backup attribute contract |
+| [1.9.0](CHANGELOG.md#190---2026-08-15) | 2026-08-15 | Standalone `nowo-cookie-consent.css`; skip style inject under CSP; skin polish |
+| [1.8.0](CHANGELOG.md#180---2026-08-15) | 2026-08-15 | Mid-migration schema probe for cookie config table |
+| [1.7.0](CHANGELOG.md#170---2026-08-15) | 2026-08-15 | Cold-start schema skip; Site Backup attribute contract |
 | [1.6.3](CHANGELOG.md#163---2026-08-11) | 2026-08-11 | `render_routes` public whitelist |
 | [1.6.2](CHANGELOG.md#162---2026-08-11) | 2026-08-11 | Inventory query memoization / single form attach |
 | [1.6.1](CHANGELOG.md#161---2026-08-11) | 2026-08-11 | `skip_render_routes` + `nowo_cookie_consent_should_render()` |

@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## Table of contents
 
 - [[Unreleased]](#unreleased)
+- [[1.9.0] - 2026-08-15](#190---2026-08-15)
 - [[1.8.0] - 2026-08-15](#180---2026-08-15)
 - [[1.7.0] - 2026-08-15](#170---2026-08-15)
 - [[1.6.3] - 2026-08-11](#163---2026-08-11)
@@ -93,6 +94,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.9.0] - 2026-08-15
+
+### Added
+
+- **Standalone modal CSS** `nowo-cookie-consent.css` in `src/Resources/public/` (emitted by Vite build). Hosts can `<link>` it via the `nowo_cookie_consent` asset package.
+- **CSP-safe external CSS mode**: `nowo-consent-modal.js` skips injecting a runtime `<style>` block when `link[data-nowo-cookie-consent-css]` is present, or when `data-nowo-cookie-consent-external-css="true"` is set on `<html>`, or `data-nowo-external-css="true"` on `#cookieconsent`.
+- Upstream Beacon skin polish in `cookie-consent.css`: category tint cards, ghost secondary actions, box layout side inset, preferences intro spacing, `html[data-theme]` light/dark token remaps, equal-weight button grid.
+
+### Changed
+
+- New `CookieConsentConfig` entity defaults for **new** DB profiles: consent/preferences modal **bottom + left**, **equal-weight buttons** on (existing rows unchanged).
+- Config API payload fallbacks align with those layout defaults when no DB config is resolved.
+
+### Documentation
+
+- CONFIGURATION / USAGE / INSTALLATION: CSP `style-src` nonce guidance and recommended layout defaults.
+- UPGRADING notes for linking kit CSS and optional removal of host-only consent SCSS.
+
 ## [1.8.0] - 2026-08-15
 
 ### Added
@@ -121,6 +140,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Documentation
 
 - Documented public whitelist usage in CONFIGURATION and UPGRADING.
+
+[1.9.0]: https://github.com/nowo-tech/CookieConsentBundle/releases/tag/v1.9.0
 
 [1.8.0]: https://github.com/nowo-tech/CookieConsentBundle/releases/tag/v1.8.0
 

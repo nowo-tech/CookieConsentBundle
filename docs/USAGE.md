@@ -41,7 +41,19 @@ The bundle detects the locale from the current request (and `Accept-Language` wh
 
 The modal uses Bootstrap 5 markup (or Tailwind when `ui_theme: tailwind`). Include the matching CSS/JS in your layout, or rely on the bundle fallback that toggles `.show` on the modal element.
 
-After upgrading the bundle, run `php bin/console assets:install` so `nowo-consent-modal.js` includes granular toggles and step navigation.
+### CSP-safe modal CSS
+
+When the site CSP uses **style-src nonces**, browsers ignore the `<style>` block that `nowo-consent-modal.js` injects by default. Link the standalone kit stylesheet and mark it:
+
+```twig
+<link rel="stylesheet"
+      href="{{ asset('nowo-cookie-consent.css', 'nowo_cookie_consent') }}"
+      data-nowo-cookie-consent-css>
+```
+
+Override chrome with `--nowo-cc-*` custom properties in host CSS. Do not fork the public modal Twig only for skinning.
+
+After upgrading the bundle, run `php bin/console assets:install` so `nowo-consent-modal.js` and `nowo-cookie-consent.css` are published.
 
 ## Conditional scripts
 
@@ -78,6 +90,7 @@ The Symfony 8 demo implements a full CRUD at `/demo/admin/cookie-consent-config/
 When `use_database_config: true`, edit `CookieConsentConfig` profiles with:
 
 - **Forms:** one class per tab under `Nowo\CookieConsentBundle\Form\Settings\` (e.g. `CookieConsentConfigProfileSettingsType`); resolve with `CookieConsentConfigSettingsSection::formType()`
+- **Recommended defaults** for new profiles (also the entity defaults from **1.9.0**): consent + preferences modals as **box / wide / bottom / left** with **equal-weight buttons** enabled. Existing DB rows keep their stored values until you change them in Administration → Cookie consent.
 - **Controller:** `CookieConsentConfigSettingsAdminController` — `GET/POST /cookie-consent-config/{configId}/settings/{section}`
 - **Template:** `@NowoCookieConsentBundle/admin/config/settings.html.twig`
 

@@ -62,11 +62,20 @@ nowo_cookie_consent:
 php bin/console assets:install
 ```
 
-This publishes `src/Resources/public` to `public/bundles/nowocookieconsent/` (`nowo-consent-modal.js`; styles injected at runtime). Templates load it via `asset('nowo-consent-modal.js', 'nowo_cookie_consent')`.
+This publishes `src/Resources/public` to `public/bundles/nowocookieconsent/` (`nowo-consent-modal.js`, `nowo-cookie-consent.css`). By default the JS injects modal styles at runtime. For CSP policies that use **style-src nonces** (injected `<style>` tags are ignored), link the standalone CSS instead:
+
+```twig
+<link rel="stylesheet"
+      href="{{ asset('nowo-cookie-consent.css', 'nowo_cookie_consent') }}"
+      data-nowo-cookie-consent-css>
+<script src="{{ asset('nowo-consent-modal.js', 'nowo_cookie_consent') }}" defer></script>
+```
+
+The `data-nowo-cookie-consent-css` marker tells the modal script to skip `<style>` injection. Templates that use the bundled fragment already load the JS via `asset('nowo-consent-modal.js', 'nowo_cookie_consent')`; add the `<link>` in your layout `<head>` when needed.
 
 ### AssetMapper
 
-If your app uses [Symfony AssetMapper](https://symfony.com/doc/current/frontend/asset_mapper.html), the bundle registers the `nowo_cookie_consent` asset package. Run `assets:install` once so `nowo-consent-modal.js` is published to `public/bundles/nowocookieconsent/`.
+If your app uses [Symfony AssetMapper](https://symfony.com/doc/current/frontend/asset_mapper.html), the bundle registers the `nowo_cookie_consent` asset package. Run `assets:install` once so `nowo-consent-modal.js` and `nowo-cookie-consent.css` are published to `public/bundles/nowocookieconsent/`.
 
 Contributors rebuild frontend assets with:
 

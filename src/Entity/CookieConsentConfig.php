@@ -118,11 +118,11 @@ class CookieConsentConfig
     #[ORM\Column(name: 'consent_modal_position_y', length: 20, options: ['default' => 'bottom'])]
     private string $consentModalPositionY = 'bottom';
 
-    #[ORM\Column(name: 'consent_modal_position_x', length: 20, nullable: true, options: ['default' => 'center'])]
-    private ?string $consentModalPositionX = 'center';
+    #[ORM\Column(name: 'consent_modal_position_x', length: 20, nullable: true, options: ['default' => 'left'])]
+    private ?string $consentModalPositionX = 'left';
 
-    #[ORM\Column(name: 'consent_modal_equal_weight_buttons', options: ['default' => false])]
-    private bool $consentModalEqualWeightButtons = false;
+    #[ORM\Column(name: 'consent_modal_equal_weight_buttons', options: ['default' => true])]
+    private bool $consentModalEqualWeightButtons = true;
 
     #[ORM\Column(name: 'consent_modal_flip_buttons', options: ['default' => false])]
     private bool $consentModalFlipButtons = false;
@@ -150,14 +150,14 @@ class CookieConsentConfig
     #[ORM\Column(name: 'preferences_modal_variant', length: 20, options: ['default' => 'wide'])]
     private string $preferencesModalVariant = 'wide';
 
-    #[ORM\Column(name: 'preferences_modal_position_y', length: 20, options: ['default' => 'middle'])]
-    private string $preferencesModalPositionY = 'middle';
+    #[ORM\Column(name: 'preferences_modal_position_y', length: 20, options: ['default' => 'bottom'])]
+    private string $preferencesModalPositionY = 'bottom';
 
-    #[ORM\Column(name: 'preferences_modal_position_x', length: 20, nullable: true, options: ['default' => 'center'])]
-    private ?string $preferencesModalPositionX = 'center';
+    #[ORM\Column(name: 'preferences_modal_position_x', length: 20, nullable: true, options: ['default' => 'left'])]
+    private ?string $preferencesModalPositionX = 'left';
 
-    #[ORM\Column(name: 'preferences_modal_equal_weight_buttons', options: ['default' => false])]
-    private bool $preferencesModalEqualWeightButtons = false;
+    #[ORM\Column(name: 'preferences_modal_equal_weight_buttons', options: ['default' => true])]
+    private bool $preferencesModalEqualWeightButtons = true;
 
     #[ORM\Column(name: 'preferences_modal_flip_buttons', options: ['default' => false])]
     private bool $preferencesModalFlipButtons = false;

@@ -5,6 +5,7 @@ This guide provides step-by-step instructions for upgrading Cookie Consent Bundl
 ## Table of contents
 
 - [General upgrade process](#general-upgrade-process)
+- [To 1.9.0](#to-190)
 - [To 1.8.0](#to-180)
 - [To 1.7.0](#to-170)
 - [To 1.6.3](#to-163)
@@ -71,6 +72,42 @@ This guide provides step-by-step instructions for upgrading Cookie Consent Bundl
 4. **Clear cache**: `php bin/console cache:clear`
 5. **Rebuild assets** if you ship the bundled JS: `php bin/console assets:install`
 6. **Test** the consent modal and logging in your environments
+
+## To 1.9.0
+
+```bash
+composer update nowo-tech/cookie-consent-bundle
+php bin/console assets:install
+php bin/console cache:clear
+```
+
+### CSP / standalone CSS (recommended for style-src nonces)
+
+Browsers ignore CSS injected via `<style>` when CSP uses **style nonces** (and does not allow `'unsafe-inline'`). From 1.9.0, link the shipped stylesheet **before** the modal script and mark it so JS skips injection:
+
+```twig
+<link rel="stylesheet"
+      href="{{ asset('nowo-cookie-consent.css', 'nowo_cookie_consent') }}"
+      data-nowo-cookie-consent-css>
+```
+
+Equivalents: `data-nowo-cookie-consent-external-css="true"` on `<html>`, or `data-nowo-external-css="true"` on `#cookieconsent`.
+
+Hosts that previously mirrored modal chrome in application SCSS (category cards, overlay position, buttons) can drop that fork once the kit CSS is linked and tokens are remapped with `--nowo-cc-*`.
+
+### Recommended layout defaults (DB profiles)
+
+New `CookieConsentConfig` rows default to **box / wide / bottom / left** with **equal-weight buttons**. Existing profiles keep stored values. Align admin settings (or seed fixtures) if you want the same corner on older installs:
+
+| Field | Recommended |
+|-------|-------------|
+| Consent modal layout | `box` |
+| Consent modal variant | `wide` |
+| Consent modal position | `bottom` + `left` |
+| Equal-weight buttons | enabled |
+| Preferences modal | same corner + equal-weight |
+
+No Doctrine migration is required for existing databases (column defaults only affect newly inserted rows without explicit values).
 
 ## To 1.8.0
 
