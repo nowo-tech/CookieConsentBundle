@@ -30,10 +30,8 @@ final class ColdStartRequestAttributes
             return true;
         }
 
-        if ($request->attributes->get(self::SITE_BACKUP_SCHEMA_EXISTS) === false) {
-            return true;
-        }
+        return (bool) ($request->attributes->get(self::SITE_BACKUP_SCHEMA_EXISTS) === false)
 
-        return false;
+        ;
     }
 }
