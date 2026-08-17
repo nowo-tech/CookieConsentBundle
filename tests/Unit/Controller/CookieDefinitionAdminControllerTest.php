@@ -26,6 +26,8 @@ use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Symfony\Contracts\Translation\TranslatorInterface;
 use Twig\Environment;
 
+use function count;
+
 final class CookieDefinitionAdminControllerTest extends AbstractControllerTestCase
 {
     public function testIndexRendersDefinitions(): void
