@@ -12,6 +12,8 @@ use Symfony\Component\Security\Csrf\CsrfTokenManagerInterface;
 
 /**
  * CSRF-protected delete form for a cookie definition row action.
+ *
+ * @extends AbstractType<null>
  */
 final class DeleteCookieDefinitionType extends AbstractType
 {
@@ -22,7 +24,7 @@ final class DeleteCookieDefinitionType extends AbstractType
     public function buildForm(FormBuilderInterface $builder, array $options): void
     {
         $builder->add('_token', HiddenType::class, [
-            'data' => $this->csrfTokenManager->getToken($options['csrf_token_id'])->getValue(),
+            'data'   => $this->csrfTokenManager->getToken($options['csrf_token_id'])->getValue(),
             'mapped' => false,
         ]);
     }
@@ -33,8 +35,8 @@ final class DeleteCookieDefinitionType extends AbstractType
         $resolver->setAllowedTypes('action', 'string');
         $resolver->setAllowedTypes('csrf_token_id', 'string');
         $resolver->setDefaults([
-            'method' => 'POST',
-            'attr' => ['class' => 'd-inline'],
+            'method'          => 'POST',
+            'attr'            => ['class' => 'd-inline'],
             'csrf_protection' => false,
         ]);
     }

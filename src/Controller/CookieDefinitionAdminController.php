@@ -168,14 +168,14 @@ final class CookieDefinitionAdminController extends AbstractController
         $forms = [];
 
         foreach ($definitions as $definition) {
-            if (null === $definition->getId()) {
+            if ($definition->getId() === null) {
                 continue;
             }
 
             $forms[$definition->getId()] = $this->createForm(DeleteCookieDefinitionType::class, null, [
                 'action' => $this->generateUrl('nowo_cookie_consent_cookie_definitions_delete', [
                     'configId' => $configId,
-                    'id' => $definition->getId(),
+                    'id'       => $definition->getId(),
                 ]),
                 'csrf_token_id' => 'delete-cookie-definition-' . $definition->getId(),
             ])->createView();

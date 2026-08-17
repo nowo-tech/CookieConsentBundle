@@ -15,7 +15,7 @@ final class DeleteCookieDefinitionTypeTest extends TypeTestCase
     public function testViewUsesExpectedDeleteOptions(): void
     {
         $form = $this->factory->create(DeleteCookieDefinitionType::class, null, [
-            'action' => '/cookie-consent-config/1/cookies/5/delete',
+            'action'        => '/cookie-consent-config/1/cookies/5/delete',
             'csrf_token_id' => 'delete-cookie-definition-5',
         ]);
 
