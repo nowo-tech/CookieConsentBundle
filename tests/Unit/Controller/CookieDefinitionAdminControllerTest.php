@@ -24,6 +24,7 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Symfony\Contracts\Translation\TranslatorInterface;
+use Twig\Environment;
 
 final class CookieDefinitionAdminControllerTest extends AbstractControllerTestCase
 {
@@ -59,6 +60,36 @@ final class CookieDefinitionAdminControllerTest extends AbstractControllerTestCa
 
         $controller = $this->createDefinitionController(config: $config, definitionRepository: $repo);
         $response   = $controller->index(1, Request::create('/', 'GET', ['page' => 99]));
+
+        self::assertSame(200, $response->getStatusCode());
+    }
+
+    public function testIndexProvidesDeleteFormsForDefinitions(): void
+    {
+        $config     = $this->createEnabledConfig(1);
+        $definition = (new CookieDefinition())->setName('_ga')->setConfig($config);
+        $this->setEntityId($definition, 5);
+
+        $repo = $this->createMock(CookieDefinitionRepository::class);
+        $repo->method('countByConfig')->willReturn(1);
+        $repo->expects(self::once())
+            ->method('findByConfigOrderedPaginated')
+            ->with($config, 1, 20)
+            ->willReturn([$definition]);
+
+        $twig = $this->createMock(Environment::class);
+        $twig->expects(self::once())
+            ->method('render')
+            ->with(
+                '@NowoCookieConsentBundle/admin/cookie_definition/index.html.twig',
+                self::callback(static function (array $context): bool {
+                    return isset($context['delete_forms'][5]);
+                }),
+            )
+            ->willReturn('rendered');
+
+        $controller = $this->createDefinitionController(config: $config, definitionRepository: $repo, twig: $twig);
+        $response   = $controller->index(1, Request::create('/'));
 
         self::assertSame(200, $response->getStatusCode());
     }
@@ -275,6 +306,7 @@ final class CookieDefinitionAdminControllerTest extends AbstractControllerTestCa
         ?CookieDefinitionRepository $definitionRepository = null,
         ?FormFactoryInterface $formFactory = null,
         bool $csrfValid = true,
+        ?Environment $twig = null,
     ): CookieDefinitionAdminController {
         $config ??= $this->createEnabledConfig(1);
 
@@ -294,6 +326,7 @@ final class CookieDefinitionAdminControllerTest extends AbstractControllerTestCa
         );
         $this->configureController(
             $controller,
+            twig: $twig,
             formFactory: $formFactory,
             csrfTokenManager: $this->createCsrfTokenManager($csrfValid),
         );
