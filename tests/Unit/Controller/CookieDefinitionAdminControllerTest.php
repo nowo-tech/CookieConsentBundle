@@ -94,6 +94,38 @@ final class CookieDefinitionAdminControllerTest extends AbstractControllerTestCa
         self::assertSame(200, $response->getStatusCode());
     }
 
+    public function testIndexSkipsDeleteFormsForDefinitionsWithoutId(): void
+    {
+        $config            = $this->createEnabledConfig(1);
+        $persisted         = (new CookieDefinition())->setName('_ga')->setConfig($config);
+        $unsavedDefinition = (new CookieDefinition())->setName('_gid')->setConfig($config);
+        $this->setEntityId($persisted, 5);
+
+        $repo = $this->createMock(CookieDefinitionRepository::class);
+        $repo->method('countByConfig')->willReturn(2);
+        $repo->expects(self::once())
+            ->method('findByConfigOrderedPaginated')
+            ->with($config, 1, 20)
+            ->willReturn([$persisted, $unsavedDefinition]);
+
+        $twig = $this->createMock(Environment::class);
+        $twig->expects(self::once())
+            ->method('render')
+            ->with(
+                '@NowoCookieConsentBundle/admin/cookie_definition/index.html.twig',
+                self::callback(static function (array $context): bool {
+                    return isset($context['delete_forms'][5])
+                        && count($context['delete_forms']) === 1;
+                }),
+            )
+            ->willReturn('rendered');
+
+        $controller = $this->createDefinitionController(config: $config, definitionRepository: $repo, twig: $twig);
+        $response   = $controller->index(1, Request::create('/'));
+
+        self::assertSame(200, $response->getStatusCode());
+    }
+
     public function testNewRendersFormOnGet(): void
     {
         $controller = $this->createDefinitionController();

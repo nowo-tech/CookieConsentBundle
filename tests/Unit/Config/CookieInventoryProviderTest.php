@@ -213,6 +213,29 @@ final class CookieInventoryProviderTest extends TestCase
         $provider = new CookieInventoryProvider($repository, true, []);
 
         self::assertTrue($provider->hasDefinitions($config));
+        // Second call must hit the hasDatabaseDefinitionsCache return path.
+        self::assertTrue($provider->hasDefinitions($config));
+    }
+
+    public function testHasDefinitionsUsesLoadedDefinitionsCacheWithoutExistsQuery(): void
+    {
+        $config     = new CookieConsentConfig();
+        $definition = (new CookieDefinition())
+            ->setName('_pk_id')
+            ->setDuration('13 months')
+            ->setCategory('analytics')
+            ->setType(CookieDefinition::TYPE_FIRST_PARTY);
+
+        $repository = $this->createMock(CookieDefinitionRepository::class);
+        $repository->expects(self::once())->method('findByConfigOrdered')->willReturn([$definition]);
+        $repository->expects(self::never())->method('existsByConfig');
+
+        $provider = new CookieInventoryProvider($repository, true, []);
+
+        // Warm definitionsByConfigKey via listForLocale, then exercise hasDatabaseDefinitions
+        // when only that cache is consulted on a subsequent hasDefinitions call.
+        self::assertNotEmpty($provider->listForLocale($config, 'en'));
+        self::assertTrue($provider->hasDefinitions($config));
     }
 
     public function testListForLocaleCachesDatabaseDefinitions(): void
