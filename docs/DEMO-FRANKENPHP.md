@@ -71,6 +71,7 @@ make -C demo up-symfony8-tailwind
 Configured for local development and debugging:
 
 - **Symfony Web Profiler** — `dev` and `test` environments
+- **Nowo Twig Inspector** (`nowo-tech/twig-inspector-bundle`) and **Nowo Hot Reload** (`nowo-tech/hot-reload-bundle`) — required together on FrankenPHP demos (dev/test only; Caddyfile Mercure + `hot_reload`, plus `worker { watch }` in worker mode). Do not enable Hot Reload in production.
 - **Symfony Debug bundle** — `dev` and `test`
 - **Nowo Twig Inspector Bundle** — installed from Packagist (`require-dev`) for template debugging
 - **Cookie Consent Bundle** — the bundle under test; includes optional Doctrine config CRUD at `/demo/admin/cookie-consent-config`
