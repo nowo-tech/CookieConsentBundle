@@ -80,6 +80,9 @@ jobs:
             SYMFONY_PACKAGES="${SYMFONY_PACKAGES} doctrine/doctrine-bundle:^3.2 doctrine/orm:^3.4 symfony/var-exporter:^${{ matrix.symfony }}"
           fi
           composer update ${SYMFONY_PACKAGES} --with-all-dependencies --no-interaction --prefer-dist --no-progress
+      - name: Composer audit (Critical/High)
+        run: composer audit --locked
+
 
       - name: Run tests
         env:
