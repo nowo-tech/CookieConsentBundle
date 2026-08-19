@@ -8,6 +8,7 @@ use Nowo\CookieConsentBundle\Config\CookieConsentConfigResolver;
 use Nowo\CookieConsentBundle\Config\CookieConsentConfigSelector;
 use Nowo\CookieConsentBundle\Config\CookieConsentRoutePatternMatcher;
 use Nowo\CookieConsentBundle\Config\CookieConsentRouteTargeting;
+use Nowo\CookieConsentBundle\Config\ResolvedCookieConsentConfig;
 use Nowo\CookieConsentBundle\Controller\CookieConsentController;
 use Nowo\CookieConsentBundle\Entity\CookieConsentConfig;
 use Nowo\CookieConsentBundle\Entity\CookieConsentConfigTranslation;
@@ -111,6 +112,52 @@ final class CookieConsentControllerTest extends TestCase
         $response   = $controller->showIfCookieConsentNotSet(Request::create('/cookie_consent_alt'));
 
         self::assertStringContainsString('rendered-bootstrap', (string) $response->getContent());
+    }
+
+    public function testShowReusesResolvedConfigFromMainRequestWithoutCallingResolver(): void
+    {
+        $config      = new CookieConsentConfig();
+        $translation = (new CookieConsentConfigTranslation())
+            ->setConsentModalTitle('Cached')
+            ->setConsentModalDescription('Intro')
+            ->setConsentModalAcceptAllBtn('All')
+            ->setConsentModalAcceptNecessaryBtn('Necessary');
+
+        $resolved = new ResolvedCookieConsentConfig($config, $translation);
+
+        $configRepository = $this->createMock(CookieConsentConfigRepository::class);
+        $configRepository->expects(self::never())->method('findDefaultEnabled');
+        $configRepository->expects(self::never())->method('findAllEnabledNonDefault');
+
+        $translationRepository = $this->createMock(CookieConsentConfigTranslationRepository::class);
+        $translationRepository->expects(self::never())->method('findOneForConfigAndLocale');
+
+        $resolver = new CookieConsentConfigResolver(
+            new CookieConsentConfigSelector($configRepository, new CookieConsentRoutePatternMatcher()),
+            $translationRepository,
+            true,
+        );
+
+        $mainRequest = Request::create('/page');
+        $mainRequest->attributes->set('_route', 'home');
+        $mainRequest->attributes->set('nowo_cookie_consent_config', $resolved);
+        $mainRequest->setLocale('en');
+
+        $stack = new RequestStack();
+        $stack->push($mainRequest);
+
+        $subRequest = Request::create('/cookie_consent');
+        $stack->push($subRequest);
+
+        $controller = $this->createController(
+            requestStack: $stack,
+            configResolver: $resolver,
+        );
+
+        $response = $controller->show($subRequest);
+
+        self::assertSame(200, $response->getStatusCode());
+        self::assertSame($resolved, $subRequest->attributes->get('nowo_cookie_consent_config'));
     }
 
     public function testShowAppliesDatabaseTranslationsAndConfigApiUrl(): void

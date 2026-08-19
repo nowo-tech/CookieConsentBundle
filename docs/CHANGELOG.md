@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## Table of contents
 
 - [[Unreleased]](#unreleased)
+- [[1.9.2] - 2026-08-19](#192---2026-08-19)
 - [[1.9.1] - 2026-08-18](#191---2026-08-18)
 - [[1.9.0] - 2026-08-15](#190---2026-08-15)
 - [[1.8.0] - 2026-08-15](#180---2026-08-15)
@@ -94,6 +95,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - [Documentation](#documentation)
 
 ## [Unreleased]
+
+## [1.9.2] - 2026-08-19
+
+### Fixed
+
+- **Consent profile lookups:** memoize `CookieConsentConfigRepository` enabled/default queries and `CookieConsentConfigResolver::resolve()` per request so the modal sub-request and Twig helpers do not repeat `findDefaultEnabled` against Doctrine. The consent fragment controller reuses `nowo_cookie_consent_config` from the main request when present; runtime caches are cleared on admin profile writes.
+
+[1.9.2]: https://github.com/nowo-tech/CookieConsentBundle/releases/tag/v1.9.2
 
 ## [1.9.1] - 2026-08-18
 

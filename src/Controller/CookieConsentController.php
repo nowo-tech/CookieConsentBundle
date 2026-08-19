@@ -129,6 +129,18 @@ class CookieConsentController
 
     protected function applyDatabaseConfig(Request $request): ?ResolvedCookieConsentConfig
     {
+        $mainRequest = $this->requestStack->getMainRequest();
+
+        if ($mainRequest instanceof Request) {
+            $resolved = $mainRequest->attributes->get('nowo_cookie_consent_config');
+
+            if ($resolved instanceof ResolvedCookieConsentConfig) {
+                $request->attributes->set('nowo_cookie_consent_config', $resolved);
+
+                return $resolved;
+            }
+        }
+
         $resolved = $this->configResolver->resolve($request->getLocale(), $this->resolvePageRoute($request));
 
         if (!$resolved instanceof ResolvedCookieConsentConfig) {

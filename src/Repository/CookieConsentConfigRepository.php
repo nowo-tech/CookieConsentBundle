@@ -11,10 +11,23 @@ use Nowo\CookieConsentBundle\Entity\CookieConsentConfig;
 /**
  * Doctrine repository for {@see CookieConsentConfig} entities.
  *
+ * Enabled-profile lookups are memoized for the service lifetime (typically one request)
+ * so repeated consent resolution does not re-query Doctrine.
+ *
  * @extends ServiceEntityRepository<CookieConsentConfig>
  */
 class CookieConsentConfigRepository extends ServiceEntityRepository
 {
+    private bool $defaultEnabledLoaded = false;
+
+    private ?CookieConsentConfig $defaultEnabled = null;
+
+    /** @var list<CookieConsentConfig>|null */
+    private ?array $allEnabled = null;
+
+    /** @var list<CookieConsentConfig>|null */
+    private ?array $allEnabledNonDefault = null;
+
     /**
      * Creates a new consent configuration repository.
      *
@@ -26,13 +39,30 @@ class CookieConsentConfigRepository extends ServiceEntityRepository
     }
 
     /**
+     * Clears in-memory lookup caches after admin writes or Doctrine flushes.
+     *
+     * @return void
+     */
+    public function clearRuntimeCache(): void
+    {
+        $this->defaultEnabledLoaded = false;
+        $this->defaultEnabled       = null;
+        $this->allEnabled           = null;
+        $this->allEnabledNonDefault = null;
+    }
+
+    /**
      * Returns the enabled default consent configuration, if any.
      *
      * @return CookieConsentConfig|null The default configuration or null
      */
     public function findDefaultEnabled(): ?CookieConsentConfig
     {
-        return $this->createQueryBuilder('config')
+        if ($this->defaultEnabledLoaded) {
+            return $this->defaultEnabled;
+        }
+
+        $this->defaultEnabled = $this->createQueryBuilder('config')
             ->andWhere('config.enabled = :enabled')
             ->andWhere('config.default = :default')
             ->setParameter('enabled', true)
@@ -40,6 +70,10 @@ class CookieConsentConfigRepository extends ServiceEntityRepository
             ->setMaxResults(1)
             ->getQuery()
             ->getOneOrNullResult();
+
+        $this->defaultEnabledLoaded = true;
+
+        return $this->defaultEnabled;
     }
 
     /**
@@ -49,6 +83,10 @@ class CookieConsentConfigRepository extends ServiceEntityRepository
      */
     public function findAllEnabled(): array
     {
+        if ($this->allEnabled !== null) {
+            return $this->allEnabled;
+        }
+
         /** @var list<CookieConsentConfig> $configs */
         $configs = $this->createQueryBuilder('config')
             ->andWhere('config.enabled = :enabled')
@@ -58,7 +96,7 @@ class CookieConsentConfigRepository extends ServiceEntityRepository
             ->getQuery()
             ->getResult();
 
-        return $configs;
+        return $this->allEnabled = $configs;
     }
 
     /**
@@ -68,6 +106,10 @@ class CookieConsentConfigRepository extends ServiceEntityRepository
      */
     public function findAllEnabledNonDefault(): array
     {
+        if ($this->allEnabledNonDefault !== null) {
+            return $this->allEnabledNonDefault;
+        }
+
         /** @var list<CookieConsentConfig> $configs */
         $configs = $this->createQueryBuilder('config')
             ->andWhere('config.enabled = :enabled')
@@ -79,6 +121,6 @@ class CookieConsentConfigRepository extends ServiceEntityRepository
             ->getQuery()
             ->getResult();
 
-        return $configs;
+        return $this->allEnabledNonDefault = $configs;
     }
 }

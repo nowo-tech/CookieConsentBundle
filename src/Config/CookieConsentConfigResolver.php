@@ -7,11 +7,19 @@ namespace Nowo\CookieConsentBundle\Config;
 use Nowo\CookieConsentBundle\Entity\CookieConsentConfig;
 use Nowo\CookieConsentBundle\Repository\CookieConsentConfigTranslationRepository;
 
+use function array_key_exists;
+
 /**
  * Resolves database-backed cookie consent configuration for a locale and route.
+ *
+ * Results are memoized for the service lifetime (typically one request) so Twig,
+ * sub-requests, and the config API do not repeat Doctrine lookups.
  */
 final class CookieConsentConfigResolver
 {
+    /** @var array<string, ResolvedCookieConsentConfig|null> */
+    private array $resolvedByLocaleAndRoute = [];
+
     /**
      * Creates a new configuration resolver.
      *
@@ -24,6 +32,16 @@ final class CookieConsentConfigResolver
         private readonly CookieConsentConfigTranslationRepository $translationRepository,
         private readonly bool $useDatabaseConfig,
     ) {
+    }
+
+    /**
+     * Clears in-memory resolution caches after admin writes.
+     *
+     * @return void
+     */
+    public function clearRuntimeCache(): void
+    {
+        $this->resolvedByLocaleAndRoute = [];
     }
 
     /**
@@ -40,14 +58,25 @@ final class CookieConsentConfigResolver
             return null;
         }
 
+        $cacheKey = $this->buildCacheKey($locale, $route);
+
+        if (array_key_exists($cacheKey, $this->resolvedByLocaleAndRoute)) {
+            return $this->resolvedByLocaleAndRoute[$cacheKey];
+        }
+
         $config = $this->configSelector->select($route);
 
         if (!$config instanceof CookieConsentConfig) {
-            return null;
+            return $this->resolvedByLocaleAndRoute[$cacheKey] = null;
         }
 
         $translation = $this->translationRepository->findOneForConfigAndLocale($config, $locale);
 
-        return new ResolvedCookieConsentConfig($config, $translation);
+        return $this->resolvedByLocaleAndRoute[$cacheKey] = new ResolvedCookieConsentConfig($config, $translation);
+    }
+
+    private function buildCacheKey(string $locale, ?string $route): string
+    {
+        return $locale . "\0" . ($route ?? '');
     }
 }

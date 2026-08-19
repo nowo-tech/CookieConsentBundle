@@ -61,11 +61,13 @@ Update README **Tests and coverage** percentages after each release when coverag
 
 ## Release history
 
+- **v1.9.2** — Memoize consent profile Doctrine lookups per request; reuse resolved config in modal sub-request.
 - **v1.9.0** — CSP-safe standalone modal CSS; Beacon skin upstream; bottom-left + equal-weight defaults for new profiles.
 - **v1.7.0** — Cold-start skip for Doctrine-backed consent (SiteBackup attribute).
 
 | Version | Date | Notes |
 | --- | --- | --- |
+| [1.9.2](CHANGELOG.md#192---2026-08-19) | 2026-08-19 | Consent profile lookup memoization; modal sub-request reuse |
 | [1.9.0](CHANGELOG.md#190---2026-08-15) | 2026-08-15 | Standalone `nowo-cookie-consent.css`; skip style inject under CSP; skin polish |
 | [1.8.0](CHANGELOG.md#180---2026-08-15) | 2026-08-15 | Mid-migration schema probe for cookie config table |
 | [1.7.0](CHANGELOG.md#170---2026-08-15) | 2026-08-15 | Cold-start schema skip; Site Backup attribute contract |

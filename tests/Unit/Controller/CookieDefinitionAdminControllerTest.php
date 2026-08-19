@@ -84,9 +84,7 @@ final class CookieDefinitionAdminControllerTest extends AbstractControllerTestCa
             ->method('render')
             ->with(
                 '@NowoCookieConsentBundle/admin/cookie_definition/index.html.twig',
-                self::callback(static function (array $context): bool {
-                    return isset($context['delete_forms'][5]);
-                }),
+                self::callback(static fn (array $context): bool => isset($context['delete_forms'][5])),
             )
             ->willReturn('rendered');
 
@@ -115,10 +113,8 @@ final class CookieDefinitionAdminControllerTest extends AbstractControllerTestCa
             ->method('render')
             ->with(
                 '@NowoCookieConsentBundle/admin/cookie_definition/index.html.twig',
-                self::callback(static function (array $context): bool {
-                    return isset($context['delete_forms'][5])
-                        && count($context['delete_forms']) === 1;
-                }),
+                self::callback(static fn (array $context): bool => isset($context['delete_forms'][5])
+                    && count($context['delete_forms']) === 1),
             )
             ->willReturn('rendered');
 

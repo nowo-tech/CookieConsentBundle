@@ -68,4 +68,37 @@ final class CookieConsentConfigResolverTest extends TestCase
         self::assertSame($config, $resolved->getConfig());
         self::assertSame($translation, $resolved->getTranslation());
     }
+
+    public function testResolveIsMemoizedPerLocaleAndRoute(): void
+    {
+        $config = (new CookieConsentConfig())
+            ->setEnabled(true)
+            ->setDefault(true);
+
+        $translation = (new CookieConsentConfigTranslation())->setLocale('es');
+
+        $configRepository = $this->createMock(CookieConsentConfigRepository::class);
+        $configRepository->expects(self::exactly(2))->method('findAllEnabledNonDefault')->willReturn([]);
+        $configRepository->expects(self::exactly(2))->method('findDefaultEnabled')->willReturn($config);
+
+        $translationRepository = $this->createMock(CookieConsentConfigTranslationRepository::class);
+        $translationRepository->expects(self::exactly(2))
+            ->method('findOneForConfigAndLocale')
+            ->with($config, 'es')
+            ->willReturn($translation);
+
+        $resolver = new CookieConsentConfigResolver(
+            new CookieConsentConfigSelector($configRepository, new CookieConsentRoutePatternMatcher()),
+            $translationRepository,
+            true,
+        );
+
+        $first = $resolver->resolve('es', 'home');
+        self::assertNotNull($first);
+        self::assertSame($first, $resolver->resolve('es', 'home'));
+
+        $resolver->clearRuntimeCache();
+
+        self::assertNotNull($resolver->resolve('es', 'home'));
+    }
 }

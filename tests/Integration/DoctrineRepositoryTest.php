@@ -86,8 +86,35 @@ final class DoctrineRepositoryTest extends TestCase
         $repository = new CookieConsentConfigRepository($this->createRegistry());
 
         self::assertSame($default->getId(), $repository->findDefaultEnabled()?->getId());
-        self::assertCount(2, $repository->findAllEnabled());
-        self::assertSame('Custom', $repository->findAllEnabledNonDefault()[0]->getName());
+
+        $enabled = $repository->findAllEnabled();
+        self::assertCount(2, $enabled);
+
+        $nonDefault = $repository->findAllEnabledNonDefault();
+        self::assertSame('Custom', $nonDefault[0]->getName());
+
+        self::assertSame($enabled, $repository->findAllEnabled());
+        self::assertSame($nonDefault, $repository->findAllEnabledNonDefault());
+    }
+
+    public function testConfigRepositoryRuntimeCacheReturnsSameResultsUntilCleared(): void
+    {
+        $default = (new CookieConsentConfig())
+            ->setEnabled(true)
+            ->setDefault(true)
+            ->setName('Default');
+
+        $this->entityManager->persist($default);
+        $this->entityManager->flush();
+
+        $repository = new CookieConsentConfigRepository($this->createRegistry());
+
+        self::assertSame($default->getId(), $repository->findDefaultEnabled()?->getId());
+        self::assertSame($default->getId(), $repository->findDefaultEnabled()?->getId());
+
+        $repository->clearRuntimeCache();
+
+        self::assertSame($default->getId(), $repository->findDefaultEnabled()?->getId());
     }
 
     public function testTranslationRepositoryFindsLocale(): void
