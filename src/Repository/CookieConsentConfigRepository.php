@@ -40,8 +40,6 @@ class CookieConsentConfigRepository extends ServiceEntityRepository
 
     /**
      * Clears in-memory lookup caches after admin writes or Doctrine flushes.
-     *
-     * @return void
      */
     public function clearRuntimeCache(): void
     {

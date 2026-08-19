@@ -36,8 +36,6 @@ final class CookieConsentConfigResolver
 
     /**
      * Clears in-memory resolution caches after admin writes.
-     *
-     * @return void
      */
     public function clearRuntimeCache(): void
     {
