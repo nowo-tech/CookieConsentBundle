@@ -76,6 +76,14 @@ This guide provides step-by-step instructions for upgrading Cookie Consent Bundl
 5. **Rebuild assets** if you ship the bundled JS: `php bin/console assets:install`
 6. **Test** the consent modal and logging in your environments
 
+## To 1.9.4
+
+No application upgrade steps (dev/demo frontend Dependabot bumps only).
+
+```bash
+composer update nowo-tech/cookie-consent-bundle
+```
+
 ## To 1.9.3
 
 No application upgrade steps.

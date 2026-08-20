@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## Table of contents
 
 - [[Unreleased]](#unreleased)
+- [[1.9.4] - 2026-08-20](#194---2026-08-20)
 - [[1.9.2] - 2026-08-19](#192---2026-08-19)
 - [[1.9.1] - 2026-08-18](#191---2026-08-18)
 - [[1.9.0] - 2026-08-15](#190---2026-08-15)
@@ -95,6 +96,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - [Documentation](#documentation)
 
 ## [Unreleased]
+
+## [1.9.4] - 2026-08-20
+
+### Security
+
+- **Dev/demo frontend:** bump `vitest` to **^3.2.6**; pnpm overrides for `vite` ≥6.4.3, `postcss`, `nanoid`, `brace-expansion@>=4` (Dependabot High).
 
 ## [1.9.3] - 2026-08-19
 
