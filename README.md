@@ -18,7 +18,7 @@ This bundle is **FrankenPHP worker mode friendly**.
 - **Cookie inventory** — definitions in YAML and/or Doctrine; optional consent logging with configurable table prefix.
 - **Admin UI** — `/cookie-consent-config` (profile, behavior, appearance, modals, route targeting) plus CRUD for cookie definitions.
 - **Preferences bubble** — reopen consent after the first choice.
-- **Route targeting** — `render_routes` / `skip_render_routes`; helper `nowo_cookie_consent_should_embed_modal()`.
+- **Route targeting** — `render_routes` / `skip_render_routes`; helpers `nowo_cookie_consent_should_render()` / `nowo_cookie_consent_render()`.
 - **Database config** — `use_database_config` so the admin UI can override YAML at runtime.
 - **Cold-start** — cooperates with SiteBackupBundle when the schema is not ready yet.
 
@@ -37,9 +37,9 @@ nowo_cookie_consent:
 ```
 
 ```twig
-{# templates/base.html.twig #}
-{% if nowo_cookie_consent_should_embed_modal() %}
-    {{ render(path('nowo_cookie_consent.show_if_not_set')) }}
+{# templates/base.html.twig — preferred: no kernel sub-request #}
+{% if nowo_cookie_consent_should_render() %}
+    {{ nowo_cookie_consent_render() }}
 {% endif %}
 ```
 

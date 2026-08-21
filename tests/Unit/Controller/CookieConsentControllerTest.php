@@ -14,6 +14,7 @@ use Nowo\CookieConsentBundle\Entity\CookieConsentConfig;
 use Nowo\CookieConsentBundle\Entity\CookieConsentConfigTranslation;
 use Nowo\CookieConsentBundle\Form\CookieConsentType;
 use Nowo\CookieConsentBundle\Locale\LocaleResolver;
+use Nowo\CookieConsentBundle\Render\CookieConsentModalRenderer;
 use Nowo\CookieConsentBundle\Repository\CookieConsentConfigRepository;
 use Nowo\CookieConsentBundle\Repository\CookieConsentConfigTranslationRepository;
 use PHPUnit\Framework\TestCase;
@@ -287,7 +288,7 @@ final class CookieConsentControllerTest extends TestCase
         );
         $translator ??= $this->createMock(TranslatorInterface::class);
 
-        return new CookieConsentController(
+        $renderer = new CookieConsentModalRenderer(
             $twig,
             $formFactory,
             $router,
@@ -303,6 +304,8 @@ final class CookieConsentControllerTest extends TestCase
             $skipRenderRoutes,
             $renderRoutes,
         );
+
+        return new CookieConsentController($renderer);
     }
 
     private function createTwig(): Environment

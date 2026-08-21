@@ -5,6 +5,8 @@ This guide provides step-by-step instructions for upgrading Cookie Consent Bundl
 ## Table of contents
 
 - [General upgrade process](#general-upgrade-process)
+- [To 1.9.5](#to-195)
+- [To 1.9.4](#to-194)
 - [To 1.9.3](#to-193)
 - [To 1.9.2](#to-192)
 - [To 1.9.1](#to-191)
@@ -75,6 +77,23 @@ This guide provides step-by-step instructions for upgrading Cookie Consent Bundl
 4. **Clear cache**: `php bin/console cache:clear`
 5. **Rebuild assets** if you ship the bundled JS: `php bin/console assets:install`
 6. **Test** the consent modal and logging in your environments
+
+## To 1.9.5
+
+Optional performance: replace ESI/sub-request embeds with the in-process Twig helper:
+
+```twig
+{% if nowo_cookie_consent_should_render() %}
+    {{ nowo_cookie_consent_render() }}
+{% endif %}
+```
+
+`{{ render(path('nowo_cookie_consent.show')) }}` remains supported.
+
+```bash
+composer update nowo-tech/cookie-consent-bundle
+php bin/console cache:clear
+```
 
 ## To 1.9.4
 

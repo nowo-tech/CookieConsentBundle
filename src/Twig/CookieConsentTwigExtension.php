@@ -12,6 +12,7 @@ use Nowo\CookieConsentBundle\Cookie\CookieChecker;
 use Nowo\CookieConsentBundle\Entity\CookieConsentConfig;
 use Nowo\CookieConsentBundle\Http\ColdStartRequestAttributes;
 use Nowo\CookieConsentBundle\Locale\LocaleResolver;
+use Nowo\CookieConsentBundle\Render\CookieConsentModalRenderer;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\RequestStack;
 use Twig\Extension\AbstractExtension;
@@ -44,6 +45,7 @@ class CookieConsentTwigExtension extends AbstractExtension
         private readonly array $cookieConsentDisabledRoutes,
         private readonly CmpUxOptionsResolver $cmpUxOptionsResolver,
         private readonly CookieInventoryProvider $inventoryProvider,
+        private readonly CookieConsentModalRenderer $modalRenderer,
         private readonly array $skipRenderRoutes = [],
         private readonly array $renderRoutes = [],
     ) {
@@ -74,6 +76,7 @@ class CookieConsentTwigExtension extends AbstractExtension
             new TwigFunction('nowo_cookie_consent_cookie_inventory', $this->getCookieInventory(...)),
             new TwigFunction('nowo_cookie_consent_should_embed_modal', $this->shouldEmbedModal(...)),
             new TwigFunction('nowo_cookie_consent_should_render', $this->shouldRenderConsent(...)),
+            new TwigFunction('nowo_cookie_consent_render', $this->renderConsentModal(...), ['is_safe' => ['html']]),
             new TwigFunction('nowo_cookie_consent_preferences_bubble_enabled', $this->isPreferencesBubbleEnabled(...)),
             new TwigFunction('nowo_cookie_consent_preferences_bubble_position', $this->getPreferencesBubblePosition(...)),
             new TwigFunction('nowo_cookie_consent_preferences_bubble_border_color', $this->getPreferencesBubbleBorderColor(...)),
@@ -419,8 +422,9 @@ class CookieConsentTwigExtension extends AbstractExtension
     /**
      * Returns whether the consent fragment should be rendered for the main request route.
      *
-     * Hosts can wrap `{{ render(path('nowo_cookie_consent.show')) }}` with this check to avoid
-     * an ESI/sub-request outside `render_routes` / on `skip_render_routes`.
+     * Hosts can wrap {@code {{ nowo_cookie_consent_render() }}} (or the legacy
+     * {@code {{ render(path('nowo_cookie_consent.show')) }}}) with this check to avoid
+     * Doctrine work outside {@code render_routes} / on {@code skip_render_routes}.
      *
      * @return bool True when the consent markup may be rendered
      */
@@ -433,6 +437,24 @@ class CookieConsentTwigExtension extends AbstractExtension
         }
 
         return !$this->routeTargeting->shouldSkipRender($this->resolveMainRouteName(), $this->skipRenderRoutes, $this->renderRoutes);
+    }
+
+    /**
+     * Renders the consent modal HTML in the current request (no kernel sub-request).
+     *
+     * Prefer this over {@code {{ render(path('nowo_cookie_consent.show')) }}} in host layouts.
+     * Still returns an empty string when {@see shouldRenderConsent()} would be false for route targeting
+     * (cold-start / skip lists are enforced inside the renderer and this helper).
+     *
+     * @return string Consent modal markup, or an empty string when skipped
+     */
+    public function renderConsentModal(): string
+    {
+        if (!$this->shouldRenderConsent()) {
+            return '';
+        }
+
+        return $this->modalRenderer->renderHtml($this->requestStack->getMainRequest());
     }
 
     /**

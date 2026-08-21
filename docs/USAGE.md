@@ -15,7 +15,23 @@
 
 ## Embed the modal
 
-Render the consent fragment when the user has not saved preferences yet, or when the floating bubble is enabled (so the modal can be reopened):
+**Preferred (no kernel sub-request):** render the modal HTML in the current request via Twig:
+
+```twig
+{% if nowo_cookie_consent_should_render() %}
+    {{ nowo_cookie_consent_render() }}
+{% endif %}
+```
+
+When the floating preferences bubble is enabled and you only want the modal while consent is missing (or the bubble needs the modal DOM), guard with `should_embed_modal` as well:
+
+```twig
+{% if nowo_cookie_consent_should_render() and nowo_cookie_consent_should_embed_modal() %}
+    {{ nowo_cookie_consent_render() }}
+{% endif %}
+```
+
+**Legacy ESI / sub-request** (still supported for `{{ render(path(...)) }}` / ESI caches):
 
 ```twig
 {% if nowo_cookie_consent_should_embed_modal() %}
@@ -25,15 +41,9 @@ Render the consent fragment when the user has not saved preferences yet, or when
 
 When the bubble is disabled, the legacy check is equivalent to `not nowo_cookie_consent_is_saved()`.
 
-To omit the consent fragment entirely on authenticated dashboards (no ESI sub-request, no inventory queries), configure `skip_render_routes` and optionally guard the embed:
+To omit the consent fragment entirely on authenticated dashboards (no modal HTML, no inventory queries), configure `skip_render_routes` and optionally guard the embed with `nowo_cookie_consent_should_render()`.
 
-```twig
-{% if nowo_cookie_consent_should_render() %}
-    {{ render(path('nowo_cookie_consent.show')) }}
-{% endif %}
-```
-
-`CookieConsentController::show` also returns an empty response when the main request route is outside `render_routes` (whitelist) or matches `skip_render_routes`, even if the host forgets the Twig guard.
+`CookieConsentModalRenderer` / `CookieConsentController::show` also return empty output when the main request route is outside `render_routes` (whitelist) or matches `skip_render_routes`, even if the host forgets the Twig guard.
 
 During cold start (before the database schema exists), Site Backup Bundle may set `_nowo_site_backup_schema_exists: false` on the main request. Cookie Consent Bundle then skips consent rendering and Doctrine work; `nowo_cookie_consent_should_render()` returns `false`. See [CONFIGURATION — Cold start / Site Backup](CONFIGURATION.md#cold-start--site-backup).
 

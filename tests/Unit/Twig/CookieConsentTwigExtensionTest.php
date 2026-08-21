@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace Nowo\CookieConsentBundle\Tests\Unit\Twig;
 
 use Nowo\CookieConsentBundle\Config\CmpUxOptionsResolver;
+use Nowo\CookieConsentBundle\Config\CookieConsentConfigResolver;
+use Nowo\CookieConsentBundle\Config\CookieConsentConfigSelector;
 use Nowo\CookieConsentBundle\Config\CookieConsentRoutePatternMatcher;
 use Nowo\CookieConsentBundle\Config\CookieConsentRouteTargeting;
 use Nowo\CookieConsentBundle\Config\CookieInventoryProvider;
@@ -14,11 +16,20 @@ use Nowo\CookieConsentBundle\Entity\CookieConsentConfig;
 use Nowo\CookieConsentBundle\Enum\CookieNameEnum;
 use Nowo\CookieConsentBundle\Http\ColdStartRequestAttributes;
 use Nowo\CookieConsentBundle\Locale\LocaleResolver;
+use Nowo\CookieConsentBundle\Render\CookieConsentModalRenderer;
+use Nowo\CookieConsentBundle\Repository\CookieConsentConfigRepository;
+use Nowo\CookieConsentBundle\Repository\CookieConsentConfigTranslationRepository;
 use Nowo\CookieConsentBundle\Repository\CookieDefinitionRepository;
 use Nowo\CookieConsentBundle\Twig\CookieConsentTwigExtension;
 use PHPUnit\Framework\TestCase;
+use Symfony\Component\Form\FormFactoryInterface;
+use Symfony\Component\Form\FormInterface;
+use Symfony\Component\Form\FormView;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\RequestStack;
+use Symfony\Component\Routing\RouterInterface;
+use Symfony\Contracts\Translation\TranslatorInterface;
+use Twig\Environment;
 use Twig\TwigFunction;
 
 final class CookieConsentTwigExtensionTest extends TestCase
@@ -427,6 +438,43 @@ final class CookieConsentTwigExtensionTest extends TestCase
         self::assertFalse($extension->shouldRenderConsent());
     }
 
+    public function testRenderConsentModalReturnsEmptyWhenShouldNotRender(): void
+    {
+        $main = Request::create('/staff');
+        $main->attributes->set('_route', 'staff_home');
+
+        $stack = new RequestStack();
+        $stack->push($main);
+
+        $extension = $this->createExtension(
+            $this->createChecker(false),
+            stack: $stack,
+            skipRenderRoutes: ['staff_*'],
+        );
+
+        self::assertSame('', $extension->renderConsentModal());
+    }
+
+    public function testRenderConsentModalDelegatesToRendererWhenAllowed(): void
+    {
+        $main = Request::create('/');
+        $main->attributes->set('_route', 'home');
+
+        $stack = new RequestStack();
+        $stack->push($main);
+
+        $extension = $this->createExtension($this->createChecker(false), stack: $stack);
+
+        self::assertSame('<div data-nowo-cc-modal></div>', $extension->renderConsentModal());
+    }
+
+    public function testShouldRenderConsentWithEmptyRequestStack(): void
+    {
+        $extension = $this->createExtension($this->createChecker(false), stack: new RequestStack());
+
+        self::assertTrue($extension->shouldRenderConsent());
+    }
+
     /**
      * @param list<string> $yamlRoutes
      * @param list<string> $disabledRoutes
@@ -448,6 +496,38 @@ final class CookieConsentTwigExtensionTest extends TestCase
     ): CookieConsentTwigExtension {
         $stack ??= new RequestStack();
 
+        $twig = $this->createMock(Environment::class);
+        $twig->method('render')->willReturn('<div data-nowo-cc-modal></div>');
+
+        $form = $this->createMock(FormInterface::class);
+        $form->method('createView')->willReturn(new FormView());
+        $formFactory = $this->createMock(FormFactoryInterface::class);
+        $formFactory->method('create')->willReturn($form);
+
+        $modalRenderer = new CookieConsentModalRenderer(
+            $twig,
+            $formFactory,
+            $this->createMock(RouterInterface::class),
+            new LocaleResolver(['en', 'es', 'it', 'fr'], 'en', true, $stack),
+            $stack,
+            new CookieConsentConfigResolver(
+                new CookieConsentConfigSelector(
+                    $this->createMock(CookieConsentConfigRepository::class),
+                    new CookieConsentRoutePatternMatcher(),
+                ),
+                $this->createMock(CookieConsentConfigTranslationRepository::class),
+                false,
+            ),
+            $this->createMock(TranslatorInterface::class),
+            new CookieConsentRouteTargeting(new CookieConsentRoutePatternMatcher()),
+            $fetchConfigViaApi,
+            'bootstrap',
+            null,
+            $disabledRoutes,
+            $skipRenderRoutes,
+            $renderRoutes,
+        );
+
         return new CookieConsentTwigExtension(
             $checker,
             new LocaleResolver(['en', 'es', 'it', 'fr'], 'en', true, $stack),
@@ -460,6 +540,7 @@ final class CookieConsentTwigExtensionTest extends TestCase
             $disabledRoutes,
             new CmpUxOptionsResolver($stack, 'light', false, false, false, false, false, false, false, false, 'bottom-right', null, null, [], $useDatabaseConfig),
             new CookieInventoryProvider($this->createMock(CookieDefinitionRepository::class), $inventory !== [], $inventory),
+            $modalRenderer,
             $skipRenderRoutes,
             $renderRoutes,
         );

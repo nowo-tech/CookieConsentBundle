@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## Table of contents
 
 - [[Unreleased]](#unreleased)
+- [[1.9.5] - 2026-08-21](#195---2026-08-21)
 - [[1.9.4] - 2026-08-20](#194---2026-08-20)
 - [[1.9.2] - 2026-08-19](#192---2026-08-19)
 - [[1.9.1] - 2026-08-18](#191---2026-08-18)
@@ -96,6 +97,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - [Documentation](#documentation)
 
 ## [Unreleased]
+
+## [1.9.5] - 2026-08-21
+
+### Added
+
+- **`nowo_cookie_consent_render()`** Twig function and `CookieConsentModalRenderer`: embed the consent modal in the current request (no kernel sub-request). Prefer this over `{{ render(path('nowo_cookie_consent.show')) }}` in host layouts. Routes `nowo_cookie_consent.show` / `show_if_not_set` remain for ESI / legacy embeds.
+
+[1.9.5]: https://github.com/nowo-tech/CookieConsentBundle/releases/tag/v1.9.5
 
 ## [1.9.4] - 2026-08-20
 

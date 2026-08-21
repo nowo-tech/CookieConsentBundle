@@ -61,12 +61,14 @@ Update README **Tests and coverage** percentages after each release when coverag
 
 ## Release history
 
+- **v1.9.5** — `nowo_cookie_consent_render()` in-process modal embed (no kernel sub-request).
 - **v1.9.2** — Memoize consent profile Doctrine lookups per request; reuse resolved config in modal sub-request.
 - **v1.9.0** — CSP-safe standalone modal CSS; Beacon skin upstream; bottom-left + equal-weight defaults for new profiles.
 - **v1.7.0** — Cold-start skip for Doctrine-backed consent (SiteBackup attribute).
 
 | Version | Date | Notes |
 | --- | --- | --- |
+| [1.9.5](CHANGELOG.md#195---2026-08-21) | 2026-08-21 | `nowo_cookie_consent_render()` — in-process modal (no sub-request) |
 | [1.9.2](CHANGELOG.md#192---2026-08-19) | 2026-08-19 | Consent profile lookup memoization; modal sub-request reuse |
 | [1.9.0](CHANGELOG.md#190---2026-08-15) | 2026-08-15 | Standalone `nowo-cookie-consent.css`; skip style inject under CSP; skin polish |
 | [1.8.0](CHANGELOG.md#180---2026-08-15) | 2026-08-15 | Mid-migration schema probe for cookie config table |
