@@ -4,6 +4,8 @@ This guide provides step-by-step instructions for upgrading Cookie Consent Bundl
 
 ## Table of contents
 
+
+- [From 1.9.5 to 1.9.6](#from-195-to-196)
 - [General upgrade process](#general-upgrade-process)
 - [To 1.9.5](#to-195)
 - [To 1.9.4](#to-194)
