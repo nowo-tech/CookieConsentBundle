@@ -5,6 +5,7 @@ This guide provides step-by-step instructions for upgrading Cookie Consent Bundl
 ## Table of contents
 
 
+- [From 1.9.6 to 1.9.7](#from-196-to-197)
 - [From 1.9.5 to 1.9.6](#from-195-to-196)
 - [General upgrade process](#general-upgrade-process)
 - [To 1.9.5](#to-195)
@@ -70,6 +71,20 @@ This guide provides step-by-step instructions for upgrading Cookie Consent Bundl
   - [Breaking changes](#breaking-changes)
 - [Future versions](#future-versions)
 - [Getting help](#getting-help)
+
+## From 1.9.6 to 1.9.7
+
+FrankenPHP worker memoization now clears via `ResetInterface`. **No required application changes.**
+
+```bash
+composer update nowo-tech/cookie-consent-bundle
+php bin/console cache:clear
+```
+
+### Notes
+
+1. Host shims that call `clearRuntimeCache()` between worker requests can be removed.
+2. Behaviour for non-worker / classic PHP-FPM is unchanged.
 
 ## General upgrade process
 

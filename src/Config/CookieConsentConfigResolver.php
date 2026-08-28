@@ -6,6 +6,7 @@ namespace Nowo\CookieConsentBundle\Config;
 
 use Nowo\CookieConsentBundle\Entity\CookieConsentConfig;
 use Nowo\CookieConsentBundle\Repository\CookieConsentConfigTranslationRepository;
+use Symfony\Contracts\Service\ResetInterface;
 
 use function array_key_exists;
 
@@ -15,7 +16,7 @@ use function array_key_exists;
  * Results are memoized for the service lifetime (typically one request) so Twig,
  * sub-requests, and the config API do not repeat Doctrine lookups.
  */
-final class CookieConsentConfigResolver
+final class CookieConsentConfigResolver implements ResetInterface
 {
     /** @var array<string, ResolvedCookieConsentConfig|null> */
     private array $resolvedByLocaleAndRoute = [];
@@ -36,10 +37,17 @@ final class CookieConsentConfigResolver
 
     /**
      * Clears in-memory resolution caches after admin writes.
+     *
+     * Also used as {@see ResetInterface::reset()} between FrankenPHP worker requests.
      */
     public function clearRuntimeCache(): void
     {
         $this->resolvedByLocaleAndRoute = [];
+    }
+
+    public function reset(): void
+    {
+        $this->clearRuntimeCache();
     }
 
     /**

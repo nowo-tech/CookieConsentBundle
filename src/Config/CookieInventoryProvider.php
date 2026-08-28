@@ -7,6 +7,7 @@ namespace Nowo\CookieConsentBundle\Config;
 use Nowo\CookieConsentBundle\Entity\CookieConsentConfig;
 use Nowo\CookieConsentBundle\Entity\CookieDefinition;
 use Nowo\CookieConsentBundle\Repository\CookieDefinitionRepository;
+use Symfony\Contracts\Service\ResetInterface;
 
 /**
  * Builds cookie inventory tables for the consent modal and legal pages.
@@ -18,7 +19,7 @@ use Nowo\CookieConsentBundle\Repository\CookieDefinitionRepository;
  * Database definitions and locale rows are memoized for the service lifetime (typically one request)
  * so Twig category loops and form builders do not re-query Doctrine.
  */
-final class CookieInventoryProvider
+final class CookieInventoryProvider implements ResetInterface
 {
     /**
      * @var list<array{
@@ -68,6 +69,22 @@ final class CookieInventoryProvider
         private readonly bool $useCookieInventory,
         private readonly array $yamlCookieInventory,
     ) {
+    }
+
+    /**
+     * Clears in-memory inventory caches (FrankenPHP worker request boundary).
+     */
+    public function clearRuntimeCache(): void
+    {
+        $this->normalizedYamlInventory     = null;
+        $this->definitionsByConfigKey      = [];
+        $this->localeListCache             = [];
+        $this->hasDatabaseDefinitionsCache = [];
+    }
+
+    public function reset(): void
+    {
+        $this->clearRuntimeCache();
     }
 
     /**

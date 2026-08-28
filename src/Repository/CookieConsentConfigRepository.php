@@ -7,6 +7,7 @@ namespace Nowo\CookieConsentBundle\Repository;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
 use Nowo\CookieConsentBundle\Entity\CookieConsentConfig;
+use Symfony\Contracts\Service\ResetInterface;
 
 /**
  * Doctrine repository for {@see CookieConsentConfig} entities.
@@ -16,7 +17,7 @@ use Nowo\CookieConsentBundle\Entity\CookieConsentConfig;
  *
  * @extends ServiceEntityRepository<CookieConsentConfig>
  */
-class CookieConsentConfigRepository extends ServiceEntityRepository
+class CookieConsentConfigRepository extends ServiceEntityRepository implements ResetInterface
 {
     private bool $defaultEnabledLoaded = false;
 
@@ -40,6 +41,8 @@ class CookieConsentConfigRepository extends ServiceEntityRepository
 
     /**
      * Clears in-memory lookup caches after admin writes or Doctrine flushes.
+     *
+     * Also used as {@see ResetInterface::reset()} between FrankenPHP worker requests.
      */
     public function clearRuntimeCache(): void
     {
@@ -47,6 +50,11 @@ class CookieConsentConfigRepository extends ServiceEntityRepository
         $this->defaultEnabled       = null;
         $this->allEnabled           = null;
         $this->allEnabledNonDefault = null;
+    }
+
+    public function reset(): void
+    {
+        $this->clearRuntimeCache();
     }
 
     /**

@@ -99,6 +99,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 
+## [1.9.7] - 2026-08-29
+
+### Added
+
+- **FrankenPHP worker:** `CookieConsentConfigRepository`, `CookieConsentConfigResolver`, and
+  `CookieInventoryProvider` implement `ResetInterface` so memoized lookups clear between worker
+  requests (hosts no longer need a custom `CookieConsentWorkerCacheReset` shim).
+
+[1.9.7]: https://github.com/nowo-tech/CookieConsentBundle/releases/tag/v1.9.7
+
 ## [1.9.6] - 2026-08-24
 
 ### Changed
