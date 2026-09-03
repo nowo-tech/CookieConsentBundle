@@ -301,4 +301,30 @@ final class CookieInventoryProviderTest extends TestCase
         self::assertSame('', $inventory[0]['provider']);
         self::assertSame('', $inventory[0]['purpose']);
     }
+
+    public function testClearRuntimeCacheAndReset(): void
+    {
+        $config = (new CookieConsentConfig())->setEnabled(true)->setDefault(true);
+
+        $definition = (new CookieDefinition())
+            ->setName('_pk_id')
+            ->setDuration('1 year')
+            ->setCategory('analytics')
+            ->setType(CookieDefinition::TYPE_THIRD_PARTY)
+            ->setSortOrder(0)
+            ->setConfig($config);
+
+        $repository = $this->createMock(CookieDefinitionRepository::class);
+        $repository->expects(self::exactly(3))->method('findByConfigOrdered')->willReturn([$definition]);
+
+        $provider = new CookieInventoryProvider($repository, true, []);
+
+        self::assertSame('_pk_id', $provider->listForLocale($config, 'en')[0]['name']);
+
+        $provider->clearRuntimeCache();
+        self::assertSame('_pk_id', $provider->listForLocale($config, 'en')[0]['name']);
+
+        $provider->reset();
+        self::assertSame('_pk_id', $provider->listForLocale($config, 'en')[0]['name']);
+    }
 }
