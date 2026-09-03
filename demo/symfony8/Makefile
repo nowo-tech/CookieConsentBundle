@@ -31,7 +31,7 @@ up:
 	@i=0; \
 	until $(call dc,exec -T php true) >/dev/null 2>&1; do \
 		i=$$((i+1)); \
-		if [ $$i -ge 60 ]; then echo "PHP container not ready"; exit 1; fi; \
+		if [ $$i -ge 120 ]; then echo "PHP container not ready"; exit 1; fi; \
 		sleep 2; \
 	done
 	@echo "Installing dependencies..."
