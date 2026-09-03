@@ -82,7 +82,7 @@ setup-db: ensure-up
 		$(call dc,logs --tail=50 db php) || true; \
 		exit 1; \
 	fi
-	@$(call dc,exec -T php php bin/console doctrine:migrations:migrate --no-interaction --allow-no-migration) || true
+	@$(call dc,exec -T php php bin/console doctrine:schema:update --force --no-interaction)
 	@$(call dc,exec -T php php bin/console demo:seed-cookie-consent-config --if-empty --apply-playground)
 	@$(call dc,exec -T php php bin/console demo:seed-cookie-definitions)
 
