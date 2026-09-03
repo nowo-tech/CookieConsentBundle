@@ -68,7 +68,21 @@ install: ensure-up
 	@$(call dc,exec -T -e COMPOSER_MEMORY_LIMIT=-1 php composer install --no-interaction)
 
 setup-db: ensure-up
-	@$(call dc,exec -T php php bin/console doctrine:migrations:migrate --no-interaction --allow-no-migration) || true
+	@echo "Waiting for MySQL from PHP container..."
+	@i=0; \
+	while [ $$i -lt 60 ]; do \
+		if $(call dc,exec -T php php bin/console doctrine:database:create --if-not-exists) >/dev/null 2>&1; then \
+			break; \
+		fi; \
+		i=$$((i+1)); \
+		sleep 2; \
+	done; \
+	if [ $$i -ge 60 ]; then \
+		echo "MySQL not reachable from demo PHP container"; \
+		$(call dc,logs --tail=50 db php) || true; \
+		exit 1; \
+	fi
+	@$(call dc,exec -T php php bin/console doctrine:schema:update --force --no-interaction)
 	@$(call dc,exec -T php php bin/console demo:seed-cookie-consent-config --if-empty --apply-playground)
 	@$(call dc,exec -T php php bin/console demo:seed-cookie-definitions)
 
