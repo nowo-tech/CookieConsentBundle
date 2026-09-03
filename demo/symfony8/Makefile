@@ -28,7 +28,12 @@ up:
 	@if [ ! -f .env ]; then cp .env.example .env 2>/dev/null || true; fi
 	@$(call dc,up -d)
 	@echo "Waiting for container to be ready..."
-	@sleep 5
+	@i=0; \
+	until $(call dc,exec -T php true) >/dev/null 2>&1; do \
+		i=$$((i+1)); \
+		if [ $$i -ge 60 ]; then echo "PHP container not ready"; exit 1; fi; \
+		sleep 2; \
+	done
 	@echo "Installing dependencies..."
 	@$(call dc,exec -T -e COMPOSER_MEMORY_LIMIT=-1 php composer install --no-interaction)
 	@$(MAKE) setup-db
@@ -58,18 +63,19 @@ install: ensure-up
 setup-db: ensure-up
 	@echo "Waiting for MySQL from PHP container..."
 	@i=0; \
-	while [ $$i -lt 30 ]; do \
-		if $(call dc,exec -T php php bin/console doctrine:migrations:migrate --no-interaction --allow-no-migration) 2>/dev/null; then \
+	while [ $$i -lt 60 ]; do \
+		if $(call dc,exec -T php php bin/console doctrine:database:create --if-not-exists 2>/dev/null; then \
 			break; \
 		fi; \
 		i=$$((i+1)); \
 		sleep 2; \
 	done; \
-	if [ $$i -ge 30 ]; then \
+	if [ $$i -ge 60 ]; then \
 		echo "MySQL not reachable from demo PHP container"; \
 		$(call dc,logs --tail=50 db php) || true; \
 		exit 1; \
 	fi
+	@$(call dc,exec -T php php bin/console doctrine:migrations:migrate --no-interaction --allow-no-migration) || true
 	@$(call dc,exec -T php php bin/console demo:seed-cookie-consent-config --if-empty --apply-playground)
 	@$(call dc,exec -T php php bin/console demo:seed-cookie-definitions)
 
