@@ -4,7 +4,7 @@
 COMPOSE_BIN := $(shell docker compose version >/dev/null 2>&1 && echo "docker compose" || echo "docker-compose")
 dc = $(SHELL) -c '$(COMPOSE_BIN) $(1)'
 
-.PHONY: help up down build install shell logs test test-coverage cache-clear update-bundle ensure-up restart setup-db
+.PHONY: help up down build install shell logs test test-coverage cache-clear update-bundle ensure-up restart setup-db composer-install
 
 BUNDLE_ROOT := $(abspath $(dir $(lastword $(MAKEFILE_LIST)))/../..)
 export DOCKER_CONFIG := $(BUNDLE_ROOT)/.docker
@@ -23,19 +23,26 @@ help:
 	@echo "  make test           Run tests"
 	@echo "  make update-bundle  Refresh bundle autoload and cache"
 
+composer-install:
+	@echo "Installing Composer dependencies (ephemeral container)..."
+	@$(call dc,run --rm --no-deps --entrypoint "" -e COMPOSER_MEMORY_LIMIT=-1 php composer install --no-interaction --no-scripts)
+
 # REQ-DEMO-005: canonical up — Waiting…, Installing…, Demo started at: from PORT
 up:
 	@if [ ! -f .env ]; then cp .env.example .env 2>/dev/null || true; fi
+	@$(MAKE) composer-install
 	@$(call dc,up -d)
-	@echo "Waiting for container to be ready..."
-	@i=0; \
-	until $(call dc,exec -T php true) >/dev/null 2>&1; do \
-		i=$$((i+1)); \
-		if [ $$i -ge 120 ]; then echo "PHP container not ready"; exit 1; fi; \
+	@echo "Waiting for FrankenPHP to stay up..."
+	@ok=0; \
+	for i in 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27 28 29 30; do \
+		if $(call dc,exec -T php true) >/dev/null 2>&1; then ok=1; break; fi; \
 		sleep 2; \
-	done
-	@echo "Installing dependencies..."
-	@$(call dc,exec -T -e COMPOSER_MEMORY_LIMIT=-1 php composer install --no-interaction)
+	done; \
+	if [ "$$ok" != "1" ]; then \
+		echo "Demo php container failed to stay up. Recent logs:"; \
+		$(call dc,logs --tail=100 php) || true; \
+		exit 1; \
+	fi
 	@$(MAKE) setup-db
 	@PORT=$$(grep "^PORT=" .env 2>/dev/null | cut -d= -f2 | tr -d '\r'); \
 	[ -z "$$PORT" ] && PORT=$$(grep "^PORT=" .env.example 2>/dev/null | cut -d= -f2 | tr -d '\r'); \
