@@ -71,7 +71,7 @@ setup-db: ensure-up
 	@echo "Waiting for MySQL from PHP container..."
 	@i=0; \
 	while [ $$i -lt 60 ]; do \
-		if $(call dc,exec -T php php bin/console doctrine:database:create --if-not-exists 2>/dev/null; then \
+		if $(call dc,exec -T php php bin/console doctrine:database:create --if-not-exists) >/dev/null 2>&1; then \
 			break; \
 		fi; \
 		i=$$((i+1)); \
