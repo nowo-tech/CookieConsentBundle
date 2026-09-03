@@ -2,7 +2,7 @@ FROM dunglas/frankenphp:1-php8.4-alpine
 
 RUN apk add --no-cache git unzip bash curl ca-certificates sqlite
 
-RUN install-php-extensions pdo_sqlite zip intl
+RUN install-php-extensions pdo_mysql zip intl
 
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 

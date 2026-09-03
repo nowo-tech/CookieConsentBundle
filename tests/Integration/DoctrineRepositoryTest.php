@@ -117,6 +117,23 @@ final class DoctrineRepositoryTest extends TestCase
         self::assertSame($default->getId(), $repository->findDefaultEnabled()?->getId());
     }
 
+    public function testResetClearsRuntimeCache(): void
+    {
+        $default = (new CookieConsentConfig())
+            ->setEnabled(true)
+            ->setDefault(true)
+            ->setName('Default');
+
+        $this->entityManager->persist($default);
+        $this->entityManager->flush();
+
+        $repository = new CookieConsentConfigRepository($this->createRegistry());
+
+        self::assertSame($default->getId(), $repository->findDefaultEnabled()?->getId());
+        $repository->reset();
+        self::assertSame($default->getId(), $repository->findDefaultEnabled()?->getId());
+    }
+
     public function testTranslationRepositoryFindsLocale(): void
     {
         $config      = (new CookieConsentConfig())->setEnabled(true)->setDefault(true);
