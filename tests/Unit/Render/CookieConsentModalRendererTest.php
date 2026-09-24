@@ -16,7 +16,6 @@ use PHPUnit\Framework\TestCase;
 use Symfony\Component\Form\FormFactoryInterface;
 use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\Routing\RouterInterface;
-use Symfony\Contracts\Translation\TranslatorInterface;
 use Twig\Environment;
 
 final class CookieConsentModalRendererTest extends TestCase
@@ -37,7 +36,6 @@ final class CookieConsentModalRendererTest extends TestCase
                 $this->createMock(CookieConsentConfigTranslationRepository::class),
                 false,
             ),
-            $this->createMock(TranslatorInterface::class),
             new CookieConsentRouteTargeting(new CookieConsentRoutePatternMatcher()),
         );
 

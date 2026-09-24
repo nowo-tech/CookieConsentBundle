@@ -11,10 +11,16 @@ use Doctrine\ORM\Event\PostUpdateEventArgs;
 use Nowo\CookieConsentBundle\Config\CookieConsentConfigResolver;
 use Nowo\CookieConsentBundle\Config\CookieConsentConfigSelector;
 use Nowo\CookieConsentBundle\Config\CookieConsentRoutePatternMatcher;
+use Nowo\CookieConsentBundle\Config\CookieInventoryProvider;
 use Nowo\CookieConsentBundle\Entity\CookieConsentConfig;
+use Nowo\CookieConsentBundle\Entity\CookieConsentConfigTranslation;
+use Nowo\CookieConsentBundle\Entity\CookieDefinition;
+use Nowo\CookieConsentBundle\Entity\CookieDefinitionTranslation;
 use Nowo\CookieConsentBundle\EventListener\CookieConsentConfigRuntimeCacheListener;
 use Nowo\CookieConsentBundle\Repository\CookieConsentConfigRepository;
 use Nowo\CookieConsentBundle\Repository\CookieConsentConfigTranslationRepository;
+use Nowo\CookieConsentBundle\Repository\CookieDefinitionRepository;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use stdClass;
 
@@ -91,5 +97,43 @@ final class CookieConsentConfigRuntimeCacheListenerTest extends TestCase
         $listener->postPersist(new PostPersistEventArgs($config, $objectManager));
         $listener->postUpdate(new PostUpdateEventArgs($config, $objectManager));
         $listener->postRemove(new PostRemoveEventArgs($config, $objectManager));
+    }
+
+    /**
+     * @return iterable<string, array{object}>
+     */
+    public static function provideInventoryAndCopyEntities(): iterable
+    {
+        yield 'config translation' => [new CookieConsentConfigTranslation()];
+        yield 'cookie definition' => [new CookieDefinition()];
+        yield 'cookie definition translation' => [new CookieDefinitionTranslation()];
+    }
+
+    #[DataProvider('provideInventoryAndCopyEntities')]
+    public function testInvalidatesAllRuntimeCachesWhenCopyOrInventoryChanges(object $entity): void
+    {
+        $configRepository = $this->createMock(CookieConsentConfigRepository::class);
+        $configRepository->expects(self::once())->method('clearRuntimeCache');
+
+        $definitionRepository = $this->createMock(CookieDefinitionRepository::class);
+        $definitionRepository->expects(self::exactly(2))->method('findByConfigOrdered')->willReturn([]);
+
+        $inventoryProvider = new CookieInventoryProvider($definitionRepository, true, []);
+        $config            = new CookieConsentConfig();
+
+        $resolver = new CookieConsentConfigResolver(
+            new CookieConsentConfigSelector(
+                $this->createMock(CookieConsentConfigRepository::class),
+                new CookieConsentRoutePatternMatcher(),
+            ),
+            $this->createMock(CookieConsentConfigTranslationRepository::class),
+            true,
+        );
+
+        $listener = new CookieConsentConfigRuntimeCacheListener($configRepository, $resolver, $inventoryProvider);
+
+        $inventoryProvider->listForLocale($config, 'en');
+        $listener->invalidateWhenConfigChanged($entity);
+        $inventoryProvider->listForLocale($config, 'en');
     }
 }

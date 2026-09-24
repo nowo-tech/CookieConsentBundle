@@ -58,6 +58,8 @@ class CookieConsentType extends AbstractType
      *
      * @param FormBuilderInterface<array<string, mixed>|null> $builder The form builder
      * @param array<string, mixed> $options The form options
+     *
+     * @return void
      */
     public function buildForm(FormBuilderInterface $builder, array $options): void
     {
@@ -94,20 +96,22 @@ class CookieConsentType extends AbstractType
             $builder->add($cookiesBuilder);
         }
 
+        $databaseMessages = $this->resolveActiveResolvedConfig()?->getTranslationMessages() ?? [];
+
         $this->addWithDefaults($builder, 'save', SubmitType::class, [
-            'label'       => 'nowo_cookie_consent.save',
+            ...$this->buildButtonLabelOptions('nowo_cookie_consent.save', $databaseMessages),
             'help'        => false,
             'placeholder' => false,
             'attr'        => ['class' => 'btn nowo-cookie-consent__btn nowo-cookie-consent__btn--secondary'],
         ]);
         $this->addWithDefaults($builder, 'use_only_functional_cookies', SubmitType::class, [
-            'label'       => 'nowo_cookie_consent.use_only_functional_cookies',
+            ...$this->buildButtonLabelOptions('nowo_cookie_consent.use_only_functional_cookies', $databaseMessages),
             'help'        => false,
             'placeholder' => false,
             'attr'        => ['class' => 'btn nowo-cookie-consent__btn nowo-cookie-consent__btn--secondary'],
         ]);
         $this->addWithDefaults($builder, 'use_all_cookies', SubmitType::class, [
-            'label'       => 'nowo_cookie_consent.use_all_cookies',
+            ...$this->buildButtonLabelOptions('nowo_cookie_consent.use_all_cookies', $databaseMessages),
             'help'        => false,
             'placeholder' => false,
             'attr'        => ['class' => 'btn nowo-cookie-consent__btn'],
@@ -236,7 +240,30 @@ class CookieConsentType extends AbstractType
         return $inventory;
     }
 
+    /**
+     * Uses the database copy of a button label as a literal (untranslated) label when the active profile defines it.
+     *
+     * @param array<string, string> $databaseMessages
+     *
+     * @return array<string, mixed>
+     */
+    private function buildButtonLabelOptions(string $messageId, array $databaseMessages): array
+    {
+        $label = $databaseMessages[$messageId] ?? '';
+
+        if ($label === '') {
+            return ['label' => $messageId];
+        }
+
+        return ['label' => $label, 'translation_domain' => false];
+    }
+
     private function resolveActiveConfig(): ?CookieConsentConfig
+    {
+        return $this->resolveActiveResolvedConfig()?->getConfig();
+    }
+
+    private function resolveActiveResolvedConfig(): ?ResolvedCookieConsentConfig
     {
         $request = $this->requestStack->getMainRequest();
 
@@ -244,7 +271,7 @@ class CookieConsentType extends AbstractType
             $resolved = $request->attributes->get('nowo_cookie_consent_config');
 
             if ($resolved instanceof ResolvedCookieConsentConfig) {
-                return $resolved->getConfig();
+                return $resolved;
             }
         }
 
@@ -252,7 +279,7 @@ class CookieConsentType extends AbstractType
         $route  = $request?->attributes->get('_route');
         $route  = is_string($route) && $route !== '' ? $route : null;
 
-        return $this->configResolver->resolve($locale, $route)?->getConfig();
+        return $this->configResolver->resolve($locale, $route);
     }
 
     /**
@@ -298,6 +325,8 @@ class CookieConsentType extends AbstractType
      *
      * @param FormInterface<array<string, mixed>|null> $form
      * @param array<string, mixed> $options
+     *
+     * @return void
      */
     public function finishView(FormView $view, FormInterface $form, array $options): void
     {
@@ -314,6 +343,8 @@ class CookieConsentType extends AbstractType
      * Configures default options for the consent form type.
      *
      * @param OptionsResolver $resolver The options resolver
+     *
+     * @return void
      */
     public function configureOptions(OptionsResolver $resolver): void
     {

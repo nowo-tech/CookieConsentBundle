@@ -61,7 +61,13 @@ GDPR **cookie consent** for Symfony: modal with category toggles, granular per-c
 
 ### Cookie runtime
 
-- **FR-COOKIE-001**: `CookieChecker`, `CookieHandler`, `CookieLogger`.
+- **FR-COOKIE-001**: `CookieChecker`, `CookieHandler`, `CookieLogger` — read `RequestStack` / obtain EntityManager per call (no request capture in constructors).
+
+### FrankenPHP worker
+
+- **FR-WORKER-001**: Shared services must not capture `Request`, user, locale or consent state across requests when the kernel is not reset (`reset_kernel false` / scenario B).
+- **FR-WORKER-002**: Memoizing services (`CookieConsentConfigResolver`, `CookieInventoryProvider`, `CookieConsentConfigRepository`) implement `ResetInterface` and are cleared by `CookieConsentRuntimeCacheResetSubscriber` on every main `kernel.request`.
+- **FR-WORKER-003**: Database profile copy is exposed via `nowo_cookie_consent_trans()`; do not register per-request catalogues with `Translator::addResource()`.
 
 ### Controllers
 
@@ -70,11 +76,11 @@ GDPR **cookie consent** for Symfony: modal with category toggles, granular per-c
 ### Forms & events
 
 - **FR-FORM-001**: Consent, config settings, definition types.
-- **FR-EVT-001**: Form and translation subscribers.
+- **FR-EVT-001**: Form, translation, schema-ready and runtime-cache-reset subscribers.
 
 ### Twig
 
-- **FR-TWIG-001**: Path pass; `CookieConsentTwigExtension`, `CmpUxTwigExtension`, `CookieConsentAdminTwigExtension`.
+- **FR-TWIG-001**: Path pass; `CookieConsentTwigExtension`, `CmpUxTwigExtension`, `CookieConsentAdminTwigExtension`, `CookieConsentTranslationTwigExtension`.
 - **FR-TWIG-003**: Bootstrap/Tailwind modal, admin views, form themes.
 
 ### Frontend (TypeScript)
@@ -97,9 +103,10 @@ GDPR **cookie consent** for Symfony: modal with category toggles, granular per-c
 
 ## Success Criteria
 
-- **SC-001**: **98/98** files under `src/` mapped (includes co-located Vitest).
+- **SC-001**: Production sources under `src/` mapped in [`code-inventory.md`](code-inventory.md) (includes co-located Vitest).
 - **SC-002**: Config keys match `docs/CONFIGURATION.md`.
 - **SC-003**: `composer qa`, `pnpm test`, PHPUnit, PHPStan pass.
+- **SC-004**: FrankenPHP worker scenario B (`reset_kernel false`) viable per [`docs/FRANKENPHP-WORKER-AUDIT.md`](../../docs/FRANKENPHP-WORKER-AUDIT.md).
 
 ---
 

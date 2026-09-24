@@ -28,7 +28,6 @@ use Symfony\Component\Form\FormView;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\Routing\RouterInterface;
-use Symfony\Contracts\Translation\TranslatorInterface;
 use Twig\Environment;
 use Twig\TwigFunction;
 
@@ -518,7 +517,6 @@ final class CookieConsentTwigExtensionTest extends TestCase
                 $this->createMock(CookieConsentConfigTranslationRepository::class),
                 false,
             ),
-            $this->createMock(TranslatorInterface::class),
             new CookieConsentRouteTargeting(new CookieConsentRoutePatternMatcher()),
             $fetchConfigViaApi,
             'bootstrap',

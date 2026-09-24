@@ -83,7 +83,7 @@ final class CookieCheckerTest extends TestCase
         self::assertFalse($checker->isCookieAllowedByUser('_ga', 'analytics'));
     }
 
-    public function testGranularPreferencesCacheResult(): void
+    public function testGranularPreferencesAreStableWithinRequest(): void
     {
         $request = Request::create('/');
         $request->cookies->set(CookieNameEnum::COOKIE_CONSENT_GRANULAR_NAME, '{"_ga": true}');
@@ -139,6 +139,54 @@ final class CookieCheckerTest extends TestCase
         $checker = new CookieChecker($this->createRequestStack($request));
 
         self::assertSame([], $checker->getGranularPreferences());
+    }
+
+    public function testConsecutiveRequestsOnSameInstanceDoNotLeakConsentState(): void
+    {
+        $stack   = new RequestStack();
+        $checker = new CookieChecker($stack);
+
+        $first = Request::create('/');
+        $first->cookies->set(CookieNameEnum::COOKIE_CONSENT_NAME, date('r'));
+        $first->cookies->set(CookieNameEnum::getCookieCategoryName('analytics'), 'true');
+        $first->cookies->set(CookieNameEnum::COOKIE_CONSENT_GRANULAR_NAME, '{"_ga": true}');
+        $stack->push($first);
+
+        self::assertTrue($checker->isCookieConsentSavedByUser());
+        self::assertTrue($checker->isCategoryAllowedByUser('analytics'));
+        self::assertSame(['_ga' => true], $checker->getGranularPreferences());
+        self::assertTrue($checker->isCookieAllowedByUser('_ga', 'analytics'));
+
+        $stack->pop();
+        $second = Request::create('/');
+        $second->cookies->set(CookieNameEnum::COOKIE_CONSENT_GRANULAR_NAME, '{"_ga": false}');
+        $stack->push($second);
+
+        self::assertFalse($checker->isCookieConsentSavedByUser());
+        self::assertFalse($checker->isCategoryAllowedByUser('analytics'));
+        self::assertSame(['_ga' => false], $checker->getGranularPreferences());
+        self::assertFalse($checker->isCookieAllowedByUser('_ga', 'analytics'));
+
+        $stack->pop();
+        $third = Request::create('/');
+        $stack->push($third);
+
+        self::assertNull($checker->getGranularPreferences());
+        self::assertFalse($checker->isCookieAllowedByUser('_ga', 'analytics'));
+    }
+
+    public function testInstanceBuiltWithoutRequestSeesLaterRequests(): void
+    {
+        $stack   = new RequestStack();
+        $checker = new CookieChecker($stack);
+
+        self::assertFalse($checker->isCookieConsentSavedByUser());
+
+        $request = Request::create('/');
+        $request->cookies->set(CookieNameEnum::COOKIE_CONSENT_NAME, date('r'));
+        $stack->push($request);
+
+        self::assertTrue($checker->isCookieConsentSavedByUser());
     }
 
     private function createRequestStack(Request $request): RequestStack

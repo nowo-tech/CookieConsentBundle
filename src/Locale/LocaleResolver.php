@@ -64,6 +64,34 @@ final class LocaleResolver
     }
 
     /**
+     * Maps an arbitrary (e.g. client-supplied) locale to an enabled locale.
+     *
+     * Tries the exact locale, then its primary language subtag, then the default locale.
+     *
+     * @param string $locale The requested locale code
+     *
+     * @return string An enabled locale code (or the fallback when none is configured)
+     */
+    public function normalize(string $locale): string
+    {
+        $candidate = $this->normalizeLocale($locale);
+
+        if ($candidate !== null) {
+            if ($this->isEnabled($candidate)) {
+                return $candidate;
+            }
+
+            $primary = explode('-', str_replace('_', '-', $candidate))[0];
+
+            if ($this->isEnabled($primary)) {
+                return $primary;
+            }
+        }
+
+        return $this->getFallbackLocale();
+    }
+
+    /**
      * Resolves the best matching enabled locale for the request.
      *
      * @param Request $request The current HTTP request
@@ -95,6 +123,11 @@ final class LocaleResolver
             }
         }
 
+        return $this->getFallbackLocale();
+    }
+
+    private function getFallbackLocale(): string
+    {
         if ($this->isEnabled($this->defaultLocale)) {
             return $this->defaultLocale;
         }

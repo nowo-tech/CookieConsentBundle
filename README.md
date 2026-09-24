@@ -9,7 +9,7 @@ Frontend behavior is implemented in TypeScript and built with Vite (`make assets
 
 ![FrankenPHP Friendly Worker Mode](docs/images/frankenphp-friendly.png)
 
-This bundle is **FrankenPHP worker mode friendly**.
+This bundle is **FrankenPHP worker mode friendly**, including when the kernel is **not** reset between requests (`reset_kernel false`). See the [FrankenPHP worker audit](docs/FRANKENPHP-WORKER-AUDIT.md).
 
 ## Features
 
@@ -19,8 +19,9 @@ This bundle is **FrankenPHP worker mode friendly**.
 - **Admin UI** — `/cookie-consent-config` (profile, behavior, appearance, modals, route targeting) plus CRUD for cookie definitions.
 - **Preferences bubble** — reopen consent after the first choice.
 - **Route targeting** — `render_routes` / `skip_render_routes`; helpers `nowo_cookie_consent_should_render()` / `nowo_cookie_consent_render()`.
-- **Database config** — `use_database_config` so the admin UI can override YAML at runtime.
+- **Database config** — `use_database_config` so the admin UI can override YAML at runtime; profile copy via `nowo_cookie_consent_trans()`.
 - **Cold-start** — cooperates with SiteBackupBundle when the schema is not ready yet.
+- **Worker-safe** — RequestStack / ManagerRegistry per call; runtime memos cleared on every main request.
 
 ## Quick start
 
@@ -83,13 +84,14 @@ See [Demo with FrankenPHP](docs/DEMO-FRANKENPHP.md) for development vs. producti
 ### Additional documentation
 
 - [Demo with FrankenPHP](docs/DEMO-FRANKENPHP.md)
+- [FrankenPHP worker audit](docs/FRANKENPHP-WORKER-AUDIT.md)
 - [GitHub Actions CI requirements](docs/GITHUB_CI.md)
 
 ## Tests and coverage
 
 | Language | Lines (approx.) | Command |
 | --- | --- | --- |
-| PHP | **100%** line coverage on `src/` (run `make coverage-check` to refresh). See [`docs/COVERAGE.md`](docs/COVERAGE.md). | `make coverage-check` |
+| PHP | **≥99%** line coverage on `src/` (run `make coverage-check` to refresh). See [`docs/COVERAGE.md`](docs/COVERAGE.md). | `make coverage-check` |
 | TypeScript | ~94% | `make test-ts` |
 
 ```bash

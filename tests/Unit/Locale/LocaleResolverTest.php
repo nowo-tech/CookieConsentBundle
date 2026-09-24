@@ -139,4 +139,28 @@ final class LocaleResolverTest extends TestCase
 
         self::assertSame('en', $this->resolver->resolve($request));
     }
+
+    public function testNormalizeKeepsEnabledLocale(): void
+    {
+        self::assertSame('es', $this->resolver->normalize('ES'));
+    }
+
+    public function testNormalizeFallsBackToPrimarySubtag(): void
+    {
+        self::assertSame('es', $this->resolver->normalize('es-MX'));
+        self::assertSame('es', $this->resolver->normalize('es_AR'));
+    }
+
+    public function testNormalizeFallsBackToDefaultForUnknownOrEmptyLocale(): void
+    {
+        self::assertSame('en', $this->resolver->normalize('zz-attacker-controlled'));
+        self::assertSame('en', $this->resolver->normalize(''));
+    }
+
+    public function testNormalizeUsesFirstEnabledLocaleWhenDefaultIsNotEnabled(): void
+    {
+        $resolver = new LocaleResolver(['fr', 'de'], 'en', false, new RequestStack());
+
+        self::assertSame('fr', $resolver->normalize('xx'));
+    }
 }

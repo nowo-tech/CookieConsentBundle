@@ -11,6 +11,7 @@
 - [AJAX submission](#ajax-submission)
 - [Consent logging](#consent-logging)
 - [Overriding templates (REQ-TWIG-001)](#overriding-templates-req-twig-001)
+- [Database profile copy (`nowo_cookie_consent_trans`)](#database-profile-copy-nowo_cookie_consent_trans)
 - [Demo](#demo)
 
 ## Embed the modal
@@ -179,6 +180,17 @@ Controllers and Twig use logical names such as `@NowoCookieConsentBundle/cookie_
 | `admin/config/settings.html.twig` | Profile settings form (overlay, theme, bubble, layout) |
 
 Theme selection follows `ui_theme` (`bootstrap` or `tailwind`); override the modal and form theme rows that match your active theme. See also [CONFIGURATION.md — UI theme](CONFIGURATION.md#ui-theme).
+
+## Database profile copy (`nowo_cookie_consent_trans`)
+
+With `use_database_config: true`, print the profile texts of the current request with
+`nowo_cookie_consent_trans('<message id>', display_config ?? null)` (e.g. `nowo_cookie_consent.title`, `.intro`,
+`.read_more`, `.privacy_route`). It falls back to the `NowoCookieConsentBundle` translation domain; plain `|trans`
+only returns the YAML translations.
+
+This helper is required for FrankenPHP worker mode when the kernel is not reset between requests: the bundle no longer
+calls `Translator::addResource()` per request. See [FRANKENPHP-WORKER-AUDIT.md](FRANKENPHP-WORKER-AUDIT.md) and
+[UPGRADING — To 1.10.0](UPGRADING.md#to-1100-frankenphp-worker-remediation).
 
 ## Demo
 

@@ -14,8 +14,6 @@ use Symfony\Component\Form\FormInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\Routing\RouterInterface;
-use Symfony\Component\Translation\Translator;
-use Symfony\Contracts\Translation\TranslatorInterface;
 use Throwable;
 use Twig\Environment;
 
@@ -42,7 +40,6 @@ final class CookieConsentModalRenderer
         private readonly LocaleResolver $localeResolver,
         private readonly RequestStack $requestStack,
         private readonly CookieConsentConfigResolver $configResolver,
-        private readonly TranslatorInterface $translator,
         private readonly CookieConsentRouteTargeting $routeTargeting,
         private readonly bool $fetchConfigViaApi = false,
         private readonly string $uiTheme = 'bootstrap',
@@ -55,6 +52,8 @@ final class CookieConsentModalRenderer
 
     /**
      * Returns the consent modal HTML, or an empty string when rendering should be skipped.
+     *
+     * @return string
      */
     public function renderHtml(?Request $request = null): string
     {
@@ -126,17 +125,6 @@ final class CookieConsentModalRenderer
 
         if (!$resolved instanceof ResolvedCookieConsentConfig) {
             return null;
-        }
-
-        $messages = $resolved->getTranslationMessages();
-
-        if ($messages !== [] && $this->translator instanceof Translator) {
-            $this->translator->addResource(
-                'array',
-                $messages,
-                $request->getLocale(),
-                'NowoCookieConsentBundle',
-            );
         }
 
         $request->attributes->set('nowo_cookie_consent_config', $resolved);

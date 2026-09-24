@@ -73,6 +73,8 @@ final class CookieInventoryProvider implements ResetInterface
 
     /**
      * Clears in-memory inventory caches (FrankenPHP worker request boundary).
+     *
+     * @return void
      */
     public function clearRuntimeCache(): void
     {
@@ -296,9 +298,7 @@ final class CookieInventoryProvider implements ResetInterface
      */
     private function getNormalizedYamlInventory(): array
     {
-        if ($this->normalizedYamlInventory === null) {
-            $this->normalizedYamlInventory = CookieInventoryNormalizer::normalize($this->yamlCookieInventory);
-        }
+        $this->normalizedYamlInventory ??= CookieInventoryNormalizer::normalize($this->yamlCookieInventory);
 
         return $this->normalizedYamlInventory;
     }

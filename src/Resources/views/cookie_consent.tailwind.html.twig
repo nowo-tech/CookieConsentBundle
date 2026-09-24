@@ -49,11 +49,11 @@
                 <div class="nowo-cookie-consent__step nowo-cookie-consent__step--banner nowo-cookie-consent__step--active" data-nowo-step="banner">
                     <div class="nowo-cookie-consent__section-header border-b px-6 py-4">
                         <h2 id="nowoCookieConsentTitle" class="nowo-cookie-consent__title text-lg font-semibold">
-                            {{ 'nowo_cookie_consent.title'|trans({}, 'NowoCookieConsentBundle') }}
+                            {{ nowo_cookie_consent_trans('nowo_cookie_consent.title', display_config ?? null) }}
                         </h2>
                     </div>
                     <div class="px-6 py-5">
-                        <p class="nowo-cookie-consent__intro text-sm">{{ 'nowo_cookie_consent.intro'|trans({}, 'NowoCookieConsentBundle') }}</p>
+                        <p class="nowo-cookie-consent__intro text-sm">{{ nowo_cookie_consent_trans('nowo_cookie_consent.intro', display_config ?? null) }}</p>
                         <div class="nowo-cookie-consent__btn-group nowo-cookie-consent__btn-group--banner mt-5 flex flex-wrap gap-2">
                             <button type="button" class="nowo-cookie-consent__btn nowo-cookie-consent__btn--secondary" data-nowo-show-preferences>
                                 {{ show_preferences_label }}
@@ -95,15 +95,15 @@
             {% else %}
                 <div class="nowo-cookie-consent__section-header border-b px-6 py-4">
                     <h2 id="nowoCookieConsentTitle" class="nowo-cookie-consent__title text-lg font-semibold">
-                        {{ 'nowo_cookie_consent.title'|trans({}, 'NowoCookieConsentBundle') }}
+                        {{ nowo_cookie_consent_trans('nowo_cookie_consent.title', display_config ?? null) }}
                     </h2>
                 </div>
                 <div class="nowo-cookie-consent__scrollable px-6 py-5">
-                    <p class="nowo-cookie-consent__intro text-sm">{{ 'nowo_cookie_consent.intro'|trans({}, 'NowoCookieConsentBundle') }}</p>
-                    {% set privacy_route = 'nowo_cookie_consent.privacy_route'|trans({}, 'NowoCookieConsentBundle') %}
+                    <p class="nowo-cookie-consent__intro text-sm">{{ nowo_cookie_consent_trans('nowo_cookie_consent.intro', display_config ?? null) }}</p>
+                    {% set privacy_route = nowo_cookie_consent_trans('nowo_cookie_consent.privacy_route', display_config ?? null) %}
                     {% if privacy_route %}
                         <a class="nowo-cookie-consent__read-more mt-2 inline-flex text-sm font-medium" href="{{ path(privacy_route) }}">
-                            {{ 'nowo_cookie_consent.read_more'|trans({}, 'NowoCookieConsentBundle') }}
+                            {{ nowo_cookie_consent_trans('nowo_cookie_consent.read_more', display_config ?? null) }}
                         </a>
                     {% endif %}
                     <div class="mt-6">

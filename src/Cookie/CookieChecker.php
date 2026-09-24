@@ -17,22 +17,19 @@ use const JSON_THROW_ON_ERROR;
 
 /**
  * Reads cookie consent state from the current HTTP request.
+ *
+ * The main request is looked up on every call: the service is shared and may outlive
+ * a single request (FrankenPHP worker mode), so no request data is stored on it.
  */
 class CookieChecker
 {
-    private readonly ?Request $request;
-
-    /** @var array<string, bool>|null */
-    private ?array $granularPreferences = null;
-
     /**
      * Creates a new cookie consent checker.
      *
      * @param RequestStack $requestStack The HTTP request stack
      */
-    public function __construct(RequestStack $requestStack)
+    public function __construct(private readonly RequestStack $requestStack)
     {
-        $this->request = $requestStack->getMainRequest();
     }
 
     /**
@@ -42,11 +39,13 @@ class CookieChecker
      */
     public function isCookieConsentSavedByUser(): bool
     {
-        if (!$this->request instanceof Request) {
+        $request = $this->requestStack->getMainRequest();
+
+        if (!$request instanceof Request) {
             return false;
         }
 
-        return $this->request->cookies->has(CookieNameEnum::COOKIE_CONSENT_NAME);
+        return $request->cookies->has(CookieNameEnum::COOKIE_CONSENT_NAME);
     }
 
     /**
@@ -58,11 +57,13 @@ class CookieChecker
      */
     public function isCategoryAllowedByUser(string $category): bool
     {
-        if (!$this->request instanceof Request) {
+        $request = $this->requestStack->getMainRequest();
+
+        if (!$request instanceof Request) {
             return false;
         }
 
-        return $this->request->cookies->get(CookieNameEnum::getCookieCategoryName($category)) === 'true';
+        return $request->cookies->get(CookieNameEnum::getCookieCategoryName($category)) === 'true';
     }
 
     /**
@@ -95,15 +96,13 @@ class CookieChecker
      */
     public function getGranularPreferences(): ?array
     {
-        if ($this->granularPreferences !== null) {
-            return $this->granularPreferences;
-        }
+        $request = $this->requestStack->getMainRequest();
 
-        if (!$this->request instanceof Request) {
+        if (!$request instanceof Request) {
             return null;
         }
 
-        $raw = $this->request->cookies->get(CookieNameEnum::COOKIE_CONSENT_GRANULAR_NAME);
+        $raw = $request->cookies->get(CookieNameEnum::COOKIE_CONSENT_GRANULAR_NAME);
 
         if (!is_string($raw) || $raw === '') {
             return null;
@@ -129,8 +128,6 @@ class CookieChecker
             $preferences[$name] = $allowed === true || $allowed === 'true';
         }
 
-        $this->granularPreferences = $preferences;
-
-        return $this->granularPreferences;
+        return $preferences;
     }
 }

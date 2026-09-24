@@ -41,6 +41,7 @@ services:
     arguments:
       $clock: '@Psr\Clock\ClockInterface'
       $logger: '@?logger'
+      $managerRegistry: '@?doctrine'
 
   # Explicit (not _defaults.bind): survives setClass overrides and avoids unused-bind
   # errors when the FormSubscriber definition is replaced by the host app.

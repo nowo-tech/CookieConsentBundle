@@ -158,6 +158,8 @@ After changing `.env`, recreate with `docker compose up -d` (no rebuild).
 
 Restart after env or Caddyfile changes: `docker-compose restart` or `make down && make up`.
 
+The bundle is audited for worker mode with **kernel not reset** between requests (`reset_kernel false`). Details: [FRANKENPHP-WORKER-AUDIT.md](FRANKENPHP-WORKER-AUDIT.md).
+
 ---
 
 ## Troubleshooting

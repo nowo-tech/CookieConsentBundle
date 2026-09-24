@@ -2,7 +2,7 @@
 
 **Baseline spec**: [`spec.md`](spec.md)  
 **Package**: `nowo-tech/cookie-consent-bundle`  
-**Last audited**: 2026-07-28
+**Last audited**: 2026-09-24
 
 ## TypeScript production (`src/Resources/assets/src/`)
 
@@ -113,12 +113,16 @@ Co-located Vitest sources under `src/` (compiled/tested in CI; not shipped to Pa
 | `EventSubscriber/CookieConsentAdminAccessSubscriber.php` | Admin access gate | FR-SEC-001 |
 | `EventSubscriber/CookieConsentConfigTranslationSubscriber.php` | Events | FR-EVT-001 |
 | `EventSubscriber/CookieConsentFormSubscriber.php` | Events | FR-EVT-001 |
+| `EventSubscriber/CookieConsentRuntimeCacheResetSubscriber.php` | Worker memo reset | FR-WORKER-002 |
+| `EventSubscriber/CookieConsentSchemaReadySubscriber.php` | Events | FR-EVT-001 |
+| `EventListener/CookieConsentConfigRuntimeCacheListener.php` | Doctrine cache invalidation | FR-WORKER-002 |
 | `Form/CookieConsentConfigSettingsType.php` | Form type | FR-FORM-001 |
 | `Form/CookieConsentType.php` | Form type | FR-FORM-001 |
 | `Form/CookieDefinitionTranslationType.php` | Form type | FR-FORM-001 |
 | `Form/CookieDefinitionType.php` | Form type | FR-FORM-001 |
 | `Locale/LocaleResolver.php` | Locale | FR-LOCALE-001 |
 | `NowoCookieConsentBundle.php` | Bundle entry | FR-BUNDLE-001 |
+| `Render/CookieConsentModalRenderer.php` | Modal render | FR-TWIG-003 |
 | `Repository/CookieConsentConfigRepository.php` | Repository | FR-ORM-002 |
 | `Repository/CookieConsentConfigTranslationRepository.php` | Repository | FR-ORM-002 |
 | `Repository/CookieDefinitionRepository.php` | Repository | FR-ORM-002 |
@@ -128,6 +132,7 @@ Co-located Vitest sources under `src/` (compiled/tested in CI; not shipped to Pa
 | `Security/AllowAllCookieConsentAccessChecker.php` | Demo allow-all checker | FR-SEC-001 |
 | `Twig/CmpUxTwigExtension.php` | Twig extension | FR-TWIG-002 |
 | `Twig/CookieConsentAdminTwigExtension.php` | Admin Twig globals | FR-TWIG-002 |
+| `Twig/CookieConsentTranslationTwigExtension.php` | DB profile `nowo_cookie_consent_trans` | FR-WORKER-003 |
 | `Twig/CookieConsentTwigExtension.php` | Twig extension | FR-TWIG-002 |
 
 ## Coverage summary
@@ -137,5 +142,5 @@ Co-located Vitest sources under `src/` (compiled/tested in CI; not shipped to Pa
 | TypeScript production | 13 | 13 |
 | TypeScript tests (Vitest) | 11 | 11 |
 | Resources (YAML/CSS/JS/i18n/Twig) | 33 | 33 |
-| PHP classes | 50 | 50 |
-| **Total production sources** | **107** | **107** |
+| PHP classes | 54 | 54 |
+| **Total production sources** | **111** | **111** |

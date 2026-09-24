@@ -13,13 +13,14 @@ use Psr\Log\LoggerInterface;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use Symfony\Component\HttpKernel\Event\RequestEvent;
 use Symfony\Component\HttpKernel\KernelEvents;
-use Symfony\Component\Translation\Translator;
-use Symfony\Contracts\Translation\TranslatorInterface;
 
 use function is_string;
 
 /**
- * Loads database-backed consent translations early in the request lifecycle.
+ * Resolves the database-backed consent profile (and its locale copy) early in the request lifecycle.
+ *
+ * The result is stored on the main request ({@code nowo_cookie_consent_config}); templates read the
+ * texts through {@code nowo_cookie_consent_trans()} so the shared translator is never mutated.
  */
 final class CookieConsentConfigTranslationSubscriber implements EventSubscriberInterface
 {
@@ -27,11 +28,9 @@ final class CookieConsentConfigTranslationSubscriber implements EventSubscriberI
      * Creates a new config translation subscriber.
      *
      * @param CookieConsentConfigResolver $configResolver Resolves database-backed config
-     * @param TranslatorInterface $translator Registers runtime translation messages
      */
     public function __construct(
         private readonly CookieConsentConfigResolver $configResolver,
-        private readonly TranslatorInterface $translator,
         private readonly ?LoggerInterface $logger = null,
     ) {
     }
@@ -49,9 +48,11 @@ final class CookieConsentConfigTranslationSubscriber implements EventSubscriberI
     }
 
     /**
-     * Resolves and registers consent translations for the current request.
+     * Resolves the consent configuration for the current request and stores it on the request.
      *
      * @param RequestEvent $event The kernel request event
+     *
+     * @return void
      */
     public function onKernelRequest(RequestEvent $event): void
     {
@@ -66,26 +67,14 @@ final class CookieConsentConfigTranslationSubscriber implements EventSubscriberI
         }
 
         try {
-            $locale   = $request->getLocale();
             $route    = $request->attributes->get('_route');
             $resolved = $this->configResolver->resolve(
-                $locale,
+                $request->getLocale(),
                 is_string($route) && $route !== '' ? $route : null,
             );
 
             if (!$resolved instanceof ResolvedCookieConsentConfig) {
                 return;
-            }
-
-            $messages = $resolved->getTranslationMessages();
-
-            if ($messages !== [] && $this->translator instanceof Translator) {
-                $this->translator->addResource(
-                    'array',
-                    $messages,
-                    $locale,
-                    'NowoCookieConsentBundle',
-                );
             }
 
             $request->attributes->set('nowo_cookie_consent_config', $resolved);

@@ -8,8 +8,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## Table of contents
 
 - [[Unreleased]](#unreleased)
+- [[1.10.0] - 2026-09-24](#1100---2026-09-24)
+- [[1.9.7] - 2026-08-29](#197---2026-08-29)
+- [[1.9.6] - 2026-08-24](#196---2026-08-24)
 - [[1.9.5] - 2026-08-21](#195---2026-08-21)
 - [[1.9.4] - 2026-08-20](#194---2026-08-20)
+- [[1.9.3] - 2026-08-19](#193---2026-08-19)
 - [[1.9.2] - 2026-08-19](#192---2026-08-19)
 - [[1.9.1] - 2026-08-18](#191---2026-08-18)
 - [[1.9.0] - 2026-08-15](#190---2026-08-15)
@@ -98,6 +102,34 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.10.0] - 2026-09-24
+
+### Added
+
+- **Twig:** `nowo_cookie_consent_trans(id, display_config = null)` returns the database profile copy of the current
+  request for a consent message id and falls back to the `NowoCookieConsentBundle` translation domain.
+- **FrankenPHP worker:** `CookieConsentRuntimeCacheResetSubscriber` (`kernel.request`, priority 4096, main requests only)
+  clears the resolver, inventory and config repository memos at the start of every request, so they stay request-scoped
+  even when the kernel is not reset between requests (`reset_kernel false` / scenario B).
+- `LocaleResolver::normalize()` maps an arbitrary locale to an enabled locale.
+- **Docs:** [FrankenPHP worker audit](FRANKENPHP-WORKER-AUDIT.md) (scenario A vs B; verdict viable under B).
+
+### Fixed
+
+- **FrankenPHP worker:** `CookieChecker` and `CookieLogger` no longer capture the main request in their constructor.
+  In worker mode every visitor served by the same worker was evaluated against (and logged with the IP of) the first
+  visitor's request. The granular preferences memo of `CookieChecker` was removed.
+- **FrankenPHP worker:** database consent texts are no longer registered on the shared translator with
+  `Translator::addResource()` on every request (unbounded memory growth, stale or ignored texts once the catalogue was
+  loaded or cached). The bundled templates and the consent form buttons read them from the resolved profile instead.
+- **FrankenPHP worker:** `CookieLogger` obtains the entity manager per call through `ManagerRegistry` (resetting it
+  when a previous failure closed it) and detaches the consent log entities after flushing.
+- The runtime cache listener also invalidates on `CookieConsentConfigTranslation`, `CookieDefinition` and
+  `CookieDefinitionTranslation` changes and clears `CookieInventoryProvider`.
+- `/cookie-consent/config` normalizes `?locale=` / `{_locale}` to an enabled locale, so arbitrary values no longer
+  create translator catalogues.
+
+[1.10.0]: https://github.com/nowo-tech/CookieConsentBundle/releases/tag/v1.10.0
 
 ## [1.9.7] - 2026-08-29
 

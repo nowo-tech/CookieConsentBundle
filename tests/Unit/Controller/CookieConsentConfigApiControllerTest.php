@@ -96,7 +96,63 @@ final class CookieConsentConfigApiControllerTest extends TestCase
         self::assertSame('fr', json_decode((string) $response->getContent(), true)['data']['language']['default']);
     }
 
-    private function createPayloadFactory(): CookieConsentConfigPayloadFactory
+    public function testUnknownQueryLocalesAreNormalizedBeforeReachingTheTranslator(): void
+    {
+        $requestedLocales = [];
+        $translator       = $this->createMock(TranslatorInterface::class);
+        $translator->method('trans')->willReturnCallback(
+            static function (string $id, array $parameters, ?string $domain, ?string $locale) use (&$requestedLocales): string {
+                $requestedLocales[(string) $locale] = true;
+
+                return $id;
+            },
+        );
+
+        $controller = new CookieConsentConfigApiController(
+            $this->createPayloadFactory($translator),
+            new LocaleResolver(['en', 'fr'], 'en', false, new RequestStack()),
+        );
+
+        foreach (['zz', 'qq-QQ', 'fr-CA'] as $locale) {
+            $response = $controller->getConfig(Request::create('/cookie-consent/config?locale=' . $locale));
+            $default  = json_decode((string) $response->getContent(), true)['data']['language']['default'];
+
+            self::assertContains($default, ['en', 'fr']);
+        }
+
+        self::assertSame(['en', 'fr'], array_keys($requestedLocales));
+    }
+
+    public function testUnknownRequestLocaleIsNormalized(): void
+    {
+        $controller = new CookieConsentConfigApiController(
+            $this->createPayloadFactory(),
+            new LocaleResolver(['en', 'es'], 'en', false, new RequestStack()),
+        );
+
+        $request = Request::create('/cookie-consent/config');
+        $request->setLocale('xx');
+
+        $response = $controller->getConfig($request);
+
+        self::assertSame('en', json_decode((string) $response->getContent(), true)['data']['language']['default']);
+    }
+
+    public function testGetLocalizedConfigNormalizesDisabledLocale(): void
+    {
+        $controller = new CookieConsentConfigApiController(
+            $this->createPayloadFactory(),
+            new LocaleResolver(['en', 'de'], 'en', false, new RequestStack()),
+        );
+
+        $request  = Request::create('/zz/cookie-consent/config');
+        $response = $controller->getLocalizedConfig('zz', $request);
+
+        self::assertSame('en', $request->getLocale());
+        self::assertSame('en', json_decode((string) $response->getContent(), true)['data']['language']['default']);
+    }
+
+    private function createPayloadFactory(?TranslatorInterface $translator = null): CookieConsentConfigPayloadFactory
     {
         $resolver = new CookieConsentConfigResolver(
             new CookieConsentConfigSelector(
@@ -107,7 +163,7 @@ final class CookieConsentConfigApiControllerTest extends TestCase
             false,
         );
 
-        return new CookieConsentConfigPayloadFactory($resolver, $this->createTranslator(), $this->createInventoryProvider(), ['analytics']);
+        return new CookieConsentConfigPayloadFactory($resolver, $translator ?? $this->createTranslator(), $this->createInventoryProvider(), ['analytics']);
     }
 
     private function createInventoryProvider(): CookieInventoryProvider

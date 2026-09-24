@@ -19,8 +19,6 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpKernel\Event\RequestEvent;
 use Symfony\Component\HttpKernel\HttpKernelInterface;
 use Symfony\Component\HttpKernel\KernelEvents;
-use Symfony\Component\Translation\Loader\ArrayLoader;
-use Symfony\Component\Translation\Translator;
 
 final class CookieConsentConfigTranslationSubscriberTest extends TestCase
 {
@@ -44,7 +42,7 @@ final class CookieConsentConfigTranslationSubscriberTest extends TestCase
             true,
         );
 
-        $subscriber = new CookieConsentConfigTranslationSubscriber($resolver, $this->createTranslator());
+        $subscriber = new CookieConsentConfigTranslationSubscriber($resolver);
         $request    = Request::create('/');
         $request->attributes->set('_route', 'home');
 
@@ -53,7 +51,7 @@ final class CookieConsentConfigTranslationSubscriberTest extends TestCase
         self::assertNull($request->attributes->get('nowo_cookie_consent_config'));
     }
 
-    public function testAddsTranslationsAndStoresResolvedConfig(): void
+    public function testStoresResolvedConfigWithTranslationMessages(): void
     {
         $config      = new CookieConsentConfig();
         $translation = (new CookieConsentConfigTranslation())
@@ -75,16 +73,53 @@ final class CookieConsentConfigTranslationSubscriberTest extends TestCase
             true,
         );
 
-        $translator = $this->createTranslator();
-        $subscriber = new CookieConsentConfigTranslationSubscriber($resolver, $translator);
+        $subscriber = new CookieConsentConfigTranslationSubscriber($resolver);
         $request    = Request::create('/');
         $request->setLocale('en');
         $request->attributes->set('_route', 'home');
 
         $subscriber->onKernelRequest($this->createRequestEvent($request));
 
-        self::assertInstanceOf(ResolvedCookieConsentConfig::class, $request->attributes->get('nowo_cookie_consent_config'));
-        self::assertSame('Title', $translator->trans('nowo_cookie_consent.title', [], 'NowoCookieConsentBundle', 'en'));
+        $resolved = $request->attributes->get('nowo_cookie_consent_config');
+        self::assertInstanceOf(ResolvedCookieConsentConfig::class, $resolved);
+        self::assertSame('Title', $resolved->getTranslationMessages()['nowo_cookie_consent.title']);
+    }
+
+    public function testConsecutiveRequestsGetTheirOwnLocaleCopy(): void
+    {
+        $config = new CookieConsentConfig();
+
+        $configRepository = $this->createMock(CookieConsentConfigRepository::class);
+        $configRepository->method('findAllEnabledNonDefault')->willReturn([]);
+        $configRepository->method('findDefaultEnabled')->willReturn($config);
+
+        $translationRepository = $this->createMock(CookieConsentConfigTranslationRepository::class);
+        $translationRepository->method('findOneForConfigAndLocale')->willReturnCallback(
+            static fn (CookieConsentConfig $config, string $locale): CookieConsentConfigTranslation => (new CookieConsentConfigTranslation())
+                ->setConsentModalTitle('Title ' . $locale),
+        );
+
+        $subscriber = new CookieConsentConfigTranslationSubscriber(new CookieConsentConfigResolver(
+            new CookieConsentConfigSelector($configRepository, new CookieConsentRoutePatternMatcher()),
+            $translationRepository,
+            true,
+        ));
+
+        $titles = [];
+
+        foreach (['en', 'es'] as $locale) {
+            $request = Request::create('/');
+            $request->setLocale($locale);
+            $request->attributes->set('_route', 'home');
+
+            $subscriber->onKernelRequest($this->createRequestEvent($request));
+
+            $resolved = $request->attributes->get('nowo_cookie_consent_config');
+            self::assertInstanceOf(ResolvedCookieConsentConfig::class, $resolved);
+            $titles[] = $resolved->getTranslationMessages()['nowo_cookie_consent.title'];
+        }
+
+        self::assertSame(['Title en', 'Title es'], $titles);
     }
 
     public function testSkipsWhenSiteBackupSchemaDoesNotExist(): void
@@ -98,7 +133,7 @@ final class CookieConsentConfigTranslationSubscriberTest extends TestCase
             true,
         );
 
-        $subscriber = new CookieConsentConfigTranslationSubscriber($resolver, $this->createTranslator());
+        $subscriber = new CookieConsentConfigTranslationSubscriber($resolver);
         $request    = Request::create('/');
         $request->attributes->set(ColdStartRequestAttributes::SITE_BACKUP_SCHEMA_EXISTS, false);
 
@@ -118,7 +153,7 @@ final class CookieConsentConfigTranslationSubscriberTest extends TestCase
             true,
         );
 
-        $subscriber = new CookieConsentConfigTranslationSubscriber($resolver, $this->createTranslator());
+        $subscriber = new CookieConsentConfigTranslationSubscriber($resolver);
         $request    = Request::create('/');
         $request->attributes->set(ColdStartRequestAttributes::COOKIE_CONSENT_SCHEMA_READY, false);
 
@@ -138,7 +173,7 @@ final class CookieConsentConfigTranslationSubscriberTest extends TestCase
             true,
         );
 
-        $subscriber = new CookieConsentConfigTranslationSubscriber($resolver, $this->createTranslator());
+        $subscriber = new CookieConsentConfigTranslationSubscriber($resolver);
         $request    = Request::create('/');
         $request->attributes->set(ColdStartRequestAttributes::SITE_BACKUP_SCHEMA_EXISTS, false);
 
@@ -149,14 +184,6 @@ final class CookieConsentConfigTranslationSubscriberTest extends TestCase
         ));
 
         self::assertNull($request->attributes->get('nowo_cookie_consent_config'));
-    }
-
-    private function createTranslator(): Translator
-    {
-        $translator = new Translator('en');
-        $translator->addLoader('array', new ArrayLoader());
-
-        return $translator;
     }
 
     private function createRequestEvent(Request $request): RequestEvent

@@ -56,9 +56,10 @@ final class CookieConsentConfigApiController
      */
     public function getLocalizedConfig(string $_locale, Request $request): JsonResponse
     {
-        $request->setLocale($_locale);
+        $locale = $this->localeResolver->normalize($_locale);
+        $request->setLocale($locale);
 
-        return $this->createResponse($_locale, $this->resolveRoute($request));
+        return $this->createResponse($locale, $this->resolveRoute($request));
     }
 
     private function resolveRoute(Request $request): ?string
@@ -73,11 +74,11 @@ final class CookieConsentConfigApiController
         $locale = $request->query->getString('locale');
 
         if ($locale !== '') {
-            return $locale;
+            return $this->localeResolver->normalize($locale);
         }
 
         if ($request->getLocale() !== '') {
-            return $request->getLocale();
+            return $this->localeResolver->normalize($request->getLocale());
         }
 
         return $this->localeResolver->resolve($request);

@@ -25,9 +25,6 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\Routing\Exception\RouteNotFoundException;
 use Symfony\Component\Routing\RouterInterface;
-use Symfony\Component\Translation\Loader\ArrayLoader;
-use Symfony\Component\Translation\Translator;
-use Symfony\Contracts\Translation\TranslatorInterface;
 use Twig\Environment;
 
 final class CookieConsentControllerTest extends TestCase
@@ -183,9 +180,6 @@ final class CookieConsentControllerTest extends TestCase
             true,
         );
 
-        $translator = new Translator('en');
-        $translator->addLoader('array', new ArrayLoader());
-
         $router = $this->createMock(RouterInterface::class);
         $router->method('generate')->willReturn('/en/cookie-consent/config');
 
@@ -200,14 +194,16 @@ final class CookieConsentControllerTest extends TestCase
             router: $router,
             requestStack: $stack,
             configResolver: $resolver,
-            translator: $translator,
             fetchConfigViaApi: true,
         );
 
-        $response = $controller->show(Request::create('/cookie_consent'));
+        $request  = Request::create('/cookie_consent');
+        $response = $controller->show($request);
 
         self::assertStringContainsString('rendered-bootstrap', (string) $response->getContent());
-        self::assertSame('DB', $translator->trans('nowo_cookie_consent.title', [], 'NowoCookieConsentBundle', 'en'));
+        $resolved = $request->attributes->get('nowo_cookie_consent_config');
+        self::assertInstanceOf(ResolvedCookieConsentConfig::class, $resolved);
+        self::assertSame('DB', $resolved->getTranslationMessages()['nowo_cookie_consent.title']);
     }
 
     public function testConfigApiUrlFallsBackWhenLocalizedRouteMissing(): void
@@ -267,7 +263,6 @@ final class CookieConsentControllerTest extends TestCase
         ?RouterInterface $router = null,
         ?RequestStack $requestStack = null,
         ?CookieConsentConfigResolver $configResolver = null,
-        ?TranslatorInterface $translator = null,
         bool $fetchConfigViaApi = false,
         string $uiTheme = 'bootstrap',
         ?string $formAction = null,
@@ -286,7 +281,6 @@ final class CookieConsentControllerTest extends TestCase
             $this->createMock(CookieConsentConfigTranslationRepository::class),
             false,
         );
-        $translator ??= $this->createMock(TranslatorInterface::class);
 
         $renderer = new CookieConsentModalRenderer(
             $twig,
@@ -295,7 +289,6 @@ final class CookieConsentControllerTest extends TestCase
             new LocaleResolver(['en', 'es'], 'en', true, $requestStack),
             $requestStack,
             $configResolver,
-            $translator,
             new CookieConsentRouteTargeting(new CookieConsentRoutePatternMatcher()),
             $fetchConfigViaApi,
             $uiTheme,

@@ -5,6 +5,7 @@ This guide provides step-by-step instructions for upgrading Cookie Consent Bundl
 ## Table of contents
 
 
+- [To 1.10.0 (FrankenPHP worker remediation)](#to-1100-frankenphp-worker-remediation)
 - [From 1.9.6 to 1.9.7](#from-196-to-197)
 - [From 1.9.5 to 1.9.6](#from-195-to-196)
 - [General upgrade process](#general-upgrade-process)
@@ -72,6 +73,33 @@ This guide provides step-by-step instructions for upgrading Cookie Consent Bundl
 - [Future versions](#future-versions)
 - [Getting help](#getting-help)
 
+## To 1.10.0 (FrankenPHP worker remediation)
+
+The bundle is safe in FrankenPHP worker mode even when the kernel is **not** reset between requests
+(`reset_kernel false` / scenario B). See [FRANKENPHP-WORKER-AUDIT.md](FRANKENPHP-WORKER-AUDIT.md).
+**No required application changes** unless you override the bundle templates or services listed below.
+
+```bash
+composer update nowo-tech/cookie-consent-bundle
+php bin/console cache:clear
+php bin/console assets:install
+```
+
+1. **Overridden modal templates:** database texts (`use_database_config: true`) are no longer injected into the
+   translator. If you copied `cookie_consent.html.twig` / `cookie_consent.tailwind.html.twig`, replace
+   `'nowo_cookie_consent.title'|trans({}, 'NowoCookieConsentBundle')` (and `.intro`, `.read_more`, `.privacy_route`) with
+   `nowo_cookie_consent_trans('nowo_cookie_consent.title', display_config ?? null)`. Plain `|trans` keeps returning the
+   YAML translations.
+2. **Direct instantiation:** `CookieConsentModalRenderer` and `CookieConsentConfigTranslationSubscriber` (both `final`)
+   no longer take a `TranslatorInterface` argument. Container users are not affected.
+3. **`CookieLogger` subclasses:** the constructor gained an optional 5th argument `?ManagerRegistry $managerRegistry`;
+   the request is read in `log()` instead of the constructor. Do not store the request, user or consent data in
+   properties of subclasses of `CookieLogger`, `CookieChecker` or `CookieConsentFormSubscriber`.
+4. `/cookie-consent/config?locale=` now falls back to an enabled locale (primary subtag, then `default_locale`)
+   instead of accepting any value.
+5. **Host Doctrine under scenario B:** clearing the application's EntityManager identity map between requests remains
+   the host application's responsibility (the bundle detaches its own consent log rows after flush).
+
 ## From 1.9.6 to 1.9.7
 
 FrankenPHP worker memoization now clears via `ResetInterface`. **No required application changes.**
@@ -85,6 +113,15 @@ php bin/console cache:clear
 
 1. Host shims that call `clearRuntimeCache()` between worker requests can be removed.
 2. Behaviour for non-worker / classic PHP-FPM is unchanged.
+
+## From 1.9.5 to 1.9.6
+
+PHP minimum is **8.2**. **No API or configuration changes** for integrators.
+
+```bash
+composer update nowo-tech/cookie-consent-bundle
+php bin/console cache:clear
+```
 
 ## General upgrade process
 

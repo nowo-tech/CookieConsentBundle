@@ -61,6 +61,9 @@ Update README **Tests and coverage** percentages after each release when coverag
 
 ## Release history
 
+- **v1.10.0** — FrankenPHP worker safe with `reset_kernel false` (scenario B); `nowo_cookie_consent_trans()`; runtime cache reset subscriber.
+- **v1.9.7** — `ResetInterface` on resolver / inventory / config repository for worker memoization.
+- **v1.9.6** — PHP 8.2 minimum; PSR evaluation docs; demo MySQL env policy.
 - **v1.9.5** — `nowo_cookie_consent_render()` in-process modal embed (no kernel sub-request).
 - **v1.9.2** — Memoize consent profile Doctrine lookups per request; reuse resolved config in modal sub-request.
 - **v1.9.0** — CSP-safe standalone modal CSS; Beacon skin upstream; bottom-left + equal-weight defaults for new profiles.
@@ -68,6 +71,9 @@ Update README **Tests and coverage** percentages after each release when coverag
 
 | Version | Date | Notes |
 | --- | --- | --- |
+| [1.10.0](CHANGELOG.md#1100---2026-09-24) | 2026-09-24 | FrankenPHP worker scenario B; `nowo_cookie_consent_trans()`; per-request RequestStack / ManagerRegistry |
+| [1.9.7](CHANGELOG.md#197---2026-08-29) | 2026-08-29 | `ResetInterface` on memoizing config/inventory services |
+| [1.9.6](CHANGELOG.md#196---2026-08-24) | 2026-08-24 | PHP 8.2+; PSR evaluation; demo MySQL env |
 | [1.9.5](CHANGELOG.md#195---2026-08-21) | 2026-08-21 | `nowo_cookie_consent_render()` — in-process modal (no sub-request) |
 | [1.9.2](CHANGELOG.md#192---2026-08-19) | 2026-08-19 | Consent profile lookup memoization; modal sub-request reuse |
 | [1.9.0](CHANGELOG.md#190---2026-08-15) | 2026-08-15 | Standalone `nowo-cookie-consent.css`; skip style inject under CSP; skin polish |
