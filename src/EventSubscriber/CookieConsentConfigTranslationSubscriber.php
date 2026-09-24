@@ -51,8 +51,6 @@ final class CookieConsentConfigTranslationSubscriber implements EventSubscriberI
      * Resolves the consent configuration for the current request and stores it on the request.
      *
      * @param RequestEvent $event The kernel request event
-     *
-     * @return void
      */
     public function onKernelRequest(RequestEvent $event): void
     {

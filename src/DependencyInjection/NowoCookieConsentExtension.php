@@ -33,8 +33,6 @@ class NowoCookieConsentExtension extends Extension implements PrependExtensionIn
      *
      * @param array<int, array<string, mixed>> $configs The bundle configuration arrays
      * @param ContainerBuilder $container The service container builder
-     *
-     * @return void
      */
     public function load(array $configs, ContainerBuilder $container): void
     {
@@ -174,8 +172,6 @@ class NowoCookieConsentExtension extends Extension implements PrependExtensionIn
     /**
      * Registers the bundle asset package before the FrameworkExtension processes assets,
      * and seeds UiKit defaults from web_ui when the host has not set nowo_ui_kit (REQ-UI-001-kit).
-     *
-     * @return void
      */
     public function prepend(ContainerBuilder $container): void
     {

@@ -52,8 +52,6 @@ final class CookieConsentModalRenderer
 
     /**
      * Returns the consent modal HTML, or an empty string when rendering should be skipped.
-     *
-     * @return string
      */
     public function renderHtml(?Request $request = null): string
     {

@@ -15,6 +15,7 @@ use Symfony\Component\Translation\Loader\ArrayLoader;
 use Symfony\Component\Translation\Translator;
 use Twig\Environment;
 use Twig\Loader\ArrayLoader as TwigArrayLoader;
+use Twig\TwigFunction;
 
 final class CookieConsentTranslationTwigExtensionTest extends TestCase
 {
@@ -23,7 +24,7 @@ final class CookieConsentTranslationTwigExtensionTest extends TestCase
         $extension = new CookieConsentTranslationTwigExtension(new RequestStack(), $this->createTranslator());
 
         self::assertSame(['nowo_cookie_consent_trans'], array_map(
-            static fn (\Twig\TwigFunction $function): string => $function->getName(),
+            static fn (TwigFunction $function): string => $function->getName(),
             $extension->getFunctions(),
         ));
     }

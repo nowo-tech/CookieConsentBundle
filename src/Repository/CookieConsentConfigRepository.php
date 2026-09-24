@@ -43,8 +43,6 @@ class CookieConsentConfigRepository extends ServiceEntityRepository implements R
      * Clears in-memory lookup caches after admin writes or Doctrine flushes.
      *
      * Also used as {@see ResetInterface::reset()} between FrankenPHP worker requests.
-     *
-     * @return void
      */
     public function clearRuntimeCache(): void
     {

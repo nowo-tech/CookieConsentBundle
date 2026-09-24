@@ -39,8 +39,6 @@ final class CookieConsentConfigResolver implements ResetInterface
      * Clears in-memory resolution caches after admin writes.
      *
      * Also used as {@see ResetInterface::reset()} between FrankenPHP worker requests.
-     *
-     * @return void
      */
     public function clearRuntimeCache(): void
     {
