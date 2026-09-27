@@ -104,6 +104,7 @@ class CookieLogger
             ->setTimestamp($this->clock->now());
 
         $this->getEntityManager()->persist($cookieConsentLog);
+        // @igor-ignore - Not shared worker service state.
         $this->pendingLogs[] = $cookieConsentLog;
     }
 

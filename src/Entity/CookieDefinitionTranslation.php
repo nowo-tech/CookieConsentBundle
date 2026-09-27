@@ -64,6 +64,7 @@ class CookieDefinitionTranslation
      */
     public function setLocale(string $locale): self
     {
+        // @igor-ignore - Doctrine entity field; instance-scoped, not a shared service.
         $this->locale = $locale;
 
         return $this;
@@ -88,6 +89,7 @@ class CookieDefinitionTranslation
      */
     public function setProvider(string $provider): self
     {
+        // @igor-ignore - Doctrine entity field; instance-scoped, not a shared service.
         $this->provider = $provider;
 
         return $this;
@@ -112,6 +114,7 @@ class CookieDefinitionTranslation
      */
     public function setPurpose(string $purpose): self
     {
+        // @igor-ignore - Doctrine entity field; instance-scoped, not a shared service.
         $this->purpose = $purpose;
 
         return $this;
@@ -136,6 +139,7 @@ class CookieDefinitionTranslation
      */
     public function setDefinition(?CookieDefinition $definition): self
     {
+        // @igor-ignore - Doctrine entity field; instance-scoped, not a shared service.
         $this->definition = $definition;
 
         return $this;

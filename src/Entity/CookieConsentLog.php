@@ -63,6 +63,7 @@ class CookieConsentLog
      */
     public function setIpAddress(string $ipAddress): self
     {
+        // @igor-ignore - Doctrine entity field; instance-scoped, not a shared service.
         $this->ipAddress = $ipAddress;
 
         return $this;
@@ -87,6 +88,7 @@ class CookieConsentLog
      */
     public function setCookieConsentKey(string $cookieConsentKey): self
     {
+        // @igor-ignore - Doctrine entity field; instance-scoped, not a shared service.
         $this->cookieConsentKey = $cookieConsentKey;
 
         return $this;
@@ -111,6 +113,7 @@ class CookieConsentLog
      */
     public function setCookieName(string $cookieName): self
     {
+        // @igor-ignore - Doctrine entity field; instance-scoped, not a shared service.
         $this->cookieName = $cookieName;
 
         return $this;
@@ -135,6 +138,7 @@ class CookieConsentLog
      */
     public function setCookieValue(bool $cookieValue): self
     {
+        // @igor-ignore - Doctrine entity field; instance-scoped, not a shared service.
         $this->cookieValue = $cookieValue;
 
         return $this;
@@ -159,6 +163,7 @@ class CookieConsentLog
      */
     public function setTimestamp(DateTimeImmutable $timestamp): self
     {
+        // @igor-ignore - Doctrine entity field; instance-scoped, not a shared service.
         $this->timestamp = $timestamp;
 
         return $this;

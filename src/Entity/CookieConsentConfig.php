@@ -241,6 +241,7 @@ class CookieConsentConfig
      */
     public function setEnabled(bool $enabled): self
     {
+        // @igor-ignore - Doctrine entity field; instance-scoped, not a shared service.
         $this->enabled = $enabled;
 
         return $this;
@@ -265,6 +266,7 @@ class CookieConsentConfig
      */
     public function setDefault(bool $default): self
     {
+        // @igor-ignore - Doctrine entity field; instance-scoped, not a shared service.
         $this->default = $default;
 
         return $this;
@@ -289,6 +291,7 @@ class CookieConsentConfig
      */
     public function setAutoShow(bool $autoShow): self
     {
+        // @igor-ignore - Doctrine entity field; instance-scoped, not a shared service.
         $this->autoShow = $autoShow;
 
         return $this;
@@ -313,6 +316,7 @@ class CookieConsentConfig
      */
     public function setRevision(int $revision): self
     {
+        // @igor-ignore - Doctrine entity field; instance-scoped, not a shared service.
         $this->revision = $revision;
 
         return $this;
@@ -337,6 +341,7 @@ class CookieConsentConfig
      */
     public function setManageScriptTags(bool $manageScriptTags): self
     {
+        // @igor-ignore - Doctrine entity field; instance-scoped, not a shared service.
         $this->manageScriptTags = $manageScriptTags;
 
         return $this;
@@ -361,6 +366,7 @@ class CookieConsentConfig
      */
     public function setAutoClearCookies(bool $autoClearCookies): self
     {
+        // @igor-ignore - Doctrine entity field; instance-scoped, not a shared service.
         $this->autoClearCookies = $autoClearCookies;
 
         return $this;
@@ -385,6 +391,7 @@ class CookieConsentConfig
      */
     public function setHideFromBots(bool $hideFromBots): self
     {
+        // @igor-ignore - Doctrine entity field; instance-scoped, not a shared service.
         $this->hideFromBots = $hideFromBots;
 
         return $this;
@@ -409,6 +416,7 @@ class CookieConsentConfig
      */
     public function setDisablePageInteraction(bool $disablePageInteraction): self
     {
+        // @igor-ignore - Doctrine entity field; instance-scoped, not a shared service.
         $this->disablePageInteraction = $disablePageInteraction;
 
         return $this;
@@ -433,6 +441,7 @@ class CookieConsentConfig
      */
     public function setLazyHtmlGeneration(bool $lazyHtmlGeneration): self
     {
+        // @igor-ignore - Doctrine entity field; instance-scoped, not a shared service.
         $this->lazyHtmlGeneration = $lazyHtmlGeneration;
 
         return $this;
@@ -461,6 +470,7 @@ class CookieConsentConfig
             throw new InvalidArgumentException(sprintf('Invalid consent modal layout "%s".', $consentModalLayout));
         }
 
+        // @igor-ignore - Doctrine entity field; instance-scoped, not a shared service.
         $this->consentModalLayout = $consentModalLayout;
 
         return $this;
@@ -485,6 +495,7 @@ class CookieConsentConfig
      */
     public function setConsentModalVariant(string $consentModalVariant): self
     {
+        // @igor-ignore - Doctrine entity field; instance-scoped, not a shared service.
         $this->consentModalVariant = $consentModalVariant;
 
         return $this;
@@ -509,6 +520,7 @@ class CookieConsentConfig
      */
     public function setConsentModalPositionY(string $consentModalPositionY): self
     {
+        // @igor-ignore - Doctrine entity field; instance-scoped, not a shared service.
         $this->consentModalPositionY = $consentModalPositionY;
 
         return $this;
@@ -543,6 +555,7 @@ class CookieConsentConfig
      */
     public function setConsentModalPositionX(?string $consentModalPositionX): self
     {
+        // @igor-ignore - Doctrine entity field; instance-scoped, not a shared service.
         $this->consentModalPositionX = $consentModalPositionX;
 
         return $this;
@@ -567,6 +580,7 @@ class CookieConsentConfig
      */
     public function setConsentModalEqualWeightButtons(bool $consentModalEqualWeightButtons): self
     {
+        // @igor-ignore - Doctrine entity field; instance-scoped, not a shared service.
         $this->consentModalEqualWeightButtons = $consentModalEqualWeightButtons;
 
         return $this;
@@ -591,6 +605,7 @@ class CookieConsentConfig
      */
     public function setConsentModalFlipButtons(bool $consentModalFlipButtons): self
     {
+        // @igor-ignore - Doctrine entity field; instance-scoped, not a shared service.
         $this->consentModalFlipButtons = $consentModalFlipButtons;
 
         return $this;
@@ -619,6 +634,7 @@ class CookieConsentConfig
             throw new InvalidArgumentException(sprintf('Invalid auto show route mode "%s".', $autoShowRouteMode));
         }
 
+        // @igor-ignore - Doctrine entity field; instance-scoped, not a shared service.
         $this->autoShowRouteMode = $autoShowRouteMode;
 
         return $this;
@@ -643,6 +659,7 @@ class CookieConsentConfig
      */
     public function setAutoShowRoutes(array $autoShowRoutes): self
     {
+        // @igor-ignore - Doctrine entity field; instance-scoped, not a shared service.
         $this->autoShowRoutes = array_values(array_unique(array_values(array_filter(array_map(trim(...), $autoShowRoutes)))));
 
         return $this;
@@ -689,6 +706,7 @@ class CookieConsentConfig
      */
     public function setName(?string $name): self
     {
+        // @igor-ignore - Doctrine entity field; instance-scoped, not a shared service.
         $this->name = $name !== null && trim($name) !== '' ? trim($name) : null;
 
         return $this;
@@ -713,6 +731,7 @@ class CookieConsentConfig
      */
     public function setRoutePatterns(array $routePatterns): self
     {
+        // @igor-ignore - Doctrine entity field; instance-scoped, not a shared service.
         $this->routePatterns = array_values(array_unique(array_values(array_filter(array_map(trim(...), $routePatterns)))));
 
         return $this;
@@ -759,6 +778,7 @@ class CookieConsentConfig
      */
     public function setPriority(int $priority): self
     {
+        // @igor-ignore - Doctrine entity field; instance-scoped, not a shared service.
         $this->priority = $priority;
 
         return $this;
@@ -828,6 +848,7 @@ class CookieConsentConfig
             throw new InvalidArgumentException(sprintf('Invalid preferences modal layout "%s".', $preferencesModalLayout));
         }
 
+        // @igor-ignore - Doctrine entity field; instance-scoped, not a shared service.
         $this->preferencesModalLayout = $preferencesModalLayout;
 
         return $this;
@@ -852,6 +873,7 @@ class CookieConsentConfig
      */
     public function setPreferencesModalVariant(string $preferencesModalVariant): self
     {
+        // @igor-ignore - Doctrine entity field; instance-scoped, not a shared service.
         $this->preferencesModalVariant = $preferencesModalVariant;
 
         return $this;
@@ -876,6 +898,7 @@ class CookieConsentConfig
      */
     public function setPreferencesModalPositionY(string $preferencesModalPositionY): self
     {
+        // @igor-ignore - Doctrine entity field; instance-scoped, not a shared service.
         $this->preferencesModalPositionY = $preferencesModalPositionY;
 
         return $this;
@@ -910,6 +933,7 @@ class CookieConsentConfig
      */
     public function setPreferencesModalPositionX(?string $preferencesModalPositionX): self
     {
+        // @igor-ignore - Doctrine entity field; instance-scoped, not a shared service.
         $this->preferencesModalPositionX = $preferencesModalPositionX;
 
         return $this;
@@ -934,6 +958,7 @@ class CookieConsentConfig
      */
     public function setPreferencesModalEqualWeightButtons(bool $preferencesModalEqualWeightButtons): self
     {
+        // @igor-ignore - Doctrine entity field; instance-scoped, not a shared service.
         $this->preferencesModalEqualWeightButtons = $preferencesModalEqualWeightButtons;
 
         return $this;
@@ -958,6 +983,7 @@ class CookieConsentConfig
      */
     public function setPreferencesModalFlipButtons(bool $preferencesModalFlipButtons): self
     {
+        // @igor-ignore - Doctrine entity field; instance-scoped, not a shared service.
         $this->preferencesModalFlipButtons = $preferencesModalFlipButtons;
 
         return $this;
@@ -1047,6 +1073,7 @@ class CookieConsentConfig
             throw new InvalidArgumentException(sprintf('Invalid color theme "%s".', $colorTheme));
         }
 
+        // @igor-ignore - Doctrine entity field; instance-scoped, not a shared service.
         $this->colorTheme = $colorTheme;
 
         return $this;
@@ -1071,6 +1098,7 @@ class CookieConsentConfig
      */
     public function setDarkModeEnabled(bool $darkModeEnabled): self
     {
+        // @igor-ignore - Doctrine entity field; instance-scoped, not a shared service.
         $this->darkModeEnabled = $darkModeEnabled;
 
         return $this;
@@ -1095,6 +1123,7 @@ class CookieConsentConfig
      */
     public function setDisableTransitions(bool $disableTransitions): self
     {
+        // @igor-ignore - Doctrine entity field; instance-scoped, not a shared service.
         $this->disableTransitions = $disableTransitions;
 
         return $this;
@@ -1119,6 +1148,7 @@ class CookieConsentConfig
      */
     public function setTwoStepModal(bool $twoStepModal): self
     {
+        // @igor-ignore - Doctrine entity field; instance-scoped, not a shared service.
         $this->twoStepModal = $twoStepModal;
 
         return $this;
@@ -1143,6 +1173,7 @@ class CookieConsentConfig
      */
     public function setOpenPreferencesModal(bool $openPreferencesModal): self
     {
+        // @igor-ignore - Doctrine entity field; instance-scoped, not a shared service.
         $this->openPreferencesModal = $openPreferencesModal;
 
         return $this;
@@ -1167,6 +1198,7 @@ class CookieConsentConfig
      */
     public function setManageIframePlaceholders(bool $manageIframePlaceholders): self
     {
+        // @igor-ignore - Doctrine entity field; instance-scoped, not a shared service.
         $this->manageIframePlaceholders = $manageIframePlaceholders;
 
         return $this;
@@ -1191,6 +1223,7 @@ class CookieConsentConfig
      */
     public function setGranularCookieSelection(bool $granularCookieSelection): self
     {
+        // @igor-ignore - Doctrine entity field; instance-scoped, not a shared service.
         $this->granularCookieSelection = $granularCookieSelection;
 
         return $this;
@@ -1215,6 +1248,7 @@ class CookieConsentConfig
      */
     public function setPreferencesBubbleEnabled(bool $preferencesBubbleEnabled): self
     {
+        // @igor-ignore - Doctrine entity field; instance-scoped, not a shared service.
         $this->preferencesBubbleEnabled = $preferencesBubbleEnabled;
 
         return $this;
@@ -1243,6 +1277,7 @@ class CookieConsentConfig
             throw new InvalidArgumentException(sprintf('Invalid preferences bubble position "%s".', $preferencesBubblePosition));
         }
 
+        // @igor-ignore - Doctrine entity field; instance-scoped, not a shared service.
         $this->preferencesBubblePosition = $preferencesBubblePosition;
 
         return $this;
@@ -1272,6 +1307,7 @@ class CookieConsentConfig
             throw new InvalidArgumentException(sprintf('Invalid preferences bubble border color "%s".', $preferencesBubbleBorderColor));
         }
 
+        // @igor-ignore - Doctrine entity field; instance-scoped, not a shared service.
         $this->preferencesBubbleBorderColor = $preferencesBubbleBorderColor === '' ? null : $preferencesBubbleBorderColor;
 
         return $this;
@@ -1298,6 +1334,7 @@ class CookieConsentConfig
      */
     public function setPreferencesBubbleIcon(?string $preferencesBubbleIcon): self
     {
+        // @igor-ignore - Doctrine entity field; instance-scoped, not a shared service.
         $this->preferencesBubbleIcon = PreferencesBubbleIconSanitizer::sanitize($preferencesBubbleIcon);
 
         return $this;

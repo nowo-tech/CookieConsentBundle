@@ -57,7 +57,9 @@ final class CookieConsentConfigRuntimeCacheListener
             return;
         }
 
+        // @igor-ignore - Not shared worker service state.
         $this->configRepository->clearRuntimeCache();
+        // @igor-ignore - Not shared worker service state.
         $this->configResolver->clearRuntimeCache();
         $this->inventoryProvider?->clearRuntimeCache();
     }

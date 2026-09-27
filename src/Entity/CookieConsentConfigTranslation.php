@@ -101,6 +101,7 @@ class CookieConsentConfigTranslation
      */
     public function setLocale(string $locale): self
     {
+        // @igor-ignore - Doctrine entity field; instance-scoped, not a shared service.
         $this->locale = $locale;
 
         return $this;
@@ -125,6 +126,7 @@ class CookieConsentConfigTranslation
      */
     public function setConsentModalLabel(?string $consentModalLabel): self
     {
+        // @igor-ignore - Doctrine entity field; instance-scoped, not a shared service.
         $this->consentModalLabel = $consentModalLabel;
 
         return $this;
@@ -149,6 +151,7 @@ class CookieConsentConfigTranslation
      */
     public function setConsentModalTitle(string $consentModalTitle): self
     {
+        // @igor-ignore - Doctrine entity field; instance-scoped, not a shared service.
         $this->consentModalTitle = $consentModalTitle;
 
         return $this;
@@ -173,6 +176,7 @@ class CookieConsentConfigTranslation
      */
     public function setConsentModalDescription(string $consentModalDescription): self
     {
+        // @igor-ignore - Doctrine entity field; instance-scoped, not a shared service.
         $this->consentModalDescription = $consentModalDescription;
 
         return $this;
@@ -197,6 +201,7 @@ class CookieConsentConfigTranslation
      */
     public function setConsentModalAcceptAllBtn(string $consentModalAcceptAllBtn): self
     {
+        // @igor-ignore - Doctrine entity field; instance-scoped, not a shared service.
         $this->consentModalAcceptAllBtn = $consentModalAcceptAllBtn;
 
         return $this;
@@ -221,6 +226,7 @@ class CookieConsentConfigTranslation
      */
     public function setConsentModalAcceptNecessaryBtn(string $consentModalAcceptNecessaryBtn): self
     {
+        // @igor-ignore - Doctrine entity field; instance-scoped, not a shared service.
         $this->consentModalAcceptNecessaryBtn = $consentModalAcceptNecessaryBtn;
 
         return $this;
@@ -245,6 +251,7 @@ class CookieConsentConfigTranslation
      */
     public function setConsentModalShowPreferencesBtn(?string $consentModalShowPreferencesBtn): self
     {
+        // @igor-ignore - Doctrine entity field; instance-scoped, not a shared service.
         $this->consentModalShowPreferencesBtn = $consentModalShowPreferencesBtn;
 
         return $this;
@@ -269,6 +276,7 @@ class CookieConsentConfigTranslation
      */
     public function setConsentModalFooter(?string $consentModalFooter): self
     {
+        // @igor-ignore - Doctrine entity field; instance-scoped, not a shared service.
         $this->consentModalFooter = $consentModalFooter;
 
         return $this;
@@ -293,6 +301,7 @@ class CookieConsentConfigTranslation
      */
     public function setPreferencesModalTitle(?string $preferencesModalTitle): self
     {
+        // @igor-ignore - Doctrine entity field; instance-scoped, not a shared service.
         $this->preferencesModalTitle = $preferencesModalTitle;
 
         return $this;
@@ -317,6 +326,7 @@ class CookieConsentConfigTranslation
      */
     public function setPreferencesModalAcceptAllBtn(?string $preferencesModalAcceptAllBtn): self
     {
+        // @igor-ignore - Doctrine entity field; instance-scoped, not a shared service.
         $this->preferencesModalAcceptAllBtn = $preferencesModalAcceptAllBtn;
 
         return $this;
@@ -341,6 +351,7 @@ class CookieConsentConfigTranslation
      */
     public function setPreferencesModalAcceptNecessaryBtn(?string $preferencesModalAcceptNecessaryBtn): self
     {
+        // @igor-ignore - Doctrine entity field; instance-scoped, not a shared service.
         $this->preferencesModalAcceptNecessaryBtn = $preferencesModalAcceptNecessaryBtn;
 
         return $this;
@@ -365,6 +376,7 @@ class CookieConsentConfigTranslation
      */
     public function setPreferencesModalSavePreferencesBtn(?string $preferencesModalSavePreferencesBtn): self
     {
+        // @igor-ignore - Doctrine entity field; instance-scoped, not a shared service.
         $this->preferencesModalSavePreferencesBtn = $preferencesModalSavePreferencesBtn;
 
         return $this;
@@ -389,6 +401,7 @@ class CookieConsentConfigTranslation
      */
     public function setPreferencesModalCloseIconLabel(?string $preferencesModalCloseIconLabel): self
     {
+        // @igor-ignore - Doctrine entity field; instance-scoped, not a shared service.
         $this->preferencesModalCloseIconLabel = $preferencesModalCloseIconLabel;
 
         return $this;
@@ -413,6 +426,7 @@ class CookieConsentConfigTranslation
      */
     public function setPrivacyRoute(?string $privacyRoute): self
     {
+        // @igor-ignore - Doctrine entity field; instance-scoped, not a shared service.
         $this->privacyRoute = $privacyRoute;
 
         return $this;
@@ -437,6 +451,7 @@ class CookieConsentConfigTranslation
      */
     public function setPreferenceSections(?array $preferenceSections): self
     {
+        // @igor-ignore - Doctrine entity field; instance-scoped, not a shared service.
         $this->preferenceSections = $preferenceSections;
 
         return $this;
@@ -461,6 +476,7 @@ class CookieConsentConfigTranslation
      */
     public function setConfig(?CookieConsentConfig $config): self
     {
+        // @igor-ignore - Doctrine entity field; instance-scoped, not a shared service.
         $this->config = $config;
 
         return $this;

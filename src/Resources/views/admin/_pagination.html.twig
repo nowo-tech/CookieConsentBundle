@@ -6,17 +6,17 @@
             {{ 'nowo_cookie_consent.admin.pagination.summary'|trans({
                 '%page%': page,
                 '%pages%': pages,
-                '%total%': total
+                '%total%': total,
             }, 'NowoCookieConsentBundle') }}
         </div>
         <div class="{{ ui.row_actions(_css_fw) }}" role="group">
             {% if page > 1 %}
-                <a class="{{ ui.btn('secondary', 'sm', _css_fw) }} nowo-ui-action-prev" href="{{ path(app.request.attributes.get('_route'), app.request.attributes.get('_route_params')|merge(app.request.query.all)|merge({ page: page - 1 })) }}">
+                <a class="{{ ui.btn('secondary', 'sm', _css_fw) }} nowo-ui-action-prev" href="{{ path(app.request.attributes.get('_route'), app.request.attributes.get('_route_params')|merge(app.request.query.all)|merge({page: page - 1})) }}">
                     {{ 'nowo_cookie_consent.admin.pagination.prev'|trans({}, 'NowoCookieConsentBundle') }}
                 </a>
             {% endif %}
             {% if page < pages %}
-                <a class="{{ ui.btn('secondary', 'sm', _css_fw) }} nowo-ui-action-next" href="{{ path(app.request.attributes.get('_route'), app.request.attributes.get('_route_params')|merge(app.request.query.all)|merge({ page: page + 1 })) }}">
+                <a class="{{ ui.btn('secondary', 'sm', _css_fw) }} nowo-ui-action-next" href="{{ path(app.request.attributes.get('_route'), app.request.attributes.get('_route_params')|merge(app.request.query.all)|merge({page: page + 1})) }}">
                     {{ 'nowo_cookie_consent.admin.pagination.next'|trans({}, 'NowoCookieConsentBundle') }}
                 </a>
             {% endif %}

@@ -81,7 +81,7 @@
                         </button>
                     </div>
                     <div class="modal-body nowo-cookie-consent__preferences-body">
-                        {% include '@NowoCookieConsentBundle/_preference_sections.html.twig' with {form: form, preference_sections: preference_sections} %}
+                        {{ include('@NowoCookieConsentBundle/_preference_sections.html.twig', {form: form, preference_sections: preference_sections}) }}
                     </div>
                     <div class="modal-footer nowo-cookie-consent__btn-group">
                         {% for child in form %}
@@ -105,7 +105,7 @@
                             {{ nowo_cookie_consent_trans('nowo_cookie_consent.read_more', display_config ?? null) }}
                         </a>
                     {% endif %}
-                    {% include '@NowoCookieConsentBundle/_preference_sections.html.twig' with {form: form, preference_sections: preference_sections} %}
+                    {{ include('@NowoCookieConsentBundle/_preference_sections.html.twig', {form: form, preference_sections: preference_sections}) }}
                 </div>
                 <div class="modal-footer nowo-cookie-consent__btn-group">
                     {% for child in form %}
@@ -125,7 +125,7 @@
 </div>
 
 {% if nowo_cookie_consent_preferences_bubble_enabled() %}
-    {% include '@NowoCookieConsentBundle/cookie_consent_preferences_bubble.html.twig' %}
+    {{ include('@NowoCookieConsentBundle/cookie_consent_preferences_bubble.html.twig') }}
 {% endif %}
 
 <script src="{{ asset('nowo-consent-modal.js', 'nowo_cookie_consent') }}" defer></script>

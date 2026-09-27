@@ -2,16 +2,16 @@
 
 {% if intro_sections is not empty %}
     {% for section in intro_sections %}
-        {% include '@NowoCookieConsentBundle/_preferences_intro.html.twig' with {
+        {{ include('@NowoCookieConsentBundle/_preferences_intro.html.twig', {
             title: section.title,
             description: section.description|default(''),
-        } %}
+        }) }}
     {% endfor %}
 {% else %}
-    {% include '@NowoCookieConsentBundle/_preferences_intro.html.twig' with {
+    {{ include('@NowoCookieConsentBundle/_preferences_intro.html.twig', {
         title: 'nowo_cookie_consent.preferences.usage_title'|trans({}, 'NowoCookieConsentBundle'),
         description: 'nowo_cookie_consent.preferences.usage_description'|trans({}, 'NowoCookieConsentBundle'),
-    } %}
+    }) }}
 {% endif %}
 
 {% if preference_sections is not empty %}

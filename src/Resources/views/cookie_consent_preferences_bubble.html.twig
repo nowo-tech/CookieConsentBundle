@@ -11,7 +11,7 @@
         {% if bubble_icon %}
             {{ bubble_icon|raw }}
         {% else %}
-            {% include '@NowoCookieConsentBundle/_preferences_bubble_icon_default.html.twig' %}
+            {{ include('@NowoCookieConsentBundle/_preferences_bubble_icon_default.html.twig') }}
         {% endif %}
     </span>
 </button>

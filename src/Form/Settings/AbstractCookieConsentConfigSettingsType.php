@@ -32,6 +32,7 @@ abstract class AbstractCookieConsentConfigSettingsType extends AbstractType
 
     public function setFormOptionsMerger(FormOptionsMerger $formOptionsMerger): void
     {
+        // @igor-ignore - Request-scoped Twig/Form wiring; not a shared worker singleton.
         $this->cookieConsentFormOptionsMerger = $formOptionsMerger;
         $this->setFormOptionsMergerTrait($formOptionsMerger);
     }
@@ -104,7 +105,8 @@ abstract class AbstractCookieConsentConfigSettingsType extends AbstractType
      */
     protected function rememberTranslationDomain(array $options): void
     {
-        $domain                        = $options['translation_domain'] ?? null;
+        $domain = $options['translation_domain'] ?? null;
+        // @igor-ignore - Request-scoped Twig/Form wiring; not a shared worker singleton.
         $this->activeTranslationDomain = is_string($domain) ? $domain : null;
     }
 

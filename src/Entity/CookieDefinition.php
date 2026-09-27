@@ -91,6 +91,7 @@ class CookieDefinition
      */
     public function setName(string $name): self
     {
+        // @igor-ignore - Doctrine entity field; instance-scoped, not a shared service.
         $this->name = $name;
 
         return $this;
@@ -115,6 +116,7 @@ class CookieDefinition
      */
     public function setDuration(string $duration): self
     {
+        // @igor-ignore - Doctrine entity field; instance-scoped, not a shared service.
         $this->duration = $duration;
 
         return $this;
@@ -139,6 +141,7 @@ class CookieDefinition
      */
     public function setCategory(string $category): self
     {
+        // @igor-ignore - Doctrine entity field; instance-scoped, not a shared service.
         $this->category = $category;
 
         return $this;
@@ -163,6 +166,7 @@ class CookieDefinition
      */
     public function setType(string $type): self
     {
+        // @igor-ignore - Doctrine entity field; instance-scoped, not a shared service.
         $this->type = $type;
 
         return $this;
@@ -187,6 +191,7 @@ class CookieDefinition
      */
     public function setSortOrder(int $sortOrder): self
     {
+        // @igor-ignore - Doctrine entity field; instance-scoped, not a shared service.
         $this->sortOrder = $sortOrder;
 
         return $this;
@@ -211,6 +216,7 @@ class CookieDefinition
      */
     public function setAllowedByDefault(bool $allowedByDefault): self
     {
+        // @igor-ignore - Doctrine entity field; instance-scoped, not a shared service.
         $this->allowedByDefault = $allowedByDefault;
 
         return $this;
@@ -235,6 +241,7 @@ class CookieDefinition
      */
     public function setConfig(?CookieConsentConfig $config): self
     {
+        // @igor-ignore - Doctrine entity field; instance-scoped, not a shared service.
         $this->config = $config;
 
         return $this;

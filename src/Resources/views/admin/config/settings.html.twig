@@ -7,12 +7,12 @@
 {% block title %}{{ 'nowo_cookie_consent.admin.config.settings.title'|trans({}, 'NowoCookieConsentBundle') }} — {{ config.displayName }}{% endblock %}
 
 {% block body %}
-    {% include '@NowoCookieConsentBundle/admin/_admin_area_nav.html.twig' with {config: config} only %}
-    {% include '@NowoCookieConsentBundle/admin/config/_settings_section_tabs.html.twig' with {
+    {{ include('@NowoCookieConsentBundle/admin/_admin_area_nav.html.twig', {config: config}, false) }}
+    {{ include('@NowoCookieConsentBundle/admin/config/_settings_section_tabs.html.twig', {
         config: config,
         section: section,
         sections: sections,
-    } only %}
+    }, false) }}
 
     <div class="card shadow-sm nowo-ui-form-wrap">
         <div class="card-body p-4">
