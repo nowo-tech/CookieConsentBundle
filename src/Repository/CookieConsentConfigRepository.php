@@ -7,8 +7,8 @@ namespace Nowo\CookieConsentBundle\Repository;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
 use Nowo\CookieConsentBundle\Entity\CookieConsentConfig;
-use Symfony\Contracts\Service\ResetInterface;
 use SortDirection;
+use Symfony\Contracts\Service\ResetInterface;
 
 /**
  * Doctrine repository for {@see CookieConsentConfig} entities.

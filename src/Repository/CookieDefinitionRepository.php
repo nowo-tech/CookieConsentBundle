@@ -8,9 +8,9 @@ use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
 use Nowo\CookieConsentBundle\Entity\CookieConsentConfig;
 use Nowo\CookieConsentBundle\Entity\CookieDefinition;
+use SortDirection;
 
 use function max;
-use SortDirection;
 
 /**
  * Doctrine repository for {@see CookieDefinition} entities.
