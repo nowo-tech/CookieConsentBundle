@@ -1,6 +1,16 @@
 # Usage
 
+## Screenshots
+
+| Overview | Interaction |
+|----------|-------------|
+| ![Cookie consent banner](images/demo/overview.png) | ![Cookie consent preferences panel](images/demo/interaction.png) |
+
+Regenerate with `make -C demo/symfony8 demo-screenshots` (REQ-DEMO-013).
+
 ## Table of contents
+
+- [Screenshots](#screenshots)
 
 - [Embed the modal](#embed-the-modal)
 - [Conditional scripts](#conditional-scripts)

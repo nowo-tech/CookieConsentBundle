@@ -11,6 +11,20 @@ Frontend behavior is implemented in TypeScript and built with Vite (`make assets
 
 This bundle is **FrankenPHP worker mode friendly**, including when the kernel is **not** reset between requests (`reset_kernel false`). See the [FrankenPHP worker audit](docs/FRANKENPHP-WORKER-AUDIT.md).
 
+<table>
+  <tr>
+    <td align="center" width="50%">
+      <img src="docs/images/demo/overview.png" alt="Cookie consent banner" />
+      <br /><sub>Consent banner</sub>
+    </td>
+    <td align="center" width="50%">
+      <img src="docs/images/demo/interaction.png" alt="Cookie consent preferences panel" />
+      <br /><sub>Preferences step</sub>
+    </td>
+  </tr>
+</table>
+
+
 ## Features
 
 - **GDPR modal** — category toggles, optional per-cookie selection, AJAX submit, TypeScript + Vite (`nowo-consent-modal.js`) and standalone CSS (`nowo-cookie-consent.css`, CSP-friendly).
