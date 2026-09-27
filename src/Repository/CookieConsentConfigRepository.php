@@ -8,6 +8,7 @@ use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
 use Nowo\CookieConsentBundle\Entity\CookieConsentConfig;
 use Symfony\Contracts\Service\ResetInterface;
+use SortDirection;
 
 /**
  * Doctrine repository for {@see CookieConsentConfig} entities.
@@ -97,8 +98,8 @@ class CookieConsentConfigRepository extends ServiceEntityRepository implements R
         $configs = $this->createQueryBuilder('config')
             ->andWhere('config.enabled = :enabled')
             ->setParameter('enabled', true)
-            ->orderBy('config.priority', 'DESC')
-            ->addOrderBy('config.id', 'ASC')
+            ->orderBy('config.priority', SortDirection::Descending)
+            ->addOrderBy('config.id', SortDirection::Ascending)
             ->getQuery()
             ->getResult();
 
@@ -122,8 +123,8 @@ class CookieConsentConfigRepository extends ServiceEntityRepository implements R
             ->andWhere('config.default = :default')
             ->setParameter('enabled', true)
             ->setParameter('default', false)
-            ->orderBy('config.priority', 'DESC')
-            ->addOrderBy('config.id', 'ASC')
+            ->orderBy('config.priority', SortDirection::Descending)
+            ->addOrderBy('config.id', SortDirection::Ascending)
             ->getQuery()
             ->getResult();
 

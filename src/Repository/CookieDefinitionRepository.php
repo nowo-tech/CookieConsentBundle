@@ -10,6 +10,7 @@ use Nowo\CookieConsentBundle\Entity\CookieConsentConfig;
 use Nowo\CookieConsentBundle\Entity\CookieDefinition;
 
 use function max;
+use SortDirection;
 
 /**
  * Doctrine repository for {@see CookieDefinition} entities.
@@ -56,8 +57,8 @@ class CookieDefinitionRepository extends ServiceEntityRepository
             ->addSelect('t')
             ->andWhere('d.config = :config')
             ->setParameter('config', $config)
-            ->orderBy('d.sortOrder', 'ASC')
-            ->addOrderBy('d.name', 'ASC');
+            ->orderBy('d.sortOrder', SortDirection::Ascending)
+            ->addOrderBy('d.name', SortDirection::Ascending);
 
         if ($pageSize !== null) {
             $page     = max(1, $page);
