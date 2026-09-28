@@ -3,6 +3,18 @@
 
 ## Unreleased
 
+## To 1.11.0
+
+From **1.10.1** — `access_roles` fail-closed; Doctrine `SortDirection`; demo e2e.
+
+```bash
+composer update nowo-tech/cookie-consent-bundle
+php bin/console cache:clear
+```
+
+- Empty `security.access_roles` denies admin routes. Set roles / custom checker, or demo-only `allow_unauthenticated`.
+- Ensure `doctrine/orm` is `^3.7` (SortDirection).
+
 ## To 1.10.1
 
 From **1.10.0** — REQ-CS-008 Igor FrankenPHP worker audit (igor-php require-dev, igor.json, make igor).

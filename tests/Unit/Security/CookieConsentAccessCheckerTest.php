@@ -29,13 +29,13 @@ final class CookieConsentAccessCheckerTest extends TestCase
         self::assertFalse($checker->canAccess());
     }
 
-    public function testConfigurableAllowsWhenRolesEmpty(): void
+    public function testConfigurableDeniesWhenRolesEmpty(): void
     {
         $auth = $this->createMock(AuthorizationCheckerInterface::class);
         $auth->expects(self::never())->method('isGranted');
 
         $checker = new ConfigurableCookieConsentAccessChecker($auth, []);
-        self::assertTrue($checker->canAccess());
+        self::assertFalse($checker->canAccess());
     }
 
     public function testAllowAllAlwaysTrue(): void

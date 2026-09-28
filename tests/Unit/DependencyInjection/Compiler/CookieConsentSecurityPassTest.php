@@ -57,14 +57,14 @@ final class CookieConsentSecurityPassTest extends TestCase
         self::assertTrue($container->hasDefinition(CookieConsentAdminAccessSubscriber::class));
     }
 
-    public function testNoopWhenAccessRolesEmpty(): void
+    public function testRegistersSubscriberWhenAccessRolesEmpty(): void
     {
         $container = $this->baseContainer(allowUnauthenticated: false, accessRoles: []);
         $container->setDefinition('security.authorization_checker', new Definition());
 
         (new CookieConsentSecurityPass())->process($container);
 
-        self::assertFalse($container->hasDefinition(CookieConsentAdminAccessSubscriber::class));
+        self::assertTrue($container->hasDefinition(CookieConsentAdminAccessSubscriber::class));
     }
 
     public function testDoesNotDuplicateExistingSubscriber(): void

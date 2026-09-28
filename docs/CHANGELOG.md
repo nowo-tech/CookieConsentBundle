@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## Table of contents
 
 - [[Unreleased]](#unreleased)
+- [[1.11.0] - 2026-09-28](#1110---2026-09-28)
 - [[1.10.1] - 2026-09-27](#1101---2026-09-27)
 - [[1.10.0] - 2026-09-24](#1100---2026-09-24)
 - [[1.9.7] - 2026-08-29](#197---2026-08-29)
@@ -103,14 +104,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-### Changed
+## [1.11.0] - 2026-09-28
 
-- **Doctrine ORM SortDirection:** replace string `'ASC'`/`'DESC'` in `#[ORM\OrderBy]` and QueryBuilder `orderBy`/`addOrderBy` with `SortDirection::Ascending`/`Descending` (doctrine/orm deprecation, https://github.com/doctrine/orm/issues/11313); require `doctrine/orm` `^3.7` where applicable.
+### Security
 
+- Empty `security.access_roles` is fail-closed (deny) unless `allow_unauthenticated` or a custom `access_checker` is set.
 
 ### Added
 
 - **REQ-DEMO-013:** Playwright e2e under `demo/symfony8/e2e/` (`make test-e2e`), `demo-screenshots` target, and README gallery cropped to .nowo-cookie-consent (`docs/images/demo/overview.png`, `interaction.png`).
+
+### Changed
+
+- **Doctrine ORM SortDirection:** replace string `'ASC'`/`'DESC'` in `#[ORM\OrderBy]` and QueryBuilder `orderBy`/`addOrderBy` with `SortDirection::Ascending`/`Descending` (doctrine/orm deprecation, https://github.com/doctrine/orm/issues/11313); require `doctrine/orm` `^3.7` where applicable.
 
 ## [1.10.1] - 2026-09-27
 
@@ -122,6 +128,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - **Worker safety (Igor):** justified `// @igor-ignore` annotations and/or `ResetInterface` / request-scoped fixes so `make igor` passes on package `src/`.
 
+[1.11.0]: https://github.com/nowo-tech/CookieConsentBundle/releases/tag/v1.11.0
 [1.10.1]: https://github.com/nowo-tech/CookieConsentBundle/releases/tag/v1.10.1
 
 ## [1.10.0] - 2026-09-24
