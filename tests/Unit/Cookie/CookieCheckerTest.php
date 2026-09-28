@@ -191,7 +191,7 @@ final class CookieCheckerTest extends TestCase
 
     public function testFallsBackToCurrentRequestWhenMainIsNull(): void
     {
-        $stack = $this->createMock(RequestStack::class);
+        $stack   = $this->createMock(RequestStack::class);
         $request = Request::create('/');
         $request->cookies->set(CookieNameEnum::COOKIE_CONSENT_NAME, 'saved');
         $stack->method('getMainRequest')->willReturn(null);
