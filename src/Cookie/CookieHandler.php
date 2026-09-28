@@ -39,7 +39,8 @@ class CookieHandler
      */
     public function save(array $categories, string $key, Response $response, array $granularCookies = []): void
     {
-        $this->saveCookie(CookieNameEnum::COOKIE_CONSENT_NAME, date('r'), $response);
+        // UTC ISO-8601 (stable across locales); not RFC 2822 `date('r')`.
+        $this->saveCookie(CookieNameEnum::COOKIE_CONSENT_NAME, gmdate('Y-m-d\TH:i:s\Z'), $response);
         $this->saveCookie(CookieNameEnum::COOKIE_CONSENT_KEY_NAME, $key, $response);
 
         foreach ($categories as $category => $permitted) {
@@ -81,8 +82,22 @@ class CookieHandler
     {
         $expirationDate = $this->clock->now()->add(new DateInterval('P1Y'));
 
+        // Always Secure + SameSite=Lax: TLS is usually terminated at a reverse proxy
+        // (Traefik/Caddy), so Request::isSecure() is false inside FrankenPHP/PHP-FPM and
+        // Symfony's secure=null ("auto") would emit cookies without the Secure flag.
+        // Browsers on https:// then drop them and the consent banner reappears on refresh.
         $response->headers->setCookie(
-            new Cookie($name, $value, $expirationDate, '/', null, null, $this->httpOnly, true),
+            new Cookie(
+                $name,
+                $value,
+                $expirationDate,
+                '/',
+                null,
+                true,
+                $this->httpOnly,
+                false,
+                Cookie::SAMESITE_LAX,
+            ),
         );
     }
 }

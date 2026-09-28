@@ -189,6 +189,19 @@ final class CookieCheckerTest extends TestCase
         self::assertTrue($checker->isCookieConsentSavedByUser());
     }
 
+    public function testFallsBackToCurrentRequestWhenMainIsNull(): void
+    {
+        $stack = $this->createMock(RequestStack::class);
+        $request = Request::create('/');
+        $request->cookies->set(CookieNameEnum::COOKIE_CONSENT_NAME, 'saved');
+        $stack->method('getMainRequest')->willReturn(null);
+        $stack->method('getCurrentRequest')->willReturn($request);
+
+        $checker = new CookieChecker($stack);
+
+        self::assertTrue($checker->isCookieConsentSavedByUser());
+    }
+
     private function createRequestStack(Request $request): RequestStack
     {
         $stack = new RequestStack();

@@ -104,6 +104,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.11.1] - 2026-09-28
+
+### Fixed
+
+- **TLS / FrankenPHP:** `CookieHandler` now always emits consent cookies with the `Secure` flag and
+  `SameSite=Lax` (and without the raw flag). Behind a TLS-terminating proxy, Symfony's `secure=null`
+  ("auto") saw a plain HTTP request and omitted `Secure`, so browsers on `https://` dropped the cookies
+  and the consent banner reappeared after refresh.
+- Consent timestamp cookie value uses UTC ISO-8601 (`Y-m-d\TH:i:s\Z`) instead of locale-dependent `date('r')`.
+- `CookieChecker` falls back to `RequestStack::getCurrentRequest()` when the main request is null
+  (edge cases under worker / sub-request stacks).
+
+[1.11.1]: https://github.com/nowo-tech/CookieConsentBundle/releases/tag/v1.11.1
+
 ## [1.11.0] - 2026-09-28
 
 ### Security

@@ -67,4 +67,35 @@ final class CookieHandlerTest extends TestCase
         self::assertNotEmpty($cookies);
         self::assertSame($now->modify('+1 year')->getTimestamp(), $cookies[0]->getExpiresTime());
     }
+
+    public function testConsentCookiesAreSecureHttpOnlyDecodedAndSameSiteLax(): void
+    {
+        $handler  = new CookieHandler(true, new SystemClock());
+        $response = new Response();
+        $handler->save(['analytics' => true], 'consent-key', $response);
+
+        $byName = [];
+        foreach ($response->headers->getCookies() as $cookie) {
+            $byName[$cookie->getName()] = $cookie;
+        }
+
+        $consent = $byName[CookieNameEnum::COOKIE_CONSENT_NAME];
+        self::assertTrue($consent->isSecure());
+        self::assertTrue($consent->isHttpOnly());
+        self::assertFalse($consent->isRaw());
+        self::assertSame(Cookie::SAMESITE_LAX, $consent->getSameSite());
+        self::assertMatchesRegularExpression('/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$/', (string) $consent->getValue());
+    }
+
+    public function testHttpOnlyFlagFollowsConstructor(): void
+    {
+        $handler  = new CookieHandler(false, new SystemClock());
+        $response = new Response();
+        $handler->save(['analytics' => true], 'key', $response);
+
+        $cookies = $response->headers->getCookies();
+        self::assertNotEmpty($cookies);
+        self::assertFalse($cookies[0]->isHttpOnly());
+        self::assertTrue($cookies[0]->isSecure());
+    }
 }

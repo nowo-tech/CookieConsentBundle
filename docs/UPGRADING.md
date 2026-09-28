@@ -3,6 +3,18 @@
 
 ## Unreleased
 
+## To 1.11.1
+
+From **1.11.0** — consent cookies always `Secure` + `SameSite=Lax` (TLS-terminated / FrankenPHP).
+
+```bash
+composer update nowo-tech/cookie-consent-bundle
+php bin/console cache:clear
+```
+
+- No config changes. After upgrade, clear site cookies once if an old non-`Secure` consent cookie lingered.
+- Plain `http://` local hosts will not persist consent cookies (by design); use HTTPS locally or accept the banner on HTTP.
+
 ## To 1.11.0
 
 From **1.10.1** — `access_roles` fail-closed; Doctrine `SortDirection`; demo e2e.

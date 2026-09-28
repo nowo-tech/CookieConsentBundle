@@ -18,7 +18,7 @@ use const JSON_THROW_ON_ERROR;
 /**
  * Reads cookie consent state from the current HTTP request.
  *
- * The main request is looked up on every call: the service is shared and may outlive
+ * The request is looked up on every call: the service is shared and may outlive
  * a single request (FrankenPHP worker mode), so no request data is stored on it.
  */
 class CookieChecker
@@ -32,6 +32,11 @@ class CookieChecker
     {
     }
 
+    private function getRequest(): ?Request
+    {
+        return $this->requestStack->getMainRequest() ?? $this->requestStack->getCurrentRequest();
+    }
+
     /**
      * Returns whether the user has saved cookie consent preferences.
      *
@@ -39,7 +44,7 @@ class CookieChecker
      */
     public function isCookieConsentSavedByUser(): bool
     {
-        $request = $this->requestStack->getMainRequest();
+        $request = $this->getRequest();
 
         if (!$request instanceof Request) {
             return false;
@@ -57,7 +62,7 @@ class CookieChecker
      */
     public function isCategoryAllowedByUser(string $category): bool
     {
-        $request = $this->requestStack->getMainRequest();
+        $request = $this->getRequest();
 
         if (!$request instanceof Request) {
             return false;
@@ -96,7 +101,7 @@ class CookieChecker
      */
     public function getGranularPreferences(): ?array
     {
-        $request = $this->requestStack->getMainRequest();
+        $request = $this->getRequest();
 
         if (!$request instanceof Request) {
             return null;
