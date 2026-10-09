@@ -3,6 +3,16 @@
 
 ## Unreleased
 
+## To 1.11.2
+
+From **1.11.1** — dependency refresh.
+
+```bash
+composer update nowo-tech/cookie-consent-bundle
+```
+
+- No breaking changes. No application upgrade steps.
+
 ## To 1.11.1
 
 From **1.11.0** — consent cookies always `Secure` + `SameSite=Lax` (TLS-terminated / FrankenPHP).
@@ -43,6 +53,7 @@ This guide provides step-by-step instructions for upgrading Cookie Consent Bundl
 ## Table of contents
 
 
+- [To 1.11.2](#to-1112)
 - [To 1.10.0 (FrankenPHP worker remediation)](#to-1100-frankenphp-worker-remediation)
 - [From 1.9.6 to 1.9.7](#from-196-to-197)
 - [From 1.9.5 to 1.9.6](#from-195-to-196)
