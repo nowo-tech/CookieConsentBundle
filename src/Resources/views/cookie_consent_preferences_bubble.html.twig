@@ -6,7 +6,7 @@
         data-nowo-open-consent
         aria-label="{{ 'nowo_cookie_consent.preferences_bubble.label'|trans({}, 'NowoCookieConsentBundle') }}"
         title="{{ label|default('nowo_cookie_consent.manage_link'|trans({}, 'NowoCookieConsentBundle')) }}"
-        {% if bubble_border_color %}style="--nowo-cc-bubble-accent: {{ bubble_border_color|e('html_attr') }}"{% endif %}>
+        {% if bubble_border_color %}data-nowo-bubble-accent="{{ bubble_border_color|e('html_attr') }}"{% endif %}>
     <span class="nowo-cookie-consent__preferences-bubble-icon">
         {% if bubble_icon %}
             {{ bubble_icon|raw }}

@@ -3,6 +3,7 @@
 {% extends nowo_cookie_consent_layout_template|default('@NowoCookieConsentBundle/admin/layout.html.twig') %}
 {% import '@NowoUiKitBundle/macros/ui.html.twig' as ui %}
 {% set _css_fw = nowo_cookie_consent_css_framework|default('bootstrap5') %}
+{% set _csp_nonce = app is defined and app.request ? app.request.attributes.get('csp_nonce')|default('') : '' %}
 
 {% block nowo_ui_flashes %}
     {% for label, messages in app.flashes %}
@@ -24,6 +25,6 @@
 {% block javascripts %}
     {{ parent() }}
     {% block nowo_ui_scripts %}
-        <script src="{{ asset('js/nowo-ui-confirm.js', 'nowo_ui_kit') }}" defer></script>
+        <script src="{{ asset('js/nowo-ui-confirm.js', 'nowo_ui_kit') }}"{% if _csp_nonce %} nonce="{{ _csp_nonce }}"{% endif %} defer></script>
     {% endblock %}
 {% endblock %}

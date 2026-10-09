@@ -54,6 +54,17 @@ final class NowoCookieConsentExtensionTest extends TestCase
         self::assertTrue($container->hasDefinition(CookieConsentConfigTranslationSubscriber::class));
     }
 
+    public function testSchemaReadyCacheTtlParameter(): void
+    {
+        $container = new ContainerBuilder();
+        (new NowoCookieConsentExtension())->load([[]], $container);
+        self::assertSame(60, $container->getParameter('nowo_cookie_consent.schema_ready_cache_ttl'));
+
+        $container = new ContainerBuilder();
+        (new NowoCookieConsentExtension())->load([['schema_ready_cache_ttl' => 0]], $container);
+        self::assertSame(0, $container->getParameter('nowo_cookie_consent.schema_ready_cache_ttl'));
+    }
+
     public function testDatabaseConfigDisabledRemovesTranslationSubscriber(): void
     {
         $container = new ContainerBuilder();

@@ -1,7 +1,8 @@
 {# Prints a copy-pasteable diagnostic report to the browser console. #}
-<script>
+{% set _csp_nonce = app is defined and app.request ? app.request.attributes.get('csp_nonce')|default('') : '' %}
+<script{% if _csp_nonce %} nonce="{{ _csp_nonce }}"{% endif %}>
 (function () {
-    const report = {{ nowo_cookie_consent_diagnostic_report(app.request.attributes.get('_route'))|json_encode(constant('JSON_UNESCAPED_UNICODE') b-or constant('JSON_HEX_TAG') b-or constant('JSON_HEX_AMP') b-or constant('JSON_HEX_APOS') b-or constant('JSON_HEX_QUOT'))|raw }};
+    const report = {{ nowo_cookie_consent_diagnostic_report(app.request ? app.request.attributes.get('_route') : null)|json_encode(constant('JSON_UNESCAPED_UNICODE') b-or constant('JSON_HEX_TAG') b-or constant('JSON_HEX_AMP') b-or constant('JSON_HEX_APOS') b-or constant('JSON_HEX_QUOT'))|raw }};
     const modal = document.getElementById('cookieconsent');
 
     report.client = {

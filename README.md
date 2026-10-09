@@ -34,7 +34,8 @@ This bundle is **FrankenPHP worker mode friendly**, including when the kernel is
 - **Preferences bubble** — reopen consent after the first choice.
 - **Route targeting** — `render_routes` / `skip_render_routes`; helpers `nowo_cookie_consent_should_render()` / `nowo_cookie_consent_render()`.
 - **Database config** — `use_database_config` so the admin UI can override YAML at runtime; profile copy via `nowo_cookie_consent_trans()`.
-- **Cold-start** — cooperates with SiteBackupBundle when the schema is not ready yet.
+- **Cold-start** — cooperates with SiteBackupBundle when the schema is not ready yet; the "table exists" probe is memoized per worker (`schema_ready_cache_ttl`, default 60 s) so public pages skip it after warm-up.
+- **CSP nonce** — bundle `<script>` tags carry the request attribute `csp_nonce` (nowo-tech convention); JS-injected `<style>` copies the loader script nonce; no inline handlers or inline `style` attributes.
 - **Worker-safe** — RequestStack / ManagerRegistry per call; runtime memos cleared on every main request.
 
 ## Quick start

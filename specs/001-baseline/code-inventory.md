@@ -20,6 +20,8 @@
 | `Resources/assets/src/granular-cookie-toggles.ts` | Per-cookie toggles | FR-UI-010 |
 | `Resources/assets/src/iframe-manager.ts` | Blocked iframe manager | FR-UI-011 |
 | `Resources/assets/src/logger.ts` | Client logger | FR-UI-012 |
+| `Resources/assets/src/inject-styles.ts` | Runtime CSS injection + CSP nonce | FR-CSP-002 |
+| `Resources/assets/src/preferences-bubble.ts` | Bubble accent via CSSOM | FR-CSP-001 |
 | `Resources/assets/src/step-manager.ts` | Step wizard UI | FR-UI-013 |
 
 ## TypeScript tests (`src/Resources/assets/src/*.test.ts`)
@@ -38,6 +40,7 @@ Co-located Vitest sources under `src/` (compiled/tested in CI; not shipped to Pa
 | `Resources/assets/src/granular-cookie-toggles.test.ts` | Vitest: granular toggles | FR-TEST-TS-001 |
 | `Resources/assets/src/iframe-manager.test.ts` | Vitest: iframe manager | FR-TEST-TS-001 |
 | `Resources/assets/src/logger.test.ts` | Vitest: logger | FR-TEST-TS-001 |
+| `Resources/assets/src/preferences-bubble.test.ts` | Vitest: bubble accent | FR-TEST-TS-001 |
 | `Resources/assets/src/step-manager.test.ts` | Vitest: step manager | FR-TEST-TS-001 |
 
 ## Symfony config, assets, translations, Twig (`src/Resources/`)
@@ -114,7 +117,7 @@ Co-located Vitest sources under `src/` (compiled/tested in CI; not shipped to Pa
 | `EventSubscriber/CookieConsentConfigTranslationSubscriber.php` | Events | FR-EVT-001 |
 | `EventSubscriber/CookieConsentFormSubscriber.php` | Events | FR-EVT-001 |
 | `EventSubscriber/CookieConsentRuntimeCacheResetSubscriber.php` | Worker memo reset | FR-WORKER-002 |
-| `EventSubscriber/CookieConsentSchemaReadySubscriber.php` | Events | FR-EVT-001 |
+| `EventSubscriber/CookieConsentSchemaReadySubscriber.php` | Events | FR-EVT-001, FR-EVT-002 |
 | `EventListener/CookieConsentConfigRuntimeCacheListener.php` | Doctrine cache invalidation | FR-WORKER-002 |
 | `Form/CookieConsentConfigSettingsType.php` | Form type | FR-FORM-001 |
 | `Form/CookieConsentType.php` | Form type | FR-FORM-001 |

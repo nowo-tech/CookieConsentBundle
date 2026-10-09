@@ -10,6 +10,7 @@ import { collectClientDiagnostics, publishClientDiagnostics } from './diagnostic
 import { installCustomEventPolyfill } from './custom-event-polyfill';
 import { injectCookieConsentStyles } from './inject-styles';
 import { prepareCsrfForRequest } from './csrf';
+import { applyPreferencesBubbleAccents } from './preferences-bubble';
 import { serializeForm } from './form-serializer';
 import { activateIframesForConsent, readAllowedCategoriesFromModal } from './iframe-manager';
 import { createBundleLogger, setBundleLogger } from './logger';
@@ -59,6 +60,7 @@ export function initCookieConsent(): void {
 
   const modalElement = document.getElementById('cookieconsent');
   injectCookieConsentStyles(modalElement);
+  applyPreferencesBubbleAccents();
 
   if (!modalElement) {
     log.debug('Modal element not found, skipping Cookie Consent init', collectClientDiagnostics(null));

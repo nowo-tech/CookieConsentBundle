@@ -44,6 +44,10 @@ nowo_cookie_consent:
     # Show cookie definitions (name, category, duration, provider, purpose) in modal and legal pages
     use_cookie_inventory: false
 
+    # Seconds a positive "config table exists" probe is memoized per worker (FrankenPHP/RoadRunner).
+    # 0 = probe information_schema on every main request (pre-1.12 behaviour).
+    schema_ready_cache_ttl: 60
+
     # Floating cookie icon button to reopen preferences (any corner)
     preferences_bubble_enabled: false
     preferences_bubble_position: bottom-right   # bottom-left | top-right | top-left
@@ -145,6 +149,23 @@ By default `nowo-consent-modal.js` injects `cookie-consent.css` as a `<style>` t
 ```
 
 Markers that skip injection: `link[data-nowo-cookie-consent-css]`, `html[data-nowo-cookie-consent-external-css="true"]`, or `#cookieconsent[data-nowo-external-css="true"]`.
+
+### CSP nonce convention (`csp_nonce` request attribute)
+
+Shared by all nowo-tech kits: when the host stores the per-request nonce in the request attribute `csp_nonce` (e.g. from a CSP subscriber), every `<script>` the bundle renders carries it:
+
+```twig
+{% set _csp_nonce = app is defined and app.request ? app.request.attributes.get('csp_nonce')|default('') : '' %}
+<script src="…"{% if _csp_nonce %} nonce="{{ _csp_nonce }}"{% endif %} defer></script>
+```
+
+Covered: modal loader (Bootstrap + Tailwind), `_diagnostics_script.html.twig`, admin layout (Bootstrap bundle) and admin `nowo-ui-confirm.js`. Templates contain no inline event handlers and no inline `style` attributes (the preferences bubble accent uses `data-nowo-bubble-accent`, applied via CSSOM).
+
+When JS injects the modal `<style>` it sets `nonce` from, in order: the loader script (`document.currentScript.nonce`), `<meta name="csp-nonce" content="…">`, the first `<script nonce>` on the page. So `style-src-elem 'nonce-…'` works without linking the standalone CSS; linking it (above) remains the zero-JS option.
+
+### Schema-ready probe (worker mode)
+
+`CookieConsentSchemaReadySubscriber` (`kernel.request`, priority 33) checks that the consent config table exists so cold-start requests skip database work. A positive result is memoized in the service for `schema_ready_cache_ttl` seconds and deliberately **not** reset between requests, so in FrankenPHP worker mode only the first request per worker per TTL window probes the schema. A missing table is never memoized (probing continues until migrations run). Set `schema_ready_cache_ttl: 0` to probe on every request.
 
 ### Recommended DB profile layout
 

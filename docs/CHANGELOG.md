@@ -8,6 +8,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## Table of contents
 
 - [[Unreleased]](#unreleased)
+
+- [[1.12.0] - 2026-10-09](#1120---2026-10-09)
 - [[1.11.2] - 2026-10-09](#1112---2026-10-09)
 - [[1.11.1] - 2026-09-28](#1111---2026-09-28)
 - [[1.11.0] - 2026-09-28](#1110---2026-09-28)
@@ -106,6 +108,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.12.0] - 2026-10-09
+
+### Added
+
+- **Performance (FrankenPHP worker):** `CookieConsentSchemaReadySubscriber` memoizes a positive "config table exists" probe per worker process for `schema_ready_cache_ttl` seconds (new option, default `60`, `0` = probe every request). The memo survives between requests (no `ResetInterface`), so anonymous public pages do no `information_schema` / `tablesExist()` probe after warm-up. A missing table is never memoized. Optional PSR-20 clock and `clearSchemaReadyMemo()`. Replaces host-side shims such as `CookieConsentSchemaReadyMemoSubscriber`.
+- **CSP nonce (nowo-tech convention):** every `<script>` the bundle renders (modal / Tailwind modal loader, `_diagnostics_script.html.twig`, admin layout Bootstrap bundle, admin `nowo-ui-confirm.js`) carries `nonce` from the request attribute `csp_nonce` when present (`app.request` null-safe).
+- **CSP nonce (JS):** the runtime-injected modal `<style>` copies the loader script nonce (`document.currentScript.nonce`, captured at evaluation), falling back to `<meta name="csp-nonce">` and then the first nonced `<script>`, so it survives `style-src-elem 'nonce-…'`. New `resolveCspNonce()` helper.
+
+### Changed
+
+- **CSP:** preferences bubble accent colour is emitted as `data-nowo-bubble-accent` and applied through CSSOM (`--nowo-cc-bubble-accent`) instead of an inline `style` attribute, so strict `style-src-attr` policies keep it.
+- `_diagnostics_script.html.twig` tolerates a missing request (`app.request` null).
+
 ## [1.11.2] - 2026-10-09
 
 ### Dependencies
@@ -114,6 +129,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - JS tooling: `vite` 8.3.2, `@types/node` 26.6.4 (rebuilt `nowo-consent-modal.js`, no behaviour change).
 - Demos `symfony8` and `symfony8-tailwind`: Symfony 8.1.8, `doctrine/orm` 3.7.4, `doctrine/dbal` 4.5.0, Twig 3.30.0, `nowo-tech/ui-kit-bundle` 1.9.1, `nowo-tech/form-kit-bundle` 2.6.0.
 
+[1.12.0]: https://github.com/nowo-tech/CookieConsentBundle/releases/tag/v1.12.0
 [1.11.2]: https://github.com/nowo-tech/CookieConsentBundle/releases/tag/v1.11.2
 
 ## [1.11.1] - 2026-09-28

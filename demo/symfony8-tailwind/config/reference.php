@@ -1019,6 +1019,7 @@ use Symfony\Component\Config\Loader\ParamConfigurator as Param;
  *     categories?: list<scalar|Param|null>,
  *     use_logger?: bool|Param, // Persist consent choices to the database when true. // Default: true
  *     use_database_config?: bool|Param, // Load modal copy and display settings from CookieConsentConfig entities when true. // Default: false
+ *     schema_ready_cache_ttl?: int|Param, // Seconds a positive "consent config table exists" probe is memoized per worker process (FrankenPHP/RoadRunner). 0 probes on every main request. // Default: 60
  *     use_cookie_inventory?: bool|Param, // Expose cookie definitions (name, category/block, duration, provider, purpose) in the preferences modal and legal pages. // Default: false
  *     cookie_inventory?: list<array{ // Default: []
  *         name?: scalar|Param|null,

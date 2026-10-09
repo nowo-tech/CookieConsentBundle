@@ -52,7 +52,7 @@ A bundle that is safe under **B** is safe under **A** and under classic mode / P
 | `EventSubscriber\CookieConsentRuntimeCacheResetSubscriber` (`kernel.request`, 4096) — new | yes | none; resets the three memoizing services on main requests | ✅ | ✅ |
 | `Twig\CookieConsentTranslationTwigExtension` — new | yes | none; reads the request attribute per call | ✅ | ✅ |
 | `EventSubscriber\CookieConsentFormSubscriber` (`kernel.response`) | yes | none itself; depends on `CookieLogger` | ✅ | ✅ |
-| `EventSubscriber\CookieConsentSchemaReadySubscriber` (`kernel.request`, 33) | yes | none; schema probe per request, result stored on the request | ✅ | ✅ |
+| `EventSubscriber\CookieConsentSchemaReadySubscriber` (`kernel.request`, 33) | yes | `readyUntil` (intentional per-worker memo of a positive probe, bounded by `schema_ready_cache_ttl`; negative results never memoized) | ✅ | ✅ |
 | `EventSubscriber\CookieConsentAdminAccessSubscriber` | yes | none | ✅ | ✅ |
 | `EventListener\CookieConsentConfigRuntimeCacheListener` (Doctrine) | yes | none; clears resolver/repository/inventory caches on config, copy and cookie definition changes | ✅ | ✅ |
 | `Twig\CookieConsentTwigExtension` | yes | none itself; depends on `CookieChecker` | ✅ | ✅ |
@@ -118,7 +118,7 @@ Entities, `ResolvedCookieConsentConfig` and the `CookieConsentConfigSettingsSect
 
 Info notes:
 
-- `CookieConsentSchemaReadySubscriber` runs a schema check (`createSchemaManager()->tablesExist()`) on every main request and stores the result on the request, not in the service. This is correct for a long-lived worker (no stale result) but costs one metadata query per request.
+- `CookieConsentSchemaReadySubscriber` runs a schema check (`createSchemaManager()->tablesExist()`) and stores a negative result on the request. Since 1.12 (Unreleased) a positive result is memoized per worker for `schema_ready_cache_ttl` seconds (default 60) so steady-state requests skip the metadata query; a table dropped at runtime is noticed within one TTL window.
 - `CookieHandler::save()` uses `date('r')` for the consent cookie value and `CookieConsentFormSubscriber::getCookieConsentKey()` uses `uniqid('', true)`; neither keeps state between requests.
 - `AbstractCookieConsentConfigSettingsType::$activeTranslationDomain` (`src/Form/Settings/AbstractCookieConsentConfigSettingsType.php:105-111`) is overwritten at the start of every `buildForm()` of the settings types, so it cannot leak between requests.
 - Both demos (`demo/symfony8`, `demo/symfony8-tailwind`) run FrankenPHP with a `worker` block in `docker/frankenphp/Caddyfile`; `Caddyfile.dev` uses classic mode, which hides W-01/W-02 during development.

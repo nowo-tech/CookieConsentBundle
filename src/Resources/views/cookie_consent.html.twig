@@ -128,4 +128,5 @@
     {{ include('@NowoCookieConsentBundle/cookie_consent_preferences_bubble.html.twig') }}
 {% endif %}
 
-<script src="{{ asset('nowo-consent-modal.js', 'nowo_cookie_consent') }}" defer></script>
+{% set _csp_nonce = app is defined and app.request ? app.request.attributes.get('csp_nonce')|default('') : '' %}
+<script src="{{ asset('nowo-consent-modal.js', 'nowo_cookie_consent') }}"{% if _csp_nonce %} nonce="{{ _csp_nonce }}"{% endif %} defer></script>

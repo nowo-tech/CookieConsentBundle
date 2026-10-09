@@ -1,7 +1,19 @@
 # Upgrade Guide
 
 
-## Unreleased
+## To 1.12.0
+
+From **1.11.2** — schema-ready memo per worker; CSP nonce on bundle scripts/styles.
+
+```bash
+composer update nowo-tech/cookie-consent-bundle
+php bin/console cache:clear
+```
+
+- **No breaking changes.** Optional new option `schema_ready_cache_ttl` (seconds, default `60`; `0` restores the previous probe-every-request behaviour).
+- **Remove host shims:** apps that pre-set `_nowo_cookie_consent_schema_ready` from their own per-worker memo subscriber (e.g. `CookieConsentSchemaReadyMemoSubscriber`) can delete it; the bundle now does the same memo internally.
+- **CSP:** if your app sets the request attribute `csp_nonce` (shared nowo-tech convention), bundle `<script>` tags render with `nonce="…"` automatically, and the JS-injected modal `<style>` copies the loader script nonce. Without `csp_nonce` the markup is unchanged.
+- **Template overrides:** if you override `cookie_consent.html.twig`, `cookie_consent.tailwind.html.twig`, `_diagnostics_script.html.twig`, `admin/*.html.twig` or `cookie_consent_preferences_bubble.html.twig`, port the `_csp_nonce` lines. The bubble now renders `data-nowo-bubble-accent` instead of `style="--nowo-cc-bubble-accent: …"`; an overridden template that keeps the inline `style` still works (but is blocked by strict `style-src-attr`).
 
 ## To 1.11.2
 

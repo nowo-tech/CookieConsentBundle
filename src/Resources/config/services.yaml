@@ -37,6 +37,11 @@ services:
       $httpOnly: '%nowo_cookie_consent.http_only%'
       $clock: '@Psr\Clock\ClockInterface'
 
+  Nowo\CookieConsentBundle\EventSubscriber\CookieConsentSchemaReadySubscriber:
+    arguments:
+      $clock: '@Psr\Clock\ClockInterface'
+      $schemaReadyCacheTtl: '%nowo_cookie_consent.schema_ready_cache_ttl%'
+
   Nowo\CookieConsentBundle\Cookie\CookieLogger:
     arguments:
       $clock: '@Psr\Clock\ClockInterface'

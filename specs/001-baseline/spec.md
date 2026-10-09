@@ -77,6 +77,9 @@ GDPR **cookie consent** for Symfony: modal with category toggles, granular per-c
 
 - **FR-FORM-001**: Consent, config settings, definition types.
 - **FR-EVT-001**: Form, translation, schema-ready and runtime-cache-reset subscribers.
+- **FR-EVT-002**: Schema-ready subscriber memoizes a positive table probe per worker for `schema_ready_cache_ttl` seconds (default 60, `0` disables); negative probes are never memoized; the memo is not reset per request.
+- **FR-CSP-001**: Every bundle-rendered `<script>`/`<style>` carries `nonce` from request attribute `csp_nonce` when present (`app.request` null-safe); no inline event handlers or inline `style` attributes in bundle templates.
+- **FR-CSP-002**: JS-injected `<style>` copies the loader script nonce (`document.currentScript`), then `<meta name="csp-nonce">`, then the first nonced `<script>`.
 
 ### Twig
 
@@ -87,7 +90,7 @@ GDPR **cookie consent** for Symfony: modal with category toggles, granular per-c
 
 - **FR-UI-001–013**: Modal entry, category/granular toggles, iframe manager, step wizard, theme/visual config, diagnostics, logger.
 - **FR-BUILD-001**: Vite output `nowo-consent-modal.js`.
-- **FR-TEST-TS-001**: Co-located Vitest under `src/Resources/assets/src/*.test.ts` (11 files).
+- **FR-TEST-TS-001**: Co-located Vitest under `src/Resources/assets/src/*.test.ts` (14 files).
 
 ### i18n & assets
 

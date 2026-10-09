@@ -50,6 +50,7 @@ class NowoCookieConsentExtension extends Extension implements PrependExtensionIn
         $container->setParameter('nowo_cookie_consent.categories', $config['categories']);
         $container->setParameter('nowo_cookie_consent.use_logger', $config['use_logger']);
         $container->setParameter('nowo_cookie_consent.use_database_config', $config['use_database_config']);
+        $container->setParameter('nowo_cookie_consent.schema_ready_cache_ttl', $config['schema_ready_cache_ttl']);
         $container->setParameter('nowo_cookie_consent.use_cookie_inventory', $config['use_cookie_inventory']);
         $container->setParameter(
             'nowo_cookie_consent.cookie_inventory',
