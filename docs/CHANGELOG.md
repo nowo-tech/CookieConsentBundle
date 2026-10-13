@@ -61,6 +61,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- **CI:** every matrix cell (and the coverage job) now pins `symfony/security-bundle` to the cell's Symfony version, so Symfony 8.1 cells resolve again; the real-kernel test (`AdminAccessSubscriberKernelTest`) enables Doctrine native lazy objects on PHP 8.4+ with DoctrineBundle 2.x, fixing the "Symfony LazyGhost is not available" errors in the Symfony 7.4 / PHP 8.4–8.5 cells. Tests/CI only, no runtime change.
+
 ## [1.15.2] - 2026-10-13
 
 ### Fixed

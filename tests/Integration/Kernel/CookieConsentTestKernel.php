@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Nowo\CookieConsentBundle\Tests\Integration\Kernel;
 
+use Doctrine\Bundle\DoctrineBundle\DependencyInjection\Configuration as DoctrineConfiguration;
 use Doctrine\Bundle\DoctrineBundle\DoctrineBundle;
 use Nowo\CookieConsentBundle\NowoCookieConsentBundle;
 use Nowo\FormKitBundle\NowoFormKitBundle;
@@ -12,6 +13,8 @@ use Symfony\Bundle\FrameworkBundle\FrameworkBundle;
 use Symfony\Bundle\FrameworkBundle\Kernel\MicroKernelTrait;
 use Symfony\Bundle\SecurityBundle\SecurityBundle;
 use Symfony\Bundle\TwigBundle\TwigBundle;
+use Symfony\Component\Config\Definition\ArrayNode;
+use Symfony\Component\Config\Definition\BaseNode;
 use Symfony\Component\Config\Loader\LoaderInterface;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\HttpKernel\Bundle\BundleInterface;
@@ -20,6 +23,8 @@ use Symfony\Component\Routing\Loader\Configurator\RoutingConfigurator;
 use Twig\Extra\TwigExtraBundle\TwigExtraBundle;
 
 use function sys_get_temp_dir;
+
+use const PHP_VERSION_ID;
 
 /**
  * Minimal real application kernel: compiles the bundle exactly like a host app (with or without SecurityBundle).
@@ -85,7 +90,7 @@ final class CookieConsentTestKernel extends Kernel
         $container->loadFromExtension('twig', []);
         $container->loadFromExtension('doctrine', [
             'dbal' => ['url' => 'sqlite:///:memory:'],
-            'orm'  => [],
+            'orm'  => $this->ormConfig(),
         ]);
         if ($this->withSecurity) {
             $container->loadFromExtension('security', [
@@ -94,6 +99,26 @@ final class CookieConsentTestKernel extends Kernel
             ]);
         }
         $container->loadFromExtension('nowo_cookie_consent', $this->bundleConfig);
+    }
+
+    /**
+     * ORM 3 on PHP 8.4+ needs either symfony/var-exporter < 8 (LazyGhost) or native lazy objects. DoctrineBundle 2.x
+     * defaults "enable_native_lazy_objects" to false, so enable it there; 3.x always uses native lazy objects and
+     * deprecates the option, so leave it unset.
+     *
+     * @return array<string, mixed>
+     */
+    private function ormConfig(): array
+    {
+        if (PHP_VERSION_ID < 80400) {
+            return [];
+        }
+
+        $root = (new DoctrineConfiguration(false))->getConfigTreeBuilder()->buildTree();
+        $orm  = $root instanceof ArrayNode ? ($root->getChildren()['orm'] ?? null) : null;
+        $node = $orm instanceof ArrayNode ? ($orm->getChildren()['enable_native_lazy_objects'] ?? null) : null;
+
+        return $node instanceof BaseNode && !$node->isDeprecated() ? ['enable_native_lazy_objects' => true] : [];
     }
 
     protected function configureRoutes(RoutingConfigurator $routes): void
