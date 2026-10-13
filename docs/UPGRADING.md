@@ -2,6 +2,14 @@
 
 ## Unreleased
 
+## To 1.15.0
+
+From **1.14.0** — complete ca/pl translations, dead config deprecated, full configuration reference, Symfony >=7.4, ext-dom.
+
+```bash
+composer update nowo-tech/cookie-consent-bundle
+```
+
 - Requires Symfony `^7.4 || ^8.0` and `ext-dom`.
 - `doctrine.connection` and `web_ui.path_prefix` are deprecated and ignored (they never had an effect): remove them from `config/packages/nowo_cookie_consent.yaml` to silence the deprecation. To serve the admin under another path, import the routes with a `prefix` and protect that path with `access_control`.
 
