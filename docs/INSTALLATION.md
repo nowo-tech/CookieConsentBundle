@@ -16,8 +16,9 @@
 
 - **FormKitBundle** (`nowo-tech/form-kit-bundle` ^2.0) — dashboard/admin Symfony forms (`FormOptionsTrait`, profile `cookie_consent`). Register `NowoFormKitBundle` in `config/bundles.php` (Flex / demo). Optional host YAML: `config/packages/nowo_form_kit.yaml`.
 
-- PHP `>=8.1` (<8.6). Symfony **8.0** and **8.1** require **PHP 8.4+**.
-- Symfony **7.4**, **8.0**, or **8.1** (minimum tested minors). The bundle also supports Symfony 6.x and 7.0–7.3 when constraints resolve.
+- PHP `>=8.2` (<8.6). Symfony **8.0** and **8.1** require **PHP 8.4+**.
+- Symfony **7.4**, **8.0**, or **8.1** (`^7.4 || ^8.0`; Symfony 6.x and 7.0–7.3 are no longer supported because `nowo-tech/form-kit-bundle` ^2 requires 7.4+).
+- PHP extension `dom` (used by the preferences bubble icon sanitizer).
 - Doctrine ORM (when `use_logger: true` or `use_database_config: true`)
 
 ## Composer
