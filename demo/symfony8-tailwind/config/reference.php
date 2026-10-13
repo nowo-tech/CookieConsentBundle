@@ -1012,7 +1012,7 @@ use Symfony\Component\Config\Loader\ParamConfigurator as Param;
  * }
  * @psalm-type NowoCookieConsentConfig = array{
  *     doctrine?: array{ // Doctrine DBAL connection and table prefix for cookie consent entities.
- *         connection?: scalar|Param|null, // Name of the Doctrine DBAL connection to use (e.g. default, or a custom connection). // Default: "default"
+ *         connection?: scalar|Param|null, // Deprecated: The "nowo_cookie_consent.doctrine.connection.connection" option is ignored (the bundle always uses the default Doctrine entity manager and connection) and will be removed in 2.0. // Deprecated since 1.15 and ignored: entities are always mapped on the default entity manager/connection. // Default: "default"
  *         table_prefix?: scalar|Param|null, // Prefix prepended to table names (dashboard_cookie_log, dashboard_cookie_config, …). Empty = no prefix. // Default: ""
  *     },
  *     table_prefix?: scalar|Param|null, // Deprecated: Use doctrine.table_prefix instead. // Deprecated. Use doctrine.table_prefix (e.g. "app_" yields app_dashboard_cookie_log). // Default: ""
@@ -1058,7 +1058,7 @@ use Symfony\Component\Config\Loader\ParamConfigurator as Param;
  *     preferences_bubble_enabled?: bool|Param, // Shows a floating cookie icon button to reopen the preferences modal after consent is saved. // Default: false
  *     preferences_bubble_position?: "bottom-right"|"bottom-left"|"top-right"|"top-left"|Param, // Screen corner for the floating preferences bubble. // Default: "bottom-right"
  *     preferences_bubble_border_color?: scalar|Param|null, // Hex color for the preferences bubble border and cookie icon (e.g. #30363c). // Default: null
- *     preferences_bubble_icon?: scalar|Param|null, // Custom HTML or SVG markup for the preferences bubble icon. Leave empty for the default cookie SVG. // Default: null
+ *     preferences_bubble_icon?: scalar|Param|null, // Custom inline SVG (or simple inline HTML such as an emoji span) for the preferences bubble icon, well-formed XML, allowlist-sanitized. Leave empty for the default cookie SVG. // Default: null
  *     preference_sections?: list<array{ // Default: []
  *         title?: scalar|Param|null, // Default: ""
  *         description?: scalar|Param|null, // Default: ""
@@ -1066,7 +1066,7 @@ use Symfony\Component\Config\Loader\ParamConfigurator as Param;
  *     }>,
  *     web_ui?: array{
  *         enabled?: bool|Param, // When false, admin access subscriber is not registered (routes still load; prefer security firewall). // Default: true
- *         path_prefix?: scalar|Param|null, // Documented URL path prefix for admin CRUD (host should lock with security.access_control). // Default: "/cookie-consent-config"
+ *         path_prefix?: scalar|Param|null, // Deprecated: The "nowo_cookie_consent.web_ui.path_prefix.path_prefix" option is ignored (admin routes are always /cookie-consent-config/...; use the "prefix" of the routes import to move them) and will be removed in 2.0. // Deprecated since 1.15 and ignored: admin routes are always mounted under /cookie-consent-config (use the import prefix of the bundle routes to move them). // Default: "/cookie-consent-config"
  *         layout_template?: scalar|Param|null, // Twig layout extended by admin pages (global nowo_cookie_consent_layout_template). Set to your app layout or a one-file bridge. // Default: "@NowoCookieConsentBundle/admin/layout.html.twig"
  *         css_framework?: "bootstrap"|"bootstrap4"|"bootstrap5"|"tailwind"|"foundation"|"custom"|"tabler"|"none"|Param, // Host CSS stack hint: bootstrap5 | bootstrap4 | bootstrap | tailwind | foundation | tabler | custom | none. // Default: "bootstrap5"
  *         icon_set?: "bootstrap-icons"|"tabler-icons"|"ux_icon"|"svg_inline"|"none"|Param, // Default: "bootstrap-icons"
@@ -1090,11 +1090,28 @@ use Symfony\Component\Config\Loader\ParamConfigurator as Param;
  *     icon_set?: "bootstrap-icons"|"tabler-icons"|"ux_icon"|"svg_inline"|"none"|Param, // Icon rendering: bootstrap-icons|tabler-icons|ux_icon|svg_inline|none. // Default: "bootstrap-icons"
  *     row_actions_display?: "icon"|"text"|"icon_text"|Param, // Table/list row actions: icon (glyph only) | text (label only) | icon_text (both). // Default: "icon"
  *     panel_path_rewrites?: array<string, scalar|Param|null>,
+ *     release_check?: array{ // Optional GitHub release-version checker (footer dialog + JSON endpoint). Off by default.
+ *         enabled?: bool|Param, // Register the checker service + controller. Also import @NowoUiKitBundle/Resources/config/routes/release_check.yaml. // Default: false
+ *         github_repo?: scalar|Param|null, // Public GitHub repository "owner/name" whose releases are compared (e.g. nowo-tech/my-app). // Default: ""
+ *         current_version?: scalar|Param|null, // Installed version label, clean semver x.y.z with optional "v" (e.g. "%app.version%"). Non-semver values skip the check. // Default: ""
+ *         cache_ttl?: int|Param, // Seconds to cache the GitHub answer (cache.app). Default 12h. // Default: 43200
+ *         default_branch?: scalar|Param|null, // Branch used as compare target when the installed version is already the latest. // Default: "main"
+ *         user_agent?: scalar|Param|null, // User-Agent sent to api.github.com. // Default: "nowo-ui-kit-release-check"
+ *     },
  * }
  * @psalm-type NowoFormKitConfig = array{
  *     type_map?: array<string, scalar|Param|null>,
  *     default_profile?: scalar|Param|null, // Name of the profile to use when no profile is specified (key in profiles) // Default: "default"
  *     css_framework?: scalar|Param|null, // CSS framework for CssClassUtilities (column merge + class ordering): bootstrap, tailwind, foundation, none. // Default: "bootstrap"
+ *     stateless_csrf?: array{ // Give selected (usually anonymous/public) form types a stateless CSRF token id so rendering them does not start a session. Off by default.
+ *         enabled?: bool|Param, // Default: false
+ *         token_id?: scalar|Param|null, // csrf_token_id default applied to the listed form types. Must be listed in framework.csrf_protection.stateless_token_ids. // Default: "submit"
+ *         form_types?: list<scalar|Param|null>,
+ *         register_stateless_token_id?: bool|Param, // Prepend token_id to framework.csrf_protection.stateless_token_ids (enables framework CSRF protection if it was not configured). // Default: true
+ *     },
+ *     accessibility?: array{ // Accessibility helpers applied by kit form type extensions.
+ *         unlabelled_choice_aria_label?: bool|Param, // When true (default), non-expanded ChoiceType fields (and subtypes such as EntityType) rendered with label: false and no aria-label/aria-labelledby get aria-label from their translated help, else their placeholder. // Default: true
+ *     },
  *     profiles?: array<string, array{ // Default: []
  *         alias?: scalar|Param|null, // Alias for this profile (e.g. for reference in form types)
  *         translation_domain?: scalar|Param|null, // Default: "messages"
