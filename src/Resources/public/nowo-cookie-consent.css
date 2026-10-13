@@ -29,6 +29,7 @@
   --nowo-cc-category-expanded-bg: color-mix(in srgb, #ffffff 88%, #f0f4f7);
   --nowo-cc-toggle-off-bg: #667481;
   --nowo-cc-toggle-on-bg: #30363c;
+  --nowo-cc-toggle-on-knob-bg: #ffffff;
   --nowo-cc-toggle-knob-bg: #ffffff;
   --nowo-cc-toggle-readonly-bg: #d5dee2;
   --nowo-cc-toggle-readonly-knob-bg: #ffffff;
@@ -506,6 +507,7 @@ body.nowo-cookie-consent-page-blocked {
   --nowo-cc-category-expanded-bg: color-mix(in srgb, #161a1c 82%, #252b30);
   --nowo-cc-toggle-off-bg: #525f6b;
   --nowo-cc-toggle-on-bg: #c2d0e0;
+  --nowo-cc-toggle-on-knob-bg: var(--nowo-cc-bg);
   --nowo-cc-toggle-readonly-bg: #343c40;
   --nowo-cc-toggle-readonly-icon: #9aa6ad;
   --nowo-cc-card-required-bg: color-mix(in srgb, #c2d0e0 14%, #252b30);
@@ -546,6 +548,7 @@ html[data-theme='light'] .nowo-cookie-consent.nowo-cookie-consent--theme-light:n
   --nowo-cc-category-expanded-bg: color-mix(in srgb, #ffffff 88%, #f0f4f7);
   --nowo-cc-toggle-off-bg: #667481;
   --nowo-cc-toggle-on-bg: #30363c;
+  --nowo-cc-toggle-on-knob-bg: #ffffff;
   --nowo-cc-card-required-bg: color-mix(in srgb, #30363c 10%, #f0f4f7);
   --nowo-cc-card-required-border: color-mix(in srgb, #30363c 22%, #e4eaed);
   --nowo-cc-card-analytics-bg: color-mix(in srgb, #3b82f6 10%, #f0f4f7);
@@ -585,6 +588,7 @@ html[data-theme='dark'] .nowo-cookie-consent.nowo-cookie-consent--dark-mode {
   --nowo-cc-category-expanded-bg: color-mix(in srgb, #161a1c 82%, #252b30);
   --nowo-cc-toggle-off-bg: #525f6b;
   --nowo-cc-toggle-on-bg: #c2d0e0;
+  --nowo-cc-toggle-on-knob-bg: var(--nowo-cc-bg);
   --nowo-cc-toggle-readonly-bg: #343c40;
   --nowo-cc-toggle-readonly-icon: #9aa6ad;
   --nowo-cc-card-required-bg: color-mix(in srgb, #c2d0e0 14%, #252b30);
@@ -615,6 +619,7 @@ html[data-theme='dark'] .nowo-cookie-consent.nowo-cookie-consent--dark-mode {
   --nowo-cc-category-expanded-bg: transparent;
   --nowo-cc-toggle-off-bg: #525f6b;
   --nowo-cc-toggle-on-bg: #eff4f6;
+  --nowo-cc-toggle-on-knob-bg: var(--nowo-cc-bg);
   --nowo-cc-toggle-readonly-bg: #343c40;
   --nowo-cc-toggle-readonly-icon: #9aa6ad;
 }
@@ -650,6 +655,7 @@ html[data-theme='dark'] .nowo-cookie-consent.nowo-cookie-consent--dark-mode {
   --nowo-cc-category-block-hover-border: #333333;
   --nowo-cc-toggle-off-bg: #525252;
   --nowo-cc-toggle-on-bg: #ffffff;
+  --nowo-cc-toggle-on-knob-bg: var(--nowo-cc-bg);
   --nowo-cc-toggle-readonly-bg: #2a2a2a;
   --nowo-cc-toggle-readonly-icon: #888888;
 }
@@ -1012,13 +1018,13 @@ html[data-theme='dark'] .nowo-cookie-consent.nowo-cookie-consent--dark-mode {
 }
 
 .nowo-cookie-consent[class*='nowo-cookie-consent--theme-'] .nowo-cookie-consent__toggle-input:checked:not(:disabled) ~ .nowo-cookie-consent__toggle-track .nowo-cookie-consent__toggle-knob {
-  background: var(--nowo-cc-toggle-on-knob-bg, #30363a);
+  background: var(--nowo-cc-toggle-on-knob-bg, var(--nowo-cc-toggle-knob-bg, #ffffff));
 }
 
 .nowo-cookie-consent[class*='nowo-cookie-consent--theme-dark'] .nowo-cookie-consent__toggle-input:checked:not(:disabled) ~ .nowo-cookie-consent__toggle-track .nowo-cookie-consent__toggle-icon--on,
 .nowo-cookie-consent--theme-dark-turquoise .nowo-cookie-consent__toggle-input:checked:not(:disabled) ~ .nowo-cookie-consent__toggle-track .nowo-cookie-consent__toggle-icon--on,
 .nowo-cookie-consent--theme-elegant-black .nowo-cookie-consent__toggle-input:checked:not(:disabled) ~ .nowo-cookie-consent__toggle-track .nowo-cookie-consent__toggle-icon--on {
-  color: var(--nowo-cc-toggle-on-knob-bg, #30363a);
+  color: var(--nowo-cc-toggle-on-bg, #c2d0e0);
 }
 
 .nowo-cookie-consent__toggle-input:checked ~ .nowo-cookie-consent__toggle-track .nowo-cookie-consent__toggle-icon--on {
