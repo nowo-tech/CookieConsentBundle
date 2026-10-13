@@ -3,6 +3,7 @@
 ## Table of contents
 
 - [Unreleased](#unreleased)
+- [To 1.15.1](#to-1151)
 - [To 1.15.0](#to-1150)
 - [To 1.14.0](#to-1140)
 - [To 1.13.1](#to-1131)
@@ -94,6 +95,14 @@
 - [Getting help](#getting-help)
 
 ## Unreleased
+
+## To 1.15.1
+
+From **1.15.0** — security - admin access subscriber now registered in real applications.
+
+```bash
+composer update nowo-tech/cookie-consent-bundle
+```
 
 - **Behaviour change (admin security):** the bundle admin access subscriber is now really registered. Admin routes enforce `security.access_roles` (default `ROLE_ADMIN`) or your custom `security.access_checker` (users without the role get 403), and answer 404 when `web_ui.enabled: false`. Previously only the host firewall / `access_control` protected them. Check that admin users have one of the configured roles; demos without SecurityBundle keep working with `security.allow_unauthenticated: true`.
 
