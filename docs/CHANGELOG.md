@@ -111,6 +111,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- Catalan (`ca`) and Polish (`pl`) catalogues were missing 128 of the English keys (banner "Customize"/"Always enabled"/usage text, manage link, preferences bubble label, inventory columns, admin settings fields and choices); they are now fully translated. A new key-parity test fails when any shipped locale drifts from `en`.
+
+### Changed
+
+- Symfony requirement raised to `^7.4 || ^8.0` (FormKitBundle ^2 already required 7.4, so 6.x/7.0–7.3 never resolved); the Symfony 7.0 CI cell is dropped and the coverage job runs on 7.4. `ext-dom` is now declared (used by the preferences bubble icon sanitizer).
+- `docs/CONFIGURATION.md` gains a full configuration reference, including the previously undocumented `dark_mode_enabled`, `disable_transitions`, `open_preferences_modal`, `manage_iframe_placeholders`, `route_targeting_mode`, `target_routes` and `preference_sections`.
+- Dev: vitest and `@vitest/coverage-v8` upgraded to 4.1 (lockfile no longer contains the vulnerable vite/postcss/brace-expansion versions flagged by Dependabot).
+
+### Deprecated
+
+- `doctrine.connection` and `web_ui.path_prefix` were never used by the bundle; setting them now triggers a deprecation (since 1.15) and they will be removed in 2.0. Entities always use the default entity manager; move the admin routes with the `prefix` of the routes import.
+
 ## [1.14.0] - 2026-10-13
 
 ### Security
