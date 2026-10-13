@@ -61,20 +61,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.15.2] - 2026-10-13
+
 ### Fixed
 
+- **Container compilation (regression in 1.15.1):** `cache:clear` failed in every real application with `Invalid service "Nowo\CookieConsentBundle\EventSubscriber\CookieConsentAdminAccessSubscriber": the class is not set.` `CookieConsentSecurityPass` replaced the `container.excluded` placeholder with a definition registered without a class, and the pass runs after `ResolveClassPass`. The subscriber definition now sets its class, arguments and `kernel.event_subscriber` tag explicitly. A regression test boots a real kernel (FrameworkBundle + the bundle, with and without SecurityBundle) and asserts the subscriber listens to `kernel.controller`; `symfony/security-bundle` is now a dev dependency for that test.
 - **Modal toggles:** `--nowo-cc-toggle-on-knob-bg` was read but never declared, so in themed modals a switched-on toggle drew its knob in the same dark colour as the track (knob invisible). It is now declared (white by default, the theme background in dark themes) and the checked icon in dark themes uses the track colour so it stays visible on the knob. A TS test now fails on any `var(--nowo-cc-*)` that the stylesheet never declares.
 - **Admin forms:** the overlay checkbox (`disablePageInteraction`) rendered two `id` attributes (a hard-coded `attr.id`); all admin fields carried raw FormKit `{form}.{field}.placeholder` keys (visible on the profile name / priority / revision / bubble icon inputs) and explicit placeholders lost against them, so optional position selects showed an empty option instead of "Not applicable"; the seeded `cookie_consent` FormKit profile repeated `form-check-input` / `form-select` / `form-control` and the `.form-check` row wrapper that `bootstrap_5_layout` already adds (doubled classes, nested `.form-check`). Fields now only get placeholders the form type sets explicitly, and the profile leaves those classes to the form theme.
 
 ### Changed
 
 - **CI:** every matrix cell (and the coverage job) now pins `symfony/security-bundle` to the cell's Symfony version, so Symfony 8.1 cells resolve again; the real-kernel test (`AdminAccessSubscriberKernelTest`) enables Doctrine native lazy objects on PHP 8.4+ with DoctrineBundle 2.x, fixing the "Symfony LazyGhost is not available" errors in the Symfony 7.4 / PHP 8.4–8.5 cells. Tests/CI only, no runtime change.
-
-## [1.15.2] - 2026-10-13
-
-### Fixed
-
-- **Container compilation (regression in 1.15.1):** `cache:clear` failed in every real application with `Invalid service "Nowo\CookieConsentBundle\EventSubscriber\CookieConsentAdminAccessSubscriber": the class is not set.` `CookieConsentSecurityPass` replaced the `container.excluded` placeholder with a definition registered without a class, and the pass runs after `ResolveClassPass`. The subscriber definition now sets its class, arguments and `kernel.event_subscriber` tag explicitly. A regression test boots a real kernel (FrameworkBundle + the bundle, with and without SecurityBundle) and asserts the subscriber listens to `kernel.controller`; `symfony/security-bundle` is now a dev dependency for that test.
 
 ## [1.15.1] - 2026-10-13
 

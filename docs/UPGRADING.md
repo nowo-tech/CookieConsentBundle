@@ -2,7 +2,6 @@
 
 ## Table of contents
 
-- [Unreleased](#unreleased)
 - [To 1.15.2](#to-1152)
 - [To 1.15.1](#to-1151)
 - [To 1.15.0](#to-1150)
@@ -95,10 +94,6 @@
 - [Future versions](#future-versions)
 - [Getting help](#getting-help)
 
-## Unreleased
-
-- **Admin form markup:** the `cookie_consent` FormKit profile seeded by the bundle no longer adds `form-control`, `form-select`, `form-check-input` or a `.form-check` row class (the admin form theme, `bootstrap_5_layout.html.twig` by default, adds them). If you set `web_ui.chrome.templates.form_theme: ~` and your own form theme relied on those classes, add them in your theme or define your own `nowo_form_kit.profiles.cookie_consent`. Admin fields no longer render `{form}.{field}.placeholder` translation keys as placeholders.
-
 ## To 1.15.2
 
 From **1.15.1** — fix container compilation regression from 1.15.1 (admin access subscriber class)
@@ -108,6 +103,7 @@ composer update nowo-tech/cookie-consent-bundle
 ```
 
 - Fixes a regression in 1.15.1: any application failed to compile the container ("Invalid service ...CookieConsentAdminAccessSubscriber: the class is not set"). Upgrade from 1.15.1 immediately; no configuration changes.
+- **Admin form markup:** the `cookie_consent` FormKit profile seeded by the bundle no longer adds `form-control`, `form-select`, `form-check-input` or a `.form-check` row class (the admin form theme, `bootstrap_5_layout.html.twig` by default, adds them). If you set `web_ui.chrome.templates.form_theme: ~` and your own form theme relied on those classes, add them in your theme or define your own `nowo_form_kit.profiles.cookie_consent`. Admin fields no longer render `{form}.{field}.placeholder` translation keys as placeholders.
 
 ## To 1.15.1
 
