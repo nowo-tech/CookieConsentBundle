@@ -1,5 +1,6 @@
 nowo_cookie_consent:
-    table_prefix: 'demo_tailwind_'
+    doctrine:
+        table_prefix: 'demo_tailwind_'
     ui_theme: tailwind
     use_logger: true
     use_database_config: true
