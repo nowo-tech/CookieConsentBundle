@@ -55,12 +55,12 @@ The bundle does **not** expose a CLI that mutates production data, outbound HTTP
 | --- | --- |
 | **XSS in modal copy** | Twig auto-escaping; Symfony Form component for consent fields; integrators must escape custom admin fields in their layouts |
 | **CSRF on consent form** | `csrf_protection: true` by default on `CookieConsentType`. The bundled `nowo-consent-modal.js` prepares Symfony SameOrigin double-submit (cookie + `csrf-token` header) before XHR because native `submit` never fires. Do not disable CSRF in production. |
-| **CSRF on admin delete** | `isCsrfTokenValid()` on delete action in `CookieDefinitionAdminController` |
+| **CSRF on admin delete** | `isCsrfTokenValid()` on delete action in `CookieDefinitionAdminController` (token posted as `delete_cookie_definition[_token]` by `DeleteCookieDefinitionType`) |
 | **Cookie flags** | `Secure` and configurable `HttpOnly` on consent cookies |
-| **PII in logs** | IP addresses anonymized (last octet masked) in `CookieConsentLog` |
+| **PII in logs** | IP addresses anonymized in `CookieConsentLog` (IPv4: last octet masked; IPv6: only the first 48 bits kept) |
 | **Invalid config IDs** | Admin controllers return 404 when config or definition does not belong to the profile |
-| **Admin authorization** | `CookieConsentAccessCheckerInterface` (default roles from `security.access_roles`) enforced by `CookieConsentAdminAccessSubscriber` on admin routes; keep `security.allow_unauthenticated: false` in production and lock `web_ui.path_prefix` with host `access_control` |
-| **Custom bubble icon HTML** | `PreferencesBubbleIconSanitizer` rejects `<script>`, event handlers, and dangerous tags before persisting `preferences_bubble_icon` |
+| **Admin authorization** | `CookieConsentAccessCheckerInterface` (default roles from `security.access_roles`) enforced by `CookieConsentAdminAccessSubscriber` on admin routes; keep `security.allow_unauthenticated: false` in production and lock `web_ui.path_prefix` with host `access_control`. With `web_ui.enabled: false` the subscriber answers admin routes with 404 |
+| **Custom bubble icon HTML** | `PreferencesBubbleIconSanitizer` allowlist: markup must be well-formed XML using only inline SVG elements (`svg`, `g`, `path`, `circle`, `rect`, gradients, …) or `span`/`i`/`b`/`strong`/`em`/`small`; it is re-serialized from the DOM (unknown attributes and comments dropped, text escaped). Event handlers, non-allowlisted elements, `href` other than `#id`, `javascript:`/`data:` values and external `url()` references are rejected. Applied when persisting, when loading YAML config, and again at render time |
 | **Required cookies** | Category `required` cannot be disabled; granular toggles exclude required cookies |
 | **Config API** | Read-only GET; returns display copy and GUI options, not secrets |
 

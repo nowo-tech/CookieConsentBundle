@@ -10,6 +10,7 @@ use Doctrine\Persistence\ManagerRegistry;
 use Nowo\CookieConsentBundle\Clock\SystemClock;
 use Nowo\CookieConsentBundle\Cookie\CookieLogger;
 use Nowo\CookieConsentBundle\Entity\CookieConsentLog;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use Psr\Clock\ClockInterface;
 use Psr\Log\LoggerInterface;
@@ -106,9 +107,31 @@ final class CookieLoggerTest extends TestCase
         self::assertSame('unknown', $persisted[0]->getIpAddress());
     }
 
-    public function testAnonymizeIpReturnsUnchangedWhenNoDot(): void
+    /**
+     * @return iterable<string, array{string, string}>
+     */
+    public static function ipProvider(): iterable
     {
-        $request = Request::create('/', 'POST', [], [], [], ['REMOTE_ADDR' => '2001:db8::1']);
+        yield 'ipv6 is truncated' => ['2001:db8:85a3:1234:5678:8a2e:370:7334', '2001:db8:85a3::'];
+        yield 'ipv6 short form' => ['2001:db8::1', '2001:db8::'];
+        yield 'ipv4-mapped ipv6' => ['::ffff:192.0.2.128', '::ffff:192.0.2.xxx'];
+        yield 'ipv4' => ['198.51.100.7', '198.51.100.x'];
+    }
+
+    #[DataProvider('ipProvider')]
+    public function testAnonymizesIp(string $clientIp, string $expected): void
+    {
+        self::assertSame($expected, $this->logAndGetIp($clientIp));
+    }
+
+    public function testInvalidClientIpIsStoredAsUnknown(): void
+    {
+        self::assertSame('unknown', $this->logAndGetIp('not-an-ip'));
+    }
+
+    private function logAndGetIp(string $clientIp): string
+    {
+        $request = Request::create('/', 'POST', [], [], [], ['REMOTE_ADDR' => $clientIp]);
         $stack   = new RequestStack();
         $stack->push($request);
 
@@ -122,7 +145,7 @@ final class CookieLoggerTest extends TestCase
         $logger = new CookieLogger($entityManager, $stack, new SystemClock());
         $logger->log(['analytics' => true], 'key');
 
-        self::assertSame('2001:db8::1', $persisted[0]->getIpAddress());
+        return $persisted[0]->getIpAddress();
     }
 
     public function testConsecutiveRequestsOnSameInstanceRecordTheirOwnIp(): void

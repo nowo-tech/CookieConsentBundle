@@ -373,7 +373,7 @@ Position with `preferences_bubble_position`: `bottom-right` (default), `bottom-l
 
 Set `preferences_bubble_border_color` (hex, e.g. `#60fed2`) for the transparent bubble outline and cookie icon. With `use_database_config: true`, configure per profile via `CookieConsentConfig::preferencesBubbleBorderColor` in the admin settings form.
 
-Set `preferences_bubble_icon` to custom SVG or HTML markup (e.g. an emoji wrapped in a `<span>`). With `use_database_config: true`, configure per profile via `CookieConsentConfig::preferencesBubbleIcon` in the admin settings form. Leave empty to use the default cookie SVG.
+Set `preferences_bubble_icon` to custom inline SVG or simple inline HTML (e.g. an emoji wrapped in a `<span>`). The markup must be well-formed XML and is allowlist-sanitized (SVG shapes/gradients and `span`/`i`/`b`/`strong`/`em`/`small`; no scripts, event handlers, `style`, external `href`/`url()`); invalid YAML values fail container compilation, invalid admin input is rejected and unsafe stored values fall back to the default icon. With `use_database_config: true`, configure per profile via `CookieConsentConfig::preferencesBubbleIcon` in the admin settings form. Leave empty to use the default cookie SVG.
 
 Twig helpers:
 
@@ -438,7 +438,7 @@ Admin pages extend `@NowoCookieConsentBundle/admin/base.html.twig`, which extend
 
 | Option | Default | Description |
 | --- | --- | --- |
-| `web_ui.enabled` | `true` | Registers admin access enforcement when security is configured |
+| `web_ui.enabled` | `true` | Enables the admin UI (access enforced by `CookieConsentAdminAccessSubscriber`). When `false`, admin routes answer 404 |
 | `web_ui.path_prefix` | `/cookie-consent-config` | Documented URL prefix for host `access_control` |
 | `web_ui.layout_template` | `@NowoCookieConsentBundle/admin/layout.html.twig` | Root Twig layout extended by `admin/base.html.twig` |
 | `web_ui.css_framework` | `bootstrap5` | Host CSS stack hint (`bootstrap` / `bootstrap4` / `bootstrap5` / `tabler` → Bootstrap CDN; `custom` / `tailwind` / `none` / `foundation` → UiKit `nowo-ui.css` via `nowo_ui_kit`) |

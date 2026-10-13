@@ -110,6 +110,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Security
+
+- Admin routes are no longer reachable when `web_ui.enabled: false`: `CookieConsentAdminAccessSubscriber` is now always registered and answers admin routes with 404 when the web UI is disabled (previously the controllers stayed routed with no access check).
+- `preferences_bubble_icon` (YAML and per-profile admin setting, rendered with `|raw` on every public page) is now sanitized with a strict allowlist: well-formed inline SVG or simple inline HTML (`span`, `i`, `b`, `strong`, `em`, `small`) re-serialized from the DOM. Payloads such as `<svg/onload=…>`, `<img/src=x/onerror=…>` or entity-encoded `javascript:` are rejected; stored values are re-sanitized at render time (unsafe ones fall back to the default icon) and invalid YAML values fail container compilation.
+- Consent log IPv6 addresses are now anonymized (only the first 48 bits are kept); they were previously stored unchanged.
+
+### Fixed
+
+- Deleting a cookie definition from the admin list always returned 403: the controller now reads the CSRF token posted by the rendered form (`delete_cookie_definition[_token]`); a top-level `_token` is still accepted for custom templates.
+
 ## [1.13.1] - 2026-10-13
 
 ### Changed

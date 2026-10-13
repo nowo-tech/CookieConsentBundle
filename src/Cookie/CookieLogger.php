@@ -15,7 +15,13 @@ use Symfony\Component\HttpFoundation\RequestStack;
 use Throwable;
 
 use function array_keys;
+use function filter_var;
+use function inet_ntop;
+use function inet_pton;
+use function str_contains;
 use function strlen;
+
+use const FILTER_VALIDATE_IP;
 
 /**
  * Persists anonymized cookie consent choices to the database.
@@ -140,18 +146,22 @@ class CookieLogger
         return $manager instanceof EntityManagerInterface ? $manager : $this->entityManager;
     }
 
+    /**
+     * Anonymizes the client IP before it is stored: IPv4 masks the last octet with `x`,
+     * IPv6 keeps only the first 48 bits (the rest is zeroed, same on every Symfony version).
+     */
     protected function anonymizeIp(?string $ip): string
     {
-        if ($ip === null) {
+        if ($ip === null || filter_var($ip, FILTER_VALIDATE_IP) === false) {
             return 'unknown';
         }
 
-        $lastDot = strrpos($ip, '.');
-        if ($lastDot === false) {
-            return $ip;
+        if (!str_contains($ip, '.')) {
+            return (string) inet_ntop(substr((string) inet_pton($ip), 0, 6) . str_repeat("\0", 10));
         }
 
-        ++$lastDot;
+        // IPv4 or IPv4-mapped IPv6 (e.g. ::ffff:192.0.2.1): mask the last octet.
+        $lastDot = (int) strrpos($ip, '.') + 1;
 
         return substr($ip, 0, $lastDot) . str_repeat('x', strlen($ip) - $lastDot);
     }
