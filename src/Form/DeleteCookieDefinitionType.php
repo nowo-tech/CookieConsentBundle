@@ -17,6 +17,9 @@ use Symfony\Component\Security\Csrf\CsrfTokenManagerInterface;
  */
 final class DeleteCookieDefinitionType extends AbstractType
 {
+    /** Form name (and POST payload key) used by the rendered delete form: `delete_cookie_definition[_token]`. */
+    public const FORM_NAME = 'delete_cookie_definition';
+
     public function __construct(private readonly CsrfTokenManagerInterface $csrfTokenManager)
     {
     }
@@ -27,6 +30,11 @@ final class DeleteCookieDefinitionType extends AbstractType
             'data'   => $this->csrfTokenManager->getToken($options['csrf_token_id'])->getValue(),
             'mapped' => false,
         ]);
+    }
+
+    public function getBlockPrefix(): string
+    {
+        return self::FORM_NAME;
     }
 
     public function configureOptions(OptionsResolver $resolver): void

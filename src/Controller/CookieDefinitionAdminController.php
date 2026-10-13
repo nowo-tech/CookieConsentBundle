@@ -22,6 +22,8 @@ use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Contracts\Translation\TranslatorInterface;
 
 use function ceil;
+use function is_array;
+use function is_string;
 use function max;
 
 #[Route(
@@ -141,7 +143,7 @@ final class CookieDefinitionAdminController extends AbstractController
         $config     = $this->getConfig($configId);
         $definition = $this->getDefinition($config, $id);
 
-        if (!$this->isCsrfTokenValid('delete-cookie-definition-' . $definition->getId(), (string) $request->request->get('_token'))) {
+        if (!$this->isCsrfTokenValid('delete-cookie-definition-' . $definition->getId(), $this->getDeleteCsrfToken($request))) {
             throw new AccessDeniedHttpException();
         }
 
@@ -153,6 +155,23 @@ final class CookieDefinitionAdminController extends AbstractController
         return $this->redirectToRoute('nowo_cookie_consent_cookie_definitions_index', [
             'configId' => $configId,
         ]);
+    }
+
+    /**
+     * Reads the CSRF token posted by {@see DeleteCookieDefinitionType} (`delete_cookie_definition[_token]`),
+     * falling back to a top-level `_token` field for custom templates.
+     *
+     * @param Request $request The current HTTP request
+     *
+     * @return string The submitted token (empty when missing or not a string)
+     */
+    private function getDeleteCsrfToken(Request $request): string
+    {
+        $formData = $request->request->all();
+        $payload  = $formData[DeleteCookieDefinitionType::FORM_NAME] ?? null;
+        $token    = is_array($payload) ? ($payload['_token'] ?? null) : ($formData['_token'] ?? null);
+
+        return is_string($token) ? $token : '';
     }
 
     /**

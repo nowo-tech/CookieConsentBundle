@@ -10,23 +10,32 @@ use Nowo\CookieConsentBundle\Entity\CookieConsentConfig;
 use Nowo\CookieConsentBundle\Entity\CookieDefinition;
 use Nowo\CookieConsentBundle\Entity\CookieDefinitionTranslation;
 use Nowo\CookieConsentBundle\Form\CookieDefinitionType;
+use Nowo\CookieConsentBundle\Form\DeleteCookieDefinitionType;
 use Nowo\CookieConsentBundle\Repository\CookieConsentConfigRepository;
 use Nowo\CookieConsentBundle\Repository\CookieDefinitionRepository;
 use Nowo\CookieConsentBundle\Tests\Unit\Support\AbstractControllerTestCase;
 use ReflectionMethod;
 use ReflectionProperty;
+use SensitiveParameter;
 use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
 use Symfony\Component\Form\FormFactoryInterface;
 use Symfony\Component\Form\FormInterface;
+use Symfony\Component\Form\Forms;
 use Symfony\Component\Form\FormView;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
+use Symfony\Component\Security\Csrf\CsrfTokenManager;
+use Symfony\Component\Security\Csrf\CsrfTokenManagerInterface;
+use Symfony\Component\Security\Csrf\Exception\TokenNotFoundException;
+use Symfony\Component\Security\Csrf\TokenStorage\TokenStorageInterface;
 use Symfony\Contracts\Translation\TranslatorInterface;
 use Twig\Environment;
 
 use function count;
+use function http_build_query;
+use function parse_str;
 
 final class CookieDefinitionAdminControllerTest extends AbstractControllerTestCase
 {
@@ -147,7 +156,7 @@ final class CookieDefinitionAdminControllerTest extends AbstractControllerTestCa
         self::assertSame(200, $response->getStatusCode());
     }
 
-    public function testDeleteRedirectsWhenCsrfValid(): void
+    public function testDeleteAcceptsPayloadPostedByRenderedDeleteForm(): void
     {
         $config     = $this->createEnabledConfig(1);
         $definition = (new CookieDefinition())->setName('_ga')->setConfig($config);
@@ -160,14 +169,69 @@ final class CookieDefinitionAdminControllerTest extends AbstractControllerTestCa
         $entityManager->expects(self::once())->method('remove')->with($definition);
         $entityManager->expects(self::once())->method('flush');
 
+        $csrfTokenManager = new CsrfTokenManager(null, $this->createInMemoryTokenStorage());
+        $controller       = $this->createDefinitionController(
+            config: $config,
+            definitionRepository: $definitionRepository,
+            csrfTokenManager: $csrfTokenManager,
+        );
+
+        // Build the POST body exactly as a browser submits the real delete form.
+        $view = Forms::createFormFactoryBuilder()
+            ->addType(new DeleteCookieDefinitionType($csrfTokenManager))
+            ->getFormFactory()
+            ->create(DeleteCookieDefinitionType::class, null, [
+                'action'        => '/cookie-consent-config/1/cookies/5/delete',
+                'csrf_token_id' => 'delete-cookie-definition-5',
+            ])
+            ->createView();
+        $tokenField = $view->children['_token'];
+        self::assertSame('delete_cookie_definition[_token]', $tokenField->vars['full_name']);
+        parse_str(http_build_query([$tokenField->vars['full_name'] => $tokenField->vars['value']]), $postBody);
+
+        $response = $controller->delete(1, 5, Request::create('/delete', 'POST', $postBody), $entityManager);
+
+        self::assertSame(302, $response->getStatusCode());
+    }
+
+    public function testDeleteRejectsForgedTokenInFormPayload(): void
+    {
+        $config     = $this->createEnabledConfig(1);
+        $definition = (new CookieDefinition())->setName('_ga')->setConfig($config);
+        $this->setEntityId($definition, 5);
+
+        $definitionRepository = $this->createMock(CookieDefinitionRepository::class);
+        $definitionRepository->method('find')->willReturn($definition);
+
         $controller = $this->createDefinitionController(
             config: $config,
             definitionRepository: $definitionRepository,
-            csrfValid: true,
+            csrfTokenManager: new CsrfTokenManager(null, $this->createInMemoryTokenStorage()),
         );
 
-        $request  = Request::create('/delete', 'POST', ['_token' => 'valid']);
-        $response = $controller->delete(1, 5, $request, $entityManager);
+        $this->expectException(AccessDeniedHttpException::class);
+
+        $controller->delete(1, 5, Request::create('/delete', 'POST', ['delete_cookie_definition' => ['_token' => 'forged']]), $this->createMock(EntityManagerInterface::class));
+    }
+
+    public function testDeleteAcceptsLegacyTopLevelToken(): void
+    {
+        $config     = $this->createEnabledConfig(1);
+        $definition = (new CookieDefinition())->setName('_ga')->setConfig($config);
+        $this->setEntityId($definition, 5);
+
+        $definitionRepository = $this->createMock(CookieDefinitionRepository::class);
+        $definitionRepository->method('find')->willReturn($definition);
+
+        $csrfTokenManager = new CsrfTokenManager(null, $this->createInMemoryTokenStorage());
+        $controller       = $this->createDefinitionController(
+            config: $config,
+            definitionRepository: $definitionRepository,
+            csrfTokenManager: $csrfTokenManager,
+        );
+
+        $token    = $csrfTokenManager->getToken('delete-cookie-definition-5')->getValue();
+        $response = $controller->delete(1, 5, Request::create('/delete', 'POST', ['_token' => $token]), $this->createMock(EntityManagerInterface::class));
 
         self::assertSame(302, $response->getStatusCode());
     }
@@ -190,6 +254,26 @@ final class CookieDefinitionAdminControllerTest extends AbstractControllerTestCa
         $this->expectException(AccessDeniedHttpException::class);
 
         $controller->delete(1, 5, Request::create('/delete', 'POST', ['_token' => 'bad']), $this->createMock(EntityManagerInterface::class));
+    }
+
+    public function testDeleteRejectsMissingOrNonStringToken(): void
+    {
+        $config     = $this->createEnabledConfig(1);
+        $definition = (new CookieDefinition())->setName('_ga')->setConfig($config);
+        $this->setEntityId($definition, 5);
+
+        $definitionRepository = $this->createMock(CookieDefinitionRepository::class);
+        $definitionRepository->method('find')->willReturn($definition);
+
+        $controller = $this->createDefinitionController(
+            config: $config,
+            definitionRepository: $definitionRepository,
+            csrfTokenManager: new CsrfTokenManager(null, $this->createInMemoryTokenStorage()),
+        );
+
+        $this->expectException(AccessDeniedHttpException::class);
+
+        $controller->delete(1, 5, Request::create('/delete', 'POST', ['delete_cookie_definition' => ['_token' => ['x']]]), $this->createMock(EntityManagerInterface::class));
     }
 
     public function testIndexThrowsWhenConfigMissing(): void
@@ -337,6 +421,7 @@ final class CookieDefinitionAdminControllerTest extends AbstractControllerTestCa
         ?FormFactoryInterface $formFactory = null,
         bool $csrfValid = true,
         ?Environment $twig = null,
+        ?CsrfTokenManagerInterface $csrfTokenManager = null,
     ): CookieDefinitionAdminController {
         $config ??= $this->createEnabledConfig(1);
 
@@ -358,10 +443,41 @@ final class CookieDefinitionAdminControllerTest extends AbstractControllerTestCa
             $controller,
             twig: $twig,
             formFactory: $formFactory,
-            csrfTokenManager: $this->createCsrfTokenManager($csrfValid),
+            csrfTokenManager: $csrfTokenManager ?? $this->createCsrfTokenManager($csrfValid),
         );
 
         return $controller;
+    }
+
+    private function createInMemoryTokenStorage(): TokenStorageInterface
+    {
+        return new class implements TokenStorageInterface {
+            /** @var array<string, string> */
+            private array $tokens = [];
+
+            public function getToken(string $tokenId): string
+            {
+                return $this->tokens[$tokenId] ?? throw new TokenNotFoundException();
+            }
+
+            public function setToken(string $tokenId, #[SensitiveParameter] string $token): void
+            {
+                $this->tokens[$tokenId] = $token;
+            }
+
+            public function removeToken(string $tokenId): ?string
+            {
+                $token = $this->tokens[$tokenId] ?? null;
+                unset($this->tokens[$tokenId]);
+
+                return $token;
+            }
+
+            public function hasToken(string $tokenId): bool
+            {
+                return isset($this->tokens[$tokenId]);
+            }
+        };
     }
 
     private function createParameterBag(int $listPageSize = 20): ParameterBagInterface
