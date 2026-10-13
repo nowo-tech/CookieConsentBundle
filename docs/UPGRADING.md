@@ -2,6 +2,7 @@
 
 ## Table of contents
 
+- [Unreleased](#unreleased)
 - [To 1.15.2](#to-1152)
 - [To 1.15.1](#to-1151)
 - [To 1.15.0](#to-1150)
@@ -93,6 +94,8 @@
   - [Breaking changes](#breaking-changes-19)
 - [Future versions](#future-versions)
 - [Getting help](#getting-help)
+
+## Unreleased
 
 ## To 1.15.2
 
