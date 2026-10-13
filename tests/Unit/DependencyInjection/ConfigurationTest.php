@@ -6,7 +6,10 @@ namespace Nowo\CookieConsentBundle\Tests\Unit\DependencyInjection;
 
 use Nowo\CookieConsentBundle\DependencyInjection\Configuration;
 use Nowo\CookieConsentBundle\Enum\CategoryEnum;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
+use Symfony\Component\Config\Definition\ArrayNode;
+use Symfony\Component\Config\Definition\BaseNode;
 use Symfony\Component\Config\Definition\Exception\InvalidConfigurationException;
 use Symfony\Component\Config\Definition\Processor;
 
@@ -99,5 +102,37 @@ final class ConfigurationTest extends TestCase
         ]]);
 
         self::assertSame('app_', $config['table_prefix']);
+    }
+
+    /**
+     * @return iterable<string, array{list<string>}>
+     */
+    public static function ignoredKeys(): iterable
+    {
+        yield 'doctrine.connection' => [['doctrine', 'connection']];
+        yield 'web_ui.path_prefix' => [['web_ui', 'path_prefix']];
+    }
+
+    /**
+     * @param list<string> $path
+     */
+    #[DataProvider('ignoredKeys')]
+    public function testIgnoredKeysAreDeprecated(array $path): void
+    {
+        $node       = (new Configuration())->getConfigTreeBuilder()->buildTree();
+        $parentPath = $node->getPath();
+        foreach ($path as $segment) {
+            self::assertInstanceOf(ArrayNode::class, $node);
+            $parentPath = $node->getPath();
+            $node       = $node->getChildren()[$segment];
+        }
+
+        self::assertInstanceOf(BaseNode::class, $node);
+        self::assertTrue($node->isDeprecated());
+        $deprecation = $node->getDeprecation($node->getName(), $parentPath);
+        self::assertSame('nowo-tech/cookie-consent-bundle', $deprecation['package']);
+        self::assertSame('1.15', $deprecation['version']);
+        self::assertStringContainsString('"nowo_cookie_consent.' . implode('.', $path) . '"', $deprecation['message']);
+        self::assertStringContainsString('ignored', $deprecation['message']);
     }
 }

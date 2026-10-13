@@ -2,6 +2,7 @@
 
 ## Table of contents
 
+- [Configuration reference](#configuration-reference)
 - [Table prefix](#table-prefix)
 - [Locale detection](#locale-detection)
   - [UI theme](#ui-theme)
@@ -105,6 +106,104 @@ nowo_cookie_consent:
     # Full-page overlay and scroll lock until the user chooses an option
     disable_page_interaction: false
 ```
+
+## Configuration reference
+
+Every key accepted under `nowo_cookie_consent` (run `php bin/console config:dump-reference nowo_cookie_consent` for the live tree). When `use_database_config: true`, the per-profile `CookieConsentConfig` values (admin settings) override the YAML defaults marked *(DB override)*.
+
+### Storage and Doctrine
+
+| Key | Default | Description |
+|-----|---------|-------------|
+| `doctrine.table_prefix` | `''` | Prefix for every bundle table (see [Table prefix](#table-prefix)) |
+| `doctrine.connection` | `default` | **Deprecated since 1.15, ignored.** The entities are always mapped on the default entity manager / connection; the option will be removed in 2.0 |
+| `table_prefix` | `''` | **Deprecated since 1.3.** Use `doctrine.table_prefix` |
+| `use_logger` | `true` | Persist consent choices to `CookieConsentLog` |
+| `use_database_config` | `false` | Load modal copy and display settings from `CookieConsentConfig` profiles (see [Database configuration](#database-configuration)) |
+| `schema_ready_cache_ttl` | `60` | Seconds a positive "config table exists" probe is memoized per worker; `0` probes every main request |
+| `use_cookie_inventory` | `false` | Expose cookie definitions in the preferences modal and legal pages |
+| `cookie_inventory` | `[]` | Static cookie definitions used when the active profile has no `CookieDefinition` rows (see [Cookie inventory](#cookie-inventory)) |
+
+### Consent form and requests
+
+| Key | Default | Description |
+|-----|---------|-------------|
+| `categories` | `[analytics, marketing, preferences]` | Optional categories shown in the modal (`required` is always shown) |
+| `http_only` | `true` | HttpOnly flag on consent cookies |
+| `form_action` | `null` | Optional route name used as the consent form action |
+| `csrf_protection` | `true` | CSRF protection on the consent form (keep enabled) |
+| `fetch_config_via_api` | `false` | Expose `GET /cookie-consent/config` and let the front-end load settings via `fetch()` (see [Config API](#config-api-get)) |
+
+### Where the modal renders and opens
+
+| Key | Default | Description |
+|-----|---------|-------------|
+| `disabled_routes` | `[privacy, imprint]` | Route names where the modal never auto-opens (always wins over targeting) |
+| `skip_render_routes` | `[]` | Route patterns (fnmatch) where the consent fragment is not rendered at all (empty response, no inventory/config queries) |
+| `render_routes` | `[]` | When non-empty, the fragment renders **only** on these route patterns; `skip_render_routes` still wins |
+| `route_targeting_mode` | `all` | *(DB override)* Where the modal opens automatically: `all` (every route except `disabled_routes`), `only` (only routes matching `target_routes`), `except` (every route except those matching `target_routes`) |
+| `target_routes` | `[]` | *(DB override)* Route names or fnmatch patterns (`admin_*`) used by `route_targeting_mode: only` / `except`; ignored with `all` |
+
+```yaml
+nowo_cookie_consent:
+    route_targeting_mode: except
+    target_routes:
+        - admin_*
+        - staff_dashboard
+```
+
+### Locale
+
+| Key | Default | Description |
+|-----|---------|-------------|
+| `default_locale` | `en` | Fallback locale (see [Locale detection](#locale-detection)) |
+| `enabled_locales` | `[en, es, it, fr, de, pt, nl, pl, ca]` | Locales supported by the modal |
+| `detect_locale_from_accept_language` | `true` | Use `Accept-Language` when no explicit locale is available |
+
+### Appearance and behaviour of the modal
+
+| Key | Default | Description |
+|-----|---------|-------------|
+| `ui_theme` | `bootstrap` | Markup framework of the public modal: `bootstrap` or `tailwind` (see [UI theme](#ui-theme)) |
+| `color_theme` | `light` | *(DB override)* Colour preset: `light`, `dark`, `dark-turquoise`, `light-funky`, `elegant-black` |
+| `dark_mode_enabled` | `false` | *(DB override)* Force the dark palette (adds the dark-mode classes even with a light `color_theme`) |
+| `disable_transitions` | `false` | *(DB override)* Disable CSS transitions and animations inside the modal (`data-nowo-disable-transitions`) |
+| `disable_page_interaction` | `false` | *(DB override)* Full-page overlay and scroll lock until the visitor chooses (see [Page interaction overlay](#page-interaction-overlay)) |
+| `two_step_modal` | `false` | *(DB override)* Show a compact banner first, then the detailed preferences step |
+| `open_preferences_modal` | `false` | *(DB override)* Skip the banner and open the preferences step directly when the modal appears (`data-nowo-open-preferences`) |
+| `manage_iframe_placeholders` | `false` | *(DB override)* Replace embedded iframes with placeholders until their category is allowed (`data-nowo-manage-iframe-placeholders`) |
+| `granular_cookie_selection` | `false` | *(DB override)* Per-cookie toggles inside optional categories (see [Granular cookie selection](#granular-cookie-selection)) |
+| `preferences_bubble_enabled` | `false` | *(DB override)* Floating button to reopen preferences (see [Preferences bubble](#preferences-bubble)) |
+| `preferences_bubble_position` | `bottom-right` | `bottom-right`, `bottom-left`, `top-right`, `top-left` |
+| `preferences_bubble_border_color` | `null` | Hex colour of the bubble outline and icon |
+| `preferences_bubble_icon` | `null` | Custom inline SVG / simple HTML, allowlist-sanitized |
+| `preference_sections` | `[]` | Optional grouping of the preferences step (see below) |
+
+`preference_sections` is a list of `{title, description, categories}` entries. Sections **without** `categories` replace the default "Cookie usage" intro (title + description shown above the toggles); sections **with** `categories` set the order in which the category toggles are rendered (categories not listed in any section are not shown). Titles and descriptions are rendered as-is, so pass already-translated text or translation keys you resolve in an override template.
+
+```yaml
+nowo_cookie_consent:
+    preference_sections:
+        - title: 'How we use cookies'
+          description: 'Strictly necessary cookies are always on. Everything else is optional.'
+        - categories: [required, preferences]
+        - categories: [analytics, marketing]
+```
+
+### Admin Web UI and security
+
+| Key | Default | Description |
+|-----|---------|-------------|
+| `web_ui.enabled` | `true` | Admin UI on/off (admin routes answer 404 when `false`) |
+| `web_ui.path_prefix` | `/cookie-consent-config` | **Deprecated since 1.15, ignored.** Admin routes are always `/cookie-consent-config/…`; move them with the `prefix` of the routes import |
+| `web_ui.layout_template` | `@NowoCookieConsentBundle/admin/layout.html.twig` | Root layout extended by admin pages |
+| `web_ui.css_framework` | `bootstrap5` | Admin CSS stack hint |
+| `web_ui.icon_set` | `bootstrap-icons` | `bootstrap-icons`, `tabler-icons`, `ux_icon`, `svg_inline`, `none` |
+| `web_ui.list_page_size` | `20` | Page size of admin lists |
+| `web_ui.chrome.*` | see [Admin Web UI](#admin-web-ui) | `page_title_tag`, `row_actions_display`, `classes`, `attributes`, `templates` |
+| `security.access_checker` | `null` | Service id implementing `CookieConsentAccessCheckerInterface` |
+| `security.access_roles` | `[ROLE_ADMIN]` | Roles allowed in the admin (empty = deny) |
+| `security.allow_unauthenticated` | `false` | Demo/dev only |
 
 ## Table prefix
 
@@ -439,7 +538,7 @@ Admin pages extend `@NowoCookieConsentBundle/admin/base.html.twig`, which extend
 | Option | Default | Description |
 | --- | --- | --- |
 | `web_ui.enabled` | `true` | Enables the admin UI (access enforced by `CookieConsentAdminAccessSubscriber`). When `false`, admin routes answer 404 |
-| `web_ui.path_prefix` | `/cookie-consent-config` | Documented URL prefix for host `access_control` |
+| `web_ui.path_prefix` | `/cookie-consent-config` | **Deprecated since 1.15 and ignored** (setting it triggers a deprecation). Admin routes are always mounted under `/cookie-consent-config`; to move them use the `prefix` option when importing `@NowoCookieConsentBundle/Resources/config/routing.yaml`, and protect the final path with `access_control` |
 | `web_ui.layout_template` | `@NowoCookieConsentBundle/admin/layout.html.twig` | Root Twig layout extended by `admin/base.html.twig` |
 | `web_ui.css_framework` | `bootstrap5` | Host CSS stack hint (`bootstrap` / `bootstrap4` / `bootstrap5` / `tabler` → Bootstrap CDN; `custom` / `tailwind` / `none` / `foundation` → UiKit `nowo-ui.css` via `nowo_ui_kit`) |
 | `web_ui.icon_set` | `bootstrap-icons` | Icon hint |

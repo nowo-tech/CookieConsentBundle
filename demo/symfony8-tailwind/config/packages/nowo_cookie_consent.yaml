@@ -24,7 +24,6 @@ nowo_cookie_consent:
         - preferences
     web_ui:
         enabled: true
-        path_prefix: /cookie-consent-config
         css_framework: tailwind
         list_page_size: 20
     # DEMO ONLY — production hosts must keep allow_unauthenticated: false and protect the admin prefix.
