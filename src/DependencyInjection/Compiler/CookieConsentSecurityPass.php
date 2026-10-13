@@ -62,7 +62,12 @@ final class CookieConsentSecurityPass implements CompilerPassInterface
             return;
         }
 
-        $container->register(CookieConsentAdminAccessSubscriber::class)
+        // This pass runs after ResolveClassPass and autoconfiguration: set the class and the
+        // kernel.event_subscriber tag explicitly, or the container fails with "the class is not set".
+        $container->register(CookieConsentAdminAccessSubscriber::class, CookieConsentAdminAccessSubscriber::class)
+            ->setAutowired(false)
+            ->setAutoconfigured(false)
+            ->setPublic(false)
             ->setArgument('$accessChecker', $accessChecker)
             ->setArgument('$webUiEnabled', $webUiEnabled)
             ->addTag('kernel.event_subscriber');

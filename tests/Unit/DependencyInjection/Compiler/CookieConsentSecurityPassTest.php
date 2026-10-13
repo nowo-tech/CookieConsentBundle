@@ -117,6 +117,8 @@ final class CookieConsentSecurityPassTest extends TestCase
         $definition = $container->getDefinition(CookieConsentAdminAccessSubscriber::class);
         self::assertFalse($definition->hasTag('container.excluded'));
         self::assertFalse($definition->isAbstract());
+        // Regression (1.15.1): the pass runs after ResolveClassPass, so the class must be set explicitly.
+        self::assertSame(CookieConsentAdminAccessSubscriber::class, $definition->getClass());
         self::assertTrue($definition->hasTag('kernel.event_subscriber'));
         self::assertInstanceOf(Reference::class, $definition->getArgument('$accessChecker'));
     }

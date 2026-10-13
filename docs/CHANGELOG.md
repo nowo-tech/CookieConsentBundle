@@ -60,6 +60,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- **Container compilation (regression in 1.15.1):** `cache:clear` failed in every real application with `Invalid service "Nowo\CookieConsentBundle\EventSubscriber\CookieConsentAdminAccessSubscriber": the class is not set.` `CookieConsentSecurityPass` replaced the `container.excluded` placeholder with a definition registered without a class, and the pass runs after `ResolveClassPass`. The subscriber definition now sets its class, arguments and `kernel.event_subscriber` tag explicitly. A regression test boots a real kernel (FrameworkBundle + the bundle, with and without SecurityBundle) and asserts the subscriber listens to `kernel.controller`; `symfony/security-bundle` is now a dev dependency for that test.
+
 ## [1.15.1] - 2026-10-13
 
 ### Security
