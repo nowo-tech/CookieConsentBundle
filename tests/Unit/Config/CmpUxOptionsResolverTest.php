@@ -10,6 +10,7 @@ use Nowo\CookieConsentBundle\Config\ResolvedCookieConsentConfig;
 use Nowo\CookieConsentBundle\Entity\CookieConsentConfig;
 use Nowo\CookieConsentBundle\Entity\CookieConsentConfigTranslation;
 use PHPUnit\Framework\TestCase;
+use ReflectionProperty;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\RequestStack;
 
@@ -113,6 +114,58 @@ final class CmpUxOptionsResolverTest extends TestCase
         self::assertSame($icon, $resolver->getPreferencesBubbleIcon());
     }
 
+    public function testUnsafeStoredPreferencesBubbleIconFallsBackToSanitizedYamlDefault(): void
+    {
+        // Rows saved before the allowlist sanitizer may hold markup the old blocklist let through.
+        $config   = new CookieConsentConfig();
+        $property = new ReflectionProperty($config, 'preferencesBubbleIcon');
+        $property->setValue($config, '<svg/onload=alert(1)>');
+
+        $request = Request::create('/');
+        $request->attributes->set('nowo_cookie_consent_config', new ResolvedCookieConsentConfig($config, null));
+
+        $stack = new RequestStack();
+        $stack->push($request);
+
+        $resolver = new CmpUxOptionsResolver(
+            $stack,
+            'dark-turquoise',
+            false,
+            false,
+            false,
+            true,
+            false,
+            false,
+            false,
+            false,
+            'bottom-right',
+            null,
+            '<svg viewBox="0 0 1 1" onclick="alert(1)"></svg>',
+            [],
+            true,
+        );
+        self::assertNull($resolver->getPreferencesBubbleIcon());
+
+        $resolver = new CmpUxOptionsResolver(
+            $stack,
+            'dark-turquoise',
+            false,
+            false,
+            false,
+            true,
+            false,
+            false,
+            false,
+            false,
+            'bottom-right',
+            null,
+            '<svg viewBox="0 0 1 1"></svg>',
+            [],
+            true,
+        );
+        self::assertSame('<svg viewBox="0 0 1 1"/>', $resolver->getPreferencesBubbleIcon());
+    }
+
     public function testGranularCookieSelectionAndPreferencesBubbleFromDatabase(): void
     {
         $config = (new CookieConsentConfig())
@@ -157,7 +210,7 @@ final class CmpUxOptionsResolverTest extends TestCase
         self::assertTrue($resolver->isPreferencesBubbleEnabled());
         self::assertSame('bottom-left', $resolver->getPreferencesBubblePosition());
         self::assertSame('#ff0000', $resolver->getPreferencesBubbleBorderColor());
-        self::assertSame('<svg></svg>', $resolver->getPreferencesBubbleIcon());
+        self::assertSame('<svg/>', $resolver->getPreferencesBubbleIcon());
     }
 
     public function testDatabaseConfigEnabledFallsBackToYamlWithoutRequest(): void

@@ -6,6 +6,7 @@ namespace Nowo\CookieConsentBundle\DependencyInjection;
 
 use InvalidArgumentException;
 use Nowo\CookieConsentBundle\Admin\AdminChrome;
+use Nowo\CookieConsentBundle\Config\PreferencesBubbleIconSanitizer;
 use Nowo\CookieConsentBundle\Enum\CategoryEnum;
 use Nowo\CookieConsentBundle\Enum\DisabledRoutesEnum;
 use Symfony\Component\Config\Definition\Builder\TreeBuilder;
@@ -16,6 +17,7 @@ use function array_keys;
 use function implode;
 use function is_string;
 use function sprintf;
+use function trim;
 
 /**
  * Defines the configuration tree for the cookie consent bundle.
@@ -203,7 +205,11 @@ class Configuration implements ConfigurationInterface
                 ->end()
                 ->scalarNode('preferences_bubble_icon')
                     ->defaultNull()
-                    ->info('Custom HTML or SVG markup for the preferences bubble icon. Leave empty for the default cookie SVG.')
+                    ->info('Custom inline SVG (or simple inline HTML such as an emoji span) for the preferences bubble icon, well-formed XML, allowlist-sanitized. Leave empty for the default cookie SVG.')
+                    ->validate()
+                        ->ifTrue(static fn ($v): bool => is_string($v) && PreferencesBubbleIconSanitizer::sanitizeOrNull($v) === null && trim($v) !== '')
+                        ->thenInvalid('preferences_bubble_icon must be well-formed SVG/inline HTML without scripts, event handlers or external references.')
+                    ->end()
                 ->end()
                 ->arrayNode('preference_sections')
                     ->defaultValue([])

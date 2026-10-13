@@ -204,14 +204,15 @@ final class CmpUxOptionsResolver
         $config = $this->getDatabaseConfig();
 
         if ($config instanceof CookieConsentConfig) {
-            $icon = $config->getPreferencesBubbleIcon();
+            // Re-sanitize at render time: rows stored before the allowlist sanitizer may hold unsafe markup.
+            $icon = PreferencesBubbleIconSanitizer::sanitizeOrNull($config->getPreferencesBubbleIcon());
 
-            if ($icon !== null && $icon !== '') {
+            if ($icon !== null) {
                 return $icon;
             }
         }
 
-        return $this->preferencesBubbleIcon;
+        return PreferencesBubbleIconSanitizer::sanitizeOrNull($this->preferencesBubbleIcon);
     }
 
     /**

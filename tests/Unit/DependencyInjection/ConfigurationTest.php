@@ -7,6 +7,7 @@ namespace Nowo\CookieConsentBundle\Tests\Unit\DependencyInjection;
 use Nowo\CookieConsentBundle\DependencyInjection\Configuration;
 use Nowo\CookieConsentBundle\Enum\CategoryEnum;
 use PHPUnit\Framework\TestCase;
+use Symfony\Component\Config\Definition\Exception\InvalidConfigurationException;
 use Symfony\Component\Config\Definition\Processor;
 
 final class ConfigurationTest extends TestCase
@@ -60,6 +61,24 @@ final class ConfigurationTest extends TestCase
         self::assertNull($config['security']['access_checker']);
         self::assertSame(['ROLE_ADMIN'], $config['security']['access_roles']);
         self::assertFalse($config['security']['allow_unauthenticated']);
+    }
+
+    public function testPreferencesBubbleIconRejectsUnsafeMarkup(): void
+    {
+        $this->expectException(InvalidConfigurationException::class);
+
+        (new Processor())->processConfiguration(new Configuration(), [[
+            'preferences_bubble_icon' => '<img/src=x/onerror=alert(1)>',
+        ]]);
+    }
+
+    public function testPreferencesBubbleIconAcceptsSvg(): void
+    {
+        $config = (new Processor())->processConfiguration(new Configuration(), [[
+            'preferences_bubble_icon' => '<svg viewBox="0 0 24 24"><path d="M0 0"/></svg>',
+        ]]);
+
+        self::assertSame('<svg viewBox="0 0 24 24"><path d="M0 0"/></svg>', $config['preferences_bubble_icon']);
     }
 
     public function testDoctrineTablePrefixIsApplied(): void
