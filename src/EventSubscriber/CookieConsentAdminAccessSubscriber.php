@@ -7,11 +7,13 @@ namespace Nowo\CookieConsentBundle\EventSubscriber;
 use Nowo\CookieConsentBundle\Security\CookieConsentAccessCheckerInterface;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use Symfony\Component\HttpKernel\Event\ControllerEvent;
+use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Symfony\Component\HttpKernel\KernelEvents;
 use Symfony\Component\Security\Core\Exception\AccessDeniedException;
 
 /**
  * Enforces CookieConsentAccessCheckerInterface on admin CRUD routes (REQ-UI-002).
+ * When the web UI is disabled, admin routes answer 404 (they are still imported by the bundle routing).
  */
 final readonly class CookieConsentAdminAccessSubscriber implements EventSubscriberInterface
 {
@@ -22,6 +24,7 @@ final readonly class CookieConsentAdminAccessSubscriber implements EventSubscrib
 
     public function __construct(
         private CookieConsentAccessCheckerInterface $accessChecker,
+        private bool $webUiEnabled = true,
     ) {
     }
 
@@ -37,6 +40,10 @@ final readonly class CookieConsentAdminAccessSubscriber implements EventSubscrib
         $route = $event->getRequest()->attributes->get('_route');
         if ($route === null || !$this->isAdminRoute((string) $route)) {
             return;
+        }
+
+        if (!$this->webUiEnabled) {
+            throw new NotFoundHttpException('Cookie consent admin UI is disabled.');
         }
 
         if (!$this->accessChecker->canAccess()) {

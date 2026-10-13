@@ -6,14 +6,19 @@ namespace Nowo\CookieConsentBundle\DependencyInjection\Compiler;
 
 use Nowo\CookieConsentBundle\DependencyInjection\Configuration;
 use Nowo\CookieConsentBundle\EventSubscriber\CookieConsentAdminAccessSubscriber;
+use Nowo\CookieConsentBundle\Security\AllowAllCookieConsentAccessChecker;
 use Nowo\CookieConsentBundle\Security\CookieConsentAccessCheckerInterface;
 use Symfony\Component\Config\Definition\Exception\InvalidConfigurationException;
 use Symfony\Component\DependencyInjection\Compiler\CompilerPassInterface;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
+use Symfony\Component\DependencyInjection\Definition;
 use Symfony\Component\DependencyInjection\Reference;
 
 /**
  * Enforces SecurityBundle for admin UI unless allow_unauthenticated is true (REQ-UI-002).
+ *
+ * The admin access subscriber is always registered because the bundle routing imports every
+ * controller: with web_ui.enabled false it answers admin routes with 404 instead of leaving them open.
  */
 final class CookieConsentSecurityPass implements CompilerPassInterface
 {
@@ -22,7 +27,12 @@ final class CookieConsentSecurityPass implements CompilerPassInterface
         if (!$container->hasParameter(Configuration::ALIAS . '.web_ui.enabled')) {
             return;
         }
-        if (!(bool) $container->getParameter(Configuration::ALIAS . '.web_ui.enabled')) {
+
+        $webUiEnabled = (bool) $container->getParameter(Configuration::ALIAS . '.web_ui.enabled');
+        if (!$webUiEnabled) {
+            // Admin routes are still loaded by routing.yaml: 404 them (the access checker is never consulted).
+            $this->registerSubscriber($container, new Definition(AllowAllCookieConsentAccessChecker::class), false);
+
             return;
         }
 
@@ -34,16 +44,24 @@ final class CookieConsentSecurityPass implements CompilerPassInterface
         }
 
         if ($allowUnauthenticated) {
+            $this->registerSubscriber($container, new Definition(AllowAllCookieConsentAccessChecker::class), true);
+
             return;
         }
 
-        // Always register when !allow_unauthenticated. Empty access_roles is fail-closed via the checker.
+        // Empty access_roles is fail-closed via the checker.
+        $this->registerSubscriber($container, new Reference(CookieConsentAccessCheckerInterface::class), true);
+    }
+
+    private function registerSubscriber(ContainerBuilder $container, Definition|Reference $accessChecker, bool $webUiEnabled): void
+    {
         if ($container->hasDefinition(CookieConsentAdminAccessSubscriber::class)) {
             return;
         }
 
         $container->register(CookieConsentAdminAccessSubscriber::class)
-            ->setArgument('$accessChecker', new Reference(CookieConsentAccessCheckerInterface::class))
+            ->setArgument('$accessChecker', $accessChecker)
+            ->setArgument('$webUiEnabled', $webUiEnabled)
             ->addTag('kernel.event_subscriber');
     }
 }

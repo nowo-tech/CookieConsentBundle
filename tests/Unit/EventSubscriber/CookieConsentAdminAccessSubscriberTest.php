@@ -9,6 +9,7 @@ use Nowo\CookieConsentBundle\Security\CookieConsentAccessCheckerInterface;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpKernel\Event\ControllerEvent;
+use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Symfony\Component\HttpKernel\HttpKernelInterface;
 use Symfony\Component\HttpKernel\KernelEvents;
 use Symfony\Component\Security\Core\Exception\AccessDeniedException;
@@ -50,6 +51,27 @@ final class CookieConsentAdminAccessSubscriberTest extends TestCase
 
         $subscriber = new CookieConsentAdminAccessSubscriber($checker);
         $subscriber->onKernelController($this->createEvent('nowo_cookie_consent_config_settings_edit'));
+    }
+
+    public function testReturnsNotFoundForAdminRoutesWhenWebUiDisabled(): void
+    {
+        $checker = $this->createMock(CookieConsentAccessCheckerInterface::class);
+        $checker->expects(self::never())->method('canAccess');
+
+        $subscriber = new CookieConsentAdminAccessSubscriber($checker, false);
+
+        $this->expectException(NotFoundHttpException::class);
+        $subscriber->onKernelController($this->createEvent('nowo_cookie_consent_cookie_definitions_delete'));
+    }
+
+    public function testIgnoresNonAdminRoutesWhenWebUiDisabled(): void
+    {
+        $checker = $this->createMock(CookieConsentAccessCheckerInterface::class);
+        $checker->expects(self::never())->method('canAccess');
+
+        $subscriber = new CookieConsentAdminAccessSubscriber($checker, false);
+        $subscriber->onKernelController($this->createEvent('nowo_cookie_consent.config'));
+        $this->addToAssertionCount(1);
     }
 
     private function createEvent(string $route): ControllerEvent

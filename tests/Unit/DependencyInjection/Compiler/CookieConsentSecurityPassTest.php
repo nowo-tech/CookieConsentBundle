@@ -7,12 +7,14 @@ namespace Nowo\CookieConsentBundle\Tests\Unit\DependencyInjection\Compiler;
 use Nowo\CookieConsentBundle\DependencyInjection\Compiler\CookieConsentSecurityPass;
 use Nowo\CookieConsentBundle\DependencyInjection\Configuration;
 use Nowo\CookieConsentBundle\EventSubscriber\CookieConsentAdminAccessSubscriber;
+use Nowo\CookieConsentBundle\Security\AllowAllCookieConsentAccessChecker;
 use Nowo\CookieConsentBundle\Security\CookieConsentAccessCheckerInterface;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Config\Definition\Exception\InvalidConfigurationException;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\Definition;
+use Symfony\Component\DependencyInjection\Reference;
 
 #[CoversClass(CookieConsentSecurityPass::class)]
 final class CookieConsentSecurityPassTest extends TestCase
@@ -24,11 +26,16 @@ final class CookieConsentSecurityPassTest extends TestCase
         self::assertFalse($container->hasDefinition(CookieConsentAdminAccessSubscriber::class));
     }
 
-    public function testNoopWhenWebUiDisabled(): void
+    public function testRegistersNotFoundSubscriberWhenWebUiDisabled(): void
     {
-        $container = $this->baseContainer(enabled: false);
+        // Regression: web_ui.enabled false used to skip the subscriber while routing.yaml still loaded admin controllers.
+        $container = $this->baseContainer(enabled: false, allowUnauthenticated: false);
         (new CookieConsentSecurityPass())->process($container);
-        self::assertFalse($container->hasDefinition(CookieConsentAdminAccessSubscriber::class));
+
+        self::assertTrue($container->hasDefinition(CookieConsentAdminAccessSubscriber::class));
+        $definition = $container->getDefinition(CookieConsentAdminAccessSubscriber::class);
+        self::assertFalse($definition->getArgument('$webUiEnabled'));
+        self::assertTrue($definition->hasTag('kernel.event_subscriber'));
     }
 
     public function testFailsWithoutSecurityWhenNotAllowUnauthenticated(): void
@@ -43,7 +50,13 @@ final class CookieConsentSecurityPassTest extends TestCase
     {
         $container = $this->baseContainer(allowUnauthenticated: true);
         (new CookieConsentSecurityPass())->process($container);
-        self::assertFalse($container->hasDefinition(CookieConsentAdminAccessSubscriber::class));
+
+        self::assertTrue($container->hasDefinition(CookieConsentAdminAccessSubscriber::class));
+        $definition = $container->getDefinition(CookieConsentAdminAccessSubscriber::class);
+        self::assertTrue($definition->getArgument('$webUiEnabled'));
+        $checker = $definition->getArgument('$accessChecker');
+        self::assertInstanceOf(Definition::class, $checker);
+        self::assertSame(AllowAllCookieConsentAccessChecker::class, $checker->getClass());
     }
 
     public function testRegistersSubscriberWhenSecurityPresent(): void
@@ -55,6 +68,9 @@ final class CookieConsentSecurityPassTest extends TestCase
         (new CookieConsentSecurityPass())->process($container);
 
         self::assertTrue($container->hasDefinition(CookieConsentAdminAccessSubscriber::class));
+        $definition = $container->getDefinition(CookieConsentAdminAccessSubscriber::class);
+        self::assertTrue($definition->getArgument('$webUiEnabled'));
+        self::assertInstanceOf(Reference::class, $definition->getArgument('$accessChecker'));
     }
 
     public function testRegistersSubscriberWhenAccessRolesEmpty(): void
