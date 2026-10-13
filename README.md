@@ -14,11 +14,11 @@ This bundle is **FrankenPHP worker mode friendly**, including when the kernel is
 <table>
   <tr>
     <td align="center" width="50%">
-      <img src="docs/images/demo/overview.png" alt="Cookie consent banner" />
+      <img src="docs/images/demo/overview.webp" alt="Cookie consent banner" />
       <br /><sub>Consent banner</sub>
     </td>
     <td align="center" width="50%">
-      <img src="docs/images/demo/interaction.png" alt="Cookie consent preferences panel" />
+      <img src="docs/images/demo/interaction.webp" alt="Cookie consent preferences panel" />
       <br /><sub>Preferences step</sub>
     </td>
   </tr>

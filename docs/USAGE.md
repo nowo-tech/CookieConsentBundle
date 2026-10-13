@@ -4,7 +4,7 @@
 
 | Overview | Interaction |
 |----------|-------------|
-| ![Cookie consent banner](images/demo/overview.png) | ![Cookie consent preferences panel](images/demo/interaction.png) |
+| ![Cookie consent banner](images/demo/overview.webp) | ![Cookie consent preferences panel](images/demo/interaction.webp) |
 
 Regenerate with `make -C demo/symfony8 demo-screenshots` (REQ-DEMO-013).
 
@@ -115,6 +115,12 @@ When `use_database_config: true`, edit `CookieConsentConfig` profiles with:
 - **Recommended defaults** for new profiles (also the entity defaults from **1.9.0**): consent + preferences modals as **box / wide / bottom / left** with **equal-weight buttons** enabled. Existing DB rows keep their stored values until you change them in Administration → Cookie consent.
 - **Controller:** `CookieConsentConfigSettingsAdminController` — `GET/POST /cookie-consent-config/{configId}/settings/{section}`
 - **Template:** `@NowoCookieConsentBundle/admin/config/settings.html.twig`
+
+The **Page overlay (disable interaction)** setting (`disablePageInteraction`) dims the page and blocks scrolling until the visitor chooses:
+
+| Default (no overlay) | Page overlay |
+|----------------------|--------------|
+| ![Preferences modal without page overlay](images/demo/cookie-consent-modal-default.webp) | ![Preferences modal with page overlay](images/demo/cookie-consent-modal-overlay.webp) |
 
 Set `nowo_cookie_consent.web_ui.layout_template` to your project layout (or a one-file bridge) so admin pages inherit host chrome without copying list/form templates. See [CONFIGURATION.md — Admin Web UI](CONFIGURATION.md#admin-web-ui). Protect admin routes with `security.access_roles` / host `access_control` ([Admin security](CONFIGURATION.md#admin-security)).
 

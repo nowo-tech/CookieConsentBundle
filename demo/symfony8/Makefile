@@ -23,7 +23,7 @@ help:
 	@echo "  make test           Run tests"
 	@echo "  make update-bundle  Refresh bundle autoload and cache"
 	@echo "  make test-e2e       Playwright e2e (REQ-DEMO-013)"
-	@echo "  make demo-screenshots  Refresh docs/images/demo/*.png"
+	@echo "  make demo-screenshots  Refresh docs/images/demo/*.webp"
 
 composer-install:
 	@echo "Installing Composer dependencies (ephemeral container)..."
@@ -109,7 +109,7 @@ update-bundle: ensure-up
 	@$(call dc,exec php php bin/console cache:clear --env=dev --no-warmup) || true
 	@echo "Bundle updated. Reload the page in the browser."
 	@echo "  make test-e2e       Playwright e2e (REQ-DEMO-013)"
-	@echo "  make demo-screenshots  Refresh docs/images/demo/*.png"
+	@echo "  make demo-screenshots  Refresh docs/images/demo/*.webp"
 
 # REQ-MAKE-008: update-deps (REQ-MAKE-008)
 # Optional: monorepo helper absent on standalone GitHub Actions checkout (REQ-MAKE-009).
@@ -137,6 +137,6 @@ demo-screenshots: ensure-up
 		-e DEMO_BASE_URL=http://127.0.0.1:$$PORT \
 		-e SCREENSHOT_DIR=/screenshots \
 		$(PLAYWRIGHT_IMAGE) \
-		bash -lc 'npm install --no-fund --no-audit && npx playwright test --project=screenshots'
-	@echo "Screenshots written under docs/images/demo/"
+		bash -lc 'npm install --no-fund --no-audit && npx playwright test --project=screenshots && node scripts/to-webp.mjs /screenshots'
+	@echo "Screenshots written under docs/images/demo/ (WebP)"
 
