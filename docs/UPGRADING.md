@@ -95,6 +95,8 @@
 
 ## Unreleased
 
+- **Behaviour change (admin security):** the bundle admin access subscriber is now really registered. Admin routes enforce `security.access_roles` (default `ROLE_ADMIN`) or your custom `security.access_checker` (users without the role get 403), and answer 404 when `web_ui.enabled: false`. Previously only the host firewall / `access_control` protected them. Check that admin users have one of the configured roles; demos without SecurityBundle keep working with `security.allow_unauthenticated: true`.
+
 ## To 1.15.0
 
 From **1.14.0** — complete ca/pl translations, dead config deprecated, full configuration reference, Symfony >=7.4, ext-dom.

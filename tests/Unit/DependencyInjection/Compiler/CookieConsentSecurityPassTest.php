@@ -12,9 +12,13 @@ use Nowo\CookieConsentBundle\Security\CookieConsentAccessCheckerInterface;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Config\Definition\Exception\InvalidConfigurationException;
+use Symfony\Component\Config\FileLocator;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\Definition;
+use Symfony\Component\DependencyInjection\Loader\YamlFileLoader;
 use Symfony\Component\DependencyInjection\Reference;
+
+use function dirname;
 
 #[CoversClass(CookieConsentSecurityPass::class)]
 final class CookieConsentSecurityPassTest extends TestCase
@@ -92,6 +96,42 @@ final class CookieConsentSecurityPassTest extends TestCase
         (new CookieConsentSecurityPass())->process($container);
 
         self::assertTrue($container->hasDefinition(CookieConsentAdminAccessSubscriber::class));
+    }
+
+    /**
+     * Regression: the services.yaml exclusion leaves an abstract `container.excluded` placeholder for the
+     * subscriber class, which used to short-circuit the registration in real applications.
+     */
+    public function testReplacesExcludedPlaceholderLeftByServicesYaml(): void
+    {
+        $container = $this->baseContainer(allowUnauthenticated: false);
+        $container->setDefinition('security.authorization_checker', new Definition());
+        foreach (['categories', 'form_action', 'csrf_protection', 'disabled_routes', 'skip_render_routes', 'render_routes', 'use_database_config', 'fetch_config_via_api', 'ui_theme'] as $parameter) {
+            $container->setParameter(Configuration::ALIAS . '.' . $parameter, null);
+        }
+        (new YamlFileLoader($container, new FileLocator(dirname(__DIR__, 4) . '/src/Resources/config')))->load('services.yaml');
+        self::assertTrue($container->getDefinition(CookieConsentAdminAccessSubscriber::class)->hasTag('container.excluded'));
+
+        (new CookieConsentSecurityPass())->process($container);
+
+        $definition = $container->getDefinition(CookieConsentAdminAccessSubscriber::class);
+        self::assertFalse($definition->hasTag('container.excluded'));
+        self::assertFalse($definition->isAbstract());
+        self::assertTrue($definition->hasTag('kernel.event_subscriber'));
+        self::assertInstanceOf(Reference::class, $definition->getArgument('$accessChecker'));
+    }
+
+    public function testKeepsHostDefinedSubscriber(): void
+    {
+        $container = $this->baseContainer(allowUnauthenticated: false);
+        $container->setDefinition('security.authorization_checker', new Definition());
+        $hostDefinition = (new Definition(CookieConsentAdminAccessSubscriber::class))->addTag('kernel.event_subscriber');
+        $container->setDefinition(CookieConsentAdminAccessSubscriber::class, $hostDefinition);
+
+        (new CookieConsentSecurityPass())->process($container);
+
+        self::assertSame($hostDefinition, $container->getDefinition(CookieConsentAdminAccessSubscriber::class));
+        self::assertSame([], $hostDefinition->getArguments());
     }
 
     /**

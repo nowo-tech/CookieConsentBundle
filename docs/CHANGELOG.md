@@ -59,6 +59,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Security
+
+- `CookieConsentAdminAccessSubscriber` is now actually registered in real applications: the `services.yaml` exclusion of the class leaves an abstract `container.excluded` placeholder definition, which made `CookieConsentSecurityPass` skip the registration. As a result `security.access_roles` / custom access checkers were never enforced on admin routes by the bundle, and the 1.14.0 "404 when `web_ui.enabled: false`" guard did not apply. Only a host-defined (non-excluded) subscriber definition now short-circuits the pass.
+
 ## [1.15.0] - 2026-10-13
 
 ### Fixed

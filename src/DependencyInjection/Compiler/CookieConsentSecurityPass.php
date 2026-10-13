@@ -55,7 +55,10 @@ final class CookieConsentSecurityPass implements CompilerPassInterface
 
     private function registerSubscriber(ContainerBuilder $container, Definition|Reference $accessChecker, bool $webUiEnabled): void
     {
-        if ($container->hasDefinition(CookieConsentAdminAccessSubscriber::class)) {
+        // services.yaml excludes the class, which leaves an abstract `container.excluded` placeholder
+        // definition: only a host-defined subscriber may short-circuit the registration.
+        if ($container->hasDefinition(CookieConsentAdminAccessSubscriber::class)
+            && !$container->getDefinition(CookieConsentAdminAccessSubscriber::class)->hasTag('container.excluded')) {
             return;
         }
 
