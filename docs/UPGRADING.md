@@ -3,6 +3,7 @@
 ## Table of contents
 
 - [Unreleased](#unreleased)
+- [To 1.15.2](#to-1152)
 - [To 1.15.1](#to-1151)
 - [To 1.15.0](#to-1150)
 - [To 1.14.0](#to-1140)
@@ -95,6 +96,16 @@
 - [Getting help](#getting-help)
 
 ## Unreleased
+
+## To 1.15.2
+
+From **1.15.1** — fix container compilation regression from 1.15.1 (admin access subscriber class)
+
+```bash
+composer update nowo-tech/cookie-consent-bundle
+```
+
+- Fixes a regression in 1.15.1: any application failed to compile the container ("Invalid service ...CookieConsentAdminAccessSubscriber: the class is not set"). Upgrade from 1.15.1 immediately; no configuration changes.
 
 ## To 1.15.1
 

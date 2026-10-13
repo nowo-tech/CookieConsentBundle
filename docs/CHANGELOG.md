@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## Table of contents
 
 - [[Unreleased]](#unreleased)
+- [[1.15.2] - 2026-10-13](#1152---2026-10-13)
 - [[1.15.1] - 2026-10-13](#1151---2026-10-13)
 - [[1.15.0] - 2026-10-13](#1150---2026-10-13)
 - [[1.14.0] - 2026-10-13](#1140---2026-10-13)
@@ -59,6 +60,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - [[1.0.0] - 2026-06-15](#100---2026-06-15)
 
 ## [Unreleased]
+
+## [1.15.2] - 2026-10-13
 
 ### Fixed
 
@@ -162,6 +165,7 @@ Admin chrome hooks so hosts can theme the admin Web UI without forking pages (sp
 - JS tooling: `vite` 8.3.2, `@types/node` 26.6.4 (rebuilt `nowo-consent-modal.js`, no behaviour change).
 - Demos `symfony8` and `symfony8-tailwind`: Symfony 8.1.8, `doctrine/orm` 3.7.4, `doctrine/dbal` 4.5.0, Twig 3.30.0, `nowo-tech/ui-kit-bundle` 1.9.1, `nowo-tech/form-kit-bundle` 2.6.0.
 
+[1.15.2]: https://github.com/nowo-tech/CookieConsentBundle/releases/tag/v1.15.2
 [1.15.1]: https://github.com/nowo-tech/CookieConsentBundle/releases/tag/v1.15.1
 [1.15.0]: https://github.com/nowo-tech/CookieConsentBundle/releases/tag/v1.15.0
 [1.14.0]: https://github.com/nowo-tech/CookieConsentBundle/releases/tag/v1.14.0
