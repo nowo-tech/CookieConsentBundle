@@ -1,5 +1,17 @@
 # Upgrade Guide
 
+## To 1.14.0
+
+From **1.13.1** — security: delete CSRF fix, admin fail-closed, allowlist bubble icon, IPv6 anonymization.
+
+```bash
+composer update nowo-tech/cookie-consent-bundle
+```
+
+- `preferences_bubble_icon` must now be well-formed XML (inline SVG or simple span-style markup). `style` and unknown attributes are dropped, unsafe YAML values fail container compilation, and unsafe stored icons render the default icon.
+- With `web_ui.enabled: false` the admin routes now return 404 (the access subscriber is always registered).
+- IPv6 addresses in the consent log are now truncated to the first 48 bits.
+
 ## To 1.13.1
 
 From **1.13.0** — dependency refresh and repository maintenance.
