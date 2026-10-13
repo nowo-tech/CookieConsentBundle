@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Nowo\CookieConsentBundle\Form\Settings;
 
 use Nowo\CookieConsentBundle\Entity\CookieConsentConfig;
+use Nowo\CookieConsentBundle\Form\FormKitPlaceholders;
 use Nowo\FormKitBundle\Attribute\FormKitConfig;
 use Nowo\FormKitBundle\Form\FormOptionsMerger;
 use Nowo\FormKitBundle\Form\FormOptionsTrait;
@@ -82,7 +83,8 @@ abstract class AbstractCookieConsentConfigSettingsType extends AbstractType
     }
 
     /**
-     * Prefer the form-level translation_domain (e.g. demos using {@code messages}) over the FormKit profile default.
+     * Prefer the form-level translation_domain (e.g. demos using {@code messages}) over the FormKit profile default,
+     * and only render placeholders the form type sets explicitly ({@see FormKitPlaceholders}).
      *
      * @param class-string<FormTypeInterface<mixed>> $type
      * @param array<string, mixed> $options
@@ -95,7 +97,7 @@ abstract class AbstractCookieConsentConfigSettingsType extends AbstractType
             $options['translation_domain'] = $this->activeTranslationDomain;
         }
 
-        return $this->resolveFieldOptionsFromTrait($name, $type, $options);
+        return FormKitPlaceholders::resolve($type, $options, fn (array $resolvedOptions): array => $this->resolveFieldOptionsFromTrait($name, $type, $resolvedOptions));
     }
 
     /**

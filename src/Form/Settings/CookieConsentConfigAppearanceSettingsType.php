@@ -38,7 +38,6 @@ final class CookieConsentConfigAppearanceSettingsType extends AbstractCookieCons
             'label'    => $labelPrefix . 'disable_page_interaction',
             'help'     => $labelPrefix . 'disable_page_interaction_help',
             'required' => false,
-            'attr'     => ['id' => 'nowo-cookie-consent-overlay-setting'],
         ]);
         $this->addCheckbox($builder, 'darkModeEnabled', [
             'label'    => $labelPrefix . 'dark_mode_enabled',

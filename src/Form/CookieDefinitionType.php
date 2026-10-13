@@ -11,6 +11,7 @@ use Nowo\FormKitBundle\Form\FormOptionsTrait;
 use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\Extension\Core\Type\CollectionType;
 use Symfony\Component\Form\FormBuilderInterface;
+use Symfony\Component\Form\FormTypeInterface;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 
 /**
@@ -21,7 +22,22 @@ use Symfony\Component\OptionsResolver\OptionsResolver;
 #[FormKitConfig('cookie_consent')]
 class CookieDefinitionType extends AbstractType
 {
-    use FormOptionsTrait;
+    use FormOptionsTrait {
+        resolveFieldOptions as private resolveFieldOptionsFromFormKit;
+    }
+
+    /**
+     * Only render placeholders this form type sets explicitly ({@see FormKitPlaceholders}).
+     *
+     * @param class-string<FormTypeInterface<mixed>> $type
+     * @param array<string, mixed> $options
+     *
+     * @return array<string, mixed>
+     */
+    protected function resolveFieldOptions(string $name, string $type, array $options = []): array
+    {
+        return FormKitPlaceholders::resolve($type, $options, fn (array $resolvedOptions): array => $this->resolveFieldOptionsFromFormKit($name, $type, $resolvedOptions));
+    }
 
     /**
      * Builds the cookie definition form fields.

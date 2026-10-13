@@ -227,26 +227,22 @@ class NowoCookieConsentExtension extends Extension implements PrependExtensionIn
                 'cookie_consent' => [
                     'alias'              => 'cookie_consent',
                     'translation_domain' => 'NowoCookieConsentBundle',
-                    'defaults'           => [
-                        'attr'     => ['class' => 'nowo-ui-input form-control'],
+                    // The admin form theme (bootstrap_5_layout by default) adds form-control / form-select /
+                    // form-check-input and the .form-check wrapper itself: repeating them here doubled the
+                    // classes and nested a second .form-check around checkboxes.
+                    'defaults' => [
+                        'attr'     => ['class' => 'nowo-ui-input'],
                         'row_attr' => ['class' => 'mb-2'],
                     ],
                     'field_types' => [
                         'checkbox' => [
-                            'attr'     => ['class' => 'form-check-input'],
-                            'row_attr' => ['class' => 'form-check mb-2'],
+                            'attr' => ['class' => ''],
                         ],
                         'choice' => [
-                            'attr' => ['class' => 'form-select'],
+                            'attr' => ['class' => ''],
                         ],
                         'entity' => [
-                            'attr' => ['class' => 'form-select'],
-                        ],
-                        'file' => [
-                            'attr' => ['class' => 'nowo-ui-input form-control'],
-                        ],
-                        'textarea' => [
-                            'attr' => ['class' => 'nowo-ui-input form-control'],
+                            'attr' => ['class' => ''],
                         ],
                     ],
                 ],

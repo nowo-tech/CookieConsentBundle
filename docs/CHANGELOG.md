@@ -64,6 +64,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 - **Modal toggles:** `--nowo-cc-toggle-on-knob-bg` was read but never declared, so in themed modals a switched-on toggle drew its knob in the same dark colour as the track (knob invisible). It is now declared (white by default, the theme background in dark themes) and the checked icon in dark themes uses the track colour so it stays visible on the knob. A TS test now fails on any `var(--nowo-cc-*)` that the stylesheet never declares.
+- **Admin forms:** the overlay checkbox (`disablePageInteraction`) rendered two `id` attributes (a hard-coded `attr.id`); all admin fields carried raw FormKit `{form}.{field}.placeholder` keys (visible on the profile name / priority / revision / bubble icon inputs) and explicit placeholders lost against them, so optional position selects showed an empty option instead of "Not applicable"; the seeded `cookie_consent` FormKit profile repeated `form-check-input` / `form-select` / `form-control` and the `.form-check` row wrapper that `bootstrap_5_layout` already adds (doubled classes, nested `.form-check`). Fields now only get placeholders the form type sets explicitly, and the profile leaves those classes to the form theme.
 
 ### Changed
 
