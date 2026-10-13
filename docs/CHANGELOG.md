@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - [[Unreleased]](#unreleased)
 
+- [[1.13.1] - 2026-10-13](#1131---2026-10-13)
 - [[1.13.0] - 2026-10-13](#1130---2026-10-13)
 - [[1.12.0] - 2026-10-09](#1120---2026-10-09)
 - [[1.11.2] - 2026-10-09](#1112---2026-10-09)
@@ -109,6 +110,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.13.1] - 2026-10-13
+
+### Changed
+
+- CI: GitHub Actions aligned with the org baseline (`actions/checkout` v7, `codecov/codecov-action` v7, `actions/cache` v6).
+
+### Dependencies
+
+- `doctrine/orm` 3.7.4 → 3.7.5 (development lock; #69).
+- `nowo-tech/ui-kit-bundle` 1.9.1 → 1.11.0 (development lock; #72).
+- `vite` 8.3.2 → 8.3.4 (frontend tooling; #74).
+- `@types/node` 26.6.4 → 26.6.5, `happy-dom` 20.14.5 → 20.14.6 (frontend tooling) and `nowo-tech/form-kit-bundle` 2.6.0 → 2.8.0 (development lock), applied locally to close #70, #71 and #73.
+
+### Fixed
+
+- **Shipped asset:** `src/Resources/public/nowo-consent-modal.js` rebuilt with the refreshed toolchain (equivalent output; no behaviour change).
+
 ## [1.13.0] - 2026-10-13
 
 Admin chrome hooks so hosts can theme the admin Web UI without forking pages (spec [`002-admin-chrome-hooks`](../specs/002-admin-chrome-hooks/spec.md)). Default output is unchanged (golden-tested against the 1.12.0 markup).
@@ -156,6 +174,7 @@ Admin chrome hooks so hosts can theme the admin Web UI without forking pages (sp
 - JS tooling: `vite` 8.3.2, `@types/node` 26.6.4 (rebuilt `nowo-consent-modal.js`, no behaviour change).
 - Demos `symfony8` and `symfony8-tailwind`: Symfony 8.1.8, `doctrine/orm` 3.7.4, `doctrine/dbal` 4.5.0, Twig 3.30.0, `nowo-tech/ui-kit-bundle` 1.9.1, `nowo-tech/form-kit-bundle` 2.6.0.
 
+[1.13.1]: https://github.com/nowo-tech/CookieConsentBundle/releases/tag/v1.13.1
 [1.13.0]: https://github.com/nowo-tech/CookieConsentBundle/releases/tag/v1.13.0
 [1.12.0]: https://github.com/nowo-tech/CookieConsentBundle/releases/tag/v1.12.0
 [1.11.2]: https://github.com/nowo-tech/CookieConsentBundle/releases/tag/v1.11.2

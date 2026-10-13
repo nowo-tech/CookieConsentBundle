@@ -1,5 +1,14 @@
 # Upgrade Guide
 
+## To 1.13.1
+
+From **1.13.0** — dependency refresh and repository maintenance.
+
+```bash
+composer update nowo-tech/cookie-consent-bundle
+```
+
+- No breaking changes. No application upgrade steps.
 
 ## To 1.13.0
 
@@ -78,7 +87,6 @@ php bin/console cache:clear
 This guide provides step-by-step instructions for upgrading Cookie Consent Bundle between versions.
 
 ## Table of contents
-
 
 - [To 1.11.2](#to-1112)
 - [To 1.10.0 (FrankenPHP worker remediation)](#to-1100-frankenphp-worker-remediation)
@@ -417,7 +425,6 @@ Admin form types use FormKit `FormOptionsTrait` + profile `cookie_consent`. Requ
 Package maintainers: `composer twig:lint` / `composer twig:fix` use `.twig-cs-fixer.php` over `src/` (and `templates/` when present).
 
 **No public PHP API breaking changes** beyond the admin CSS asset package path and UiKit dependency.
-
 
 ## To 1.5.2
 
