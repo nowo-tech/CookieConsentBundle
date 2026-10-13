@@ -22,11 +22,11 @@
   },
   "devDependencies": {
     "@types/node": "^26.6.5",
-    "@vitest/coverage-v8": "^3.2.6",
+    "@vitest/coverage-v8": "^4.1.11",
     "happy-dom": "^20.14.6",
     "typescript": "^5.9.3",
     "vite": "^8.3.4",
-    "vitest": "^3.2.6"
+    "vitest": "^4.1.11"
   },
   "author": "Héctor Franco Aceituno <hectorfranco@nowo.tech>",
   "license": "MIT"
