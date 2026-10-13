@@ -23,10 +23,13 @@ final class TwigPathsPassTest extends TestCase
         (new TwigPathsPass())->process($container);
 
         $calls = $loader->getMethodCalls();
-        self::assertCount(1, $calls);
+        self::assertCount(2, $calls);
         self::assertSame('addPath', $calls[0][0]);
         self::assertSame('NowoCookieConsentBundle', $calls[0][1][1]);
         self::assertStringEndsWith('/Resources/views', $calls[0][1][0]);
+        self::assertSame('addPath', $calls[1][0]);
+        self::assertSame('!NowoCookieConsentBundle', $calls[1][1][1]);
+        self::assertSame($calls[0][1][0], $calls[1][1][0]);
     }
 
     public function testPrependsApplicationOverridePathWhenPresent(): void

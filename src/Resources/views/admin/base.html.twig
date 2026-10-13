@@ -1,5 +1,6 @@
 {# Admin pages extend this shell; configure web_ui.layout_template for host chrome (REQ-UI-001).
-   When the host sets layout_template, stack assets via parent() (same pattern as ContactForm). #}
+   When the host sets layout_template, stack assets via parent() (same pattern as ContactForm).
+   web_ui.chrome.templates.styles_after (1.13+) is included after the UiKit stylesheet so host remaps win. #}
 {% extends nowo_cookie_consent_layout_template|default('@NowoCookieConsentBundle/admin/layout.html.twig') %}
 {% import '@NowoUiKitBundle/macros/ui.html.twig' as ui %}
 {% set _css_fw = nowo_cookie_consent_css_framework|default('bootstrap5') %}
@@ -18,6 +19,11 @@
     {% block nowo_ui_styles %}
         {% if nowo_cookie_consent_css_framework|default('bootstrap5') not in ['bootstrap', 'bootstrap5', 'bootstrap4', 'tabler'] %}
             <link rel="stylesheet" href="{{ asset('css/nowo-ui.css', 'nowo_ui_kit') }}">
+        {% endif %}
+    {% endblock %}
+    {% block nowo_cookie_consent_admin_styles_after %}
+        {% if nowo_cookie_consent_admin_chrome.templates.styles_after %}
+            {{ include(nowo_cookie_consent_admin_chrome.templates.styles_after) }}
         {% endif %}
     {% endblock %}
 {% endblock %}

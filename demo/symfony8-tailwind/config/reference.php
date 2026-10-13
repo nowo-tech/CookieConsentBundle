@@ -1071,6 +1071,13 @@ use Symfony\Component\Config\Loader\ParamConfigurator as Param;
  *         css_framework?: "bootstrap"|"bootstrap4"|"bootstrap5"|"tailwind"|"foundation"|"custom"|"tabler"|"none"|Param, // Host CSS stack hint: bootstrap5 | bootstrap4 | bootstrap | tailwind | foundation | tabler | custom | none. // Default: "bootstrap5"
  *         icon_set?: "bootstrap-icons"|"tabler-icons"|"ux_icon"|"svg_inline"|"none"|Param, // Default: "bootstrap-icons"
  *         list_page_size?: int|Param, // Default page size for admin cookie definition lists. // Default: 20
+ *         chrome?: array{ // Admin chrome hooks (1.13+): class map, attribute map, partial paths. Defaults reproduce the shipped markup; see docs/USAGE.md "Customising the admin chrome".
+ *             page_title_tag?: "h1"|"h2"|"h3"|"h4"|"h5"|"h6"|"none"|Param, // Heading tag of the in-page title (list + form). Use h2 when the host layout already renders the h1, or none to hide it. // Default: "h1"
+ *             row_actions_display?: "text"|"icon"|"icon_text"|"inherit"|Param, // UiKit row actions display: text | icon | icon_text | inherit (use nowo_ui_kit.row_actions_display). // Default: "text"
+ *             classes?: array<string, scalar|Param|null>,
+ *             attributes?: array<string, array<string, scalar|Param|null>>,
+ *             templates?: array<string, scalar|Param|null>,
+ *         },
  *     },
  *     security?: array{
  *         access_checker?: scalar|Param|null, // Optional service id implementing CookieConsentAccessCheckerInterface. // Default: null

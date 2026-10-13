@@ -4,12 +4,18 @@ declare(strict_types=1);
 
 namespace Nowo\CookieConsentBundle\DependencyInjection;
 
+use InvalidArgumentException;
+use Nowo\CookieConsentBundle\Admin\AdminChrome;
 use Nowo\CookieConsentBundle\Enum\CategoryEnum;
 use Nowo\CookieConsentBundle\Enum\DisabledRoutesEnum;
 use Symfony\Component\Config\Definition\Builder\TreeBuilder;
 use Symfony\Component\Config\Definition\ConfigurationInterface;
 
+use function array_diff_key;
+use function array_keys;
+use function implode;
 use function is_string;
+use function sprintf;
 
 /**
  * Defines the configuration tree for the cookie consent bundle.
@@ -247,6 +253,62 @@ class Configuration implements ConfigurationInterface
                             ->min(1)
                             ->max(200)
                             ->info('Default page size for admin cookie definition lists.')
+                        ->end()
+                        ->arrayNode('chrome')
+                            ->info('Admin chrome hooks (1.13+): class map, attribute map, partial paths. Defaults reproduce the shipped markup; see docs/USAGE.md "Customising the admin chrome".')
+                            ->addDefaultsIfNotSet()
+                            ->children()
+                                ->enumNode('page_title_tag')
+                                    ->values(AdminChrome::PAGE_TITLE_TAGS)
+                                    ->defaultValue('h1')
+                                    ->info('Heading tag of the in-page title (list + form). Use h2 when the host layout already renders the h1, or none to hide it.')
+                                ->end()
+                                ->enumNode('row_actions_display')
+                                    ->values(AdminChrome::ROW_ACTIONS_DISPLAYS)
+                                    ->defaultValue('text')
+                                    ->info('UiKit row actions display: text | icon | icon_text | inherit (use nowo_ui_kit.row_actions_display).')
+                                ->end()
+                                ->arrayNode('classes')
+                                    ->info('Element key => CSS class string replacing the default (see AdminChrome::DEFAULT_CLASSES). ~ = UiKit macro default.')
+                                    ->useAttributeAsKey('name')
+                                    ->normalizeKeys(false)
+                                    ->scalarPrototype()->end()
+                                    ->validate()
+                                        ->ifTrue(static fn (array $v): bool => array_diff_key($v, AdminChrome::DEFAULT_CLASSES) !== [])
+                                        ->then(static function (array $v): never {
+                                            throw new InvalidArgumentException(sprintf('Unknown web_ui.chrome.classes key(s): %s. Known keys: %s.', implode(', ', array_keys(array_diff_key($v, AdminChrome::DEFAULT_CLASSES))), implode(', ', array_keys(AdminChrome::DEFAULT_CLASSES))));
+                                        })
+                                    ->end()
+                                ->end()
+                                ->arrayNode('attributes')
+                                    ->info('Element key (same keys as classes) => extra HTML attributes, e.g. {table_panel: {data-testid: cookie-table}}.')
+                                    ->useAttributeAsKey('name')
+                                    ->normalizeKeys(false)
+                                    ->arrayPrototype()
+                                        ->useAttributeAsKey('name')
+                                        ->normalizeKeys(false)
+                                        ->scalarPrototype()->end()
+                                    ->end()
+                                    ->validate()
+                                        ->ifTrue(static fn (array $v): bool => array_diff_key($v, AdminChrome::DEFAULT_CLASSES) !== [])
+                                        ->then(static function (array $v): never {
+                                            throw new InvalidArgumentException(sprintf('Unknown web_ui.chrome.attributes key(s): %s. Known keys: %s.', implode(', ', array_keys(array_diff_key($v, AdminChrome::DEFAULT_CLASSES))), implode(', ', array_keys(AdminChrome::DEFAULT_CLASSES))));
+                                        })
+                                    ->end()
+                                ->end()
+                                ->arrayNode('templates')
+                                    ->info('Partial paths: tabs, pagination, form_theme (~ = none), form_fields (~ = bundle loop), styles_after (~ = none).')
+                                    ->useAttributeAsKey('name')
+                                    ->normalizeKeys(false)
+                                    ->scalarPrototype()->end()
+                                    ->validate()
+                                        ->ifTrue(static fn (array $v): bool => array_diff_key($v, AdminChrome::DEFAULT_TEMPLATES) !== [])
+                                        ->then(static function (array $v): never {
+                                            throw new InvalidArgumentException(sprintf('Unknown web_ui.chrome.templates key(s): %s. Known keys: %s.', implode(', ', array_keys(array_diff_key($v, AdminChrome::DEFAULT_TEMPLATES))), implode(', ', array_keys(AdminChrome::DEFAULT_TEMPLATES))));
+                                        })
+                                    ->end()
+                                ->end()
+                            ->end()
                         ->end()
                     ->end()
                 ->end()

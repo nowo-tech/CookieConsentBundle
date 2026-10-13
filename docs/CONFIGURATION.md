@@ -444,6 +444,13 @@ Admin pages extend `@NowoCookieConsentBundle/admin/base.html.twig`, which extend
 | `web_ui.css_framework` | `bootstrap5` | Host CSS stack hint (`bootstrap` / `bootstrap4` / `bootstrap5` / `tabler` → Bootstrap CDN; `custom` / `tailwind` / `none` / `foundation` → UiKit `nowo-ui.css` via `nowo_ui_kit`) |
 | `web_ui.icon_set` | `bootstrap-icons` | Icon hint |
 | `web_ui.list_page_size` | `20` | Page size for cookie definition admin lists |
+| `web_ui.chrome.page_title_tag` | `h1` | In-page title tag (`h1`…`h6`, `none`) — 1.13+ |
+| `web_ui.chrome.row_actions_display` | `text` | Row actions: `text` / `icon` / `icon_text` / `inherit` (UiKit setting) — 1.13+ |
+| `web_ui.chrome.classes` | `{}` | Element → CSS class map (defaults = shipped markup) — 1.13+ |
+| `web_ui.chrome.attributes` | `{}` | Element → extra HTML attributes — 1.13+ |
+| `web_ui.chrome.templates` | `{}` | `tabs`, `pagination`, `form_theme`, `form_fields`, `styles_after` partial paths — 1.13+ |
+
+See [USAGE.md — Customising the admin chrome](USAGE.md#customising-the-admin-chrome) for keys, defaults and partial contracts.
 
 ```yaml
 nowo_cookie_consent:

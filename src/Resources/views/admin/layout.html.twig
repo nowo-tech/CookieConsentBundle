@@ -6,7 +6,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>{% block nowo_ui_document_title %}{% block title %}Cookie Consent Admin{% endblock %}{% endblock %}</title>
+    <title>{% block nowo_ui_document_title %}{% block title %}{{ 'nowo_cookie_consent.admin.layout.title'|trans({}, 'NowoCookieConsentBundle') }}{% endblock %}{% endblock %}</title>
     {# Demo root layout: no parent() (full HTML). Bundle pages stack via admin/base.html.twig. #}
     {% block stylesheets %}
         {% if nowo_cookie_consent_css_framework|default('bootstrap5') in ['bootstrap', 'bootstrap5', 'bootstrap4', 'tabler'] %}

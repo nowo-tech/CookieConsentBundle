@@ -72,6 +72,7 @@ nowo_cookie_consent.admin.cookie_definition.category.marketing: 'Marketing'
 nowo_cookie_consent.admin.cookie_definition.type.first_party: 'Propia'
 nowo_cookie_consent.admin.cookie_definition.type.third_party: 'De terceros'
 
+nowo_cookie_consent.admin.layout.title: 'Administración del consentimiento de cookies'
 nowo_cookie_consent.admin.area_nav.label: 'Administración de consentimiento de cookies'
 nowo_cookie_consent.admin.area_nav.settings: 'Ajustes'
 nowo_cookie_consent.admin.area_nav.cookies: 'Inventario de cookies'
@@ -189,6 +190,13 @@ nowo_cookie_consent.admin.config.settings.bubble_position.bottom_right: 'Abajo d
 nowo_cookie_consent.admin.config.settings.bubble_position.bottom_left: 'Abajo izquierda'
 nowo_cookie_consent.admin.config.settings.bubble_position.top_right: 'Arriba derecha'
 nowo_cookie_consent.admin.config.settings.bubble_position.top_left: 'Arriba izquierda'
+nowo_cookie_consent.admin.pagination.label: 'Paginación'
 nowo_cookie_consent.admin.pagination.summary: 'Página %page% de %pages% (%total% elementos)'
 nowo_cookie_consent.admin.pagination.prev: 'Anterior'
 nowo_cookie_consent.admin.pagination.next: 'Siguiente'
+
+# Admin chrome (1.13)
+nowo_cookie_consent.admin.cookie_definition.lead: 'Cookies declaradas para este perfil de consentimiento y mostradas en el modal de preferencias.'
+nowo_cookie_consent.admin.cookie_definition.form_lead: 'Cookie declarada para el perfil de consentimiento «%profile%».'
+nowo_cookie_consent.admin.cookie_definition.new_title: 'Nueva cookie'
+nowo_cookie_consent.admin.cookie_definition.edit_title: 'Editar cookie %name%'

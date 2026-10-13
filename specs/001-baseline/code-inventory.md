@@ -66,7 +66,12 @@ Co-located Vitest sources under `src/` (compiled/tested in CI; not shipped to Pa
 | `Resources/views/_preference_sections.html.twig` | Preferences partial | FR-TWIG-003 |
 | `Resources/views/_preferences_bubble_icon_default.html.twig` | Bubble icon partial | FR-TWIG-003 |
 | `Resources/views/_preferences_intro.html.twig` | Intro partial | FR-TWIG-003 |
-| `Resources/views/admin/_pagination.html.twig` | Admin pagination | FR-TWIG-003 |
+| `Resources/views/admin/_admin_area_nav.html.twig` | Admin area tabs | FR-TWIG-003, 002 FR-CHROME-002 |
+| `Resources/views/admin/_chrome.html.twig` | Admin chrome `attrs()` macro | 002 FR-CHROME-001 |
+| `Resources/views/admin/_pagination.html.twig` | Admin pagination | FR-TWIG-003, 002 FR-CHROME-002 |
+| `Resources/views/admin/_tabs.html.twig` | Admin default tab strip | 002 FR-CHROME-002 |
+| `Resources/views/admin/base.html.twig` | Admin intermediate shell | FR-TWIG-003, 002 FR-CHROME-003 |
+| `Resources/views/admin/config/_settings_section_tabs.html.twig` | Admin settings section tabs | FR-TWIG-003, 002 FR-CHROME-002 |
 | `Resources/views/admin/layout.html.twig` | Admin shell layout | FR-TWIG-003 |
 | `Resources/views/admin/config/layout.html.twig` | Admin layout | FR-TWIG-003 |
 | `Resources/views/admin/config/settings.html.twig` | Admin settings | FR-TWIG-003 |
@@ -82,6 +87,7 @@ Co-located Vitest sources under `src/` (compiled/tested in CI; not shipped to Pa
 | `Resources/views/form/cookie_consent_theme.tailwind.html.twig` | Form theme Tailwind | FR-TWIG-003 |
 
 ## PHP classes (`src/**/*.php`)
+| `Admin/AdminChrome.php` | Admin chrome hooks (class/attribute map, partial paths) | 002 FR-CHROME-001 |
 | `Config/CmpUxOptionsResolver.php` | Config helper | FR-CFG-003 |
 | `Config/CookieConsentConfigPayloadFactory.php` | Config helper | FR-CFG-003 |
 | `Config/CookieConsentConfigResolver.php` | Config helper | FR-CFG-003 |
@@ -144,6 +150,6 @@ Co-located Vitest sources under `src/` (compiled/tested in CI; not shipped to Pa
 | --- | ---: | ---: |
 | TypeScript production | 13 | 13 |
 | TypeScript tests (Vitest) | 11 | 11 |
-| Resources (YAML/CSS/JS/i18n/Twig) | 33 | 33 |
-| PHP classes | 54 | 54 |
-| **Total production sources** | **111** | **111** |
+| Resources (YAML/CSS/JS/i18n/Twig) | 38 | 38 |
+| PHP classes | 56 | 56 |
+| **Total production sources** | **118** | **118** |

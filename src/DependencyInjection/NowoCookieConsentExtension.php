@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Nowo\CookieConsentBundle\DependencyInjection;
 
+use Nowo\CookieConsentBundle\Admin\AdminChrome;
 use Nowo\CookieConsentBundle\Config\CookieInventoryNormalizer;
 use Nowo\CookieConsentBundle\EventSubscriber\CookieConsentConfigTranslationSubscriber;
 use Nowo\CookieConsentBundle\Security\AllowAllCookieConsentAccessChecker;
@@ -102,7 +103,8 @@ class NowoCookieConsentExtension extends Extension implements PrependExtensionIn
             $container->getDefinition(CookieConsentAdminTwigExtension::class)
                 ->setArgument('$layoutTemplate', $webUi['layout_template'])
                 ->setArgument('$cssFramework', $webUi['css_framework'])
-                ->setArgument('$iconSet', $webUi['icon_set']);
+                ->setArgument('$iconSet', $webUi['icon_set'])
+                ->setArgument('$chrome', AdminChrome::resolve($webUi['chrome'] ?? []));
         }
 
         $this->registerAccessChecker($container, $security);

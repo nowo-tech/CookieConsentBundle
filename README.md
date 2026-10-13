@@ -30,7 +30,7 @@ This bundle is **FrankenPHP worker mode friendly**, including when the kernel is
 - **GDPR modal** — category toggles, optional per-cookie selection, AJAX submit, TypeScript + Vite (`nowo-consent-modal.js`) and standalone CSS (`nowo-cookie-consent.css`, CSP-friendly).
 - **Themes** — `ui_theme: bootstrap` (default) or `tailwind`; dual FrankenPHP demos.
 - **Cookie inventory** — definitions in YAML and/or Doctrine; optional consent logging with configurable table prefix.
-- **Admin UI** — `/cookie-consent-config` (profile, behavior, appearance, modals, route targeting) plus CRUD for cookie definitions.
+- **Admin UI** — `/cookie-consent-config` (profile, behavior, appearance, modals, route targeting) plus CRUD for cookie definitions; themable without forking via `web_ui.chrome` (class map, partial paths, Twig blocks — 1.13+).
 - **Preferences bubble** — reopen consent after the first choice.
 - **Route targeting** — `render_routes` / `skip_render_routes`; helpers `nowo_cookie_consent_should_render()` / `nowo_cookie_consent_render()`.
 - **Database config** — `use_database_config` so the admin UI can override YAML at runtime; profile copy via `nowo_cookie_consent_trans()`.

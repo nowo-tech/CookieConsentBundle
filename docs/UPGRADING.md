@@ -1,6 +1,21 @@
 # Upgrade Guide
 
 
+## To 1.13.0
+
+From **1.12.0** — admin chrome hooks (class map, attribute map, partial paths, Twig blocks).
+
+```bash
+composer update nowo-tech/cookie-consent-bundle
+php bin/console cache:clear
+```
+
+- **No breaking changes.** Without `web_ui.chrome` the admin pages render the same markup as 1.12.0 (only previously untranslated strings now show text instead of raw keys, and the pagination `aria-label` is translated).
+- **Shrink admin forks:** if you override `admin/*.html.twig` only to repaint chrome (tabs, panels, buttons, table classes, form theme, pagination, extra stylesheet), delete the override and configure `nowo_cookie_consent.web_ui.chrome` instead — see [USAGE.md — Customising the admin chrome](USAGE.md#customising-the-admin-chrome).
+- **Keep a fork but make it thin:** `{% extends '@!NowoCookieConsentBundle/admin/<page>.html.twig' %}` and override only the `nowo_cookie_consent_admin_*` block you need.
+- **Existing full overrides keep working.** If you keep one, port the vendor behaviour you rely on (delete forms come from the controller's `delete_forms`; row "Edit" label now passes `%name%`).
+- Custom `tabs` / `pagination` partials receive the contracts documented in USAGE.
+
 ## To 1.12.0
 
 From **1.11.2** — schema-ready memo per worker; CSP nonce on bundle scripts/styles.

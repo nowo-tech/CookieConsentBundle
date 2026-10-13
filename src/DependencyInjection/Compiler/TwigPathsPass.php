@@ -19,6 +19,8 @@ final class TwigPathsPass implements CompilerPassInterface
 {
     private const TWIG_NAMESPACE = 'NowoCookieConsentBundle';
 
+    private const ORIGINAL_NAMESPACE = '!NowoCookieConsentBundle';
+
     /**
      * Registers app `templates/bundles/` overrides (prepend) then bundle views.
      *
@@ -48,6 +50,11 @@ final class TwigPathsPass implements CompilerPassInterface
 
         // @igor-ignore - Container compile-time DI mutation; not runtime worker state.
         $definition->addMethodCall('addPath', [$viewsPath, self::TWIG_NAMESPACE]);
+
+        // 1.13+: '@!NowoCookieConsentBundle/…' always resolves to the shipped template, so a host fork can
+        // `{% extends '@!NowoCookieConsentBundle/admin/…' %}` and override only the chrome blocks.
+        // @igor-ignore - Container compile-time DI mutation; not runtime worker state.
+        $definition->addMethodCall('addPath', [$viewsPath, self::ORIGINAL_NAMESPACE]);
     }
 
     private function getNativeLoaderServiceId(ContainerBuilder $container): ?string

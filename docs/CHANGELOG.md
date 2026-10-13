@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - [[Unreleased]](#unreleased)
 
+- [[1.13.0] - 2026-10-13](#1130---2026-10-13)
 - [[1.12.0] - 2026-10-09](#1120---2026-10-09)
 - [[1.11.2] - 2026-10-09](#1112---2026-10-09)
 - [[1.11.1] - 2026-09-28](#1111---2026-09-28)
@@ -108,6 +109,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.13.0] - 2026-10-13
+
+Admin chrome hooks so hosts can theme the admin Web UI without forking pages (spec [`002-admin-chrome-hooks`](../specs/002-admin-chrome-hooks/spec.md)). Default output is unchanged (golden-tested against the 1.12.0 markup).
+
+### Added
+
+- **`web_ui.chrome`** config subtree (Twig global `nowo_cookie_consent_admin_chrome`, resolved by `Nowo\CookieConsentBundle\Admin\AdminChrome`):
+  - `classes` — CSS class map per element (page header/title/intro, area nav + section tabs, table panel/wrap/table/cells, empty state, form + settings panels/bodies/actions, section title/lead, buttons, confirm buttons, pagination). `~` keeps the UiKit macro default for the configured `css_framework`; an empty string on `form_panel_body` / `settings_panel_body` drops the inner wrapper.
+  - `attributes` — extra HTML attributes per element (e.g. `data-testid`).
+  - `templates` — partial paths: `tabs` (area + section tabs, default `admin/_tabs.html.twig`), `pagination` (receives `page`, `pages`, `total`, `page_size`, `item_count`, `framework`), `form_theme` (`~` = app default theme), `form_fields` (host partial receiving `{form}`), `styles_after` (included after the UiKit stylesheet in `admin/base.html.twig`).
+  - `page_title_tag` (`h1`…`h6` / `none`) and `row_actions_display` (`text` / `icon` / `icon_text` / `inherit` = `nowo_ui_kit.row_actions_display`).
+  - Unknown keys fail at container compile time.
+- **Twig blocks** on every admin page: `nowo_cookie_consent_admin_area_nav`, `_page_header`, `_page_title`, `_page_intro`, `_page_actions`, `_table_wrapper`, `_pagination`, `_section_tabs`, `_settings_section`, `_section_header`, `_form_wrapper`, `_form_body`, `_form_actions`; `_table.html.twig` adds `_table_head`, `_row_actions`, `_empty_state`; `base.html.twig` adds `_styles_after`.
+- **`@!NowoCookieConsentBundle/…`** namespace always points at the shipped templates, so a host fork can extend the original and override one block.
+- Translation keys `nowo_cookie_consent.admin.pagination.label` (pagination `aria-label`, was hard-coded "Pagination") and `nowo_cookie_consent.admin.layout.title` (default admin layout `<title>`).
+
+### Fixed
+
+- Admin strings that rendered as raw keys in every locale now have translations: `cookie_definition.lead`, `form_lead`, `new_title`, `edit_title`. Catalan and Polish gain the full admin chrome set (tabs, settings sections, table, pagination).
+- Row action "Edit" label now receives `%name%` (was rendered literally as "Edit %name%").
+- `make validate-translations` (shell quoting + autoload).
+
 ### Changed
 
 - Development: `composer.json` pins `config.platform.php` to 8.2.0 so the committed lock stays installable on the minimum PHP; CI overrides the platform per matrix cell.
@@ -133,6 +156,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - JS tooling: `vite` 8.3.2, `@types/node` 26.6.4 (rebuilt `nowo-consent-modal.js`, no behaviour change).
 - Demos `symfony8` and `symfony8-tailwind`: Symfony 8.1.8, `doctrine/orm` 3.7.4, `doctrine/dbal` 4.5.0, Twig 3.30.0, `nowo-tech/ui-kit-bundle` 1.9.1, `nowo-tech/form-kit-bundle` 2.6.0.
 
+[1.13.0]: https://github.com/nowo-tech/CookieConsentBundle/releases/tag/v1.13.0
 [1.12.0]: https://github.com/nowo-tech/CookieConsentBundle/releases/tag/v1.12.0
 [1.11.2]: https://github.com/nowo-tech/CookieConsentBundle/releases/tag/v1.11.2
 

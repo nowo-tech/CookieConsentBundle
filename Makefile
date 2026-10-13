@@ -100,7 +100,7 @@ phpstan: ensure-up
 
 validate-translations: ensure-up
 	@echo "Translation files validated (YAML syntax only)."
-	@$(COMPOSE) exec -T $(SERVICE_PHP) php -r "foreach (glob('src/Resources/translations/*.yaml') as $$f) { Symfony\\Component\\Yaml\\Yaml::parseFile($$f); } echo \"OK\\n\";"
+	@$(COMPOSE) exec -T $(SERVICE_PHP) php -r 'require "vendor/autoload.php"; foreach (glob("src/Resources/translations/*.yaml") as $$f) { Symfony\Component\Yaml\Yaml::parseFile($$f); } echo "OK\n";'
 
 qa: cs-check twig-lint test test-ts
 

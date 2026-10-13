@@ -1,0 +1,42 @@
+# Spec 002 suggested Beacon config (host partials swapped for @Test stubs).
+web_ui:
+    layout_template: 'kit/cookie_consent_admin_layout.html.twig'
+    css_framework: tailwind
+    chrome:
+        page_title_tag: h2
+        row_actions_display: inherit
+        classes:
+            page_header: 'nowo-ui-toolbar flex flex-wrap items-center justify-between gap-2 mb-2'
+            page_header_form: 'mb-4'
+            page_title: 'nowo-ui-section-title'
+            page_intro: 'nowo-ui-muted text-slate-500 mb-0'
+            area_nav: 'mb-4 nowo-ui-tabs--area'
+            section_tabs: 'mb-6 beacon-tabs--sections nowo-ui-tabs--sections'
+            table_panel: 'panel nowo-ui-table-wrap'
+            table_wrap: 'nowo-ui-table-wrap overflow-x-auto'
+            table: 'nowo-ui-table nowo-ui-table--striped min-w-full text-sm text-left data-table'
+            form_panel: 'panel nowo-ui-form-wrap mx-auto'
+            form_panel_body: ''
+            settings_panel: 'panel nowo-ui-form-wrap mx-auto'
+            settings_panel_body: ''
+            form: 'nowo-ui-form nowo-ui-form--stack'
+            form_actions: 'nowo-ui-form-actions'
+            settings_actions: 'nowo-ui-form-actions'
+            section_title: 'nowo-ui-section-title'
+            section_lead: 'nowo-ui-muted text-slate-500 mb-4'
+            button_primary: 'btn-primary'
+            button_secondary: 'btn-ghost no-underline'
+            confirm_cancel: 'btn-ghost'
+            confirm_delete: 'btn-danger'
+        attributes:
+            area_nav: { data-testid: cookie-consent-area-tabs }
+            section_tabs: { data-testid: cookie-consent-section-tabs }
+            table_panel: { data-testid: cookie-consent-definitions-table }
+            form_panel: { data-testid: cookie-consent-definition-form }
+            settings_panel: { data-testid: cookie-consent-settings-form }
+        templates:
+            tabs: '@Test/tabs.html.twig'
+            pagination: '@Test/pagination.html.twig'
+            form_theme: ~
+            form_fields: '@Test/fields.html.twig'
+            styles_after: '@Test/styles.html.twig'
