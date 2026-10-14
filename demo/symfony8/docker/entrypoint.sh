@@ -31,4 +31,5 @@ git config --global --add safe.directory /var/cookie-consent-bundle 2>/dev/null 
 
 mkdir -p /app/var/cache /app/var/log /app/var
 chmod -R 777 /app/var
+if [ ! -f /app/vendor/autoload_runtime.php ]; then composer install --no-interaction; fi
 exec frankenphp run --config /etc/frankenphp/Caddyfile --adapter caddyfile
