@@ -13,6 +13,7 @@ use Doctrine\Persistence\ManagerRegistry;
 use Nowo\CookieConsentBundle\Entity\CookieConsentConfig;
 use Nowo\CookieConsentBundle\Entity\CookieConsentConfigTranslation;
 use Nowo\CookieConsentBundle\Entity\CookieDefinition;
+use Nowo\CookieConsentBundle\Entity\CookieDefinitionTranslation;
 use Nowo\CookieConsentBundle\Repository\CookieConsentConfigRepository;
 use Nowo\CookieConsentBundle\Repository\CookieConsentConfigTranslationRepository;
 use Nowo\CookieConsentBundle\Repository\CookieDefinitionRepository;
@@ -186,6 +187,36 @@ final class DoctrineRepositoryTest extends TestCase
         $page = $repository->findByConfigOrderedPaginated($config, 1, 1);
         self::assertCount(1, $page);
         self::assertSame('_fbp', $page[0]->getName());
+    }
+
+    /**
+     * Regression: the fetch-joined translations made setMaxResults() limit SQL rows, so a page of 2 definitions
+     * with 3 translations each returned a single definition.
+     */
+    public function testPaginationCountsDefinitionsNotTranslationRows(): void
+    {
+        $config = (new CookieConsentConfig())->setEnabled(true)->setDefault(true);
+        $this->entityManager->persist($config);
+        foreach (['_a', '_b', '_c'] as $order => $name) {
+            $definition = (new CookieDefinition())->setName($name)->setSortOrder($order)->setConfig($config);
+            foreach (['en', 'es', 'fr'] as $locale) {
+                $definition->addTranslation((new CookieDefinitionTranslation())->setLocale($locale)->setProvider('P')->setPurpose('X'));
+            }
+            $this->entityManager->persist($definition);
+        }
+        $this->entityManager->flush();
+        $this->entityManager->clear();
+
+        $repository = new CookieDefinitionRepository($this->createRegistry());
+        $managed    = $this->entityManager->find(CookieConsentConfig::class, $config->getId());
+        self::assertInstanceOf(CookieConsentConfig::class, $managed);
+
+        $first  = $repository->findByConfigOrderedPaginated($managed, 1, 2);
+        $second = $repository->findByConfigOrderedPaginated($managed, 2, 2);
+
+        self::assertSame(['_a', '_b'], array_map(static fn (CookieDefinition $d): string => $d->getName(), $first));
+        self::assertSame(['_c'], array_map(static fn (CookieDefinition $d): string => $d->getName(), $second));
+        self::assertCount(3, $first[0]->getTranslations());
     }
 
     private function createRegistry(): ManagerRegistry

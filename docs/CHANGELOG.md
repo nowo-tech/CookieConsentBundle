@@ -78,6 +78,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `nowo-tech/ui-kit-bundle` ^2.0.
 - Removed the unused translation keys `nowo_cookie_consent.admin.layout.title`, `admin.pagination.*` and `admin.config.settings.section_tabs_label`; added `nowo_cookie_consent.admin.config.settings.lead` (all locales).
 
+### Fixed
+
+- **Cookie inventory pagination:** `CookieDefinitionRepository::findByConfigOrderedPaginated()` fetch-joins the translations, so `setMaxResults()` limited SQL rows instead of definitions (a page of 20 showed 3 cookies when each had 9 translations). It now pages through Doctrine's `Paginator`.
+
 ### Deprecated
 
 - `web_ui.chrome` (`classes`, `attributes`, `templates`, `page_title_tag`, `row_actions_display`) and the `Admin\AdminChrome` class: the class and attribute maps and the `tabs` / `pagination` partials are bridged into `nowo_ui_kit.theme.bundles.NowoCookieConsentBundle`; `templates.form_theme|form_fields|styles_after` and `row_actions_display` are still applied; `page_title_tag` is ignored. Removed in 2.0.

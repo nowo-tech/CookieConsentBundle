@@ -5,11 +5,13 @@ declare(strict_types=1);
 namespace Nowo\CookieConsentBundle\Repository;
 
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
+use Doctrine\ORM\Tools\Pagination\Paginator;
 use Doctrine\Persistence\ManagerRegistry;
 use Nowo\CookieConsentBundle\Entity\CookieConsentConfig;
 use Nowo\CookieConsentBundle\Entity\CookieDefinition;
 use SortDirection;
 
+use function iterator_to_array;
 use function max;
 
 /**
@@ -60,15 +62,21 @@ class CookieDefinitionRepository extends ServiceEntityRepository
             ->orderBy('d.sortOrder', SortDirection::Ascending)
             ->addOrderBy('d.name', SortDirection::Ascending);
 
-        if ($pageSize !== null) {
-            $page     = max(1, $page);
-            $pageSize = max(1, $pageSize);
-            $qb->setFirstResult(($page - 1) * $pageSize)
-                ->setMaxResults($pageSize);
+        if ($pageSize === null) {
+            /** @var list<CookieDefinition> $definitions */
+            $definitions = $qb->getQuery()->getResult();
+
+            return $definitions;
         }
 
+        $page     = max(1, $page);
+        $pageSize = max(1, $pageSize);
+        $qb->setFirstResult(($page - 1) * $pageSize)
+            ->setMaxResults($pageSize);
+
+        // The translations are fetch-joined: limit definitions, not SQL rows (one row per translation).
         /** @var list<CookieDefinition> $definitions */
-        $definitions = $qb->getQuery()->getResult();
+        $definitions = iterator_to_array(new Paginator($qb->getQuery(), true), false);
 
         return $definitions;
     }
