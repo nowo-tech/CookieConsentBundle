@@ -74,7 +74,7 @@ Configured for local development and debugging:
 - **Nowo Twig Inspector** (`nowo-tech/twig-inspector-bundle`) and **Nowo Hot Reload** (`nowo-tech/hot-reload-bundle`) — required together on FrankenPHP demos (dev/test only; Caddyfile Mercure + `hot_reload`, plus `worker { watch }` in worker mode). Do not enable Hot Reload in production.
 - **Symfony Debug bundle** — `dev` and `test`
 - **Nowo Twig Inspector Bundle** — installed from Packagist (`require-dev`) for template debugging
-- **Cookie Consent Bundle** — the bundle under test; includes optional Doctrine config CRUD at `/demo/admin/cookie-consent-config`
+- **Cookie Consent Bundle** — the bundle under test; includes optional Doctrine config CRUD at `/demo/admin/cookie-consent-config`; the bundle's own admin pages (`/cookie-consent-config/{id}/cookies`, `/cookie-consent-config/{id}/settings/{section}`, linked from each profile page) render with the UiKit page scaffolds inside the demo host layout `templates/admin/layout.html.twig` (`nowo_ui_kit.layouts.admin`, theme in `config/packages/nowo_ui_kit.yaml`)
 
 Example `config/bundles.php` (Symfony 8 Bootstrap demo):
 

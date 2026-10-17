@@ -9,6 +9,8 @@ import { resolve } from 'node:path';
  * - interaction: preferences step with the Analytics category switched on and expanded
  * - cookie-consent-modal-overlay / cookie-consent-modal-default: preferences step with and
  *   without the "Page overlay (disable interaction)" profile setting
+ * - admin-cookie-definitions / admin-cookie-definition-form / admin-settings: the bundle admin pages (UiKit page
+ *   scaffolds in the demo host layout, REQ-UI-003)
  */
 const outDir = process.env.SCREENSHOT_DIR
   ? resolve(process.env.SCREENSHOT_DIR)
@@ -118,5 +120,27 @@ test.describe.serial('CookieConsent screenshots', () => {
     } finally {
       await setOverlay(page, true); // restore the demo preset
     }
+  });
+});
+
+test.describe('CookieConsent admin screenshots', () => {
+  test.use({ viewport: { width: 1280, height: 900 } });
+
+  test('admin — cookie inventory (page/list)', async ({ page }) => {
+    await page.goto('/cookie-consent-config/1/cookies');
+    await expect(page.locator('[data-nowo-ui-page="list"]')).toBeVisible();
+    await page.screenshot({ path: resolve(outDir, 'admin-cookie-definitions.png') });
+  });
+
+  test('admin — cookie definition form (page/form)', async ({ page }) => {
+    await page.goto('/cookie-consent-config/1/cookies/1/edit');
+    await expect(page.locator('[data-nowo-ui-page="form"]')).toBeVisible();
+    await page.screenshot({ path: resolve(outDir, 'admin-cookie-definition-form.png') });
+  });
+
+  test('admin — profile settings with section tabs (page/settings)', async ({ page }) => {
+    await page.goto('/cookie-consent-config/1/settings/appearance');
+    await expect(page.locator('[data-nowo-ui-page="settings"]')).toBeVisible();
+    await page.screenshot({ path: resolve(outDir, 'admin-settings.png') });
   });
 });

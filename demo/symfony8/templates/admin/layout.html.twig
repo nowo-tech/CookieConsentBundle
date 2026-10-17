@@ -1,0 +1,39 @@
+{#
+  Demo host layout of the bundle admin pages — the REQ-UI-003 one-file bridge (nowo_ui_kit.layouts.admin): extends the
+  demo base (Bootstrap 5 loaded by the demo, not by the bundle) and renders every UiKit canonical block.
+  nowo-ui.unlayered.css is linked after Bootstrap so the kit rules keep their 1.x precedence over the framework.
+#}
+{% extends 'base.html.twig' %}
+
+{% block html_attributes %}{% if nowo_ui_theme.hasTokens() %} data-nowo-ui-host-tokens{% endif %}{% endblock %}
+
+{% block title %}{% block nowo_ui_document_title %}{% endblock %} · {{ 'demo.brand'|trans }}{% endblock %}
+
+{% block stylesheets %}
+    {#- demo assets: the row-action icons (nowo_ui_kit.icon_set: bootstrap-icons) -#}
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link rel="stylesheet" href="{{ asset('css/nowo-ui.unlayered.css', 'nowo_ui_kit') }}">
+    {{ nowo_ui_tokens() }}
+    {% block nowo_ui_head %}{% endblock %}
+    {% block nowo_ui_styles %}{% endblock %}
+{% endblock %}
+
+{% block body %}
+    {% include 'demo/_nav.html.twig' %}
+    {% block nowo_ui_navigation %}{% endblock %}
+    <main class="container pb-5" id="nowo-ui-content"{% if nowo_ui_bundle|default(null) %} data-nowo-ui-bundle="{{ nowo_ui_bundle }}"{% endif %}>
+        {% block nowo_ui_page_header %}{% endblock %}
+        {% block nowo_ui_flashes %}
+            {{ include(nowo_ui_partial('flashes', nowo_ui_bundle|default(null)), {bundle: nowo_ui_bundle|default(null)}) }}
+        {% endblock %}
+        {% block nowo_ui_content %}{% endblock %}
+    </main>
+    {% block nowo_ui_modals %}{% endblock %}
+{% endblock %}
+
+{% block javascripts %}
+    {% for _script in ['nowo-ui-modal', 'nowo-ui-confirm', 'nowo-ui-toast', 'nowo-ui-tabs'] %}
+        <script src="{{ asset('js/' ~ _script ~ '.js', 'nowo_ui_kit') }}" defer></script>
+    {% endfor %}
+    {% block nowo_ui_scripts %}{% endblock %}
+{% endblock %}

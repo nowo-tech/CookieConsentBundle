@@ -17,6 +17,10 @@ nowo_cookie_consent:
         - pl
         - ca
     detect_locale_from_accept_language: false
+    # The bundle admin pages (UiKit layout) never render the consent banner.
+    skip_render_routes:
+        - 'nowo_cookie_consent_cookie_definitions_*'
+        - 'nowo_cookie_consent_config_settings_*'
     categories:
         - functionality
         - analytics

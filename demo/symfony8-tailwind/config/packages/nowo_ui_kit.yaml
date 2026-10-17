@@ -1,0 +1,26 @@
+# REQ-UI-003: the bundle admin pages (/cookie-consent-config/{id}/cookies|settings) render in the demo host layout
+# (one-file bridge into base.html.twig, Tailwind from the demo) and are themed once here, like every Nowo bundle.
+nowo_ui_kit:
+    css_framework: tailwind
+    icon_set: bootstrap-icons
+    row_actions_display: icon
+    layouts:
+        admin: 'admin/layout.html.twig'
+    theme:
+        tokens:
+            primary: '#4f46e5'
+            radius: '0.5rem'
+        classes:
+            page_title: 'text-2xl font-semibold text-slate-900'
+            btn_primary: 'rounded-md bg-indigo-600 text-white hover:bg-indigo-500'
+            btn_secondary: 'rounded-md border-slate-300 bg-white text-slate-700 hover:bg-slate-50'
+            btn_danger: 'rounded-md border-red-300 text-red-700 hover:bg-red-50'
+            table_wrap: 'rounded-lg border border-slate-200 bg-white shadow-sm nowo-ui-table-wrap--flush'
+            table: 'min-w-full divide-y divide-slate-200 text-sm'
+            table_head_cell: 'px-4 py-3 text-left font-semibold text-slate-700'
+            table_cell: 'px-4 py-3 text-slate-700'
+            form_panel: 'rounded-lg border border-slate-200 bg-white p-6 shadow-sm'
+            section: 'rounded-lg border border-slate-200 bg-white shadow-sm'
+            tab_active: 'border-indigo-600 text-indigo-700'
+        attributes:
+            table: { data-demo-table: 'cookie-consent' }

@@ -18,6 +18,10 @@ nowo_cookie_consent:
         - pl
         - ca
     detect_locale_from_accept_language: false
+    # The bundle admin pages (UiKit layout) never render the consent banner.
+    skip_render_routes:
+        - 'nowo_cookie_consent_cookie_definitions_*'
+        - 'nowo_cookie_consent_config_settings_*'
     categories:
         - functionality
         - analytics
@@ -25,7 +29,6 @@ nowo_cookie_consent:
         - preferences
     web_ui:
         enabled: true
-        css_framework: tailwind
         list_page_size: 20
     # DEMO ONLY — production hosts must keep allow_unauthenticated: false and protect the admin prefix.
     security:
