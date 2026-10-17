@@ -17,8 +17,19 @@ use Symfony\Component\Security\Csrf\CsrfTokenManagerInterface;
  */
 final class DeleteCookieDefinitionType extends AbstractType
 {
-    /** Form name (and POST payload key) used by the rendered delete form: `delete_cookie_definition[_token]`. */
+    /**
+     * Base form name (and 1.x POST payload key `delete_cookie_definition[_token]`). The admin list names each row
+     * form {@see self::formName()} so the hidden token inputs get unique DOM ids.
+     */
     public const FORM_NAME = 'delete_cookie_definition';
+
+    /**
+     * Name of the delete form of one row (`delete_cookie_definition_<id>`; payload `delete_cookie_definition_<id>[_token]`).
+     */
+    public static function formName(int $definitionId): string
+    {
+        return self::FORM_NAME . '_' . $definitionId;
+    }
 
     public function __construct(private readonly CsrfTokenManagerInterface $csrfTokenManager)
     {

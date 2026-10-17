@@ -7,6 +7,7 @@ namespace Nowo\CookieConsentBundle\Entity;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 use Nowo\CookieConsentBundle\Repository\CookieDefinitionTranslationRepository;
+use Symfony\Component\Validator\Constraints as Assert;
 
 #[ORM\Entity(repositoryClass: CookieDefinitionTranslationRepository::class)]
 #[ORM\Table(name: 'dashboard_cookie_definition_translation')]
@@ -23,9 +24,12 @@ class CookieDefinitionTranslation
     private ?int $id = null;
 
     #[ORM\Column(length: 10)]
+    #[Assert\NotBlank]
+    #[Assert\Length(max: 10)]
     private string $locale = 'en';
 
     #[ORM\Column(length: 120)]
+    #[Assert\Length(max: 120)]
     private string $provider = '';
 
     #[ORM\Column(type: Types::TEXT)]

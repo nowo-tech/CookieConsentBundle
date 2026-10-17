@@ -9,6 +9,7 @@ use Nowo\CookieConsentBundle\Enum\CategoryEnum;
 use Nowo\FormKitBundle\Attribute\FormKitConfig;
 use Nowo\FormKitBundle\Form\FormOptionsTrait;
 use Symfony\Component\Form\AbstractType;
+use Symfony\Component\Form\CallbackTransformer;
 use Symfony\Component\Form\Extension\Core\Type\CollectionType;
 use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\Form\FormTypeInterface;
@@ -60,12 +61,16 @@ class CookieDefinitionType extends AbstractType
             $options['type_label_prefix'] . 'third_party' => CookieDefinition::TYPE_THIRD_PARTY,
         ];
 
+        // The entity setters take non-null strings / ints: empty submissions map to '' / 0 (empty_data) and the
+        // entity constraints (NotBlank / Length) turn them into validation errors (422) instead of a TypeError.
         $this->addText($builder, 'name', [
-            'label' => $options['label_prefix'] . 'name',
+            'label'      => $options['label_prefix'] . 'name',
+            'empty_data' => '',
         ]);
         $this->addText($builder, 'duration', [
-            'label' => $options['label_prefix'] . 'duration',
-            'help'  => $options['label_prefix'] . 'duration_help',
+            'label'      => $options['label_prefix'] . 'duration',
+            'help'       => $options['label_prefix'] . 'duration_help',
+            'empty_data' => '',
         ]);
         $this->addChoice($builder, 'category', [
             'label'   => $options['label_prefix'] . 'category',
@@ -75,8 +80,16 @@ class CookieDefinitionType extends AbstractType
             'label'   => $options['label_prefix'] . 'type',
             'choices' => $typeChoices,
         ]);
+        // ChoiceType maps an empty submission to null whatever empty_data says: keep the model a string.
+        foreach (['category', 'type'] as $choice) {
+            $builder->get($choice)->addModelTransformer(new CallbackTransformer(
+                static fn (mixed $value): mixed => $value,
+                static fn (mixed $value): mixed => $value ?? '',
+            ));
+        }
         $this->addInteger($builder, 'sortOrder', [
-            'label' => $options['label_prefix'] . 'sort_order',
+            'label'      => $options['label_prefix'] . 'sort_order',
+            'empty_data' => '0',
         ]);
         $this->addCheckbox($builder, 'allowedByDefault', [
             'label'    => $options['label_prefix'] . 'allowed_by_default',

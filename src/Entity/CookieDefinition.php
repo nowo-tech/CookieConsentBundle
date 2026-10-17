@@ -9,6 +9,7 @@ use Doctrine\Common\Collections\Collection;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 use Nowo\CookieConsentBundle\Repository\CookieDefinitionRepository;
+use Symfony\Component\Validator\Constraints as Assert;
 
 #[ORM\Entity(repositoryClass: CookieDefinitionRepository::class)]
 #[ORM\Table(name: 'dashboard_cookie_definition')]
@@ -29,15 +30,20 @@ class CookieDefinition
     private ?int $id = null;
 
     #[ORM\Column(length: 120)]
+    #[Assert\NotBlank]
+    #[Assert\Length(max: 120)]
     private string $name = '';
 
     #[ORM\Column(length: 60)]
+    #[Assert\Length(max: 60)]
     private string $duration = '';
 
     #[ORM\Column(length: 40)]
+    #[Assert\NotBlank]
     private string $category = 'required';
 
     #[ORM\Column(length: 20)]
+    #[Assert\NotBlank]
     private string $type = self::TYPE_FIRST_PARTY;
 
     #[ORM\Column(name: 'sort_order', options: ['default' => 0])]
@@ -51,6 +57,7 @@ class CookieDefinition
     private ?CookieConsentConfig $config = null;
 
     /** @var Collection<int, CookieDefinitionTranslation> */
+    #[Assert\Valid]
     #[ORM\OneToMany(targetEntity: CookieDefinitionTranslation::class, mappedBy: 'definition', cascade: ['persist', 'remove'], orphanRemoval: true)]
     private Collection $translations;
 

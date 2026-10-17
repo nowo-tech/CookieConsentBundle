@@ -164,7 +164,7 @@ final class AdminPageFixtures
 
     private static function deleteForm(int $id): FormView
     {
-        return self::forms()->createNamed(DeleteCookieDefinitionType::FORM_NAME, DeleteCookieDefinitionType::class, null, [
+        return self::forms()->createNamed(DeleteCookieDefinitionType::formName($id), DeleteCookieDefinitionType::class, null, [
             'action'        => '/cookie-consent-config/1/cookies/' . $id . '/delete',
             'csrf_token_id' => 'delete-cookie-definition-' . $id,
         ])->createView();

@@ -11,11 +11,16 @@ use Nowo\CookieConsentBundle\Entity\CookieDefinition;
 use Nowo\CookieConsentBundle\Entity\CookieDefinitionTranslation;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
+use Symfony\Bundle\FrameworkBundle\KernelBrowser;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\Filesystem\Filesystem;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 
+use function array_filter;
+use function array_merge;
+use function array_unique;
+use function array_values;
 use function bin2hex;
 use function random_bytes;
 use function sprintf;
@@ -77,7 +82,7 @@ final class AdminPagesKernelTest extends TestCase
         self::assertStringContainsString('Google', $html);
         self::assertStringContainsString('Cookies declared for this consent profile and shown in the preferences modal.', $html);
         self::assertStringContainsString('data-nowo-ui-confirm', $html);
-        self::assertStringContainsString('name="delete_cookie_definition[_token]"', $html);
+        self::assertMatchesRegularExpression('/name="delete_cookie_definition_\d+\[_token\]"/', $html);
     }
 
     /** Invalid (here: no CSRF token) submissions re-render the form page with 422. */
@@ -89,6 +94,89 @@ final class AdminPagesKernelTest extends TestCase
 
         self::assertSame(Response::HTTP_UNPROCESSABLE_ENTITY, $response->getStatusCode(), (string) $response->getContent());
         self::assertStringContainsString('data-nowo-ui-page="form"', (string) $response->getContent());
+    }
+
+    /**
+     * @return iterable<string, array{array<string, mixed>, string}>
+     */
+    public static function emptyRequiredFields(): iterable
+    {
+        yield 'empty name' => [['name' => ''], 'cookie_definition[name]'];
+        yield 'missing name' => [['name' => null], 'cookie_definition[name]'];
+        yield 'empty category' => [['category' => ''], 'cookie_definition[category]'];
+        yield 'empty party' => [['type' => ''], 'cookie_definition[type]'];
+        yield 'empty translation locale' => [['translations' => [['locale' => '', 'provider' => '', 'purpose' => '']]], 'cookie_definition[translations][0][locale]'];
+    }
+
+    /**
+     * Regression: empty required fields reached the non-nullable entity setters (setName(null) TypeError, 500).
+     * They are validation errors now: 422, the form re-rendered with the error, nothing persisted.
+     *
+     * @param array<string, mixed> $override
+     */
+    #[DataProvider('emptyRequiredFields')]
+    public function testEmptyRequiredFieldIsAValidationError(array $override, string $field): void
+    {
+        [$configId] = $this->boot([]);
+        $browser    = $this->browser();
+        $crawler    = $browser->request('GET', sprintf('/cookie-consent-config/%d/cookies/new', $configId));
+        $token      = (string) $crawler->filter('input[name="cookie_definition[_token]"]')->attr('value');
+
+        $data = array_merge([
+            'name'         => '_gid',
+            'duration'     => '1 day',
+            'category'     => 'analytics',
+            'type'         => 'first_party',
+            'sortOrder'    => '',
+            'translations' => [['locale' => 'en', 'provider' => '', 'purpose' => '']],
+            '_token'       => $token,
+        ], $override);
+        $data = array_filter($data, static fn (mixed $value): bool => $value !== null);
+
+        $crawler = $browser->request('POST', sprintf('/cookie-consent-config/%d/cookies/new', $configId), ['cookie_definition' => $data]);
+
+        self::assertSame(Response::HTTP_UNPROCESSABLE_ENTITY, $browser->getResponse()->getStatusCode(), (string) $browser->getResponse()->getContent());
+        self::assertGreaterThan(0, $crawler->filter('[name="' . $field . '"]')->closest('div')?->filter('ul li, .invalid-feedback, [id$="_errors"]')->count() ?? 0, 'error rendered next to ' . $field);
+        self::assertSame(1, $this->definitionCount(), 'nothing persisted');
+    }
+
+    public function testValidSubmissionWithOptionalFieldsEmptyIsSaved(): void
+    {
+        [$configId] = $this->boot([]);
+        $browser    = $this->browser();
+        $crawler    = $browser->request('GET', sprintf('/cookie-consent-config/%d/cookies/new', $configId));
+
+        $browser->submit($crawler->filter('form[name="cookie_definition"]')->form(), [
+            'cookie_definition[name]'                      => '_gid',
+            'cookie_definition[duration]'                  => '',
+            'cookie_definition[sortOrder]'                 => '',
+            'cookie_definition[translations][0][provider]' => '',
+            'cookie_definition[translations][0][purpose]'  => '',
+        ]);
+
+        self::assertSame(Response::HTTP_FOUND, $browser->getResponse()->getStatusCode(), (string) $browser->getResponse()->getContent());
+        self::assertSame(2, $this->definitionCount());
+    }
+
+    /**
+     * Regression: every row delete form was named delete_cookie_definition, so the hidden _token inputs shared one
+     * DOM id. Each row form has its own name / ids now, and posting it still passes the CSRF check.
+     */
+    public function testRowDeleteFormsHaveUniqueIdsAndStillDelete(): void
+    {
+        [$configId] = $this->boot([]);
+        $this->addDefinition('_gid');
+        $browser = $this->browser();
+        $crawler = $browser->request('GET', sprintf('/cookie-consent-config/%d/cookies', $configId));
+
+        $ids = $crawler->filter('dialog form input[type="hidden"]')->each(static fn ($input): string => (string) $input->attr('id'));
+        self::assertCount(2, $ids);
+        self::assertSame($ids, array_values(array_unique($ids)));
+        self::assertCount(0, $crawler->filter('form[name="delete_cookie_definition"]'), 'one form name per row');
+
+        $browser->submit($crawler->filter('dialog form')->first()->form());
+        self::assertSame(Response::HTTP_FOUND, $browser->getResponse()->getStatusCode(), (string) $browser->getResponse()->getContent());
+        self::assertSame(1, $this->definitionCount());
     }
 
     public function testLayoutAndPageTemplateOverrides(): void
@@ -149,6 +237,39 @@ final class AdminPagesKernelTest extends TestCase
         $em->flush();
 
         return [(int) $config->getId(), (int) $definition->getId()];
+    }
+
+    /** Browser on the booted kernel; no reboot between requests (the SQLite database is in memory). */
+    private function browser(): KernelBrowser
+    {
+        $browser = new KernelBrowser($this->kernel());
+        $browser->disableReboot();
+
+        return $browser;
+    }
+
+    private function definitionCount(): int
+    {
+        $container = $this->kernel()->getContainer()->get('test.service_container');
+        self::assertInstanceOf(ContainerInterface::class, $container);
+        $em = $container->get('doctrine.orm.entity_manager');
+        self::assertInstanceOf(EntityManagerInterface::class, $em);
+        $em->clear();
+
+        return $em->getRepository(CookieDefinition::class)->count([]);
+    }
+
+    private function addDefinition(string $name): void
+    {
+        $container = $this->kernel()->getContainer()->get('test.service_container');
+        self::assertInstanceOf(ContainerInterface::class, $container);
+        $em = $container->get('doctrine.orm.entity_manager');
+        self::assertInstanceOf(EntityManagerInterface::class, $em);
+        $config = $em->getRepository(CookieConsentConfig::class)->findOneBy([]);
+        self::assertInstanceOf(CookieConsentConfig::class, $config);
+        $definition = (new CookieDefinition())->setName($name)->setCategory('analytics')->setConfig($config);
+        $em->persist($definition);
+        $em->flush();
     }
 
     private function get(string $path): Response

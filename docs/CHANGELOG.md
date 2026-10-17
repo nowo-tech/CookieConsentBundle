@@ -81,6 +81,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 - **Cookie inventory pagination:** `CookieDefinitionRepository::findByConfigOrderedPaginated()` fetch-joins the translations, so `setMaxResults()` limited SQL rows instead of definitions (a page of 20 showed 3 cookies when each had 9 translations). It now pages through Doctrine's `Paginator`.
+- **Cookie definition form:** submitting an empty name (or an empty category, party or translation locale) reached the non-nullable entity setters and answered 500 (`setName(null)` TypeError). Empty text fields now map to `''` / `0` (`empty_data`, choices through a model transformer) and the entities carry validation constraints (`NotBlank` on name, category, party and translation locale; `Length` matching the columns; `Valid` on the translations), so the form is re-rendered with the errors (422). `symfony/validator` is now an explicit requirement (it already came with FormKit).
+- **Duplicate DOM ids in the cookie list:** every row delete form was named `delete_cookie_definition`, so the hidden `_token` inputs of the confirm dialogs shared one id. Each row form is now `delete_cookie_definition_<id>`; the delete action reads that payload and still accepts the 1.x `delete_cookie_definition[_token]` and a top-level `_token`.
 
 ### Deprecated
 

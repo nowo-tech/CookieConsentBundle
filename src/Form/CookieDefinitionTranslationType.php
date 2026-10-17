@@ -46,16 +46,19 @@ class CookieDefinitionTranslationType extends AbstractType
     public function buildForm(FormBuilderInterface $builder, array $options): void
     {
         $this->addText($builder, 'locale', [
-            'label' => $options['label_prefix'] . 'locale',
-            'help'  => $options['label_prefix'] . 'locale_help',
-            'attr'  => ['placeholder' => 'en'],
+            'label'      => $options['label_prefix'] . 'locale',
+            'help'       => $options['label_prefix'] . 'locale_help',
+            'attr'       => ['placeholder' => 'en'],
+            'empty_data' => '',
         ]);
         $this->addText($builder, 'provider', [
-            'label' => $options['label_prefix'] . 'provider',
+            'label'      => $options['label_prefix'] . 'provider',
+            'empty_data' => '',
         ]);
         $this->addTextarea($builder, 'purpose', [
-            'label' => $options['label_prefix'] . 'purpose',
-            'attr'  => ['rows' => 3],
+            'label'      => $options['label_prefix'] . 'purpose',
+            'attr'       => ['rows' => 3],
+            'empty_data' => '',
         ]);
     }
 

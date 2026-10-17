@@ -64,6 +64,7 @@ abstract class AbstractControllerTestCase extends TestCase
 
         $formFactory = $this->createMock(FormFactoryInterface::class);
         $formFactory->method('create')->willReturn($form);
+        $formFactory->method('createNamed')->willReturn($form);
 
         return $formFactory;
     }

@@ -129,8 +129,9 @@ Bundle block kept: `nowo_cookie_consent_admin_area_nav`.
    markup (`nowo-ui-*` + theme slots). CSS or tests targeting 1.x classes (`.card.shadow-sm`, `.table-responsive`,
    `nowo-ui-action-create` / `-save` / `-cancel`, `nowo-ui-tabs__list`) should use the theme slots and the regions
    (`[data-nowo-ui-region="table|pagination|area-nav|tabs|form"]`, `[data-testid="cookie-consent-definitions"]`,
-   `cookie-consent-definition-form`, `cookie-consent-settings`). The delete forms keep their CSRF payload
-   (`delete_cookie_definition[_token]`) and token ids.
+   `cookie-consent-definition-form`, `cookie-consent-settings`). The row delete forms are named
+   `delete_cookie_definition_<id>` (unique DOM ids); the delete action still accepts the 1.x payload
+   `delete_cookie_definition[_token]` and keeps the CSRF token ids (`delete-cookie-definition-<id>`).
 4. **Row actions** inherit `nowo_ui_kit.row_actions_display` (default `icon`); 1.x showed text. Keep the text with
    `nowo_ui_kit.row_actions_display: text` (or the deprecated `web_ui.chrome.row_actions_display: text`).
 5. **Template context.** Templates set through `web_ui.templates.<page>` receive `page` (the view model) and

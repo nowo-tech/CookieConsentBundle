@@ -116,7 +116,7 @@ final class AdminPagesTemplateTest extends PageContractTestCase
         self::assertSame(3, substr_count($content, '<dialog'));
         self::assertStringContainsString('Delete cookie "PHPSESSID"?', $content);
         self::assertStringContainsString('action="/nowo-cookie-consent-cookie-definitions-delete?configId=1&amp;id=8"', $content);
-        self::assertStringContainsString('name="delete_cookie_definition[_token]" value="token-delete-cookie-definition-8"', $content);
+        self::assertStringContainsString('name="delete_cookie_definition_8[_token]" value="token-delete-cookie-definition-8"', $content);
         self::assertStringContainsString('href="/nowo-cookie-consent-cookie-definitions-edit?configId=1&amp;id=7"', $content);
         self::assertStringContainsString('Edit _ga', $content);
     }

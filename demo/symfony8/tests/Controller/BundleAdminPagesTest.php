@@ -56,7 +56,7 @@ final class BundleAdminPagesTest extends WebTestCase
         $crawler = $client->request('GET', sprintf('/cookie-consent-config/%d/cookies', $configId));
         self::assertSelectorTextContains('[data-nowo-ui-region="table"]', '_ga');
         self::assertSelectorExists('table[data-demo-table="cookie-consent"]');
-        self::assertCount(1, $crawler->filter('dialog[data-nowo-ui-confirm] form[name="delete_cookie_definition"]'));
+        self::assertCount(1, $crawler->filter('dialog[data-nowo-ui-confirm] form[name^="delete_cookie_definition_"]'));
 
         $client->request('GET', sprintf('/cookie-consent-config/%d/cookies/new', $configId));
         $client->submitForm('Save cookie', [
@@ -71,7 +71,7 @@ final class BundleAdminPagesTest extends WebTestCase
         self::assertSelectorTextContains('.nowo-ui-flash', 'Cookie definition created.');
         self::assertSelectorTextContains('[data-nowo-ui-region="table"]', '_gid');
 
-        $form = $crawler->filter('dialog[data-nowo-ui-confirm] form[name="delete_cookie_definition"]')->first()->form();
+        $form = $crawler->filter('dialog[data-nowo-ui-confirm] form[name^="delete_cookie_definition_"]')->first()->form();
         $client->submit($form);
         self::assertResponseRedirects(sprintf('/cookie-consent-config/%d/cookies', $configId));
         $client->followRedirect();

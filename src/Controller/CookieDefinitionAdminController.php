@@ -15,6 +15,7 @@ use Nowo\CookieConsentBundle\Repository\CookieConsentConfigRepository;
 use Nowo\CookieConsentBundle\Repository\CookieDefinitionRepository;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
+use Symfony\Component\Form\FormFactoryInterface;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -149,7 +150,7 @@ final class CookieDefinitionAdminController extends AbstractController
         $config     = $this->getConfig($configId);
         $definition = $this->getDefinition($config, $id);
 
-        if (!$this->isCsrfTokenValid('delete-cookie-definition-' . $definition->getId(), $this->getDeleteCsrfToken($request))) {
+        if (!$this->isCsrfTokenValid('delete-cookie-definition-' . $definition->getId(), $this->getDeleteCsrfToken($request, $id))) {
             throw new AccessDeniedHttpException();
         }
 
@@ -164,17 +165,18 @@ final class CookieDefinitionAdminController extends AbstractController
     }
 
     /**
-     * Reads the CSRF token posted by {@see DeleteCookieDefinitionType} (`delete_cookie_definition[_token]`),
-     * falling back to a top-level `_token` field for custom templates.
+     * Reads the CSRF token posted by the row delete form (`delete_cookie_definition_<id>[_token]`), falling back to
+     * the 1.x form name (`delete_cookie_definition[_token]`) and to a top-level `_token` field for custom templates.
      *
      * @param Request $request The current HTTP request
+     * @param int $id The cookie definition identifier
      *
      * @return string The submitted token (empty when missing or not a string)
      */
-    private function getDeleteCsrfToken(Request $request): string
+    private function getDeleteCsrfToken(Request $request, int $id): string
     {
         $formData = $request->request->all();
-        $payload  = $formData[DeleteCookieDefinitionType::FORM_NAME] ?? null;
+        $payload  = $formData[DeleteCookieDefinitionType::formName($id)] ?? $formData[DeleteCookieDefinitionType::FORM_NAME] ?? null;
         $token    = is_array($payload) ? ($payload['_token'] ?? null) : ($formData['_token'] ?? null);
 
         return is_string($token) ? $token : '';
@@ -190,14 +192,19 @@ final class CookieDefinitionAdminController extends AbstractController
      */
     private function createDeleteForms(int $configId, array $definitions): array
     {
-        $forms = [];
+        $forms       = [];
+        $formFactory = $this->container->get('form.factory');
+        if (!$formFactory instanceof FormFactoryInterface) {
+            return $forms;
+        }
 
         foreach ($definitions as $definition) {
             if ($definition->getId() === null) {
                 continue;
             }
 
-            $forms[$definition->getId()] = $this->createForm(DeleteCookieDefinitionType::class, null, [
+            // One form name per row: unique ids for the hidden token inputs of the confirm dialogs.
+            $forms[$definition->getId()] = $formFactory->createNamed(DeleteCookieDefinitionType::formName($definition->getId()), DeleteCookieDefinitionType::class, null, [
                 'action' => $this->generateUrl('nowo_cookie_consent_cookie_definitions_delete', [
                     'configId' => $configId,
                     'id'       => $definition->getId(),

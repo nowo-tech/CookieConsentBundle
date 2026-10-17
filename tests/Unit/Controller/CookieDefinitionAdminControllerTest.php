@@ -195,6 +195,74 @@ final class CookieDefinitionAdminControllerTest extends AbstractControllerTestCa
         self::assertSame(302, $response->getStatusCode());
     }
 
+    /**
+     * The admin list names each row form delete_cookie_definition_<id> (unique DOM ids); its payload passes CSRF.
+     */
+    public function testDeleteAcceptsPayloadOfThePerRowDeleteForm(): void
+    {
+        $config     = $this->createEnabledConfig(1);
+        $definition = (new CookieDefinition())->setName('_ga')->setConfig($config);
+        $this->setEntityId($definition, 5);
+
+        $definitionRepository = $this->createMock(CookieDefinitionRepository::class);
+        $definitionRepository->method('find')->willReturn($definition);
+
+        $entityManager = $this->createMock(EntityManagerInterface::class);
+        $entityManager->expects(self::once())->method('remove')->with($definition);
+
+        $csrfTokenManager = new CsrfTokenManager(null, $this->createInMemoryTokenStorage());
+        $controller       = $this->createDefinitionController(
+            config: $config,
+            definitionRepository: $definitionRepository,
+            csrfTokenManager: $csrfTokenManager,
+        );
+
+        $view = Forms::createFormFactoryBuilder()
+            ->addType(new DeleteCookieDefinitionType($csrfTokenManager))
+            ->getFormFactory()
+            ->createNamed(DeleteCookieDefinitionType::formName(5), DeleteCookieDefinitionType::class, null, [
+                'action'        => '/cookie-consent-config/1/cookies/5/delete',
+                'csrf_token_id' => 'delete-cookie-definition-5',
+            ])
+            ->createView();
+        $tokenField = $view->children['_token'];
+        self::assertSame('delete_cookie_definition_5[_token]', $tokenField->vars['full_name']);
+        self::assertSame('delete_cookie_definition_5__token', $tokenField->vars['id']);
+        parse_str(http_build_query([$tokenField->vars['full_name'] => $tokenField->vars['value']]), $postBody);
+
+        $response = $controller->delete(1, 5, Request::create('/delete', 'POST', $postBody), $entityManager);
+
+        self::assertSame(302, $response->getStatusCode());
+    }
+
+    public function testIndexNamesEachDeleteFormAfterItsDefinition(): void
+    {
+        $config = $this->createEnabledConfig(1);
+        $first  = (new CookieDefinition())->setName('_ga')->setConfig($config);
+        $second = (new CookieDefinition())->setName('_gid')->setConfig($config);
+        $this->setEntityId($first, 5);
+        $this->setEntityId($second, 6);
+
+        $repo = $this->createMock(CookieDefinitionRepository::class);
+        $repo->method('countByConfig')->willReturn(2);
+        $repo->method('findByConfigOrderedPaginated')->willReturn([$first, $second]);
+
+        $names = [];
+        $form  = $this->createMock(FormInterface::class);
+        $form->method('createView')->willReturn(new FormView());
+        $formFactory = $this->createMock(FormFactoryInterface::class);
+        $formFactory->method('createNamed')->willReturnCallback(static function (string $name) use (&$names, $form): FormInterface {
+            $names[] = $name;
+
+            return $form;
+        });
+
+        $controller = $this->createDefinitionController(config: $config, definitionRepository: $repo, formFactory: $formFactory);
+        $controller->index(1, Request::create('/'));
+
+        self::assertSame(['delete_cookie_definition_5', 'delete_cookie_definition_6'], $names);
+    }
+
     public function testDeleteRejectsForgedTokenInFormPayload(): void
     {
         $config     = $this->createEnabledConfig(1);

@@ -23,7 +23,7 @@ test.describe('CookieConsent bundle admin (UiKit page contract)', () => {
     await row.locator('[data-nowo-confirm-open], [data-nowo-confirm-target]').first().click();
     const dialog = page.locator('dialog[data-nowo-ui-confirm][open]');
     await expect(dialog).toBeVisible();
-    await expect(dialog.locator('form[name="delete_cookie_definition"]')).toHaveCount(1);
+    await expect(dialog.locator('form[name^="delete_cookie_definition_"]')).toHaveCount(1);
     await dialog.locator('[data-nowo-confirm-close]').first().click();
     await expect(page.locator('dialog[data-nowo-ui-confirm][open]')).toHaveCount(0);
   });
