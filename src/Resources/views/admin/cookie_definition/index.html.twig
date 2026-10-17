@@ -1,52 +1,38 @@
-{# Cookie inventory list. Chrome hooks (1.13+): web_ui.chrome classes / attributes / templates and the
-   nowo_cookie_consent_admin_* blocks below (override from a page fork extending '@!NowoCookieConsentBundle/…'). #}
-{% extends '@NowoCookieConsentBundle/admin/base.html.twig' %}
-{% import '@NowoUiKitBundle/macros/ui.html.twig' as ui %}
-{% import '@NowoCookieConsentBundle/admin/_chrome.html.twig' as chrome %}
-{% set _css_fw = nowo_cookie_consent_css_framework|default('bootstrap5') %}
-{% set _chrome = nowo_cookie_consent_admin_chrome %}
-{% set _cls = _chrome.classes %}
-{% set _attrs = _chrome.attributes %}
+{#
+  Cookie inventory of a consent profile (REQ-UI-003): UiKit list scaffold.
+  View model: page (View\ListPage, AdminPageFactory::definitionList()); rows are plain arrays (id, name, provider,
+  purpose, category: View\Label, duration, allowedByDefault). Extra context: area_nav.
+  Data blocks: nowo_ui_list_row (cells). Bundle block: nowo_cookie_consent_admin_area_nav (above the page header).
+  Header, actions, table frame, row actions + confirm dialogs, pagination and empty state come from the scaffold.
+#}
+{% extends '@NowoUiKit/page/list.html.twig' %}
 
-{% block title %}{{ 'nowo_cookie_consent.admin.cookie_definition.title'|trans({'%profile%': config.displayName}, 'NowoCookieConsentBundle') }}{% endblock %}
+{% block nowo_ui_styles %}
+    {{ parent() }}
+    {%- if nowo_cookie_consent_admin_chrome.templates.styles_after|default(null) %}{{ include(nowo_cookie_consent_admin_chrome.templates.styles_after) }}{% endif -%}
+{% endblock %}
 
-{% block body %}
+{% block nowo_ui_page_header %}
     {% block nowo_cookie_consent_admin_area_nav %}
-        {{ include('@NowoCookieConsentBundle/admin/_admin_area_nav.html.twig', {config: config}, false) }}
+        {{ include('@NowoCookieConsentBundle/admin/_admin_area_nav.html.twig', {area_nav: area_nav|default([]), bundle: page.bundle}, false) }}
     {% endblock %}
+    {{ parent() }}
+{% endblock %}
 
-    {% block nowo_cookie_consent_admin_page_header %}
-        <div class="{{ _cls.page_header }}"{{ chrome.attrs(_attrs.page_header ?? {}) }}>
-            <div>
-                {% block nowo_cookie_consent_admin_page_title %}
-                    {% if _chrome.page_title_tag != 'none' %}
-                        <{{ _chrome.page_title_tag }} class="{{ _cls.page_title }}"{{ chrome.attrs(_attrs.page_title ?? {}) }}>{{ 'nowo_cookie_consent.admin.cookie_definition.title'|trans({'%profile%': config.displayName}, 'NowoCookieConsentBundle') }}</{{ _chrome.page_title_tag }}>
-                    {% endif %}
-                {% endblock %}
-                {% block nowo_cookie_consent_admin_page_intro %}
-                    <p class="{{ _cls.page_intro }}"{{ chrome.attrs(_attrs.page_intro ?? {}) }}>{{ 'nowo_cookie_consent.admin.cookie_definition.lead'|trans({}, 'NowoCookieConsentBundle') }}</p>
-                {% endblock %}
-            </div>
-            {% block nowo_cookie_consent_admin_page_actions %}
-                <a class="{{ _cls.button_primary ?? ui.btn('primary', null, _css_fw) }} nowo-ui-action-create" href="{{ path('nowo_cookie_consent_cookie_definitions_new', {configId: config.id}) }}"{{ chrome.attrs(_attrs.button_primary ?? {}) }}>{{ 'nowo_cookie_consent.admin.cookie_definition.new'|trans({}, 'NowoCookieConsentBundle') }}</a>
-            {% endblock %}
-        </div>
-    {% endblock %}
-
-    {% block nowo_cookie_consent_admin_table_wrapper %}
-        <div class="{{ _cls.table_panel }}"{{ chrome.attrs(_attrs.table_panel ?? {}) }}>
-            {{ include('@NowoCookieConsentBundle/admin/cookie_definition/_table.html.twig') }}
-        </div>
-    {% endblock %}
-
-    {% block nowo_cookie_consent_admin_pagination %}
-        {{ include(_chrome.templates.pagination, {
-            page: page,
-            pages: pages,
-            total: total,
-            page_size: pageSize|default(null),
-            item_count: definitions|length,
-            framework: _css_fw,
-        }) }}
-    {% endblock %}
+{% block nowo_ui_list_row %}
+    {% set _b = page.bundle %}
+    {% set _cell = nowo_ui_class('table_cell', _b) %}
+    {% set _muted = _cell ~ ' ' ~ nowo_ui_class('table_cell_muted', _b) %}
+    <td class="{{ _cell }}" data-label="{{ page.columns[0].label|nowo_ui_trans }}"><code>{{ row.name }}</code></td>
+    <td class="{{ row.provider ? _cell : _muted }}" data-label="{{ page.columns[1].label|nowo_ui_trans }}" data-nowo-ui-priority="2">{{ row.provider ?: '—' }}</td>
+    <td class="{{ row.purpose ? _cell : _muted }}" data-label="{{ page.columns[2].label|nowo_ui_trans }}" data-nowo-ui-priority="3">
+        {%- if row.purpose %}<span class="{{ nowo_ui_class('muted', _b) }}">{{ row.purpose }}</span>{% else %}—{% endif -%}
+    </td>
+    <td class="{{ _cell }}" data-label="{{ page.columns[3].label|nowo_ui_trans }}">{{ row.category|nowo_ui_trans }}</td>
+    <td class="{{ row.duration ? _cell : _muted }}" data-label="{{ page.columns[4].label|nowo_ui_trans }}" data-nowo-ui-priority="2">{{ row.duration ?: '—' }}</td>
+    <td class="{{ _cell }}" data-label="{{ page.columns[5].label|nowo_ui_trans }}" data-nowo-ui-priority="3">
+        <span class="{{ nowo_ui_class(row.allowedByDefault ? 'badge_success' : 'badge_neutral', _b) }}">
+            {{- (row.allowedByDefault ? 'nowo_cookie_consent.admin.cookie_definition.yes' : 'nowo_cookie_consent.admin.cookie_definition.no')|trans({}, 'NowoCookieConsentBundle') -}}
+        </span>
+    </td>
 {% endblock %}

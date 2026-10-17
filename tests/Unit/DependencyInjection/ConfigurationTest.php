@@ -57,9 +57,10 @@ final class ConfigurationTest extends TestCase
         self::assertSame([], $config['preference_sections']);
         self::assertTrue($config['web_ui']['enabled']);
         self::assertSame('/cookie-consent-config', $config['web_ui']['path_prefix']);
-        self::assertSame('@NowoCookieConsentBundle/admin/layout.html.twig', $config['web_ui']['layout_template']);
-        self::assertSame('bootstrap5', $config['web_ui']['css_framework']);
-        self::assertSame('bootstrap-icons', $config['web_ui']['icon_set']);
+        self::assertNull($config['web_ui']['layout_template'], 'null = UiKit admin layout (REQ-UI-003)');
+        self::assertSame([], $config['web_ui']['templates']);
+        self::assertNull($config['web_ui']['css_framework'], 'inherited from nowo_ui_kit');
+        self::assertNull($config['web_ui']['icon_set'], 'inherited from nowo_ui_kit');
         self::assertSame(20, $config['web_ui']['list_page_size']);
         self::assertNull($config['security']['access_checker']);
         self::assertSame(['ROLE_ADMIN'], $config['security']['access_roles']);
@@ -134,5 +135,81 @@ final class ConfigurationTest extends TestCase
         self::assertSame('1.15', $deprecation['version']);
         self::assertStringContainsString('"nowo_cookie_consent.' . implode('.', $path) . '"', $deprecation['message']);
         self::assertStringContainsString('ignored', $deprecation['message']);
+    }
+
+    /**
+     * @return iterable<string, array{list<string>}>
+     */
+    public static function uiContractDeprecatedKeys(): iterable
+    {
+        yield 'web_ui.css_framework' => [['web_ui', 'css_framework']];
+        yield 'web_ui.icon_set' => [['web_ui', 'icon_set']];
+        yield 'web_ui.chrome' => [['web_ui', 'chrome']];
+    }
+
+    /**
+     * REQ-UI-003: per-bundle stack / chrome keys are deprecated in favour of nowo_ui_kit.
+     *
+     * @param list<string> $path
+     */
+    #[DataProvider('uiContractDeprecatedKeys')]
+    public function testUiContractKeysAreDeprecated(array $path): void
+    {
+        $node       = (new Configuration())->getConfigTreeBuilder()->buildTree();
+        $parentPath = $node->getPath();
+        foreach ($path as $segment) {
+            self::assertInstanceOf(ArrayNode::class, $node);
+            $parentPath = $node->getPath();
+            $node       = $node->getChildren()[$segment];
+        }
+
+        self::assertInstanceOf(BaseNode::class, $node);
+        self::assertTrue($node->isDeprecated());
+        $deprecation = $node->getDeprecation($node->getName(), $parentPath);
+        self::assertSame('nowo-tech/cookie-consent-bundle', $deprecation['package']);
+        self::assertSame('1.16', $deprecation['version']);
+        self::assertStringContainsString('"nowo_cookie_consent.' . implode('.', $path) . '"', $deprecation['message']);
+    }
+
+    /**
+     * @return iterable<string, array{mixed, string|null}>
+     */
+    public static function layoutTemplates(): iterable
+    {
+        yield 'null' => [null, null];
+        yield 'empty string' => ['', null];
+        yield '1.x default (removed CDN layout)' => [Configuration::LEGACY_LAYOUT_TEMPLATE, null];
+        yield 'host layout' => ['layouts/admin.html.twig', 'layouts/admin.html.twig'];
+    }
+
+    #[DataProvider('layoutTemplates')]
+    public function testLayoutTemplateNormalization(mixed $value, ?string $expected): void
+    {
+        $config = (new Processor())->processConfiguration(new Configuration(), [['web_ui' => ['layout_template' => $value]]]);
+
+        self::assertSame($expected, $config['web_ui']['layout_template']);
+    }
+
+    public function testPageTemplatesAcceptKnownPages(): void
+    {
+        $config = (new Processor())->processConfiguration(new Configuration(), [['web_ui' => ['templates' => ['settings' => 'admin/cookie_settings.html.twig']]]]);
+
+        self::assertSame(['settings' => 'admin/cookie_settings.html.twig'], $config['web_ui']['templates']);
+    }
+
+    public function testUnknownPageTemplateIsRejected(): void
+    {
+        $this->expectException(InvalidConfigurationException::class);
+        $this->expectExceptionMessage('Unknown web_ui.templates page(s): dashboard');
+
+        (new Processor())->processConfiguration(new Configuration(), [['web_ui' => ['templates' => ['dashboard' => 'x.html.twig']]]]);
+    }
+
+    public function testDeprecatedStackOverridesAreStillAccepted(): void
+    {
+        $config = (new Processor())->processConfiguration(new Configuration(), [['web_ui' => ['css_framework' => 'tailwind', 'icon_set' => 'svg_inline']]]);
+
+        self::assertSame('tailwind', $config['web_ui']['css_framework']);
+        self::assertSame('svg_inline', $config['web_ui']['icon_set']);
     }
 }

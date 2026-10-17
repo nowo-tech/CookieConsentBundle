@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Nowo\CookieConsentBundle\Controller;
 
 use Doctrine\ORM\EntityManagerInterface;
+use Nowo\CookieConsentBundle\Admin\AdminPageFactory;
 use Nowo\CookieConsentBundle\Admin\CookieConsentConfigSettingsSection;
 use Nowo\CookieConsentBundle\Entity\CookieConsentConfig;
 use Nowo\CookieConsentBundle\Repository\CookieConsentConfigRepository;
@@ -30,10 +31,12 @@ final class CookieConsentConfigSettingsAdminController extends AbstractControlle
      *
      * @param CookieConsentConfigRepository $configRepository Repository for consent profiles
      * @param TranslatorInterface $translator Symfony translator for flash messages
+     * @param AdminPageFactory $pages UiKit view models and templates of the admin pages (REQ-UI-003)
      */
     public function __construct(
         private readonly CookieConsentConfigRepository $configRepository,
         private readonly TranslatorInterface $translator,
+        private readonly AdminPageFactory $pages,
     ) {
     }
 
@@ -102,12 +105,17 @@ final class CookieConsentConfigSettingsAdminController extends AbstractControlle
             ]);
         }
 
-        return $this->render('@NowoCookieConsentBundle/admin/config/settings.html.twig', [
+        $view = $form->createView();
+
+        return $this->render($this->pages->template('settings'), [
+            'page'     => $this->pages->settings($config, $sectionEnum, $view),
+            'area_nav' => $this->pages->areaNav($config, AdminPageFactory::AREA_SETTINGS),
+            // 1.x variables, for host templates (web_ui.templates.settings)
             'config'   => $config,
-            'form'     => $form,
+            'form'     => $view,
             'section'  => $sectionEnum,
             'sections' => CookieConsentConfigSettingsSection::cases(),
-        ]);
+        ], new Response(null, $form->isSubmitted() ? Response::HTTP_UNPROCESSABLE_ENTITY : Response::HTTP_OK));
     }
 
     private function getConfig(int $configId): CookieConsentConfig

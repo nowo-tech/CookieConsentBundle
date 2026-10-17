@@ -19,6 +19,7 @@ final class FormKitTestSupport
     {
         $profile = [
             'translation_domain' => 'NowoCookieConsentBundle',
+            'auto_help'          => false,
             'defaults'           => [
                 'attr'     => [],
                 'row_attr' => [],

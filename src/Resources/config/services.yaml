@@ -115,3 +115,10 @@ services:
     resource: '../../Form/'
     exclude: '../../Form/DataTransformer/'
     tags: ['form.type']
+
+  # REQ-UI-003 view models of the admin pages.
+  Nowo\CookieConsentBundle\Admin\AdminPageFactory:
+    arguments:
+      $layoutTemplate: '%nowo_cookie_consent.web_ui.layout_template%'
+      $rowActionsDisplay: '%nowo_cookie_consent.web_ui.row_actions_display%'
+      $templates: '%nowo_cookie_consent.web_ui.templates%'

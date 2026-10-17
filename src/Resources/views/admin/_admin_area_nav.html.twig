@@ -1,31 +1,13 @@
-{# Settings | Cookie inventory — route-based area tabs (REQ-UI-001).
-   Markup comes from web_ui.chrome.templates.tabs (default admin/_tabs.html.twig); classes from chrome.classes. #}
-{% set route = app.request.attributes.get('_route')|default('') %}
-{% set config_id = config.id|default(app.request.attributes.get('configId')) %}
-{% if config_id %}
-    {% set _chrome = nowo_cookie_consent_admin_chrome %}
-    {% set on_cookies = route starts with 'nowo_cookie_consent_cookie_definitions_' %}
-    {% set on_settings = route starts with 'nowo_cookie_consent_config_settings_' %}
-    {{ include(_chrome.templates.tabs, {
-        variant: 'area',
+{#
+  Area navigation of a consent profile (Settings | Cookie inventory), rendered above the page header of every admin
+  page through the UiKit `tabs` partial (theme slots tabs / tab / tab_active; region `area-nav`).
+  Context: area_nav (AdminPageFactory::areaNav(): list of {label: View\Label, href, current}), bundle.
+#}
+{% if area_nav|default([]) is not empty %}
+    {{ include(nowo_ui_partial('tabs', bundle|default(null)), {
+        items: area_nav,
         aria_label: 'nowo_cookie_consent.admin.area_nav.label'|trans({}, 'NowoCookieConsentBundle'),
-        nav_class: _chrome.classes.area_nav,
-        list_class: _chrome.classes.tab_list,
-        item_class: _chrome.classes.tab_item,
-        active_class: _chrome.classes.tab_item_active,
-        attr: {'data-turbo': 'false'}|merge(_chrome.attributes.area_nav ?? {}),
-        framework: nowo_cookie_consent_css_framework|default('bootstrap5'),
-        items: [
-            {
-                label: 'nowo_cookie_consent.admin.area_nav.settings'|trans({}, 'NowoCookieConsentBundle'),
-                href: path('nowo_cookie_consent_config_settings_edit', {configId: config_id}),
-                current: on_settings,
-            },
-            {
-                label: 'nowo_cookie_consent.admin.area_nav.cookies'|trans({}, 'NowoCookieConsentBundle'),
-                href: path('nowo_cookie_consent_cookie_definitions_index', {configId: config_id}),
-                current: on_cookies,
-            },
-        ],
+        region: 'area-nav',
+        bundle: bundle|default(null),
     }, false) }}
 {% endif %}

@@ -10,6 +10,7 @@ use Nowo\CookieConsentBundle\Controller\CookieConsentConfigSettingsAdminControll
 use Nowo\CookieConsentBundle\Entity\CookieConsentConfig;
 use Nowo\CookieConsentBundle\Form\Settings\CookieConsentConfigProfileSettingsType;
 use Nowo\CookieConsentBundle\Repository\CookieConsentConfigRepository;
+use Nowo\CookieConsentBundle\Tests\Support\AdminPageFixtures;
 use Nowo\CookieConsentBundle\Tests\Unit\Support\AbstractControllerTestCase;
 use ReflectionProperty;
 use Symfony\Component\Form\FormFactoryInterface;
@@ -74,7 +75,7 @@ final class CookieConsentConfigSettingsAdminControllerTest extends AbstractContr
         $translator = $this->createMock(TranslatorInterface::class);
         $translator->method('trans')->willReturn('saved');
 
-        $controller = new CookieConsentConfigSettingsAdminController($configRepository, $translator);
+        $controller = new CookieConsentConfigSettingsAdminController($configRepository, $translator, AdminPageFixtures::factory());
         $this->configureController($controller, formFactory: $formFactory);
 
         $response = $controller->section(
@@ -99,6 +100,7 @@ final class CookieConsentConfigSettingsAdminControllerTest extends AbstractContr
         $controller = new CookieConsentConfigSettingsAdminController(
             $configRepository,
             $this->createMock(TranslatorInterface::class),
+            AdminPageFixtures::factory(),
         );
         $this->configureController($controller);
 
@@ -134,7 +136,7 @@ final class CookieConsentConfigSettingsAdminControllerTest extends AbstractContr
 
         $translator = $this->createMock(TranslatorInterface::class);
 
-        $controller = new CookieConsentConfigSettingsAdminController($configRepository, $translator);
+        $controller = new CookieConsentConfigSettingsAdminController($configRepository, $translator, AdminPageFixtures::factory());
         $this->configureController($controller);
 
         return $controller;

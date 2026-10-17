@@ -4,14 +4,19 @@ declare(strict_types=1);
 
 namespace Nowo\CookieConsentBundle\Tests\Unit\DependencyInjection;
 
+use Nowo\CookieConsentBundle\Admin\AdminPageFactory;
+use Nowo\CookieConsentBundle\DependencyInjection\Configuration;
 use Nowo\CookieConsentBundle\DependencyInjection\NowoCookieConsentExtension;
 use Nowo\CookieConsentBundle\DependencyInjection\TablePrefixListener;
 use Nowo\CookieConsentBundle\EventSubscriber\CookieConsentConfigTranslationSubscriber;
 use Nowo\CookieConsentBundle\Security\AllowAllCookieConsentAccessChecker;
 use Nowo\CookieConsentBundle\Security\ConfigurableCookieConsentAccessChecker;
 use Nowo\CookieConsentBundle\Security\CookieConsentAccessCheckerInterface;
+use Nowo\CookieConsentBundle\Twig\CookieConsentAdminTwigExtension;
+use Nowo\UiKitBundle\DependencyInjection\Configuration as UiKitConfiguration;
 use PHPUnit\Framework\TestCase;
 use Symfony\Bundle\FrameworkBundle\DependencyInjection\FrameworkExtension;
+use Symfony\Component\Config\Definition\Processor;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\Definition;
 use Symfony\Component\DependencyInjection\Extension\Extension;
@@ -82,9 +87,11 @@ final class NowoCookieConsentExtensionTest extends TestCase
 
         self::assertTrue($container->getParameter('nowo_cookie_consent.web_ui.enabled'));
         self::assertSame('/cookie-consent-config', $container->getParameter('nowo_cookie_consent.web_ui.path_prefix'));
-        self::assertSame('@NowoCookieConsentBundle/admin/layout.html.twig', $container->getParameter('nowo_cookie_consent.web_ui.layout_template'));
-        self::assertSame('bootstrap5', $container->getParameter('nowo_cookie_consent.web_ui.css_framework'));
-        self::assertSame('bootstrap-icons', $container->getParameter('nowo_cookie_consent.web_ui.icon_set'));
+        self::assertNull($container->getParameter('nowo_cookie_consent.web_ui.layout_template'));
+        self::assertSame(Configuration::PAGE_TEMPLATES, $container->getParameter('nowo_cookie_consent.web_ui.templates'));
+        self::assertNull($container->getParameter('nowo_cookie_consent.web_ui.row_actions_display'));
+        self::assertNull($container->getParameter('nowo_cookie_consent.web_ui.css_framework'));
+        self::assertNull($container->getParameter('nowo_cookie_consent.web_ui.icon_set'));
         self::assertSame(20, $container->getParameter('nowo_cookie_consent.web_ui.list_page_size'));
         self::assertSame(['ROLE_ADMIN'], $container->getParameter('nowo_cookie_consent.security.access_roles'));
         self::assertFalse($container->getParameter('nowo_cookie_consent.security.allow_unauthenticated'));
@@ -264,6 +271,92 @@ final class NowoCookieConsentExtensionTest extends TestCase
         $uiKitConfigs = $container->getExtensionConfig('nowo_ui_kit');
         self::assertSame('custom', $uiKitConfigs[0]['css_framework'] ?? null);
         self::assertSame('ux_icon', $uiKitConfigs[0]['icon_set'] ?? null);
+    }
+
+    public function testLoadsPageTemplateOverridesAndLegacyRowActionsDisplay(): void
+    {
+        $container = new ContainerBuilder();
+        (new NowoCookieConsentExtension())->load([[
+            'web_ui' => [
+                'layout_template' => 'layouts/admin.html.twig',
+                'templates'       => ['settings' => 'admin/settings.html.twig'],
+                'chrome'          => ['row_actions_display' => 'icon_text'],
+            ],
+        ]], $container);
+
+        self::assertSame('layouts/admin.html.twig', $container->getParameter('nowo_cookie_consent.web_ui.layout_template'));
+        self::assertSame(['settings' => 'admin/settings.html.twig'] + Configuration::PAGE_TEMPLATES, $container->getParameter('nowo_cookie_consent.web_ui.templates'));
+        self::assertSame('icon_text', $container->getParameter('nowo_cookie_consent.web_ui.row_actions_display'));
+        self::assertTrue($container->hasDefinition(AdminPageFactory::class));
+        self::assertSame('layouts/admin.html.twig', $container->getDefinition(CookieConsentAdminTwigExtension::class)->getArgument('$layoutTemplate'));
+    }
+
+    public function testDeprecatedLayoutGlobalFallsBackToTheUiKitLayout(): void
+    {
+        $container = new ContainerBuilder();
+        (new NowoCookieConsentExtension())->load([[]], $container);
+
+        $definition = $container->getDefinition(CookieConsentAdminTwigExtension::class);
+        self::assertSame(CookieConsentAdminTwigExtension::UI_KIT_ADMIN_LAYOUT, $definition->getArgument('$layoutTemplate'));
+        self::assertSame('bootstrap5', $definition->getArgument('$cssFramework'));
+        self::assertSame('bootstrap-icons', $definition->getArgument('$iconSet'));
+    }
+
+    public function testPrependBridgesTheChromeMapIntoTheUiKitBundleTheme(): void
+    {
+        $container = $this->containerWithUiKit();
+        $container->prependExtensionConfig('nowo_cookie_consent', [
+            'web_ui' => ['chrome' => [
+                'classes'    => ['table' => 'data-table', 'button_primary' => 'btn-moss'],
+                'attributes' => ['table_panel' => ['data-testid' => 'cookie-table']],
+                'templates'  => ['pagination' => 'kit/_pagination.html.twig'],
+            ]],
+        ]);
+
+        (new NowoCookieConsentExtension())->prepend($container);
+
+        $configs = $container->getExtensionConfig('nowo_ui_kit');
+        self::assertSame([
+            'theme' => ['bundles' => ['NowoCookieConsentBundle' => [
+                'classes' => [
+                    'table'       => ['value' => 'data-table', 'framework_defaults' => false],
+                    'btn_primary' => ['value' => 'btn-moss', 'framework_defaults' => false],
+                ],
+                'attributes' => ['table_wrap' => ['data-testid' => 'cookie-table']],
+                'partials'   => ['pagination' => 'kit/_pagination.html.twig'],
+            ]]],
+        ], $configs[0] ?? null);
+
+        // The bridged exception is valid UiKit theme config.
+        $processed = (new Processor())->processConfiguration(new UiKitConfiguration(), $configs);
+        self::assertSame('kit/_pagination.html.twig', $processed['theme']['bundles']['NowoCookieConsentBundle']['partials']['pagination'] ?? null);
+    }
+
+    public function testPrependDoesNotTouchUiKitWithoutLegacyKeys(): void
+    {
+        $container = $this->containerWithUiKit();
+        $container->prependExtensionConfig('nowo_cookie_consent', ['web_ui' => ['layout_template' => 'layouts/admin.html.twig']]);
+
+        (new NowoCookieConsentExtension())->prepend($container);
+
+        self::assertSame([], $container->getExtensionConfig('nowo_ui_kit'));
+    }
+
+    private function containerWithUiKit(): ContainerBuilder
+    {
+        $container = new ContainerBuilder();
+        $container->registerExtension(new class extends Extension {
+            public function getAlias(): string
+            {
+                return 'nowo_ui_kit';
+            }
+
+            public function load(array $configs, ContainerBuilder $container): void
+            {
+            }
+        });
+
+        return $container;
     }
 
     public function testPrependSkipsUiKitWhenExtensionMissing(): void

@@ -1,66 +1,39 @@
-{# Consent profile settings (one section per route). Chrome hooks (1.13+): web_ui.chrome classes / attributes,
-   templates.form_theme / form_fields, tabs partial, and the nowo_cookie_consent_admin_* blocks. #}
-{% extends '@NowoCookieConsentBundle/admin/base.html.twig' %}
-{% import '@NowoUiKitBundle/macros/ui.html.twig' as ui %}
-{% import '@NowoCookieConsentBundle/admin/_chrome.html.twig' as chrome %}
-{% set _css_fw = nowo_cookie_consent_css_framework|default('bootstrap5') %}
-{% set _chrome = nowo_cookie_consent_admin_chrome %}
-{% set _cls = _chrome.classes %}
-{% set _attrs = _chrome.attributes %}
+{#
+  Consent profile settings, one section (tab) per route (REQ-UI-003): UiKit settings scaffold.
+  View model: page (View\SettingsPage, AdminPageFactory::settings(); only the current section has its form).
+  Extra context: area_nav.
+  Data blocks: nowo_ui_settings_section (the deprecated web_ui.chrome.templates.form_fields partial renders inside
+  the section form first when configured). Bundle block: nowo_cookie_consent_admin_area_nav (above the page header).
+  The form theme comes from the host (twig.form_themes); the deprecated web_ui.chrome.templates.form_theme still
+  applies when configured.
+#}
+{% extends '@NowoUiKit/page/settings.html.twig' %}
 
-{% set section_suffix = section.translationSuffix() %}
+{% block nowo_ui_styles %}
+    {{ parent() }}
+    {%- if nowo_cookie_consent_admin_chrome.templates.styles_after|default(null) %}{{ include(nowo_cookie_consent_admin_chrome.templates.styles_after) }}{% endif -%}
+{% endblock %}
 
-{% block title %}{{ 'nowo_cookie_consent.admin.config.settings.title'|trans({}, 'NowoCookieConsentBundle') }} — {{ config.displayName }}{% endblock %}
-
-{% block body %}
+{% block nowo_ui_page_header %}
     {% block nowo_cookie_consent_admin_area_nav %}
-        {{ include('@NowoCookieConsentBundle/admin/_admin_area_nav.html.twig', {config: config}, false) }}
+        {{ include('@NowoCookieConsentBundle/admin/_admin_area_nav.html.twig', {area_nav: area_nav|default([]), bundle: page.bundle}, false) }}
     {% endblock %}
-    {% block nowo_cookie_consent_admin_section_tabs %}
-        {{ include('@NowoCookieConsentBundle/admin/config/_settings_section_tabs.html.twig', {
-            config: config,
-            section: section,
-            sections: sections,
-        }, false) }}
-    {% endblock %}
+    {{ parent() }}
+{% endblock %}
 
-    {% block nowo_cookie_consent_admin_settings_section %}
-        <div class="{{ _cls.settings_panel }}"{{ chrome.attrs(_attrs.settings_panel ?? {}) }}>
-            {% if _cls.settings_panel_body %}<div class="{{ _cls.settings_panel_body }}">{% endif %}
-                {% block nowo_cookie_consent_admin_section_header %}
-                    <h2 class="{{ _cls.section_title }}"{{ chrome.attrs(_attrs.section_title ?? {}) }}>
-                        {{ ('nowo_cookie_consent.admin.config.settings.section.' ~ section_suffix)|trans({}, 'NowoCookieConsentBundle') }}
-                    </h2>
-                    <p class="{{ _cls.section_lead }}"{{ chrome.attrs(_attrs.section_lead ?? {}) }}>
-                        {{ ('nowo_cookie_consent.admin.config.settings.section.' ~ section_suffix ~ '_lead')|trans({}, 'NowoCookieConsentBundle') }}
-                    </p>
-                {% endblock %}
-
-                {% if _chrome.templates.form_theme %}
-                    {% form_theme form with [_chrome.templates.form_theme] %}
-                {% endif %}
-                {{ form_start(form, _cls.form ? {attr: {class: _cls.form}} : {}) }}
-                    {% block nowo_cookie_consent_admin_form_body %}
-                        {% if _chrome.templates.form_fields %}
-                            {{ include(_chrome.templates.form_fields, {form: form}, false) }}
-                        {% else %}
-                            {% for child in form %}
-                                {% if child.vars.name != '_token' %}
-                                    {{ form_row(child) }}
-                                {% endif %}
-                            {% endfor %}
-                        {% endif %}
-                    {% endblock %}
-
-                    {% block nowo_cookie_consent_admin_form_actions %}
-                        <div class="{{ _cls.settings_actions }}"{{ chrome.attrs(_attrs.settings_actions ?? {}) }}>
-                            <button type="submit" class="{{ _cls.button_primary ?? ui.btn('primary', null, _css_fw) }} nowo-ui-action-save">
-                                {{ 'nowo_cookie_consent.admin.config.settings.save'|trans({}, 'NowoCookieConsentBundle') }}
-                            </button>
-                        </div>
-                    {% endblock %}
-                {{ form_end(form) }}
-            {% if _cls.settings_panel_body %}</div>{% endif %}
-        </div>
-    {% endblock %}
+{% block nowo_ui_settings_section %}
+    {%- if section.form and nowo_cookie_consent_admin_chrome.templates.form_theme|default(null) %}
+        {% form_theme section.form with [nowo_cookie_consent_admin_chrome.templates.form_theme] %}
+    {% endif -%}
+    {%- if section.form and nowo_cookie_consent_admin_chrome.templates.form_fields|default(null) %}
+        {{ form_start(section.form, {attr: {class: nowo_ui_class('form', page.bundle), 'data-nowo-ui-region': 'form'}}) }}
+            {{ include(nowo_cookie_consent_admin_chrome.templates.form_fields, {form: section.form}, false) }}
+            {{ form_rest(section.form) }}
+            <div class="{{ nowo_ui_class('form_actions', page.bundle) }}"{{ nowo_ui_attrs('form_actions', page.bundle) }}>
+                <button type="submit" class="{{ nowo_ui_class('btn_primary', page.bundle) }}">{{ section.submitLabel|nowo_ui_trans }}</button>
+            </div>
+        {{ form_end(section.form) }}
+    {% else %}
+        {{ parent() }}
+    {% endif -%}
 {% endblock %}

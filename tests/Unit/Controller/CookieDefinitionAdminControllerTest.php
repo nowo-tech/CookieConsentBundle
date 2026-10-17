@@ -13,6 +13,7 @@ use Nowo\CookieConsentBundle\Form\CookieDefinitionType;
 use Nowo\CookieConsentBundle\Form\DeleteCookieDefinitionType;
 use Nowo\CookieConsentBundle\Repository\CookieConsentConfigRepository;
 use Nowo\CookieConsentBundle\Repository\CookieDefinitionRepository;
+use Nowo\CookieConsentBundle\Tests\Support\AdminPageFixtures;
 use Nowo\CookieConsentBundle\Tests\Unit\Support\AbstractControllerTestCase;
 use ReflectionMethod;
 use ReflectionProperty;
@@ -286,6 +287,7 @@ final class CookieDefinitionAdminControllerTest extends AbstractControllerTestCa
             $this->createMock(CookieDefinitionRepository::class),
             $this->createMock(TranslatorInterface::class),
             $this->createParameterBag(),
+            AdminPageFixtures::factory(),
         );
         $this->configureController($controller);
 
@@ -438,6 +440,7 @@ final class CookieDefinitionAdminControllerTest extends AbstractControllerTestCa
             $definitionRepository,
             $translator,
             $this->createParameterBag(),
+            AdminPageFixtures::factory(),
         );
         $this->configureController(
             $controller,

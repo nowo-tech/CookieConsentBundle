@@ -25,12 +25,12 @@ final class CookieConsentAdminTwigExtensionTest extends TestCase
         self::assertSame('svg_inline', $globals[CookieConsentAdminTwigExtension::GLOBAL_ICON_SET]);
     }
 
-    public function testDefaultGlobalsMatchBundleLayout(): void
+    public function testDefaultGlobalsPointAtTheUiKitLayout(): void
     {
         $globals = (new CookieConsentAdminTwigExtension())->getGlobals();
 
         self::assertSame(
-            '@NowoCookieConsentBundle/admin/layout.html.twig',
+            '@NowoUiKit/layout/admin.html.twig',
             $globals[CookieConsentAdminTwigExtension::GLOBAL_LAYOUT_TEMPLATE],
         );
         self::assertSame('bootstrap5', $globals[CookieConsentAdminTwigExtension::GLOBAL_CSS_FRAMEWORK]);

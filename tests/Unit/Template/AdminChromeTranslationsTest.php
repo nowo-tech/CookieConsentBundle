@@ -11,22 +11,21 @@ use Symfony\Component\Yaml\Yaml;
 use function dirname;
 
 /**
- * Every admin chrome string rendered by the admin pages exists in every shipped locale (spec 002).
+ * Every string the admin pages (UiKit scaffolds, REQ-UI-003) render exists in every shipped locale.
  */
 final class AdminChromeTranslationsTest extends TestCase
 {
     private const KEYS = [
-        'nowo_cookie_consent.admin.layout.title',
-        'nowo_cookie_consent.admin.pagination.label',
-        'nowo_cookie_consent.admin.pagination.summary',
-        'nowo_cookie_consent.admin.pagination.prev',
-        'nowo_cookie_consent.admin.pagination.next',
         'nowo_cookie_consent.admin.area_nav.label',
         'nowo_cookie_consent.admin.area_nav.settings',
         'nowo_cookie_consent.admin.area_nav.cookies',
         'nowo_cookie_consent.admin.config.settings.title',
+        'nowo_cookie_consent.admin.config.settings.lead',
+        'nowo_cookie_consent.admin.config.settings.section.profile',
+        'nowo_cookie_consent.admin.config.settings.section.profile_lead',
+        'nowo_cookie_consent.admin.config.settings.section.route_targeting',
+        'nowo_cookie_consent.admin.config.settings.section.route_targeting_lead',
         'nowo_cookie_consent.admin.config.settings.save',
-        'nowo_cookie_consent.admin.config.settings.section_tabs_label',
         'nowo_cookie_consent.admin.cookie_definition.title',
         'nowo_cookie_consent.admin.cookie_definition.lead',
         'nowo_cookie_consent.admin.cookie_definition.form_lead',
@@ -40,6 +39,10 @@ final class AdminChromeTranslationsTest extends TestCase
         'nowo_cookie_consent.admin.cookie_definition.delete_confirm',
         'nowo_cookie_consent.admin.cookie_definition.empty',
         'nowo_cookie_consent.admin.cookie_definition.table.actions',
+        'nowo_cookie_consent.admin.cookie_definition.table.name',
+        'nowo_cookie_consent.admin.cookie_definition.table.allowed_by_default',
+        'nowo_cookie_consent.admin.cookie_definition.yes',
+        'nowo_cookie_consent.admin.cookie_definition.no',
     ];
 
     /**

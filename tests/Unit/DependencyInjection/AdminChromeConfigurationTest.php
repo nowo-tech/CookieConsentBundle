@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Nowo\CookieConsentBundle\Tests\Unit\DependencyInjection;
 
-use Nowo\CookieConsentBundle\Admin\AdminChrome;
 use Nowo\CookieConsentBundle\DependencyInjection\Configuration;
 use Nowo\CookieConsentBundle\DependencyInjection\NowoCookieConsentExtension;
 use Nowo\CookieConsentBundle\Twig\CookieConsentAdminTwigExtension;
@@ -22,7 +21,7 @@ final class AdminChromeConfigurationTest extends TestCase
 
         self::assertSame([
             'page_title_tag'      => 'h1',
-            'row_actions_display' => 'text',
+            'row_actions_display' => 'inherit',
             'classes'             => [],
             'attributes'          => [],
             'templates'           => [],
@@ -81,6 +80,6 @@ final class AdminChromeConfigurationTest extends TestCase
         self::assertIsArray($chrome);
         self::assertSame('data-table', $chrome['classes']['table']);
         self::assertSame('kit/_styles.html.twig', $chrome['templates']['styles_after']);
-        self::assertSame(AdminChrome::DEFAULT_TEMPLATES['pagination'], $chrome['templates']['pagination']);
+        self::assertNull($chrome['templates']['pagination']);
     }
 }

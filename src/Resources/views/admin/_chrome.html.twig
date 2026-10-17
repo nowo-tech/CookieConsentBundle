@@ -1,5 +1,0 @@
-{# Admin chrome helpers (1.13+). Import: {% import '@NowoCookieConsentBundle/admin/_chrome.html.twig' as chrome %}
-   attrs(map) renders extra HTML attributes from web_ui.chrome.attributes (leading space per attribute). #}
-{% macro attrs(map) -%}
-    {%- for name, value in map|default({}) %} {{ name|e('html_attr') }}="{{ value }}"{% endfor -%}
-{%- endmacro %}

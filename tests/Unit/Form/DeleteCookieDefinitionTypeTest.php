@@ -23,7 +23,7 @@ final class DeleteCookieDefinitionTypeTest extends TypeTestCase
 
         self::assertSame('POST', $form->getConfig()->getMethod());
         self::assertSame('/cookie-consent-config/1/cookies/5/delete', $view->vars['action']);
-        self::assertSame('d-inline', $view->vars['attr']['class']);
+        self::assertSame([], $view->vars['attr'], 'No framework utility class: the UiKit action partial styles the form (REQ-UI-003).');
         self::assertArrayHasKey('_token', $view->children);
         self::assertSame('generated-token', $view->children['_token']->vars['value']);
     }

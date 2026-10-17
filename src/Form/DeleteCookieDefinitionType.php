@@ -44,7 +44,6 @@ final class DeleteCookieDefinitionType extends AbstractType
         $resolver->setAllowedTypes('csrf_token_id', 'string');
         $resolver->setDefaults([
             'method'          => 'POST',
-            'attr'            => ['class' => 'd-inline'],
             'csrf_protection' => false,
         ]);
     }

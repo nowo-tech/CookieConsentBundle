@@ -87,7 +87,10 @@ class NowoCookieConsentExtension extends Extension implements PrependExtensionIn
         $webUi = $config['web_ui'];
         $container->setParameter('nowo_cookie_consent.web_ui.enabled', $webUi['enabled']);
         $container->setParameter('nowo_cookie_consent.web_ui.path_prefix', $webUi['path_prefix']);
+        $chrome = AdminChrome::resolve($webUi['chrome'] ?? []);
         $container->setParameter('nowo_cookie_consent.web_ui.layout_template', $webUi['layout_template']);
+        $container->setParameter('nowo_cookie_consent.web_ui.templates', $webUi['templates'] + Configuration::PAGE_TEMPLATES);
+        $container->setParameter('nowo_cookie_consent.web_ui.row_actions_display', $chrome['row_actions_display']);
         $container->setParameter('nowo_cookie_consent.web_ui.css_framework', $webUi['css_framework']);
         $container->setParameter('nowo_cookie_consent.web_ui.icon_set', $webUi['icon_set']);
         $container->setParameter('nowo_cookie_consent.web_ui.list_page_size', $webUi['list_page_size']);
@@ -100,11 +103,12 @@ class NowoCookieConsentExtension extends Extension implements PrependExtensionIn
         $loader->load('services.yaml');
 
         if ($container->hasDefinition(CookieConsentAdminTwigExtension::class)) {
+            // Deprecated globals (1.x); the admin pages read the UiKit layout / theme instead.
             $container->getDefinition(CookieConsentAdminTwigExtension::class)
-                ->setArgument('$layoutTemplate', $webUi['layout_template'])
-                ->setArgument('$cssFramework', $webUi['css_framework'])
-                ->setArgument('$iconSet', $webUi['icon_set'])
-                ->setArgument('$chrome', AdminChrome::resolve($webUi['chrome'] ?? []));
+                ->setArgument('$layoutTemplate', $webUi['layout_template'] ?? CookieConsentAdminTwigExtension::UI_KIT_ADMIN_LAYOUT)
+                ->setArgument('$cssFramework', $webUi['css_framework'] ?? 'bootstrap5')
+                ->setArgument('$iconSet', $webUi['icon_set'] ?? 'bootstrap-icons')
+                ->setArgument('$chrome', $chrome);
         }
 
         $this->registerAccessChecker($container, $security);
@@ -195,6 +199,53 @@ class NowoCookieConsentExtension extends Extension implements PrependExtensionIn
     }
 
     /**
+     * Seeds UiKit from the bundle config when UiKit is installed: the deprecated `web_ui.css_framework` /
+     * `web_ui.icon_set` overrides (when the host has not set nowo_ui_kit's own keys) and the deprecated
+     * `web_ui.chrome` map, bridged into `nowo_ui_kit.theme.bundles.NowoCookieConsentBundle` (REQ-UI-003). Prepended,
+     * so a host's own nowo_ui_kit config still wins.
+     */
+    private function prependUiKitDefaults(ContainerBuilder $container): void
+    {
+        if (!$container->hasExtension('nowo_ui_kit')) {
+            return;
+        }
+
+        $config = $this->processConfiguration(new Configuration(), $container->getExtensionConfig(Configuration::ALIAS));
+        $webUi  = is_array($config['web_ui'] ?? null) ? $config['web_ui'] : [];
+
+        $hostHasCssFramework = false;
+        $hostHasIconSet      = false;
+        foreach ($container->getExtensionConfig('nowo_ui_kit') as $cfg) {
+            if (array_key_exists('css_framework', $cfg)) {
+                $hostHasCssFramework = true;
+            }
+            if (array_key_exists('icon_set', $cfg)) {
+                $hostHasIconSet = true;
+            }
+        }
+
+        $defaults = [];
+        $fw       = $webUi['css_framework'] ?? null;
+        if (!$hostHasCssFramework && is_string($fw)) {
+            $defaults['css_framework'] = $fw === 'bootstrap' ? 'bootstrap5' : $fw;
+        }
+        $iconSet = $webUi['icon_set'] ?? null;
+        if (!$hostHasIconSet && is_string($iconSet)) {
+            $defaults['icon_set'] = $iconSet;
+        }
+
+        $chrome = is_array($webUi['chrome'] ?? null) ? $webUi['chrome'] : [];
+        $theme  = AdminChrome::toUiKitTheme($chrome);
+        if ($theme !== []) {
+            $defaults['theme'] = ['bundles' => [AdminChrome::BUNDLE => $theme]];
+        }
+
+        if ($defaults !== []) {
+            $container->prependExtensionConfig('nowo_ui_kit', $defaults);
+        }
+    }
+
+    /**
      * When FormKit is installed, register the cookie_consent profile. Forms select it via #[FormKitConfig].
      */
     private function prependFormKitDefaults(ContainerBuilder $container): void
@@ -227,12 +278,15 @@ class NowoCookieConsentExtension extends Extension implements PrependExtensionIn
                 'cookie_consent' => [
                     'alias'              => 'cookie_consent',
                     'translation_domain' => 'NowoCookieConsentBundle',
-                    // The admin form theme (bootstrap_5_layout by default) adds form-control / form-select /
-                    // form-check-input and the .form-check wrapper itself: repeating them here doubled the
-                    // classes and nested a second .form-check around checkboxes.
+                    // The form types set every help text they have explicitly: no "{form}.{field}.help"
+                    // convention keys (the bundle ships none, so they rendered raw).
+                    'auto_help' => false,
+                    // The host form theme (e.g. bootstrap_5_layout) adds form-control / form-select /
+                    // form-check-input, the .form-check wrapper and the row spacing itself: repeating them here
+                    // doubled the classes and nested a second .form-check around checkboxes. No framework
+                    // utility classes here (REQ-UI-003): rows get their spacing from the form theme.
                     'defaults' => [
-                        'attr'     => ['class' => 'nowo-ui-input'],
-                        'row_attr' => ['class' => 'mb-2'],
+                        'attr' => ['class' => 'nowo-ui-input'],
                     ],
                     'field_types' => [
                         'checkbox' => [
@@ -252,45 +306,5 @@ class NowoCookieConsentExtension extends Extension implements PrependExtensionIn
         if ($seed !== []) {
             $container->prependExtensionConfig('nowo_form_kit', $seed);
         }
-    }
-
-    /**
-     * When UiKit is installed, seed nowo_ui_kit.css_framework / icon_set from web_ui
-     * so kit macros resolve the same stack. Does not override keys the host already set.
-     */
-    private function prependUiKitDefaults(ContainerBuilder $container): void
-    {
-        if (!$container->hasExtension('nowo_ui_kit')) {
-            return;
-        }
-
-        $hostHasCssFramework = false;
-        $hostHasIconSet      = false;
-        foreach ($container->getExtensionConfig('nowo_ui_kit') as $cfg) {
-            if (array_key_exists('css_framework', $cfg)) {
-                $hostHasCssFramework = true;
-            }
-            if (array_key_exists('icon_set', $cfg)) {
-                $hostHasIconSet = true;
-            }
-        }
-
-        if ($hostHasCssFramework && $hostHasIconSet) {
-            return;
-        }
-
-        $config   = $this->processConfiguration(new Configuration(), $container->getExtensionConfig(Configuration::ALIAS));
-        $webUi    = is_array($config['web_ui'] ?? null) ? $config['web_ui'] : [];
-        $defaults = [];
-
-        if (!$hostHasCssFramework) {
-            $fw                        = (string) ($webUi['css_framework'] ?? 'bootstrap5');
-            $defaults['css_framework'] = $fw === 'bootstrap' ? 'bootstrap5' : $fw;
-        }
-        if (!$hostHasIconSet) {
-            $defaults['icon_set'] = (string) ($webUi['icon_set'] ?? 'bootstrap-icons');
-        }
-
-        $container->prependExtensionConfig('nowo_ui_kit', $defaults);
     }
 }

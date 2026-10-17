@@ -88,8 +88,8 @@ final class CookieConsentConfigBehaviorSettingsType extends AbstractCookieConsen
             'help'     => $labelPrefix . 'preferences_bubble_icon_help',
             'required' => false,
             'attr'     => [
-                'rows'  => 4,
-                'class' => 'font-monospace',
+                'rows'       => 4,
+                'spellcheck' => 'false',
             ],
         ]);
     }

@@ -29,6 +29,20 @@ class Configuration implements ConfigurationInterface
     public const CSS_FRAMEWORKS = ['bootstrap', 'bootstrap4', 'bootstrap5', 'tailwind', 'foundation', 'custom', 'tabler', 'none'];
 
     /**
+     * `web_ui.templates.<page>` => shipped page template (REQ-UI-003 per-page override).
+     *
+     * @var array<string, string>
+     */
+    public const PAGE_TEMPLATES = [
+        'cookie_definition_index' => '@NowoCookieConsentBundle/admin/cookie_definition/index.html.twig',
+        'cookie_definition_form'  => '@NowoCookieConsentBundle/admin/cookie_definition/form.html.twig',
+        'settings'                => '@NowoCookieConsentBundle/admin/config/settings.html.twig',
+    ];
+
+    /** 1.x default of web_ui.layout_template (removed in 1.16: it loaded Bootstrap from a CDN). */
+    public const LEGACY_LAYOUT_TEMPLATE = '@NowoCookieConsentBundle/admin/layout.html.twig';
+
+    /**
      * Builds the configuration tree for bundle settings.
      *
      * @return TreeBuilder The root configuration tree builder
@@ -227,6 +241,10 @@ class Configuration implements ConfigurationInterface
                 ->end()
                 ->arrayNode('web_ui')
                     ->addDefaultsIfNotSet()
+                    ->beforeNormalization()
+                        ->ifArray()
+                        ->then(static fn (array $v): array => self::normalizeWebUi($v))
+                    ->end()
                     ->children()
                         ->booleanNode('enabled')
                             ->defaultTrue()
@@ -243,18 +261,32 @@ class Configuration implements ConfigurationInterface
                             ->end()
                         ->end()
                         ->scalarNode('layout_template')
-                            ->defaultValue('@NowoCookieConsentBundle/admin/layout.html.twig')
-                            ->cannotBeEmpty()
-                            ->info('Twig layout extended by admin pages (global nowo_cookie_consent_layout_template). Set to your app layout or a one-file bridge.')
+                            ->defaultNull()
+                            ->info('Per-bundle layout override of the admin pages (REQ-UI-003). Null (default) = the UiKit admin layout (nowo_ui_kit.layouts.admin). The layout must render the UiKit canonical blocks (nowo_ui_content, nowo_ui_page_header, …).')
+                        ->end()
+                        ->arrayNode('templates')
+                            ->info('Per-page template override (REQ-UI-003): ' . implode(', ', array_keys(self::PAGE_TEMPLATES)) . '. Use a thin template that extends the shipped one ("@!NowoCookieConsentBundle/…") and overrides a data block.')
+                            ->useAttributeAsKey('page')
+                            ->normalizeKeys(false)
+                            ->scalarPrototype()->cannotBeEmpty()->end()
+                            ->validate()
+                                ->ifTrue(static fn (array $v): bool => array_diff_key($v, self::PAGE_TEMPLATES) !== [])
+                                ->then(static function (array $v): never {
+                                    throw new InvalidArgumentException(sprintf('Unknown web_ui.templates page(s): %s. Known pages: %s.', implode(', ', array_keys(array_diff_key($v, self::PAGE_TEMPLATES))), implode(', ', array_keys(self::PAGE_TEMPLATES))));
+                                })
+                            ->end()
                         ->end()
                         ->enumNode('css_framework')
-                            ->values(self::CSS_FRAMEWORKS)
-                            ->defaultValue('bootstrap5')
-                            ->info('Host CSS stack hint: bootstrap5 | bootstrap4 | bootstrap | tailwind | foundation | tabler | custom | none.')
+                            ->values([...self::CSS_FRAMEWORKS, null])
+                            ->defaultNull()
+                            ->info('Deprecated since 1.16: set nowo_ui_kit.css_framework. When set (and nowo_ui_kit.css_framework is not), seeds the UiKit stack.')
+                            ->setDeprecated('nowo-tech/cookie-consent-bundle', '1.16', 'The "%path%.%node%" option is deprecated: the admin pages inherit nowo_ui_kit.css_framework. It will be removed in 2.0.')
                         ->end()
                         ->enumNode('icon_set')
-                            ->values(['bootstrap-icons', 'tabler-icons', 'ux_icon', 'svg_inline', 'none'])
-                            ->defaultValue('bootstrap-icons')
+                            ->values(['bootstrap-icons', 'tabler-icons', 'ux_icon', 'svg_inline', 'none', null])
+                            ->defaultNull()
+                            ->info('Deprecated since 1.16: set nowo_ui_kit.icon_set. When set (and nowo_ui_kit.icon_set is not), seeds the UiKit icon set.')
+                            ->setDeprecated('nowo-tech/cookie-consent-bundle', '1.16', 'The "%path%.%node%" option is deprecated: the admin pages inherit nowo_ui_kit.icon_set. It will be removed in 2.0.')
                         ->end()
                         ->integerNode('list_page_size')
                             ->defaultValue(20)
@@ -263,21 +295,22 @@ class Configuration implements ConfigurationInterface
                             ->info('Default page size for admin cookie definition lists.')
                         ->end()
                         ->arrayNode('chrome')
-                            ->info('Admin chrome hooks (1.13+): class map, attribute map, partial paths. Defaults reproduce the shipped markup; see docs/USAGE.md "Customising the admin chrome".')
+                            ->info('Deprecated since 1.16 (1.13 admin chrome hooks): bridged into nowo_ui_kit.theme.bundles.NowoCookieConsentBundle; see docs/UPGRADING.md "Template contract".')
+                            ->setDeprecated('nowo-tech/cookie-consent-bundle', '1.16', 'The "%path%.%node%" option is deprecated: the admin pages use the UiKit page scaffolds and theme slots; configure nowo_ui_kit.theme.bundles.NowoCookieConsentBundle (see UPGRADING "Template contract"). It will be removed in 2.0.')
                             ->addDefaultsIfNotSet()
                             ->children()
                                 ->enumNode('page_title_tag')
                                     ->values(AdminChrome::PAGE_TITLE_TAGS)
                                     ->defaultValue('h1')
-                                    ->info('Heading tag of the in-page title (list + form). Use h2 when the host layout already renders the h1, or none to hide it.')
+                                    ->info('Ignored since 1.16: the heading comes from the UiKit page_header partial (override it through theme.partials.page_header).')
                                 ->end()
                                 ->enumNode('row_actions_display')
                                     ->values(AdminChrome::ROW_ACTIONS_DISPLAYS)
-                                    ->defaultValue('text')
-                                    ->info('UiKit row actions display: text | icon | icon_text | inherit (use nowo_ui_kit.row_actions_display).')
+                                    ->defaultValue('inherit')
+                                    ->info('Row actions display of the cookie list: text | icon | icon_text | inherit (default: nowo_ui_kit.row_actions_display).')
                                 ->end()
                                 ->arrayNode('classes')
-                                    ->info('Element key => CSS class string replacing the default (see AdminChrome::DEFAULT_CLASSES). ~ = UiKit macro default.')
+                                    ->info('1.x element key => classes (see AdminChrome::SLOT_MAP), bridged into the UiKit theme slots.')
                                     ->useAttributeAsKey('name')
                                     ->normalizeKeys(false)
                                     ->scalarPrototype()->end()
@@ -289,7 +322,7 @@ class Configuration implements ConfigurationInterface
                                     ->end()
                                 ->end()
                                 ->arrayNode('attributes')
-                                    ->info('Element key (same keys as classes) => extra HTML attributes, e.g. {table_panel: {data-testid: cookie-table}}.')
+                                    ->info('1.x element key (same keys as classes) => extra HTML attributes, bridged into the UiKit theme slot attributes.')
                                     ->useAttributeAsKey('name')
                                     ->normalizeKeys(false)
                                     ->arrayPrototype()
@@ -305,7 +338,7 @@ class Configuration implements ConfigurationInterface
                                     ->end()
                                 ->end()
                                 ->arrayNode('templates')
-                                    ->info('Partial paths: tabs, pagination, form_theme (~ = none), form_fields (~ = bundle loop), styles_after (~ = none).')
+                                    ->info('Partial paths: tabs / pagination (bridged to the UiKit partials), form_theme, form_fields, styles_after (still applied by the admin pages).')
                                     ->useAttributeAsKey('name')
                                     ->normalizeKeys(false)
                                     ->scalarPrototype()->end()
@@ -341,5 +374,23 @@ class Configuration implements ConfigurationInterface
             ->end();
 
         return $treeBuilder;
+    }
+
+    /**
+     * `web_ui` before normalization: the 1.x default layout (`@NowoCookieConsentBundle/admin/layout.html.twig`,
+     * removed in 1.16) set explicitly, or an empty string, means "the UiKit layout" (null).
+     *
+     * @param array<string, mixed> $webUi
+     *
+     * @return array<string, mixed>
+     */
+    private static function normalizeWebUi(array $webUi): array
+    {
+        $layout = $webUi['layout_template'] ?? null;
+        if (is_string($layout) && (trim($layout) === '' || $layout === self::LEGACY_LAYOUT_TEMPLATE)) {
+            $webUi['layout_template'] = null;
+        }
+
+        return $webUi;
     }
 }

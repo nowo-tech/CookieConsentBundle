@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Nowo\CookieConsentBundle\Controller;
 
 use Doctrine\ORM\EntityManagerInterface;
+use Nowo\CookieConsentBundle\Admin\AdminPageFactory;
 use Nowo\CookieConsentBundle\Entity\CookieConsentConfig;
 use Nowo\CookieConsentBundle\Entity\CookieDefinition;
 use Nowo\CookieConsentBundle\Entity\CookieDefinitionTranslation;
@@ -43,12 +44,14 @@ final class CookieDefinitionAdminController extends AbstractController
      * @param CookieDefinitionRepository $definitionRepository Repository for cookie definitions
      * @param TranslatorInterface $translator Symfony translator for flash messages
      * @param ParameterBagInterface $parameterBag Container parameters (list page size)
+     * @param AdminPageFactory $pages UiKit view models and templates of the admin pages (REQ-UI-003)
      */
     public function __construct(
         private readonly CookieConsentConfigRepository $configRepository,
         private readonly CookieDefinitionRepository $definitionRepository,
         private readonly TranslatorInterface $translator,
         private readonly ParameterBagInterface $parameterBag,
+        private readonly AdminPageFactory $pages,
     ) {
     }
 
@@ -73,12 +76,15 @@ final class CookieDefinitionAdminController extends AbstractController
         }
 
         $definitions = $this->definitionRepository->findByConfigOrderedPaginated($config, $page, $pageSize);
+        $deleteForms = $this->createDeleteForms($configId, $definitions);
 
-        return $this->render('@NowoCookieConsentBundle/admin/cookie_definition/index.html.twig', [
+        return $this->render($this->pages->template('cookie_definition_index'), [
+            'page'     => $this->pages->definitionList($config, $definitions, $deleteForms, $page, $pageSize, $total, $request->getLocale()),
+            'area_nav' => $this->pages->areaNav($config, AdminPageFactory::AREA_COOKIES),
+            // 1.x variables, for host templates (web_ui.templates.cookie_definition_index)
             'config'       => $config,
             'definitions'  => $definitions,
-            'delete_forms' => $this->createDeleteForms($configId, $definitions),
-            'page'         => $page,
+            'delete_forms' => $deleteForms,
             'pages'        => $pages,
             'total'        => $total,
             'pageSize'     => $pageSize,
@@ -241,12 +247,17 @@ final class CookieDefinitionAdminController extends AbstractController
             ]);
         }
 
-        return $this->render('@NowoCookieConsentBundle/admin/cookie_definition/form.html.twig', [
+        $view = $form->createView();
+
+        return $this->render($this->pages->template('cookie_definition_form'), [
+            'page'     => $this->pages->definitionForm($config, $definition, $view, $isNew),
+            'area_nav' => $this->pages->areaNav($config, AdminPageFactory::AREA_COOKIES),
+            // 1.x variables, for host templates (web_ui.templates.cookie_definition_form)
             'config'     => $config,
             'definition' => $definition,
-            'form'       => $form,
+            'form'       => $view,
             'isNew'      => $isNew,
-        ]);
+        ], new Response(null, $form->isSubmitted() ? Response::HTTP_UNPROCESSABLE_ENTITY : Response::HTTP_OK));
     }
 
     private function ensureTranslationForLocale(CookieDefinition $definition, string $locale): void
