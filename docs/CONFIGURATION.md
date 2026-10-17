@@ -196,11 +196,12 @@ nowo_cookie_consent:
 |-----|---------|-------------|
 | `web_ui.enabled` | `true` | Admin UI on/off (admin routes answer 404 when `false`) |
 | `web_ui.path_prefix` | `/cookie-consent-config` | **Deprecated since 1.15, ignored.** Admin routes are always `/cookie-consent-config/…`; move them with the `prefix` of the routes import |
-| `web_ui.layout_template` | `@NowoCookieConsentBundle/admin/layout.html.twig` | Root layout extended by admin pages |
-| `web_ui.css_framework` | `bootstrap5` | Admin CSS stack hint |
-| `web_ui.icon_set` | `bootstrap-icons` | `bootstrap-icons`, `tabler-icons`, `ux_icon`, `svg_inline`, `none` |
+| `web_ui.layout_template` | `null` | Per-bundle layout override; `null` = UiKit `nowo_ui_kit.layouts.admin` (REQ-UI-003) |
+| `web_ui.templates.<page>` | `{}` | Per-page template override: `cookie_definition_index`, `cookie_definition_form`, `settings` |
 | `web_ui.list_page_size` | `20` | Page size of admin lists |
-| `web_ui.chrome.*` | see [Admin Web UI](#admin-web-ui) | `page_title_tag`, `row_actions_display`, `classes`, `attributes`, `templates` |
+| `web_ui.css_framework` | `null` | **Deprecated since 1.16** — set `nowo_ui_kit.css_framework` |
+| `web_ui.icon_set` | `null` | **Deprecated since 1.16** — set `nowo_ui_kit.icon_set` |
+| `web_ui.chrome.*` | — | **Deprecated since 1.16** — bridged into `nowo_ui_kit.theme.bundles.NowoCookieConsentBundle` (see [Admin Web UI](#admin-web-ui)) |
 | `security.access_checker` | `null` | Service id implementing `CookieConsentAccessCheckerInterface` |
 | `security.access_roles` | `[ROLE_ADMIN]` | Roles allowed in the admin (empty = deny) |
 | `security.allow_unauthenticated` | `false` | Demo/dev only |
@@ -522,68 +523,63 @@ The frontend script reads `data-nowo-config-url` on the modal, performs a `GET`,
 
 ## Admin Web UI
 
-Admin pages extend `@NowoCookieConsentBundle/admin/base.html.twig`, which extends `web_ui.layout_template` (Twig global `nowo_cookie_consent_layout_template`) and stacks `stylesheets` / `javascripts` with `{{ parent() }}` (REQ-UI-001). Prefer pointing `layout_template` at your project layout (or a thin bridge that maps `nowo_ui_content` into your `body` block) instead of copying list/form templates. The default `admin/layout.html.twig` is a full HTML document (no `parent()`).
-
-> **`ui_theme` vs `web_ui.css_framework`**
->
-> These are independent settings:
->
-> | Setting | Scope | Default | Controls |
-> | --- | --- | --- | --- |
-> | `ui_theme` | **Public modal** | `bootstrap` | Markup variant for the GDPR consent modal rendered on the front-end (`bootstrap` or `tailwind`). Does not affect admin pages. |
-> | `web_ui.css_framework` | **Admin UI** | `bootstrap5` | CSS stack loaded in the bundle's admin layout. When set to `bootstrap`, `bootstrap4`, `bootstrap5`, or `tabler` the Bootstrap 5 CDN link is included automatically. For any other value (`custom`, `tailwind`, `none`, `foundation`) the layout injects UiKit `nowo-ui.css` via package `nowo_ui_kit`. |
->
-> Change `web_ui.css_framework` without affecting the public modal, and vice-versa.
+The admin pages (cookie inventory, cookie definition form, profile settings) follow the **UiKit 2.0 page contract**
+(REQ-UI-003): each page extends a UiKit scaffold (`page/list`, `page/form`, `page/settings`), the controllers pass UiKit
+view models, and every structural element (page header, area / section tabs, table, row actions, confirm dialogs,
+pagination, empty state, form frame, flashes) is painted by UiKit's theme slots. You theme them **once** in
+`nowo_ui_kit` for every Nowo bundle; nothing in this bundle loads CSS frameworks from a CDN. Page → scaffold map, data
+blocks and view-model fields: [TEMPLATES.md](TEMPLATES.md).
 
 | Option | Default | Description |
 | --- | --- | --- |
 | `web_ui.enabled` | `true` | Enables the admin UI (access enforced by `CookieConsentAdminAccessSubscriber`). When `false`, admin routes answer 404 |
 | `web_ui.path_prefix` | `/cookie-consent-config` | **Deprecated since 1.15 and ignored** (setting it triggers a deprecation). Admin routes are always mounted under `/cookie-consent-config`; to move them use the `prefix` option when importing `@NowoCookieConsentBundle/Resources/config/routing.yaml`, and protect the final path with `access_control` |
-| `web_ui.layout_template` | `@NowoCookieConsentBundle/admin/layout.html.twig` | Root Twig layout extended by `admin/base.html.twig` |
-| `web_ui.css_framework` | `bootstrap5` | Host CSS stack hint (`bootstrap` / `bootstrap4` / `bootstrap5` / `tabler` → Bootstrap CDN; `custom` / `tailwind` / `none` / `foundation` → UiKit `nowo-ui.css` via `nowo_ui_kit`) |
-| `web_ui.icon_set` | `bootstrap-icons` | Icon hint |
+| `web_ui.layout_template` | `null` | Per-bundle layout override. `null` = `nowo_ui_kit.layouts.admin` (default `@NowoUiKit/layout/admin.html.twig`). The layout must render the UiKit canonical blocks (`nowo_ui_content`, `nowo_ui_page_header`, `nowo_ui_flashes`, …). The 1.x value `@NowoCookieConsentBundle/admin/layout.html.twig` is treated as `null` |
+| `web_ui.templates.<page>` | `{}` | Per-page template (`cookie_definition_index`, `cookie_definition_form`, `settings`): a thin template extending `@!NowoCookieConsentBundle/…` that overrides a data block. Unknown pages fail at compile time |
 | `web_ui.list_page_size` | `20` | Page size for cookie definition admin lists |
-| `web_ui.chrome.page_title_tag` | `h1` | In-page title tag (`h1`…`h6`, `none`) — 1.13+ |
-| `web_ui.chrome.row_actions_display` | `text` | Row actions: `text` / `icon` / `icon_text` / `inherit` (UiKit setting) — 1.13+ |
-| `web_ui.chrome.classes` | `{}` | Element → CSS class map (defaults = shipped markup) — 1.13+ |
-| `web_ui.chrome.attributes` | `{}` | Element → extra HTML attributes — 1.13+ |
-| `web_ui.chrome.templates` | `{}` | `tabs`, `pagination`, `form_theme`, `form_fields`, `styles_after` partial paths — 1.13+ |
+| `web_ui.css_framework` | `null` | **Deprecated since 1.16.** When set and `nowo_ui_kit.css_framework` is not, seeds it (as before) |
+| `web_ui.icon_set` | `null` | **Deprecated since 1.16.** When set and `nowo_ui_kit.icon_set` is not, seeds it |
+| `web_ui.chrome.classes` / `.attributes` / `.templates.tabs` / `.templates.pagination` | `{}` | **Deprecated since 1.16.** Bridged into `nowo_ui_kit.theme.bundles.NowoCookieConsentBundle` (classes → slots with `framework_defaults: false`, attributes → slot attributes, partials → UiKit partials); mapping in [UPGRADING — Template contract](UPGRADING.md#template-contract-116) |
+| `web_ui.chrome.templates.form_theme` / `.form_fields` / `.styles_after` | `~` | **Deprecated since 1.16**, still applied by the admin pages (no theme slot equivalent) |
+| `web_ui.chrome.row_actions_display` | `inherit` | **Deprecated since 1.16.** `text` / `icon` / `icon_text` forces the display of the list row actions; `inherit` = `nowo_ui_kit.row_actions_display` |
+| `web_ui.chrome.page_title_tag` | `h1` | **Deprecated since 1.16 and ignored** — the heading comes from the UiKit `page_header` partial |
 
-See [USAGE.md — Customising the admin chrome](USAGE.md#customising-the-admin-chrome) for keys, defaults and partial contracts.
+> **`ui_theme` vs the admin stack**
+>
+> `ui_theme` (`bootstrap` / `tailwind`) only selects the markup of the **public consent modal**. The admin pages take
+> their CSS stack (`css_framework`), icons and row-action display from **`nowo_ui_kit`**.
+
+Typical host configuration (once for every Nowo bundle):
 
 ```yaml
+# config/packages/nowo_ui_kit.yaml
+nowo_ui_kit:
+    css_framework: bootstrap5
+    layouts:
+        admin: 'layouts/admin.html.twig'   # your layout or a one-file bridge rendering the nowo_ui_* blocks
+    theme:
+        tokens: { primary: '#0f766e' }
+        classes: { table: 'data-table' }
+        bundles:                            # optional exceptions for this bundle only
+            NowoCookieConsentBundle:
+                classes: { table: 'data-table data-table--dense' }
+
+# config/packages/twig.yaml — the admin forms use your form theme
+twig:
+    form_themes: ['bootstrap_5_layout.html.twig']
+```
+
+```yaml
+# config/packages/nowo_cookie_consent.yaml
 nowo_cookie_consent:
     web_ui:
-        layout_template: 'base.html.twig'
-        css_framework: bootstrap5   # change to custom/tailwind/none to drop Bootstrap CDN
         list_page_size: 20
+        # layout_template: 'layouts/cookie_admin.html.twig'   # only to differ from nowo_ui_kit.layouts.admin
 ```
 
-### Using a custom CSS framework (no Bootstrap CDN)
-
-Set `web_ui.css_framework: custom` (or `tailwind` / `none`) to remove the Bootstrap CDN dependency from the admin layout. The bundle then automatically links UiKit admin stylesheet (`nowo-ui.css`) from the `nowo_ui_kit` asset package:
-
-```yaml
-nowo_cookie_consent:
-    web_ui:
-        css_framework: custom
-```
-
-UiKit `nowo-ui.css` ships semantic styles plus `--nowo-ui-*` CSS custom properties for easy token overrides. Override tokens in your host CSS:
-
-```css
-/* Override design tokens scoped to the admin root */
-.nowo-ui-root {
-    --nowo-ui-primary:       #6366f1;
-    --nowo-ui-primary-hover: #4f46e5;
-    --nowo-ui-bg:            #f9fafb;
-    --nowo-ui-border-radius: 0.5rem;
-}
-```
-
-If you supply your own host layout via `web_ui.layout_template`, load your CSS there and set `css_framework: custom` so the bundle does not inject its fallback stylesheet.
-
-When using the project layout, load host CSS/JS in that layout; `admin/base.html.twig` stacks them with `{{ parent() }}` on both `stylesheets` and `javascripts`. Semantic hooks use `nowo-ui-*` classes. Legacy templates under `admin/cookie_definition/layout.html.twig` and `admin/config/layout.html.twig` remain as BC aliases that extend `admin/base.html.twig`.
+The bundle ships no admin layout. UiKit's `layout/admin.html.twig` loads `nowo-ui.css` and the UiKit scripts from the
+`nowo_ui_kit` asset package; load your CSS framework in your own layout (see the demos: `demo/symfony8` Bootstrap,
+`demo/symfony8-tailwind` Tailwind).
 
 ## Admin security
 

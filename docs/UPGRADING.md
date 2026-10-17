@@ -3,6 +3,7 @@
 ## Table of contents
 
 - [Unreleased](#unreleased)
+  - [Template contract (1.16)](#template-contract-116)
 - [To 1.15.2](#to-1152)
 - [To 1.15.1](#to-1151)
 - [To 1.15.0](#to-1150)
@@ -96,6 +97,118 @@
 - [Getting help](#getting-help)
 
 ## Unreleased
+
+### Template contract (1.16)
+
+The admin pages follow the **UiKit 2.0 page contract** (REQ-UI-003). Hosts that only configured
+`nowo_cookie_consent` / `nowo_ui_kit` need no template work; check the points below.
+
+**Pages → scaffolds** ([TEMPLATES.md](TEMPLATES.md))
+
+| Page | Template | Scaffold / view model | Data blocks |
+| --- | --- | --- | --- |
+| Cookie inventory | `admin/cookie_definition/index.html.twig` | `page/list` / `ListPage` | `nowo_ui_list_row` |
+| Cookie definition | `admin/cookie_definition/form.html.twig` | `page/form` / `FormPage` | `nowo_ui_form_body` |
+| Profile settings | `admin/config/settings.html.twig` | `page/settings` / `SettingsPage` | `nowo_ui_settings_section` |
+
+Bundle block kept: `nowo_cookie_consent_admin_area_nav`.
+
+**What hosts may notice**
+
+1. **Layout.** `web_ui.layout_template` defaults to `null`: the pages render in `nowo_ui_kit.layouts.admin` (default
+   `@NowoUiKit/layout/admin.html.twig`, which loads `nowo-ui.css` but **no CSS framework**). The removed default
+   `@NowoCookieConsentBundle/admin/layout.html.twig` (Bootstrap 5.3.3 from jsDelivr) is treated as `null` when set
+   explicitly. Point `nowo_ui_kit.layouts.admin` (or `web_ui.layout_template`) at a layout that loads your CSS and
+   renders the canonical blocks (`nowo_ui_document_title`, `nowo_ui_head`, `nowo_ui_styles`, `nowo_ui_navigation`,
+   `nowo_ui_page_header`, `nowo_ui_flashes`, `nowo_ui_content`, `nowo_ui_modals`, `nowo_ui_scripts`). A 1.x layout
+   that only rendered `body` / `title` / `stylesheets` / `javascripts` needs those blocks (UiKit
+   `docs/PAGE_CONTRACT.md#example-host-integration` has a one-file bridge).
+2. **Form theme.** `bootstrap_5_layout.html.twig` is no longer forced on the admin forms: set `twig.form_themes`
+   (or keep the deprecated `web_ui.chrome.templates.form_theme`).
+3. **Markup.** Header, tabs, table, row actions, confirm `<dialog>`s, pagination, empty state and form frame are UiKit
+   markup (`nowo-ui-*` + theme slots). CSS or tests targeting 1.x classes (`.card.shadow-sm`, `.table-responsive`,
+   `nowo-ui-action-create` / `-save` / `-cancel`, `nowo-ui-tabs__list`) should use the theme slots and the regions
+   (`[data-nowo-ui-region="table|pagination|area-nav|tabs|form"]`, `[data-testid="cookie-consent-definitions"]`,
+   `cookie-consent-definition-form`, `cookie-consent-settings`). The delete forms keep their CSRF payload
+   (`delete_cookie_definition[_token]`) and token ids.
+4. **Row actions** inherit `nowo_ui_kit.row_actions_display` (default `icon`); 1.x showed text. Keep the text with
+   `nowo_ui_kit.row_actions_display: text` (or the deprecated `web_ui.chrome.row_actions_display: text`).
+5. **Template context.** Templates set through `web_ui.templates.<page>` receive `page` (the view model) and
+   `area_nav`; the 1.x variables stay (`config`, `definitions`, `delete_forms`, `pages`, `total`, `pageSize`,
+   `definition`, `form`, `isNew`, `section`, `sections`) except `page`, which was the page number (use
+   `page.pagination.page`).
+
+**Removed templates:** `admin/layout.html.twig`, `admin/base.html.twig`, `admin/_pagination.html.twig`,
+`admin/_tabs.html.twig`, `admin/_chrome.html.twig`, `admin/cookie_definition/_table.html.twig`,
+`admin/config/_settings_section_tabs.html.twig`, `admin/cookie_definition/layout.html.twig`,
+`admin/config/layout.html.twig`. **Removed blocks:** `nowo_cookie_consent_admin_page_header|page_title|page_intro|
+page_actions|table_wrapper|pagination|table_head|row_actions|empty_state|form_wrapper|form_body|form_actions|
+section_tabs|settings_section|section_header|styles_after` → use the scaffold data blocks, the UiKit theme or a
+scaffold override (`templates/bundles/NowoUiKitBundle/page/*.html.twig`).
+
+**Migrating overrides.** Delete forks under `templates/bundles/NowoCookieConsentBundle/admin/`. For a genuinely
+bundle-specific change use `web_ui.templates.<page>` with a thin
+`{% extends '@!NowoCookieConsentBundle/admin/…' %}` that overrides a data block.
+
+**Deprecated configuration** (still read in 1.x, removed in 2.0)
+
+| Key | Replacement |
+| --- | --- |
+| `web_ui.css_framework` | `nowo_ui_kit.css_framework` (still seeded from this key when unset there) |
+| `web_ui.icon_set` | `nowo_ui_kit.icon_set` (same) |
+| `web_ui.chrome.classes.*` / `attributes.*` | `nowo_ui_kit.theme.bundles.NowoCookieConsentBundle.classes` / `.attributes` (bridged automatically, table below) |
+| `web_ui.chrome.templates.tabs` / `pagination` | `…NowoCookieConsentBundle.partials.tabs` / `pagination` (bridged; the partials now receive UiKit's input: `items` / `pagination`) |
+| `web_ui.chrome.templates.form_theme` | `twig.form_themes` (still applied) |
+| `web_ui.chrome.templates.form_fields` | `web_ui.templates.<page>` overriding `nowo_ui_form_body` / `nowo_ui_settings_section` (still applied) |
+| `web_ui.chrome.templates.styles_after` | your layout's `nowo_ui_styles` or `theme.tokens` (still applied) |
+| `web_ui.chrome.row_actions_display` | `nowo_ui_kit.row_actions_display` (still applied when not `inherit`) |
+| `web_ui.chrome.page_title_tag` | `theme.partials.page_header` (ignored) |
+| Twig globals `nowo_cookie_consent_layout_template`, `_css_framework`, `_icon_set` | `nowo_ui_layout`, `nowo_ui_kit_css_framework`, `nowo_ui_kit_icon_set` |
+
+**`web_ui.chrome` → UiKit slot bridge** (classes are bridged with `framework_defaults: false`, i.e. they replace the
+whole class list as in 1.x; a host `nowo_ui_kit.theme.bundles.NowoCookieConsentBundle` entry wins):
+
+| 1.x key | UiKit slot |
+| --- | --- |
+| `page_header` (else `page_header_form`) | `page_header` |
+| `page_title` / `page_intro` | `page_title` / `page_intro` |
+| `area_nav`, `section_tabs` | `tabs` |
+| `tab_item` / `tab_item_active` | `tab` / `tab_active` (= `tab_item` + `tab_item_active`) |
+| `table_panel`, `table_wrap` | `table_wrap` |
+| `table` | `table` |
+| `table_muted_cell` / `table_actions_cell` / `empty_cell` | `table_cell_muted` / `table_actions_cell` / `empty` |
+| `form_panel` | `form_panel` |
+| `settings_panel` / `settings_panel_body` | `section` / `card_body` |
+| `form` | `form` |
+| `settings_actions`, `form_actions` | `form_actions` |
+| `section_title` / `section_lead` | `card_title` / `card_intro` |
+| `button_primary` / `button_secondary` / `confirm_delete` | `btn_primary` / `btn_secondary` / `btn_danger` |
+| `pagination` / `pagination_summary` / `pagination_button` | `pagination` / `pagination_info` / `pagination_link` |
+| `tab_list`, `form_panel_body`, `confirm_cancel`, `pagination_actions` | — (no slot; ignored) |
+
+```yaml
+# Before (1.13–1.15)
+nowo_cookie_consent:
+    web_ui:
+        layout_template: 'admin/_cookie_consent_layout.html.twig'
+        css_framework: tailwind
+        chrome:
+            classes: { table: 'data-table', button_primary: 'btn-primary' }
+            attributes: { table_panel: { data-testid: cookie-consent-definitions-table } }
+
+# After (1.16)
+nowo_ui_kit:
+    css_framework: tailwind
+    layouts: { admin: 'layouts/admin.html.twig' }   # renders the nowo_ui_* blocks
+    theme:
+        bundles:
+            NowoCookieConsentBundle:
+                classes:
+                    table: { value: 'data-table', framework_defaults: false }
+                    btn_primary: { value: 'btn-primary', framework_defaults: false }
+                attributes: { table_wrap: { data-testid: cookie-consent-definitions-table } }
+```
+
 
 ## To 1.15.2
 

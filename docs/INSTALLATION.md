@@ -128,4 +128,4 @@ Then install public assets (UiKit `nowo_ui_kit` package + this bundle’s modal 
 php bin/console assets:install
 ```
 
-Admin shells load UiKit `nowo-ui.css` / `nowo-ui-confirm.js` via `admin/base.html.twig`. Cookie-consent modal CSS/JS stay on the `nowo_cookie_consent` asset package.
+The admin pages render in the UiKit admin layout (`nowo_ui_kit.layouts.admin`), which loads `nowo-ui.css` and the UiKit scripts (`nowo-ui-confirm.js`…) from the `nowo_ui_kit` asset package; point it at your own layout to load your CSS framework ([CONFIGURATION — Admin Web UI](CONFIGURATION.md#admin-web-ui)). Cookie-consent modal CSS/JS stay on the `nowo_cookie_consent` asset package.

@@ -6,6 +6,12 @@
 |----------|-------------|
 | ![Cookie consent banner](images/demo/overview.webp) | ![Cookie consent preferences panel](images/demo/interaction.webp) |
 
+Admin pages (UiKit page scaffolds with the demo host theme):
+
+| Cookie inventory (`page/list`) | Cookie definition (`page/form`) | Profile settings (`page/settings`) |
+|---|---|---|
+| ![Cookie inventory admin list](images/demo/admin-cookie-definitions.webp) | ![Cookie definition admin form](images/demo/admin-cookie-definition-form.webp) | ![Profile settings admin with section tabs](images/demo/admin-settings.webp) |
+
 Regenerate with `make -C demo/symfony8 demo-screenshots` (REQ-DEMO-013).
 
 ## Table of contents
@@ -20,7 +26,7 @@ Regenerate with `make -C demo/symfony8 demo-screenshots` (REQ-DEMO-013).
 - [Preferences bubble icon](#preferences-bubble-icon)
 - [AJAX submission](#ajax-submission)
 - [Consent logging](#consent-logging)
-- [Customising the admin chrome](#customising-the-admin-chrome)
+- [Theming the admin pages](#theming-the-admin-pages)
 - [Overriding templates (REQ-TWIG-001)](#overriding-templates-req-twig-001)
 - [Database profile copy (`nowo_cookie_consent_trans`)](#database-profile-copy-nowo_cookie_consent_trans)
 - [Demo](#demo)
@@ -103,7 +109,7 @@ With `granular_cookie_selection`, each optional cookie shows an **Allow** toggle
 
 ## Cookie inventory admin
 
-The bundle provides `CookieDefinitionAdminController`, `CookieDefinitionType`, and Bootstrap admin templates. Register the routes in your application and link from your config admin UI.
+The bundle provides `CookieDefinitionAdminController`, `CookieDefinitionType`, and admin templates built on the UiKit page scaffolds (list + form, REQ-UI-003; see [TEMPLATES.md](TEMPLATES.md)). Register the routes in your application and link from your config admin UI.
 
 The Symfony 8 demo implements a full CRUD at `/demo/admin/cookie-consent-config/{id}/cookies` with locale tabs for translations.
 
@@ -122,7 +128,7 @@ The **Page overlay (disable interaction)** setting (`disablePageInteraction`) di
 |----------------------|--------------|
 | ![Preferences modal without page overlay](images/demo/cookie-consent-modal-default.webp) | ![Preferences modal with page overlay](images/demo/cookie-consent-modal-overlay.webp) |
 
-Set `nowo_cookie_consent.web_ui.layout_template` to your project layout (or a one-file bridge) so admin pages inherit host chrome without copying list/form templates. See [CONFIGURATION.md — Admin Web UI](CONFIGURATION.md#admin-web-ui). Protect admin routes with `security.access_roles` / host `access_control` ([Admin security](CONFIGURATION.md#admin-security)).
+The admin pages render inside `nowo_ui_kit.layouts.admin` (your layout or a one-file bridge; `nowo_cookie_consent.web_ui.layout_template` overrides it for this bundle only), so they inherit the host chrome without copying list/form templates. See [CONFIGURATION.md — Admin Web UI](CONFIGURATION.md#admin-web-ui). Protect admin routes with `security.access_roles` / host `access_control` ([Admin security](CONFIGURATION.md#admin-security)).
 
 Import bundle routes (`config/routes/nowo_cookie_consent.yaml` → `@NowoCookieConsentBundle/Resources/config/routing.yaml`). Labels use the `NowoCookieConsentBundle` translation domain (`en` and `es` shipped; other locales fall back to English).
 
@@ -151,113 +157,51 @@ Before each XHR POST it prepares Symfony CSRF the same way as the Flex `csrf-pro
 
 When `use_logger: true`, each submission creates rows in `CookieConsentLog` with anonymized IP addresses (GDPR-friendly).
 
-## Customising the admin chrome
+## Theming the admin pages
 
-Since **1.13.0** the admin Web UI (cookie inventory list/form, profile settings) exposes chrome hooks so hosts can match their design system **without copying pages**. Pick the lightest layer that does the job:
+Since **1.16** the admin pages (cookie inventory, cookie definition form, profile settings) extend the **UiKit page
+scaffolds** (REQ-UI-003). Pick the lightest layer that does the job:
 
-1. **`web_ui.layout_template`** — your shell (sidebar, header, page title). Unchanged.
-2. **`web_ui.chrome`** — classes, attributes, partial paths, heading tag, row-action display (config only, upgrade-safe).
-3. **Block override** — a thin fork that extends the shipped page through `@!NowoCookieConsentBundle/…` and overrides one `nowo_cookie_consent_admin_*` block.
-4. **Full override** under `templates/bundles/NowoCookieConsentBundle/` — last resort (freezes the page).
-
-Without `web_ui.chrome` the output is the 1.12.0 markup (golden-tested).
-
-### Class map (`web_ui.chrome.classes`)
-
-Every key replaces the default class string of one element. `~` (null) on a button/pagination key means "UiKit macro for `web_ui.css_framework`" (the default). Unknown keys fail at compile time.
-
-| Key | Default | Element |
-| --- | --- | --- |
-| `page_header` | `nowo-ui-page-header d-flex justify-content-between align-items-center mb-4` | List page header (title + intro + create button) |
-| `page_header_form` | `nowo-ui-page-header mb-4` | Form page header |
-| `page_title` / `page_intro` | `h3 mb-1` / `text-muted mb-0` | In-page title and lead |
-| `area_nav` / `section_tabs` | `nowo-ui-tabs nowo-ui-tabs--area mb-3` / `nowo-ui-tabs nowo-ui-tabs--sections mb-4` | Tab strip wrapper (`nav_class` for the tabs partial) |
-| `tab_list` / `tab_item` / `tab_item_active` | `nowo-ui-tabs__list` / `nowo-ui-tabs__item` / `is-active` | Default tabs partial |
-| `table_panel` | `nowo-ui-table-wrap card shadow-sm` | Wrapper around the table |
-| `table_wrap` / `table` | `table-responsive` / `table table-striped mb-0 align-middle nowo-ui-table` | Table scroll wrapper and `<table>` |
-| `table_muted_cell` / `table_actions_cell` / `empty_cell` | `small text-secondary` / `text-end` / `text-center text-muted py-4` | Purpose cell, actions column, empty state cell |
-| `form_panel` / `form_panel_body` | `card shadow-sm nowo-ui-form-wrap` / `card-body` | Cookie form panel (empty body class = no inner `div`) |
-| `settings_panel` / `settings_panel_body` | `card shadow-sm nowo-ui-form-wrap` / `card-body p-4` | Settings panel |
-| `form` | *(empty)* | `class` on `<form>` |
-| `form_actions` / `settings_actions` | `d-flex gap-2 mt-3` / `nowo-ui-form-actions mt-4 pt-3 border-top` | Submit row |
-| `section_title` / `section_lead` | `h6 text-uppercase text-muted fw-semibold mb-1` / `small text-muted mb-3` | Settings section heading |
-| `button_primary` / `button_secondary` | `~` → `ui.btn('primary'\|'secondary')` | Create / save / cancel (marker classes `nowo-ui-action-*` are always appended) |
-| `confirm_cancel` / `confirm_delete` | `~` → `ui.btn(…, 'sm')` | Delete confirm dialog buttons |
-| `pagination` / `pagination_summary` / `pagination_actions` / `pagination_button` | `~` → `ui.pagination_wrap ~ ' mt-3'` / `text-muted small` / `~` → `ui.row_actions` / `~` → `ui.btn('secondary', 'sm')` | Default pagination partial |
-
-### Attributes, partials and options
+1. **UiKit layout** — `nowo_ui_kit.layouts.admin`: your shell (sidebar, header) for every Nowo bundle;
+   `nowo_cookie_consent.web_ui.layout_template` only when this bundle must differ.
+2. **UiKit theme** — `nowo_ui_kit.theme` (`tokens`, `classes`, `attributes`, `partials`) themes every list / form /
+   settings page of every bundle; `theme.bundles.NowoCookieConsentBundle` holds exceptions for this bundle only.
+   Slot vocabulary: UiKit `docs/THEME_SLOTS.md`.
+3. **Scaffold override** — `templates/bundles/NowoUiKitBundle/page/list.html.twig` (or `form`, `settings`) re-skins
+   that view type for every bundle.
+4. **Per-page template** — `nowo_cookie_consent.web_ui.templates.<page>` with a thin template that extends
+   `@!NowoCookieConsentBundle/admin/…` and overrides a data block ([TEMPLATES.md](TEMPLATES.md#per-page-overrides)).
 
 ```yaml
-nowo_cookie_consent:
-    web_ui:
-        layout_template: 'admin/_cookie_consent_layout.html.twig'
-        css_framework: tailwind
-        chrome:
-            page_title_tag: h2            # h1 (default) … h6 | none — use h2/none when your layout renders the h1
-            row_actions_display: inherit  # text (default) | icon | icon_text | inherit (= nowo_ui_kit.row_actions_display)
-            classes:
-                page_header: 'toolbar'
-                table_panel: 'panel nowo-ui-table-wrap'
-                table: 'data-table'
-                form_panel: 'panel nowo-ui-form-wrap'
-                form_panel_body: ''        # drop the inner card-body div
-                settings_panel: 'panel nowo-ui-form-wrap'
-                settings_panel_body: ''
-                form: 'nowo-ui-form nowo-ui-form--stack'
-                button_primary: 'btn-primary'
-                button_secondary: 'btn-ghost'
-                area_nav: 'mb-4 nowo-ui-tabs--area'
-                section_tabs: 'mb-6 nowo-ui-tabs--sections'
-            attributes:                    # same element keys as classes
-                table_panel: { data-testid: cookie-consent-definitions-table }
-                settings_panel: { data-testid: cookie-consent-settings-form }
-            templates:
-                tabs: 'shared/_tabs.html.twig'           # default @NowoCookieConsentBundle/admin/_tabs.html.twig
-                pagination: 'shared/_pagination.html.twig' # default @NowoCookieConsentBundle/admin/_pagination.html.twig
-                form_theme: ~                            # default bootstrap_5_layout.html.twig; ~ = your app form theme
-                form_fields: 'form/_fields.html.twig'    # ~ (default) = bundle loop of form_row()
-                styles_after: 'admin/_remaps.html.twig'  # included after nowo-ui.css in admin/base.html.twig
+nowo_ui_kit:
+    css_framework: tailwind
+    layouts:
+        admin: 'layouts/admin.html.twig'
+    theme:
+        classes:
+            table: 'data-table'
+            btn_primary: 'btn-primary'
+        attributes:
+            table_wrap: { data-testid: data-table }
+        bundles:
+            NowoCookieConsentBundle:
+                classes: { table: 'data-table data-table--dense' }
 ```
 
-**Partial contracts**
+The 1.13–1.15 `web_ui.chrome` map still works for one minor version: it is **deprecated** and bridged into
+`nowo_ui_kit.theme.bundles.NowoCookieConsentBundle` (mapping table in
+[UPGRADING — Template contract](UPGRADING.md#template-contract-116)).
 
-| Partial | Variables |
-| --- | --- |
-| `templates.tabs` | `variant` (`area` \| `sections`), `aria_label` (translated), `items` (`[{label, href, current}]`), `nav_class`, `list_class`, `item_class`, `active_class`, `attr` (hash, includes `data-turbo: 'false'` + `attributes.area_nav` / `attributes.section_tabs`), `framework`. Rendered with `only`. |
-| `templates.pagination` | `page`, `pages`, `total`, `page_size`, `item_count`, `framework`, plus the page context (`config`, `definitions`, …). |
-| `templates.form_fields` | `form` (rendered with `only`); `form_end()` renders anything left (CSRF token). |
-| `templates.styles_after` | Page context; output lands inside `{% block stylesheets %}` after the UiKit stylesheet. |
-
-### Blocks (thin forks)
-
-`@!NowoCookieConsentBundle/…` always resolves to the shipped templates (even when you override the same path), so a fork can stay a few lines:
-
-```twig
-{# templates/bundles/NowoCookieConsentBundle/admin/cookie_definition/index.html.twig #}
-{% extends '@!NowoCookieConsentBundle/admin/cookie_definition/index.html.twig' %}
-
-{% block nowo_cookie_consent_admin_page_actions %}
-    <a class="btn-primary" href="{{ path('nowo_cookie_consent_cookie_definitions_new', {configId: config.id}) }}">
-        {{ 'nowo_cookie_consent.admin.cookie_definition.new'|trans({}, 'NowoCookieConsentBundle') }}
-    </a>
-{% endblock %}
-```
-
-| Template | Blocks |
-| --- | --- |
-| `admin/base.html.twig` | `nowo_ui_flashes`, `nowo_ui_styles`, `nowo_cookie_consent_admin_styles_after`, `nowo_ui_scripts` |
-| `admin/cookie_definition/index.html.twig` | `…_area_nav`, `…_page_header`, `…_page_title`, `…_page_intro`, `…_page_actions`, `…_table_wrapper`, `…_pagination` |
-| `admin/cookie_definition/_table.html.twig` | `…_table_head`, `…_row_actions`, `…_empty_state` (fork `_table` itself and extend `@!…/_table.html.twig`) |
-| `admin/cookie_definition/form.html.twig` | `…_area_nav`, `…_page_header`, `…_page_title`, `…_page_intro`, `…_form_wrapper`, `…_form_body`, `…_form_actions` |
-| `admin/config/settings.html.twig` | `…_area_nav`, `…_section_tabs`, `…_settings_section`, `…_section_header`, `…_form_body`, `…_form_actions` |
-
-(`…` = `nowo_cookie_consent_admin`.) Blocks only reorganise chrome: keep route names, `delete_forms` (CSRF), confirm ids (`delete-cookie-definition-{id}`) and `nowo-ui-action-*` marker classes when you override them.
+**Blocks.** Data blocks of the scaffolds (`nowo_ui_list_row`, `nowo_ui_form_body`, `nowo_ui_settings_section`) plus
+`nowo_cookie_consent_admin_area_nav` (the Settings / Cookie inventory tabs above the page header). The 1.x
+`nowo_cookie_consent_admin_*` chrome blocks (page header, table wrapper, pagination, form actions…) are gone: those
+regions belong to the scaffold now.
 
 ## Overriding templates (REQ-TWIG-001)
 
 The bundle registers the Twig namespace **`@NowoCookieConsentBundle/`**. Application files under **`templates/bundles/NowoCookieConsentBundle/`** **always win** over the copies inside the package (`TwigPathsPass` prepends that directory when it exists, then adds the bundle views path).
 
-**Freeze rule:** a full-file override hides vendor updates for that `<subpath>` until you delete or manually merge it. Prefer surgical overrides (a single partial), a block fork via `@!NowoCookieConsentBundle/…`, or config such as **`nowo_cookie_consent.web_ui.layout_template`** / **`web_ui.chrome`** ([Customising the admin chrome](#customising-the-admin-chrome)) for upgrade-safe customisation — see [CONFIGURATION.md — Admin Web UI](CONFIGURATION.md#admin-web-ui).
+**Freeze rule:** a full-file override hides vendor updates for that `<subpath>` until you delete or manually merge it. Prefer surgical overrides (a single partial), a block fork via `@!NowoCookieConsentBundle/…`, or config such as **`nowo_ui_kit.theme`** / **`nowo_cookie_consent.web_ui.templates`** ([Theming the admin pages](#theming-the-admin-pages)) for upgrade-safe customisation — see [CONFIGURATION.md — Admin Web UI](CONFIGURATION.md#admin-web-ui).
 
 **Procedure**
 
@@ -288,19 +232,10 @@ Controllers and Twig use logical names such as `@NowoCookieConsentBundle/cookie_
 | `_preference_sections.html.twig` | Preferences step category blocks |
 | `_preferences_intro.html.twig` | Intro text on the preferences step |
 | `_diagnostics_script.html.twig` | Optional diagnostics script partial |
-| `admin/base.html.twig` | Intermediate shell admin pages extend (points at `web_ui.layout_template`; stacks `stylesheets` / `javascripts` with `parent()`) |
-| `admin/layout.html.twig` | Default admin demo full HTML root (`web_ui.layout_template` default); preferred override target via config |
-| `admin/_pagination.html.twig` | Cookie definition list pagination partial (prefer `web_ui.chrome.templates.pagination`) |
-| `admin/_tabs.html.twig` | Default tab strip (prefer `web_ui.chrome.templates.tabs`) |
-| `admin/_admin_area_nav.html.twig` | Settings / Cookie inventory area tabs (builds items, renders `templates.tabs`) |
-| `admin/config/_settings_section_tabs.html.twig` | Settings section tabs (builds items, renders `templates.tabs`) |
-| `admin/_chrome.html.twig` | `attrs()` macro for `web_ui.chrome.attributes` |
-| `admin/cookie_definition/layout.html.twig` | Admin CRUD layout shell (BC alias of `admin/base.html.twig`) |
-| `admin/cookie_definition/index.html.twig` | Cookie definition list |
-| `admin/cookie_definition/form.html.twig` | Create/edit cookie definition form |
-| `admin/cookie_definition/_table.html.twig` | Admin list table partial |
-| `admin/config/layout.html.twig` | Profile settings admin layout shell (BC alias of `admin/base.html.twig`) |
-| `admin/config/settings.html.twig` | Profile settings form (overlay, theme, bubble, layout) |
+| `admin/_admin_area_nav.html.twig` | Settings / Cookie inventory area tabs (UiKit `tabs` partial) |
+| `admin/cookie_definition/index.html.twig` | Cookie inventory list (`page/list`; prefer `web_ui.templates.cookie_definition_index`) |
+| `admin/cookie_definition/form.html.twig` | Create/edit cookie definition (`page/form`; prefer `web_ui.templates.cookie_definition_form`) |
+| `admin/config/settings.html.twig` | Profile settings sections (`page/settings`; prefer `web_ui.templates.settings`) |
 
 Theme selection follows `ui_theme` (`bootstrap` or `tailwind`); override the modal and form theme rows that match your active theme. See also [CONFIGURATION.md — UI theme](CONFIGURATION.md#ui-theme).
 
