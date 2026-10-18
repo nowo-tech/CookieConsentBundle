@@ -108,8 +108,7 @@ final class CookieConsentConfigSettingsAdminController extends AbstractControlle
         $view = $form->createView();
 
         return $this->render($this->pages->template('settings'), [
-            'page'     => $this->pages->settings($config, $sectionEnum, $view),
-            'area_nav' => $this->pages->areaNav($config, AdminPageFactory::AREA_SETTINGS),
+            'page' => $this->pages->settings($config, $sectionEnum, $view),
             // 1.x variables, for host templates (web_ui.templates.settings)
             'config'   => $config,
             'form'     => $view,

@@ -1,11 +1,11 @@
 {#
   Consent profile settings, one section (tab) per route (REQ-UI-003): UiKit settings scaffold.
   View model: page (View\SettingsPage, AdminPageFactory::settings(); only the current section has its form).
-  Extra context: area_nav.
   Data blocks: nowo_ui_settings_section (the deprecated web_ui.chrome.templates.form_fields partial renders inside
-  the section form first when configured). Bundle block: nowo_cookie_consent_admin_area_nav (above the page header).
-  The form theme comes from the host (twig.form_themes); the deprecated web_ui.chrome.templates.form_theme still
-  applies when configured.
+  the section form first when configured).
+  Area navigation: page.header.tabs (View\AreaNav, rendered by the UiKit page header). Form theme: the host's
+  twig.form_themes; the deprecated web_ui.chrome.templates.form_theme reaches the scaffold as
+  section.formThemes (current section).
 #}
 {% extends '@NowoUiKit/page/settings.html.twig' %}
 
@@ -14,17 +14,7 @@
     {%- if nowo_cookie_consent_admin_chrome.templates.styles_after|default(null) %}{{ include(nowo_cookie_consent_admin_chrome.templates.styles_after) }}{% endif -%}
 {% endblock %}
 
-{% block nowo_ui_page_header %}
-    {% block nowo_cookie_consent_admin_area_nav %}
-        {{ include('@NowoCookieConsentBundle/admin/_admin_area_nav.html.twig', {area_nav: area_nav|default([]), bundle: page.bundle}, false) }}
-    {% endblock %}
-    {{ parent() }}
-{% endblock %}
-
 {% block nowo_ui_settings_section %}
-    {%- if section.form and nowo_cookie_consent_admin_chrome.templates.form_theme|default(null) %}
-        {% form_theme section.form with [nowo_cookie_consent_admin_chrome.templates.form_theme] %}
-    {% endif -%}
     {%- if section.form and nowo_cookie_consent_admin_chrome.templates.form_fields|default(null) %}
         {{ form_start(section.form, {attr: {class: nowo_ui_class('form', page.bundle), 'data-nowo-ui-region': 'form'}}) }}
             {{ include(nowo_cookie_consent_admin_chrome.templates.form_fields, {form: section.form}, false) }}

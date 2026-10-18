@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Nowo\CookieConsentBundle\DependencyInjection;
 
 use Nowo\CookieConsentBundle\Admin\AdminChrome;
+use Nowo\CookieConsentBundle\Admin\AdminPageFactory;
 use Nowo\CookieConsentBundle\Config\CookieInventoryNormalizer;
 use Nowo\CookieConsentBundle\EventSubscriber\CookieConsentConfigTranslationSubscriber;
 use Nowo\CookieConsentBundle\Security\AllowAllCookieConsentAccessChecker;
@@ -109,6 +110,13 @@ class NowoCookieConsentExtension extends Extension implements PrependExtensionIn
                 ->setArgument('$cssFramework', $webUi['css_framework'] ?? 'bootstrap5')
                 ->setArgument('$iconSet', $webUi['icon_set'] ?? 'bootstrap-icons')
                 ->setArgument('$chrome', $chrome);
+        }
+
+        if ($container->hasDefinition(AdminPageFactory::class)) {
+            // Deprecated web_ui.chrome.templates.form_theme: applied through FormPage / SettingsSection::$formThemes.
+            $formTheme = $chrome['templates']['form_theme'];
+            $container->getDefinition(AdminPageFactory::class)
+                ->setArgument('$formThemes', $formTheme !== null ? [$formTheme] : []);
         }
 
         $this->registerAccessChecker($container, $security);

@@ -12,9 +12,10 @@ use Twig\Extension\GlobalsInterface;
  * Admin Web UI Twig globals.
  *
  * Since 1.16 the admin pages extend the UiKit page scaffolds (REQ-UI-003) and only read
- * `nowo_cookie_consent_admin_chrome.templates` (`form_theme`, `form_fields`, `styles_after`: deprecated 1.x hooks that
- * have no theme slot). The layout / css framework / icon set globals are deprecated and kept for host templates
- * written for 1.x; they are removed in 2.0 together with `web_ui.chrome`.
+ * `nowo_cookie_consent_admin_chrome.templates` (`form_fields`, `styles_after`: deprecated 1.x hooks that have no theme
+ * slot; `form_theme` reaches the scaffolds as `FormPage` / `SettingsSection::$formThemes` since UiKit 2.1). The
+ * layout / css framework / icon set globals are deprecated and kept for host templates written for 1.x; they are
+ * removed in 2.0 together with `web_ui.chrome`.
  */
 final class CookieConsentAdminTwigExtension extends AbstractExtension implements GlobalsInterface
 {

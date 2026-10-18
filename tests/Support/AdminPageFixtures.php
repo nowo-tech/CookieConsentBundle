@@ -39,10 +39,11 @@ final class AdminPageFixtures
 {
     /**
      * @param array<string, string> $templates
+     * @param list<string> $formThemes
      */
-    public static function factory(?string $layout = null, ?string $rowActionsDisplay = null, array $templates = []): AdminPageFactory
+    public static function factory(?string $layout = null, ?string $rowActionsDisplay = null, array $templates = [], array $formThemes = []): AdminPageFactory
     {
-        return new AdminPageFactory(self::urlGenerator(), $layout, $rowActionsDisplay, $templates);
+        return new AdminPageFactory(self::urlGenerator(), $layout, $rowActionsDisplay, $templates, $formThemes);
     }
 
     /**
@@ -65,8 +66,7 @@ final class AdminPageFixtures
         }
 
         return [
-            'page'     => $factory->definitionList($config, $definitions, $deleteForms, 1, 3, $empty ? 0 : 5, 'en'),
-            'area_nav' => $factory->areaNav($config, AdminPageFactory::AREA_COOKIES),
+            'page' => $factory->definitionList($config, $definitions, $deleteForms, 1, 3, $empty ? 0 : 5, 'en'),
         ];
     }
 
@@ -86,8 +86,7 @@ final class AdminPageFixtures
         $form = self::forms()->create(CookieDefinitionType::class, $definition)->createView();
 
         return [
-            'page'     => $factory->definitionForm($config, $definition, $form, $isNew),
-            'area_nav' => $factory->areaNav($config, AdminPageFactory::AREA_COOKIES),
+            'page' => $factory->definitionForm($config, $definition, $form, $isNew),
         ];
     }
 
@@ -103,8 +102,7 @@ final class AdminPageFixtures
         $form   = self::forms()->create($section->formType(), $config)->createView();
 
         return [
-            'page'     => $factory->settings($config, $section, $form),
-            'area_nav' => $factory->areaNav($config, AdminPageFactory::AREA_SETTINGS),
+            'page' => $factory->settings($config, $section, $form),
         ];
     }
 

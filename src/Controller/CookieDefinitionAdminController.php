@@ -80,8 +80,7 @@ final class CookieDefinitionAdminController extends AbstractController
         $deleteForms = $this->createDeleteForms($configId, $definitions);
 
         return $this->render($this->pages->template('cookie_definition_index'), [
-            'page'     => $this->pages->definitionList($config, $definitions, $deleteForms, $page, $pageSize, $total, $request->getLocale()),
-            'area_nav' => $this->pages->areaNav($config, AdminPageFactory::AREA_COOKIES),
+            'page' => $this->pages->definitionList($config, $definitions, $deleteForms, $page, $pageSize, $total, $request->getLocale()),
             // 1.x variables, for host templates (web_ui.templates.cookie_definition_index)
             'config'       => $config,
             'definitions'  => $definitions,
@@ -257,8 +256,7 @@ final class CookieDefinitionAdminController extends AbstractController
         $view = $form->createView();
 
         return $this->render($this->pages->template('cookie_definition_form'), [
-            'page'     => $this->pages->definitionForm($config, $definition, $view, $isNew),
-            'area_nav' => $this->pages->areaNav($config, AdminPageFactory::AREA_COOKIES),
+            'page' => $this->pages->definitionForm($config, $definition, $view, $isNew),
             // 1.x variables, for host templates (web_ui.templates.cookie_definition_form)
             'config'     => $config,
             'definition' => $definition,

@@ -9,7 +9,10 @@ use Nowo\CookieConsentBundle\DependencyInjection\Configuration;
 use Nowo\CookieConsentBundle\Entity\CookieConsentConfig;
 use Nowo\CookieConsentBundle\Entity\CookieDefinition;
 use Nowo\CookieConsentBundle\Entity\CookieDefinitionTranslation;
+use Nowo\UiKitBundle\Navigation\AreaNavRegistry;
 use Nowo\UiKitBundle\View\Action;
+use Nowo\UiKitBundle\View\AreaNav;
+use Nowo\UiKitBundle\View\AreaNavItem;
 use Nowo\UiKitBundle\View\Column;
 use Nowo\UiKitBundle\View\Confirm;
 use Nowo\UiKitBundle\View\EmptyState;
@@ -28,7 +31,8 @@ use function sprintf;
 /**
  * Builds the UiKit view models of the admin pages (REQ-UI-003): the cookie inventory list (`page/list`), the
  * cookie definition form (`page/form`) and the profile settings (`page/settings`), plus the area navigation
- * (Settings | Cookie inventory) rendered above the page header.
+ * (Settings | Cookie inventory, `PageHeader::$tabs`: rendered by the UiKit page header, also published to the
+ * UiKit area-nav registry by {@see CookieConsentAreaNavProvider}).
  *
  * View models are plain data (labels as translation keys of the bundle domain, URLs already generated): safe in
  * worker mode. The service itself is stateless.
@@ -41,18 +45,28 @@ final class AdminPageFactory
 
     public const AREA_COOKIES = 'cookies';
 
+    /** Root attributes of the area `<nav>` (1.x markup: the tabs are plain links, never Turbo visits). */
+    public const AREA_NAV_ATTRIBUTES = ['data-turbo' => 'false'];
+
     private const KEY = 'nowo_cookie_consent.admin.';
 
     /**
      * @param string|null $layoutTemplate `web_ui.layout_template` (null = UiKit admin layout)
      * @param string|null $rowActionsDisplay `web_ui.chrome.row_actions_display` (deprecated; null = nowo_ui_kit.row_actions_display)
      * @param array<string, string> $templates `web_ui.templates` (page => template; missing pages use the shipped template)
+     * @param list<string> $formThemes form themes of the admin forms (`FormPage` / `SettingsSection::$formThemes`):
+     *                                 the deprecated `web_ui.chrome.templates.form_theme`, else none (host `twig.form_themes`)
+     * @param AreaNavRegistry|null $areaNavRegistry UiKit area-nav registry: the page tabs come from the first provider
+     *                                              of area `cookie_consent` (a host provider with a higher priority can
+     *                                              replace them, or drop them with an empty `AreaNav`); null = {@see self::areaNav()}
      */
     public function __construct(
         private readonly UrlGeneratorInterface $urlGenerator,
         private readonly ?string $layoutTemplate = null,
         private readonly ?string $rowActionsDisplay = null,
         private readonly array $templates = [],
+        private readonly array $formThemes = [],
+        private readonly ?AreaNavRegistry $areaNavRegistry = null,
     ) {
     }
 
@@ -67,26 +81,27 @@ final class AdminPageFactory
     }
 
     /**
-     * Area tabs (Settings | Cookie inventory) of a consent profile, for the UiKit `tabs` partial.
+     * Area navigation (Settings | Cookie inventory) of a consent profile, for `PageHeader::$tabs`.
      *
-     * @return list<array{label: Label, href: string, current: bool}>
+     * @param CookieConsentConfig|int $config consent profile (or its id)
+     * @param string|null $current active section ({@see self::AREA_SETTINGS}, {@see self::AREA_COOKIES}; null = none)
      */
-    public function areaNav(CookieConsentConfig $config, string $current): array
+    public function areaNav(CookieConsentConfig|int $config, ?string $current = null): AreaNav
     {
-        $configId = (int) $config->getId();
+        $configId = $config instanceof CookieConsentConfig ? (int) $config->getId() : $config;
 
-        return [
-            [
-                'label'   => $this->label('area_nav.settings'),
-                'href'    => $this->urlGenerator->generate('nowo_cookie_consent_config_settings_edit', ['configId' => $configId]),
-                'current' => $current === self::AREA_SETTINGS,
-            ],
-            [
-                'label'   => $this->label('area_nav.cookies'),
-                'href'    => $this->urlGenerator->generate('nowo_cookie_consent_cookie_definitions_index', ['configId' => $configId]),
-                'current' => $current === self::AREA_COOKIES,
-            ],
-        ];
+        return new AreaNav([
+            new AreaNavItem(
+                $this->label('area_nav.settings'),
+                $this->urlGenerator->generate('nowo_cookie_consent_config_settings_edit', ['configId' => $configId]),
+                $current === self::AREA_SETTINGS,
+            ),
+            new AreaNavItem(
+                $this->label('area_nav.cookies'),
+                $this->urlGenerator->generate('nowo_cookie_consent_cookie_definitions_index', ['configId' => $configId]),
+                $current === self::AREA_COOKIES,
+            ),
+        ], $this->label('area_nav.label'), self::AREA_NAV_ATTRIBUTES);
     }
 
     /**
@@ -146,11 +161,11 @@ final class AdminPageFactory
         };
 
         return new ListPage(
-            new PageHeader(
+            (new PageHeader(
                 $this->label('cookie_definition.title'),
                 $this->label('cookie_definition.lead'),
                 [Action::create($newUrl, $this->label('cookie_definition.new'))],
-            ),
+            ))->withTabs($this->pageTabs($config, self::AREA_COOKIES)),
             [
                 new Column('name', $this->label('cookie_definition.table.name'), required: true),
                 new Column('provider', $this->label('cookie_definition.table.provider'), priority: 2),
@@ -189,7 +204,8 @@ final class AdminPageFactory
             : $this->label('cookie_definition.edit_title', ['%name%' => $definition->getName()]);
 
         return new FormPage(
-            new PageHeader($title, $this->label('cookie_definition.form_lead', ['%profile%' => $config->getDisplayName()])),
+            (new PageHeader($title, $this->label('cookie_definition.form_lead', ['%profile%' => $config->getDisplayName()])))
+                ->withTabs($this->pageTabs($config, self::AREA_COOKIES)),
             $form,
             submitLabel: $this->label('cookie_definition.save'),
             cancelHref: $this->urlGenerator->generate('nowo_cookie_consent_cookie_definitions_index', ['configId' => (int) $config->getId()]),
@@ -197,6 +213,7 @@ final class AdminPageFactory
             bundle: AdminChrome::BUNDLE,
             layout: $this->layoutTemplate,
             attributes: ['data-testid' => 'cookie-consent-definition-form'],
+            formThemes: $this->formThemes,
         );
     }
 
@@ -216,20 +233,34 @@ final class AdminPageFactory
                 $section === $current ? $form : null,
                 $this->label('config.settings.section.' . $suffix . '_lead'),
                 $this->label('config.settings.save'),
+                $section === $current ? $this->formThemes : [],
             );
         }
 
         return new SettingsPage(
-            new PageHeader(
+            (new PageHeader(
                 $this->label('config.settings.title'),
                 $this->label('config.settings.lead', ['%profile%' => $config->getDisplayName()]),
-            ),
+            ))->withTabs($this->pageTabs($config, self::AREA_SETTINGS)),
             $sections,
             $current->value,
             bundle: AdminChrome::BUNDLE,
             layout: $this->layoutTemplate,
             attributes: ['data-testid' => 'cookie-consent-settings'],
         );
+    }
+
+    /**
+     * Area navigation of a page header: the registry's answer for area `cookie_consent` (context: `config`,
+     * `configId`, `section`), else the bundle's own.
+     */
+    private function pageTabs(CookieConsentConfig $config, string $section): AreaNav
+    {
+        return $this->areaNavRegistry?->get(CookieConsentAreaNavProvider::AREA, [
+            'config'   => $config,
+            'configId' => (int) $config->getId(),
+            'section'  => $section,
+        ]) ?? $this->areaNav($config, $section);
     }
 
     /**

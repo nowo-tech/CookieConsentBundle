@@ -66,7 +66,7 @@ final class AdminPagesKernelTest extends TestCase
         self::assertStringContainsString('<html', $html, 'UiKit document layout');
         self::assertStringContainsString('data-nowo-ui-page="' . $pageType . '"', $html);
         self::assertStringContainsString('data-nowo-ui-bundle="NowoCookieConsentBundle"', $html);
-        self::assertStringContainsString('data-nowo-ui-region="area-nav"', $html);
+        self::assertMatchesRegularExpression('#<div class="nowo-ui-page-header__nav">\s*<nav [^>]*data-turbo="false"[^>]*data-nowo-ui-region="area-nav"#', $html, 'area nav inside the UiKit page header');
         self::assertStringNotContainsString('cdn.jsdelivr.net', $html);
         self::assertDoesNotMatchRegularExpression('/\son[a-z]+="/i', $html);
         self::assertDoesNotMatchRegularExpression('/\b[a-z_]+(\.[a-z_]+)+\.(label|help|placeholder|title)\b/', $html);
@@ -160,7 +160,8 @@ final class AdminPagesKernelTest extends TestCase
 
     /**
      * Regression: every row delete form was named delete_cookie_definition, so the hidden _token inputs shared one
-     * DOM id. Each row form has its own name / ids now, and posting it still passes the CSRF check.
+     * DOM id. Each row form has its own name now (UiKit 2.1 prints the hidden fields of action forms without an id),
+     * and posting it still passes the CSRF check.
      */
     public function testRowDeleteFormsHaveUniqueIdsAndStillDelete(): void
     {
@@ -169,9 +170,11 @@ final class AdminPagesKernelTest extends TestCase
         $browser = $this->browser();
         $crawler = $browser->request('GET', sprintf('/cookie-consent-config/%d/cookies', $configId));
 
-        $ids = $crawler->filter('dialog form input[type="hidden"]')->each(static fn ($input): string => (string) $input->attr('id'));
-        self::assertCount(2, $ids);
-        self::assertSame($ids, array_values(array_unique($ids)));
+        $names = $crawler->filter('dialog form input[type="hidden"]')->each(static fn ($input): string => (string) $input->attr('name'));
+        self::assertCount(2, $names);
+        self::assertSame($names, array_values(array_unique($names)));
+        $ids = array_values(array_filter($crawler->filter('[id]')->each(static fn ($node): string => (string) $node->attr('id'))));
+        self::assertSame($ids, array_values(array_unique($ids)), 'no duplicate DOM ids');
         self::assertCount(0, $crawler->filter('form[name="delete_cookie_definition"]'), 'one form name per row');
 
         $browser->submit($crawler->filter('dialog form')->first()->form());
@@ -189,9 +192,12 @@ final class AdminPagesKernelTest extends TestCase
         $list = (string) $this->get(sprintf('/cookie-consent-config/%d/cookies', $configId))->getContent();
         self::assertStringContainsString('nowo-ui-page--guest', $list);
 
-        // web_ui.templates.settings renders the settings page (here: just the area navigation partial).
+        // web_ui.templates.settings renders the settings page (here: just the deprecated area navigation partial,
+        // fed by the UiKit area-nav registry through CookieConsentAreaNavProvider).
         $settings = (string) $this->get(sprintf('/cookie-consent-config/%d/settings/profile', $configId))->getContent();
         self::assertStringContainsString('data-nowo-ui-region="area-nav"', $settings);
+        self::assertStringContainsString('data-turbo="false"', $settings);
+        self::assertMatchesRegularExpression(sprintf('#href="/cookie-consent-config/%d/settings"[^>]*aria-current="page"#', $configId), $settings);
         self::assertStringNotContainsString('data-nowo-ui-page="settings"', $settings);
     }
 

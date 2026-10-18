@@ -1,13 +1,26 @@
 {#
-  Area navigation of a consent profile (Settings | Cookie inventory), rendered above the page header of every admin
-  page through the UiKit `tabs` partial (theme slots tabs / tab / tab_active; region `area-nav`).
-  Context: area_nav (AdminPageFactory::areaNav(): list of {label: View\Label, href, current}), bundle.
+  Deprecated since 1.16 (UiKit 2.1): the admin pages render the area navigation (Settings | Cookie inventory) as
+  PageHeader::$tabs inside the UiKit page header. Kept for host templates written for 1.x that include it.
+  Context (1.x): config (CookieConsentConfig; else the configId request attribute). The navigation comes from the
+  UiKit area-nav registry (area `cookie_consent`, Admin\CookieConsentAreaNavProvider) and renders through the UiKit
+  `tabs` partial (region `area-nav`, data-turbo="false").
 #}
-{% if area_nav|default([]) is not empty %}
-    {{ include(nowo_ui_partial('tabs', bundle|default(null)), {
-        items: area_nav,
+{% set _route = app.request.attributes.get('_route')|default('') %}
+{% set _config_id = config.id|default(app.request.attributes.get('configId')) %}
+{% set _nav = _config_id ? nowo_ui_area_nav('cookie_consent', {
+    configId: _config_id ~ '',
+    section: _route starts with 'nowo_cookie_consent_cookie_definitions_' ? 'cookies' : (_route starts with 'nowo_cookie_consent_config_settings_' ? 'settings' : null),
+}) : null %}
+{% if _nav and not _nav.isEmpty() %}
+    {% set _items = [] %}
+    {% for item in _nav.items %}
+        {% set _items = _items|merge([{label: item.label, href: item.href, current: item.active, attr: item.attributes}]) %}
+    {% endfor %}
+    {{ include(nowo_ui_partial('tabs', 'NowoCookieConsentBundle'), {
+        items: _items,
         aria_label: 'nowo_cookie_consent.admin.area_nav.label'|trans({}, 'NowoCookieConsentBundle'),
+        attr: _nav.attributes,
         region: 'area-nav',
-        bundle: bundle|default(null),
+        bundle: 'NowoCookieConsentBundle',
     }, false) }}
 {% endif %}

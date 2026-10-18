@@ -5,13 +5,18 @@ declare(strict_types=1);
 namespace Nowo\CookieConsentBundle\Tests\Integration;
 
 use Nowo\CookieConsentBundle\Admin\AdminChrome;
+use Nowo\CookieConsentBundle\Admin\AdminPageFactory;
 use Nowo\CookieConsentBundle\Admin\CookieConsentConfigSettingsSection;
 use Nowo\CookieConsentBundle\Tests\Support\AdminPageFixtures;
 use Nowo\CookieConsentBundle\Twig\CookieConsentAdminTwigExtension;
 use Nowo\UiKitBundle\Test\PageContractTestCase;
 use Nowo\UiKitBundle\Test\PageFixture;
 use Nowo\UiKitBundle\Test\RenderedPage;
+use Nowo\UiKitBundle\View\AreaNav;
+use Nowo\UiKitBundle\View\FormPage;
 use Nowo\UiKitBundle\View\ListPage;
+use Nowo\UiKitBundle\View\PageHeader;
+use Nowo\UiKitBundle\View\SettingsPage;
 use Twig\Environment;
 
 use function dirname;
@@ -66,25 +71,34 @@ final class AdminPagesTemplateTest extends PageContractTestCase
         $twig->addExtension(new CookieConsentAdminTwigExtension(chrome: AdminChrome::resolve($this->chrome)));
     }
 
-    public function testListRendersTheAreaNavAboveThePageHeader(): void
+    public function testListHeaderCarriesTheAreaNavWithTheCookiesTabActive(): void
     {
-        $page   = $this->render(self::VIEWS . 'cookie_definition/index.html.twig', AdminPageFixtures::definitionList());
-        $header = $page->blockHtml('nowo_ui_page_header');
+        $page = AdminPageFixtures::definitionList()['page'];
+        self::assertInstanceOf(ListPage::class, $page);
+        $nav = $page->header->tabs;
+        self::assertInstanceOf(AreaNav::class, $nav);
+        self::assertSame(AdminPageFactory::AREA_NAV_ATTRIBUTES, $nav->attributes);
+        self::assertSame('/nowo-cookie-consent-cookie-definitions-index?configId=1', $nav->active()?->href);
+
+        $header = $this->renderUiKitPageHeader($page->header);
 
         self::assertStringContainsString('data-nowo-ui-region="area-nav"', $header);
-        self::assertLessThan(strpos($header, 'data-nowo-ui-contract-partial="page_header"'), strpos($header, 'data-nowo-ui-region="area-nav"'));
+        self::assertLessThan(strpos($header, 'data-nowo-ui-region="area-nav"'), strpos($header, 'Cookie inventory</h1>'), 'tabs below the title row');
         self::assertStringContainsString('aria-label="Cookie consent admin"', $header);
+        self::assertStringContainsString('data-turbo="false"', $header, '1.x <nav> attribute kept');
         self::assertMatchesRegularExpression('#<a[^>]*href="/nowo-cookie-consent-cookie-definitions-index\?configId=1"[^>]*aria-current="page"#s', $header);
-        self::assertStringNotContainsString('aria-current="page"', (string) preg_replace('#<a[^>]*cookie-definitions-index.*?</a>#s', '', $header));
-        self::assertStringContainsString('Cookie inventory', $header);
+        self::assertSame(1, substr_count($header, 'aria-current="page"'));
+        self::assertStringContainsString('>Settings</a>', $header);
     }
 
     public function testSettingsMarksTheSettingsAreaAndTheCurrentSectionTab(): void
     {
-        $page    = $this->render(self::VIEWS . 'config/settings.html.twig', AdminPageFixtures::settings(CookieConsentConfigSettingsSection::RouteTargeting));
-        $header  = $page->blockHtml('nowo_ui_page_header');
+        $context = AdminPageFixtures::settings(CookieConsentConfigSettingsSection::RouteTargeting);
+        $page    = $this->render(self::VIEWS . 'config/settings.html.twig', $context);
         $content = $page->blockHtml('nowo_ui_content');
 
+        self::assertInstanceOf(SettingsPage::class, $context['page']);
+        $header = $this->renderUiKitPageHeader($context['page']->header);
         self::assertMatchesRegularExpression('#href="/nowo-cookie-consent-config-settings-edit\?configId=1"[^>]*aria-current="page"#s', $header);
         self::assertSame(6, substr_count($content, 'href="/nowo-cookie-consent-config-settings-section?'));
         self::assertMatchesRegularExpression('#section=route-targeting"[^>]*aria-current="page"#s', $content);
@@ -92,6 +106,15 @@ final class AdminPagesTemplateTest extends PageContractTestCase
         self::assertStringContainsString('Auto-show targeting', $content);
         self::assertStringContainsString('Control on which Symfony routes the modal opens automatically.', $content);
         self::assertStringContainsString('Save settings', $content);
+    }
+
+    public function testFormHeaderCarriesTheAreaNavWithTheCookiesTabActive(): void
+    {
+        $page = AdminPageFixtures::definitionForm()['page'];
+        self::assertInstanceOf(FormPage::class, $page);
+
+        self::assertSame('/nowo-cookie-consent-cookie-definitions-index?configId=1', $page->header->tabs?->active()?->href);
+        self::assertSame([], $page->formThemes, 'no form theme of its own: the host twig.form_themes');
     }
 
     public function testListCellsTranslateValuesAndMarkEmptyOnes(): void
@@ -166,10 +189,12 @@ final class AdminPagesTemplateTest extends PageContractTestCase
             'form_theme'   => '@Host/form_theme.html.twig',
             'form_fields'  => '@Host/fields.html.twig',
         ]];
+        // web_ui.chrome.templates.form_theme reaches the factory as $formThemes (NowoCookieConsentExtension).
+        $factory = AdminPageFixtures::factory(formThemes: ['@Host/form_theme.html.twig']);
 
         foreach ([
-            [self::VIEWS . 'cookie_definition/form.html.twig', AdminPageFixtures::definitionForm()],
-            [self::VIEWS . 'config/settings.html.twig', AdminPageFixtures::settings()],
+            [self::VIEWS . 'cookie_definition/form.html.twig', AdminPageFixtures::definitionForm(false, $factory)],
+            [self::VIEWS . 'config/settings.html.twig', AdminPageFixtures::settings(CookieConsentConfigSettingsSection::Appearance, $factory)],
         ] as [$template, $context]) {
             $page    = $this->render($template, $context);
             $content = $page->blockHtml('nowo_ui_content');
@@ -183,6 +208,14 @@ final class AdminPagesTemplateTest extends PageContractTestCase
         $this->chrome = [];
         $content      = $this->render(self::VIEWS . 'config/settings.html.twig', AdminPageFixtures::settings())->blockHtml('nowo_ui_content');
         self::assertStringNotContainsString('data-host-', $content);
+    }
+
+    /**
+     * The stub host's page_header override does not render header.tabs: render UiKit's own page header partial.
+     */
+    private function renderUiKitPageHeader(PageHeader $header): string
+    {
+        return $this->createTwig()->render('@NowoUiKitBundle/partials/_page_header.html.twig', ['header' => $header, 'bundle' => AdminChrome::BUNDLE]);
     }
 
     /**
