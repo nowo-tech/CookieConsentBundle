@@ -66,6 +66,7 @@ class NowoCookieConsentExtension extends Extension implements PrependExtensionIn
         $container->setParameter('nowo_cookie_consent.form_action', $config['form_action']);
         $container->setParameter('nowo_cookie_consent.csrf_protection', $config['csrf_protection']);
         $container->setParameter('nowo_cookie_consent.disabled_routes', $config['disabled_routes']);
+        $container->setParameter('nowo_cookie_consent.privacy_route', $config['privacy_route'] ?? null);
         $container->setParameter('nowo_cookie_consent.skip_render_routes', $config['skip_render_routes']);
         $container->setParameter('nowo_cookie_consent.render_routes', $config['render_routes']);
         $container->setParameter('nowo_cookie_consent.route_targeting_mode', $config['route_targeting_mode']);

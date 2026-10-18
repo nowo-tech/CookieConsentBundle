@@ -23,10 +23,25 @@ final class CookieConsentTranslationTwigExtensionTest extends TestCase
     {
         $extension = new CookieConsentTranslationTwigExtension(new RequestStack(), $this->createTranslator());
 
-        self::assertSame(['nowo_cookie_consent_trans'], array_map(
+        self::assertSame(['nowo_cookie_consent_trans', 'nowo_cookie_consent_privacy_route'], array_map(
             static fn (TwigFunction $function): string => $function->getName(),
             $extension->getFunctions(),
         ));
+    }
+
+    public function testPrivacyRouteUsesTheConfigFallbackWhenTheTranslationIsEmpty(): void
+    {
+        self::assertNull((new CookieConsentTranslationTwigExtension(new RequestStack(), $this->createTranslator()))->privacyRoute());
+        self::assertSame('legal_privacy', (new CookieConsentTranslationTwigExtension(new RequestStack(), $this->createTranslator(), 'legal_privacy'))->privacyRoute());
+        self::assertNull((new CookieConsentTranslationTwigExtension(new RequestStack(), $this->createTranslator(), ''))->privacyRoute());
+        self::assertSame('legal_privacy', (new CookieConsentTranslationTwigExtension(new RequestStack(), $this->createTranslator(['nowo_cookie_consent.privacy_route' => '']), 'legal_privacy'))->privacyRoute());
+    }
+
+    public function testPrivacyRouteTranslationWinsOverTheFallback(): void
+    {
+        $extension = new CookieConsentTranslationTwigExtension(new RequestStack(), $this->createTranslator(['nowo_cookie_consent.privacy_route' => 'app_privacy']), 'legal_privacy');
+
+        self::assertSame('app_privacy', $extension->privacyRoute());
     }
 
     public function testFallsBackToTranslatorWithoutResolvedConfig(): void
@@ -102,11 +117,14 @@ final class CookieConsentTranslationTwigExtensionTest extends TestCase
         );
     }
 
-    private function createTranslator(): Translator
+    /**
+     * @param array<string, string> $extra
+     */
+    private function createTranslator(array $extra = []): Translator
     {
         $translator = new Translator('en');
         $translator->addLoader('array', new ArrayLoader());
-        $translator->addResource('array', [
+        $translator->addResource('array', $extra + [
             'nowo_cookie_consent.title'     => 'YAML title',
             'nowo_cookie_consent.read_more' => 'YAML read more',
         ], 'en', CookieConsentTranslationTwigExtension::TRANSLATION_DOMAIN);

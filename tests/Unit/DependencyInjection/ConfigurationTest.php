@@ -21,6 +21,7 @@ final class ConfigurationTest extends TestCase
         $config    = $processor->processConfiguration(new Configuration(), [[]]);
 
         self::assertSame('', $config['table_prefix']);
+        self::assertNull($config['privacy_route']);
         self::assertSame('default', $config['doctrine']['connection']);
         self::assertSame('', $config['doctrine']['table_prefix']);
         self::assertSame(

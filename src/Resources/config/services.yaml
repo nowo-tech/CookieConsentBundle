@@ -67,6 +67,7 @@ services:
       $darkModeEnabled: '%nowo_cookie_consent.dark_mode_enabled%'
       $disableTransitions: '%nowo_cookie_consent.disable_transitions%'
       $disablePageInteraction: '%nowo_cookie_consent.disable_page_interaction%'
+      $privacyRouteFallback: '%nowo_cookie_consent.privacy_route%'
       $twoStepModal: '%nowo_cookie_consent.two_step_modal%'
       $openPreferencesModal: '%nowo_cookie_consent.open_preferences_modal%'
       $manageIframePlaceholders: '%nowo_cookie_consent.manage_iframe_placeholders%'
@@ -82,6 +83,10 @@ services:
     arguments:
       $useCookieInventory: '%nowo_cookie_consent.use_cookie_inventory%'
       $yamlCookieInventory: '%nowo_cookie_consent.cookie_inventory%'
+
+  Nowo\CookieConsentBundle\Twig\CookieConsentTranslationTwigExtension:
+    arguments:
+      $privacyRouteFallback: '%nowo_cookie_consent.privacy_route%'
 
   Nowo\CookieConsentBundle\Twig\CookieConsentTwigExtension:
     arguments:

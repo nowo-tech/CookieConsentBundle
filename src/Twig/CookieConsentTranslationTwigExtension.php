@@ -12,6 +12,7 @@ use Twig\Extension\AbstractExtension;
 use Twig\TwigFunction;
 
 use function array_key_exists;
+use function trim;
 
 /**
  * Translates consent modal texts, preferring the database profile copy of the current request.
@@ -23,9 +24,13 @@ final class CookieConsentTranslationTwigExtension extends AbstractExtension
 {
     public const TRANSLATION_DOMAIN = 'NowoCookieConsentBundle';
 
+    /**
+     * @param string|null $privacyRouteFallback Config `privacy_route`: used when the profile translation is empty
+     */
     public function __construct(
         private readonly RequestStack $requestStack,
         private readonly TranslatorInterface $translator,
+        private readonly ?string $privacyRouteFallback = null,
     ) {
     }
 
@@ -36,6 +41,7 @@ final class CookieConsentTranslationTwigExtension extends AbstractExtension
     {
         return [
             new TwigFunction('nowo_cookie_consent_trans', $this->trans(...)),
+            new TwigFunction('nowo_cookie_consent_privacy_route', $this->privacyRoute(...)),
         ];
     }
 
@@ -59,6 +65,22 @@ final class CookieConsentTranslationTwigExtension extends AbstractExtension
         }
 
         return $this->translator->trans($id, [], self::TRANSLATION_DOMAIN);
+    }
+
+    /**
+     * Route name of the privacy link of the modal: the profile / translation value
+     * (`nowo_cookie_consent.privacy_route`), else the configured `privacy_route` fallback; null for no link.
+     *
+     * @param mixed $displayConfig The resolved config passed to the template; defaults to the one stored on the request
+     */
+    public function privacyRoute(mixed $displayConfig = null): ?string
+    {
+        $route = trim($this->trans('nowo_cookie_consent.privacy_route', $displayConfig));
+        if ($route !== '' && $route !== 'nowo_cookie_consent.privacy_route') {
+            return $route;
+        }
+
+        return $this->privacyRouteFallback !== null && $this->privacyRouteFallback !== '' ? $this->privacyRouteFallback : null;
     }
 
     private function getRequestResolvedConfig(): ?ResolvedCookieConsentConfig

@@ -72,6 +72,9 @@ nowo_cookie_consent:
         - privacy
         - imprint
 
+    # Privacy link of the modal when the profile translation nowo_cookie_consent.privacy_route is empty (1.17)
+    privacy_route: null
+
     # Route name patterns where the consent fragment is not rendered at all
     # (empty response; no Doctrine inventory/config work). Wildcards via fnmatch.
     # skip_render_routes:
@@ -139,6 +142,7 @@ Every key accepted under `nowo_cookie_consent` (run `php bin/console config:dump
 | Key | Default | Description |
 |-----|---------|-------------|
 | `disabled_routes` | `[privacy, imprint]` | Route names where the modal never auto-opens (always wins over targeting) |
+| `privacy_route` | `null` | *(1.17)* Route name of the privacy link when the profile translation `nowo_cookie_consent.privacy_route` is empty |
 | `skip_render_routes` | `[]` | Route patterns (fnmatch) where the consent fragment is not rendered at all (empty response, no inventory/config queries) |
 | `render_routes` | `[]` | When non-empty, the fragment renders **only** on these route patterns; `skip_render_routes` still wins |
 | `route_targeting_mode` | `all` | *(DB override)* Where the modal opens automatically: `all` (every route except `disabled_routes`), `only` (only routes matching `target_routes`), `except` (every route except those matching `target_routes`) |
@@ -330,7 +334,9 @@ nowo_cookie_consent:
 
 4. Clear the Symfony cache in dev if translations do not appear: `php bin/console cache:clear`.
 
-Set `nowo_cookie_consent.privacy_route` to a Symfony route name to link the privacy policy from the modal.
+Set the translation `nowo_cookie_consent.privacy_route` to a Symfony route name to link the privacy policy from the modal.
+When it is empty, the config key `privacy_route` (1.17, default `null`) is used instead — one line for every locale and
+profile, e.g. `privacy_route: legal_privacy` (LegalKitBundle prepends exactly that unless you set it).
 
 When `use_database_config: true`, per-locale copy can also be stored in `CookieConsentConfigTranslation` entities (admin CRUD); YAML overrides still apply to keys not overridden in the database layer.
 

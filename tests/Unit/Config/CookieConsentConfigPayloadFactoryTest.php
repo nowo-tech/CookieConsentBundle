@@ -84,6 +84,26 @@ final class CookieConsentConfigPayloadFactoryTest extends TestCase
         self::assertArrayHasKey('marketing', $payload['data']['categories']);
     }
 
+    public function testPrivacyRouteFallsBackToTheConfiguredRoute(): void
+    {
+        $resolver = new CookieConsentConfigResolver(
+            new CookieConsentConfigSelector(
+                $this->createMock(CookieConsentConfigRepository::class),
+                new CookieConsentRoutePatternMatcher(),
+            ),
+            $this->createMock(CookieConsentConfigTranslationRepository::class),
+            false,
+        );
+        $translator = $this->createMock(TranslatorInterface::class);
+        $translator->method('trans')->willReturnCallback(static fn (string $id): string => $id === 'nowo_cookie_consent.privacy_route' ? '' : $id);
+
+        $withFallback = new CookieConsentConfigPayloadFactory($resolver, $translator, $this->createInventoryProvider(), ['analytics'], [], false, 'legal_privacy');
+        self::assertSame('legal_privacy', $withFallback->build('en')['data']['language']['translations']['en']['consentModal']['privacyRoute']);
+
+        $without = new CookieConsentConfigPayloadFactory($resolver, $translator, $this->createInventoryProvider(), ['analytics']);
+        self::assertNull($without->build('en')['data']['language']['translations']['en']['consentModal']['privacyRoute']);
+    }
+
     private function createInventoryProvider(): CookieInventoryProvider
     {
         return new CookieInventoryProvider($this->createMock(CookieDefinitionRepository::class), false, []);

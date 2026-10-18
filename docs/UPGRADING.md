@@ -3,6 +3,7 @@
 ## Table of contents
 
 - [Unreleased](#unreleased)
+- [To 1.17.0](#to-1170)
 - [To 1.16.3](#to-1163)
 - [To 1.16.2](#to-1162)
 - [To 1.16.1](#to-1161)
@@ -101,6 +102,26 @@
 - [Getting help](#getting-help)
 
 ## Unreleased
+
+## To 1.17.0
+
+From **1.16.3**:
+
+```bash
+composer update nowo-tech/cookie-consent-bundle
+```
+
+No breaking change. Optional: replace per-locale `nowo_cookie_consent.privacy_route` translations that all point at
+the same route by one config line:
+
+```yaml
+nowo_cookie_consent:
+    privacy_route: legal_privacy   # used when the profile translation is empty
+```
+
+Host overrides of `cookie_consent.html.twig` / `cookie_consent.tailwind.html.twig` that read
+`nowo_cookie_consent_trans('nowo_cookie_consent.privacy_route', …)` keep working; call
+`nowo_cookie_consent_privacy_route(display_config ?? null)` to get the fallback too.
 
 ## To 1.16.3
 

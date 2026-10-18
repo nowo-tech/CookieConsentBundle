@@ -29,6 +29,7 @@ final class CookieConsentConfigPayloadFactory
         private readonly array $categories,
         private readonly array $yamlPreferenceSections = [],
         private readonly bool $disablePageInteraction = false,
+        private readonly ?string $privacyRouteFallback = null,
     ) {
     }
 
@@ -132,7 +133,7 @@ final class CookieConsentConfigPayloadFactory
             'acceptNecessaryBtn' => $translation?->getConsentModalAcceptNecessaryBtn() ?? $this->trans('nowo_cookie_consent.use_only_functional_cookies', $locale),
             'showPreferencesBtn' => $translation?->getConsentModalShowPreferencesBtn(),
             'footer'             => $translation?->getConsentModalFooter() ?? $this->trans('nowo_cookie_consent.read_more', $locale),
-            'privacyRoute'       => $translation?->getPrivacyRoute() ?? $this->trans('nowo_cookie_consent.privacy_route', $locale) ?: null,
+            'privacyRoute'       => ($translation?->getPrivacyRoute() ?? $this->trans('nowo_cookie_consent.privacy_route', $locale)) ?: ($this->privacyRouteFallback ?: null),
         ];
     }
 

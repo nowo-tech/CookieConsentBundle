@@ -101,7 +101,7 @@
                 </div>
                 <div class="nowo-cookie-consent__scrollable px-6 py-5">
                     <p class="nowo-cookie-consent__intro text-sm">{{ nowo_cookie_consent_trans('nowo_cookie_consent.intro', display_config ?? null) }}</p>
-                    {% set privacy_route = nowo_cookie_consent_trans('nowo_cookie_consent.privacy_route', display_config ?? null) %}
+                    {% set privacy_route = nowo_cookie_consent_privacy_route(display_config ?? null) %}
                     {% if privacy_route %}
                         <a class="nowo-cookie-consent__read-more mt-2 inline-flex text-sm font-medium" href="{{ path(privacy_route) }}">
                             {{ nowo_cookie_consent_trans('nowo_cookie_consent.read_more', display_config ?? null) }}

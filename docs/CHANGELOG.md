@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## Table of contents
 
 - [[Unreleased]](#unreleased)
+- [[1.17.0] - 2026-10-18](#1170---2026-10-18)
 - [[1.16.3] - 2026-10-18](#1163---2026-10-18)
 - [[1.16.2] - 2026-10-18](#1162---2026-10-18)
 - [[1.16.1] - 2026-10-18](#1161---2026-10-18)
@@ -64,6 +65,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - [[1.0.0] - 2026-06-15](#100---2026-06-15)
 
 ## [Unreleased]
+
+## [1.17.0] - 2026-10-18
+
+Config `privacy_route` fallback for the privacy link of the modal. See [UPGRADING](UPGRADING.md#to-1170).
+
+### Added
+
+- `nowo_cookie_consent.privacy_route` (default `null`): route name the modal links as the privacy policy when the
+  profile translation `nowo_cookie_consent.privacy_route` is empty (database profile or YAML catalogue). The profile
+  value still wins. Used by the server-rendered modal (both themes) and the config API payload (`privacyRoute`);
+  container parameter `nowo_cookie_consent.privacy_route`; Twig function `nowo_cookie_consent_privacy_route()`.
+  LegalKitBundle sets it to `legal_privacy` unless the host does (one line instead of a translation edit per host).
 
 ## [1.16.3] - 2026-10-18
 
