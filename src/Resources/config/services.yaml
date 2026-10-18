@@ -67,7 +67,6 @@ services:
       $darkModeEnabled: '%nowo_cookie_consent.dark_mode_enabled%'
       $disableTransitions: '%nowo_cookie_consent.disable_transitions%'
       $disablePageInteraction: '%nowo_cookie_consent.disable_page_interaction%'
-      $privacyRouteFallback: '%nowo_cookie_consent.privacy_route%'
       $twoStepModal: '%nowo_cookie_consent.two_step_modal%'
       $openPreferencesModal: '%nowo_cookie_consent.open_preferences_modal%'
       $manageIframePlaceholders: '%nowo_cookie_consent.manage_iframe_placeholders%'
@@ -103,6 +102,7 @@ services:
       $categories: '%nowo_cookie_consent.categories%'
       $yamlPreferenceSections: '%nowo_cookie_consent.preference_sections%'
       $disablePageInteraction: '%nowo_cookie_consent.disable_page_interaction%'
+      $privacyRouteFallback: '%nowo_cookie_consent.privacy_route%'
 
   Nowo\CookieConsentBundle\Controller\:
     resource: '../../Controller/'
