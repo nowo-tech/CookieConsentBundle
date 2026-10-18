@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## Table of contents
 
 - [[Unreleased]](#unreleased)
+- [[1.16.2] - 2026-10-18](#1162---2026-10-18)
 - [[1.16.1] - 2026-10-18](#1161---2026-10-18)
 - [[1.16.0] - 2026-10-18](#1160---2026-10-18)
 - [[1.15.2] - 2026-10-13](#1152---2026-10-13)
@@ -63,6 +64,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.16.2] - 2026-10-18
+
+Requires UiKit ^2.2; locale and route-pattern placeholders are translated keys. See [UPGRADING](UPGRADING.md#to-1162).
+
 ### Changed
 
 - Requires `nowo-tech/ui-kit-bundle` **^2.2** (default-theme polish: table header hierarchy, striped rows, subtle
@@ -90,6 +95,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - The host layouts print the UiKit runtimes through the UiKit `scripts` partial; the Tailwind demo themes
   `btn_danger_solid` (danger confirm buttons) next to `btn_danger`.
+
+[1.16.2]: https://github.com/nowo-tech/CookieConsentBundle/releases/tag/v1.16.2
 
 ## [1.16.1] - 2026-10-18
 

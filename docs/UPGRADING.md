@@ -3,6 +3,7 @@
 ## Table of contents
 
 - [Unreleased](#unreleased)
+- [To 1.16.2](#to-1162)
 - [To 1.16.1](#to-1161)
 - [To 1.16.0](#to-1160)
   - [Template contract (1.16)](#template-contract-116)
@@ -99,6 +100,14 @@
 - [Getting help](#getting-help)
 
 ## Unreleased
+
+## To 1.16.2
+
+From **1.16.1**:
+
+```bash
+composer update nowo-tech/cookie-consent-bundle
+```
 
 Requires UiKit **^2.2** (`composer require nowo-tech/ui-kit-bundle:^2.2`). No configuration change. What hosts may
 notice (UiKit UPGRADING "Template contract (2.2)"): the settings section tabs under the Settings / Cookie inventory
