@@ -1122,14 +1122,14 @@
             "dist": {
                 "type": "path",
                 "url": "/var/cookie-consent-bundle",
-                "reference": "b003775cd7625a3f0ca1f912e56335faa510ced8"
+                "reference": "915250378e463f0a1d625ef875d36fa1b66108bc"
             },
             "require": {
                 "doctrine/doctrine-bundle": "^2.10 || ^3.0",
                 "doctrine/orm": "^3.7",
                 "ext-dom": "*",
                 "nowo-tech/form-kit-bundle": "^2.9",
-                "nowo-tech/ui-kit-bundle": "^2.1",
+                "nowo-tech/ui-kit-bundle": "^2.2",
                 "php": ">=8.2 <8.6",
                 "psr/clock": "^1.0",
                 "psr/log": "^1.0 || ^2 || ^3",
@@ -1370,16 +1370,16 @@
         },
         {
             "name": "nowo-tech/ui-kit-bundle",
-            "version": "v2.1.0",
+            "version": "v2.2.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/nowo-tech/UiKitBundle.git",
-                "reference": "f0abbd4536811d0c91e4f91473745f6af9f44cd2"
+                "reference": "aa13a2f8845017ba7a07e48ee74ce63a44326698"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/nowo-tech/UiKitBundle/zipball/f0abbd4536811d0c91e4f91473745f6af9f44cd2",
-                "reference": "f0abbd4536811d0c91e4f91473745f6af9f44cd2",
+                "url": "https://api.github.com/repos/nowo-tech/UiKitBundle/zipball/aa13a2f8845017ba7a07e48ee74ce63a44326698",
+                "reference": "aa13a2f8845017ba7a07e48ee74ce63a44326698",
                 "shasum": ""
             },
             "require": {
@@ -1458,7 +1458,7 @@
                 "issues": "https://github.com/nowo-tech/UiKitBundle/issues",
                 "source": "https://github.com/nowo-tech/UiKitBundle"
             },
-            "time": "2026-10-17T23:39:23+00:00"
+            "time": "2026-10-18T08:32:49+00:00"
         },
         {
             "name": "psr/cache",

@@ -15,6 +15,8 @@ nowo_ui_kit:
             btn_primary: 'rounded-md bg-indigo-600 text-white hover:bg-indigo-500'
             btn_secondary: 'rounded-md border-slate-300 bg-white text-slate-700 hover:bg-slate-50'
             btn_danger: 'rounded-md border-red-300 text-red-700 hover:bg-red-50'
+            # UiKit 2.2: confirm buttons of danger confirms (solid destructive button)
+            btn_danger_solid: 'rounded-md bg-red-600 text-white hover:bg-red-500'
             table_wrap: 'rounded-lg border border-slate-200 bg-white shadow-sm nowo-ui-table-wrap--flush'
             table: 'min-w-full divide-y divide-slate-200 text-sm'
             table_head_cell: 'px-4 py-3 text-left font-semibold text-slate-700'
