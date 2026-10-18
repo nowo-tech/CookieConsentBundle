@@ -13,13 +13,17 @@ This bundle is **FrankenPHP worker mode friendly**, including when the kernel is
 
 <table>
   <tr>
-    <td align="center" width="50%">
-      <img src="docs/images/demo/overview.webp" alt="Cookie consent banner" />
-      <br /><sub>Consent banner</sub>
+    <td align="center" valign="top" width="33%">
+      <img src="docs/images/demo/overview.webp" alt="Demo home page with the two-step consent banner (dark-turquoise theme): Manage preferences, Reject all and Accept all buttons over the page overlay" />
+      <br /><sub>Consent banner — two-step modal with page overlay</sub>
     </td>
-    <td align="center" width="50%">
-      <img src="docs/images/demo/interaction.webp" alt="Cookie consent preferences panel" />
-      <br /><sub>Preferences step</sub>
+    <td align="center" valign="top" width="33%">
+      <img src="docs/images/demo/admin-cookie-definitions.webp" alt="Cookie inventory admin list: name, provider, purpose, category, duration, allowed-by-default badge and row actions, paginated" />
+      <br /><sub>Admin — cookie inventory per consent profile</sub>
+    </td>
+    <td align="center" valign="top" width="33%">
+      <img src="docs/images/demo/admin-settings.webp" alt="Consent profile settings with section tabs, Appearance tab open: colour theme, page overlay, dark mode, transitions and two-step modal options" />
+      <br /><sub>Admin — profile settings with section tabs</sub>
     </td>
   </tr>
 </table>
