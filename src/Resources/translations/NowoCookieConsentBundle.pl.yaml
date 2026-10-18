@@ -64,6 +64,7 @@ nowo_cookie_consent.admin.cookie_definition.fields.allowed_by_default_help: 'Gdy
 nowo_cookie_consent.admin.cookie_definition.fields.translations: 'Tłumaczenia'
 nowo_cookie_consent.admin.cookie_definition.fields.locale: 'Język'
 nowo_cookie_consent.admin.cookie_definition.fields.locale_help: 'Kod języka ISO, np. en lub es'
+nowo_cookie_consent.admin.cookie_definition.fields.locale_placeholder: 'en'
 nowo_cookie_consent.admin.cookie_definition.category.required: 'Niezbędne'
 nowo_cookie_consent.admin.cookie_definition.category.functionality: 'Funkcjonalne'
 nowo_cookie_consent.admin.cookie_definition.category.preferences: 'Preferencje'
@@ -97,6 +98,7 @@ nowo_cookie_consent.admin.config.settings.fields.name: 'Nazwa profilu'
 nowo_cookie_consent.admin.config.settings.fields.name_help: 'Etykieta wyświetlana na liście profili w panelu administracyjnym. Nie wpływa na tekst publicznego okna.'
 nowo_cookie_consent.admin.config.settings.fields.route_patterns: 'Wzorce tras'
 nowo_cookie_consent.admin.config.settings.fields.route_patterns_help: 'Jeden wzorzec w wierszu. Przykłady: home, admin_*, *_privacy'
+nowo_cookie_consent.admin.config.settings.fields.route_patterns_placeholder: "admin_*\ncookie_consent_*"
 nowo_cookie_consent.admin.config.settings.fields.priority: 'Priorytet'
 nowo_cookie_consent.admin.config.settings.fields.priority_help: 'Jeśli do bieżącej trasy pasuje kilka profili, wygrywa ten o najwyższym priorytecie.'
 nowo_cookie_consent.admin.config.settings.fields.default_profile: 'Domyślny profil zapasowy'
@@ -165,6 +167,7 @@ nowo_cookie_consent.admin.config.settings.fields.auto_show_route_mode: 'Gdzie po
 nowo_cookie_consent.admin.config.settings.fields.auto_show_route_mode_help: 'Ogranicza automatyczne otwieranie do wybranych tras lub wyklucza strony administracyjne.'
 nowo_cookie_consent.admin.config.settings.fields.auto_show_routes: 'Nazwy tras'
 nowo_cookie_consent.admin.config.settings.fields.auto_show_routes_help: 'Nazwy lub wzorce tras, po jednym w wierszu. Używane z powyższym trybem wyboru.'
+nowo_cookie_consent.admin.config.settings.fields.auto_show_routes_placeholder: "home\nadmin_*"
 nowo_cookie_consent.admin.config.settings.layout.box: 'Pudełko'
 nowo_cookie_consent.admin.config.settings.layout.cloud: 'Chmura'
 nowo_cookie_consent.admin.config.settings.layout.bar: 'Pasek'

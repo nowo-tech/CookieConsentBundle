@@ -70,12 +70,13 @@ abstract class AbstractCookieConsentConfigSettingsType extends AbstractType
     public function configureOptions(OptionsResolver $resolver): void
     {
         $resolver->setDefaults([
-            'data_class'                   => CookieConsentConfig::class,
-            'translation_domain'           => 'NowoCookieConsentBundle',
-            'label_prefix'                 => 'nowo_cookie_consent.admin.config.settings.fields.',
-            'choice_label_prefix'          => 'nowo_cookie_consent.admin.config.settings.',
-            'route_patterns_placeholder'   => "admin_*\ncookie_consent_*",
-            'auto_show_routes_placeholder' => "home\nadmin_*",
+            'data_class'          => CookieConsentConfig::class,
+            'translation_domain'  => 'NowoCookieConsentBundle',
+            'label_prefix'        => 'nowo_cookie_consent.admin.config.settings.fields.',
+            'choice_label_prefix' => 'nowo_cookie_consent.admin.config.settings.',
+            // Translation keys of the form domain (the form theme translates the placeholder once).
+            'route_patterns_placeholder'   => 'nowo_cookie_consent.admin.config.settings.fields.route_patterns_placeholder',
+            'auto_show_routes_placeholder' => 'nowo_cookie_consent.admin.config.settings.fields.auto_show_routes_placeholder',
         ]);
 
         $resolver->setAllowedTypes('route_patterns_placeholder', 'string');

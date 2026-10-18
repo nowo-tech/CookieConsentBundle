@@ -75,6 +75,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   (`nowo-cookie-consent-admin.css`): UiKit 2.2 keeps row actions on one line in every list (`width: 1%;
   white-space: nowrap` actions column).
 
+### Fixed
+
+- **Missing messages (profiler):** literal placeholders were looked up as messages of `NowoCookieConsentBundle` by
+  the form theme: the translation locale example (`en`) and the route-pattern examples of the settings forms
+  (`admin_*` / `cookie_consent_*`, `home` / `admin_*`). They are catalogue keys now
+  (`nowo_cookie_consent.admin.cookie_definition.fields.locale_placeholder`,
+  `nowo_cookie_consent.admin.config.settings.fields.route_patterns_placeholder`, `…auto_show_routes_placeholder`;
+  9 locales), translated once by the theme. The `route_patterns_placeholder` / `auto_show_routes_placeholder` form
+  options now default to those keys (a custom value is translated in the form domain, like any placeholder). A
+  contract test renders every admin page with a `DataCollectorTranslator` and asserts no missing message.
+
 ### Demo
 
 - The host layouts print the UiKit runtimes through the UiKit `scripts` partial; the Tailwind demo themes

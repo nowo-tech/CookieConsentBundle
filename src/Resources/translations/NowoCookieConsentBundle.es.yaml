@@ -64,6 +64,7 @@ nowo_cookie_consent.admin.cookie_definition.fields.allowed_by_default_help: 'Con
 nowo_cookie_consent.admin.cookie_definition.fields.translations: 'Traducciones'
 nowo_cookie_consent.admin.cookie_definition.fields.locale: 'Idioma'
 nowo_cookie_consent.admin.cookie_definition.fields.locale_help: 'Código ISO, p. ej. en o es'
+nowo_cookie_consent.admin.cookie_definition.fields.locale_placeholder: 'en'
 nowo_cookie_consent.admin.cookie_definition.category.required: 'Necesarias'
 nowo_cookie_consent.admin.cookie_definition.category.functionality: 'Funcionalidad'
 nowo_cookie_consent.admin.cookie_definition.category.preferences: 'Preferencias'
@@ -97,6 +98,7 @@ nowo_cookie_consent.admin.config.settings.fields.name: 'Nombre del perfil'
 nowo_cookie_consent.admin.config.settings.fields.name_help: 'Etiqueta en el listado de perfiles del admin. No afecta al texto público del modal.'
 nowo_cookie_consent.admin.config.settings.fields.route_patterns: 'Patrones de ruta'
 nowo_cookie_consent.admin.config.settings.fields.route_patterns_help: 'Un patrón por línea. Ejemplos: home, admin_*, *_privacy'
+nowo_cookie_consent.admin.config.settings.fields.route_patterns_placeholder: "admin_*\ncookie_consent_*"
 nowo_cookie_consent.admin.config.settings.fields.priority: 'Prioridad'
 nowo_cookie_consent.admin.config.settings.fields.priority_help: 'Si varios perfiles coinciden con la ruta actual, gana el de mayor prioridad.'
 nowo_cookie_consent.admin.config.settings.fields.default_profile: 'Perfil predeterminado'
@@ -165,6 +167,7 @@ nowo_cookie_consent.admin.config.settings.fields.auto_show_route_mode: 'Dónde m
 nowo_cookie_consent.admin.config.settings.fields.auto_show_route_mode_help: 'Restringe la apertura automática a rutas concretas o excluye páginas de admin.'
 nowo_cookie_consent.admin.config.settings.fields.auto_show_routes: 'Nombres de ruta'
 nowo_cookie_consent.admin.config.settings.fields.auto_show_routes_help: 'Nombres o patrones de ruta, uno por línea. Se usan con el modo de destino anterior.'
+nowo_cookie_consent.admin.config.settings.fields.auto_show_routes_placeholder: "home\nadmin_*"
 nowo_cookie_consent.admin.config.settings.layout.box: 'Caja'
 nowo_cookie_consent.admin.config.settings.layout.cloud: 'Nube'
 nowo_cookie_consent.admin.config.settings.layout.bar: 'Barra'

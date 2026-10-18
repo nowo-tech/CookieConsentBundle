@@ -48,7 +48,7 @@ class CookieDefinitionTranslationType extends AbstractType
         $this->addText($builder, 'locale', [
             'label'      => $options['label_prefix'] . 'locale',
             'help'       => $options['label_prefix'] . 'locale_help',
-            'attr'       => ['placeholder' => 'en'],
+            'attr'       => ['placeholder' => 'nowo_cookie_consent.admin.cookie_definition.fields.locale_placeholder'],
             'empty_data' => '',
         ]);
         $this->addText($builder, 'provider', [

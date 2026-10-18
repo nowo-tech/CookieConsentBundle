@@ -64,6 +64,7 @@ nowo_cookie_consent.admin.cookie_definition.fields.allowed_by_default_help: 'Bei
 nowo_cookie_consent.admin.cookie_definition.fields.translations: 'Übersetzungen'
 nowo_cookie_consent.admin.cookie_definition.fields.locale: 'Sprache'
 nowo_cookie_consent.admin.cookie_definition.fields.locale_help: 'ISO-Sprachcode, z. B. en oder de'
+nowo_cookie_consent.admin.cookie_definition.fields.locale_placeholder: 'en'
 nowo_cookie_consent.admin.cookie_definition.category.required: 'Erforderlich'
 nowo_cookie_consent.admin.cookie_definition.category.functionality: 'Funktionalität'
 nowo_cookie_consent.admin.cookie_definition.category.preferences: 'Präferenzen'
@@ -97,6 +98,7 @@ nowo_cookie_consent.admin.config.settings.fields.name: 'Profilname'
 nowo_cookie_consent.admin.config.settings.fields.name_help: 'Bezeichnung in der Admin-Profiliste. Beeinflusst nicht den öffentlichen Modaltext.'
 nowo_cookie_consent.admin.config.settings.fields.route_patterns: 'Routenmuster'
 nowo_cookie_consent.admin.config.settings.fields.route_patterns_help: 'Ein Muster pro Zeile. Beispiele: home, admin_*, *_privacy'
+nowo_cookie_consent.admin.config.settings.fields.route_patterns_placeholder: "admin_*\ncookie_consent_*"
 nowo_cookie_consent.admin.config.settings.fields.priority: 'Priorität'
 nowo_cookie_consent.admin.config.settings.fields.priority_help: 'Wenn mehrere Profile zur aktuellen Route passen, gewinnt das mit der höchsten Priorität.'
 nowo_cookie_consent.admin.config.settings.fields.default_profile: 'Standard-Fallback-Profil'
@@ -165,6 +167,7 @@ nowo_cookie_consent.admin.config.settings.fields.auto_show_route_mode: 'Wo das M
 nowo_cookie_consent.admin.config.settings.fields.auto_show_route_mode_help: 'Beschränkt automatisches Öffnen auf bestimmte Routen oder schließt Admin-Seiten aus.'
 nowo_cookie_consent.admin.config.settings.fields.auto_show_routes: 'Routennamen'
 nowo_cookie_consent.admin.config.settings.fields.auto_show_routes_help: 'Routennamen oder Muster, eines pro Zeile. Wird mit dem Zielmodus oben verwendet.'
+nowo_cookie_consent.admin.config.settings.fields.auto_show_routes_placeholder: "home\nadmin_*"
 nowo_cookie_consent.admin.config.settings.layout.box: 'Kasten'
 nowo_cookie_consent.admin.config.settings.layout.cloud: 'Wolke'
 nowo_cookie_consent.admin.config.settings.layout.bar: 'Leiste'
