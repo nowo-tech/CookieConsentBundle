@@ -26,7 +26,7 @@ scaffolds and keeps its own templates and CSS (no CDN assets).
 | Page | Template | Scaffold | View model | Data blocks filled |
 | --- | --- | --- | --- | --- |
 | Cookie inventory of a profile | `admin/cookie_definition/index.html.twig` | `page/list` | `ListPage` (columns: name, provider, purpose, category, duration, allowedByDefault; rowActions: edit, delete with `Confirm`; pagination; empty state with a create action; header action: create) | `nowo_ui_list_row` |
-| Cookie definition (new / edit) | `admin/cookie_definition/form.html.twig` | `page/form` | `FormPage` (submit "Save cookie", cancel → inventory) | `nowo_ui_form_body` (`parent()`; deprecated `form_fields` partial first when configured) |
+| Cookie definition (new / edit) | `admin/cookie_definition/form.html.twig` | `page/form` | `FormPage` (submit "Save cookie", cancel → inventory) | `nowo_ui_form_body` (scalar fields in a two-column grid, "allowed by default", translations table `_translations_table.html.twig`, then `parent()` for the rest; deprecated `form_fields` partial first when configured — the fields it renders are skipped) |
 | Profile settings (one section per route: profile, behavior, appearance, consent-modal, preferences-modal, route-targeting) | `admin/config/settings.html.twig` | `page/settings` | `SettingsPage` (six `SettingsSection`s with `href` = tabs, `current` = the route section; only the current one carries its form) | `nowo_ui_settings_section` (`parent()`; deprecated `form_fields` partial when configured) |
 
 Root attributes (`ListPage::attributes` etc.) for tests: `data-testid="cookie-consent-definitions"`,
@@ -55,8 +55,24 @@ them (for instance when DashboardMenu renders the navigation). `admin/_admin_are
 for 1.x host templates that include it; it renders the registry's navigation).
 
 Rows of the inventory list are plain arrays: `id`, `name`, `provider`, `purpose`, `category` (`View\Label`, translate with
-`|nowo_ui_trans`), `duration`, `allowedByDefault` (bool). Cells use the `table_cell`, `table_cell_muted`, `muted`,
-`badge_success` and `badge_neutral` slots and carry `data-label` (card mode) and `data-nowo-ui-priority`.
+`|nowo_ui_trans`), `duration`, `allowedByDefault` (bool). Cells use the `table_cell`, `table_cell_muted`, `code`, `muted`,
+`badge_success` and `badge_neutral` slots and carry `data-label` (card mode) and `data-nowo-ui-priority`; name,
+category, duration and default carry `nowo-cc-admin-nowrap`, the purpose `nowo-cc-admin-clamp` (two lines, full text in
+`title`).
+
+**Cookie definition form.** `nowo_ui_form_body` renders `name`, `duration`, `category`, `type`, `sortOrder` inside
+`<div class="nowo-cc-admin-form__grid" data-nowo-cc-region="definition-fields">`, then `allowedByDefault`, then the
+translations through `admin/cookie_definition/_translations_table.html.twig` (`<fieldset data-nowo-cc-region="translations">`
+with a legend, the locale help and a table built from the `table_wrap` / `table` / `table_head*` / `table_row` /
+`table_cell` slots: one `<tr data-nowo-cc-translation="<locale>">` per entry, the locale widget in the row header cell,
+provider and purpose widgets with per-row `aria-label`s and their errors), then `parent()` renders whatever is left
+(CSRF token, fields a host form extension adds). Text controls come from the seeded `cookie_consent` FormKit profile with
+the UiKit `input_full` slot.
+
+**Bundle stylesheet.** The list and form pages append `bundles/nowocookieconsent/nowo-cookie-consent-admin.css` to
+`nowo_ui_styles` (local asset, no CDN). It only lays out the bundle's own data-block markup (`nowo-cc-admin-*` classes:
+form grid, translations table, nowrap / clamp cells, one-line row actions of the inventory) and reads UiKit tokens; a
+host theme can override it like any stylesheet loaded after UiKit's.
 
 ## Unique pages
 

@@ -62,6 +62,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+UI polish after the UiKit page-contract migration: readable dark preferences modal, cookie definition form and inventory list layout, demo fixes.
+
+### Fixed
+
+- **Preferences modal, dark themes:** with `dark-turquoise` and `elegant-black` the category headers inherited the light-theme pastel tints (white titles on pastel backgrounds, unreadable) and the footer the light grey strip. Both themes now declare the full token set: dark tints of the category hues (`--nowo-cc-card-*`), footer on the modal surface (`--nowo-cc-footer-bg: var(--nowo-cc-bg)`, also for `dark` / dark mode), separators, link and button hover tokens, a visible read-only toggle track. The base category tints derive from `--nowo-cc-category-block-bg` / `-border`, so a theme that only sets the block tokens stays coherent.
+- **Preferences modal:** "Save preferences", the only action of the two-step preferences step, renders as the primary (accent) button instead of the secondary one (Bootstrap and Tailwind templates; class `nowo-cookie-consent__btn--save`). The scroll area keeps 1.5rem of bottom padding and a scroll padding so the last category / cookie row is not cut at the footer edge; cookie names in the cookie table use the theme text colour.
+- **Cookie definition form:** the translations collection carried the input class (`nowo-ui-input`, capped at 20rem) and rendered one numbered fieldset per entry (`0`, `1`, …) with narrow inputs and tiny textareas.
+- **Cookie inventory:** edit / delete row actions stacked vertically, short cells (name, category, duration, default) wrapped, long purposes made every row tall.
+
+### Changed
+
+- **Cookie definition form layout:** scalar fields in a two-column grid (one column on narrow screens), the translations as a full-width table — one row per locale with the locale as the row header, provider and purpose (readable textarea), per-row `aria-label`s and errors under each widget (`admin/cookie_definition/_translations_table.html.twig`). Form names, CSRF token and validation are unchanged.
+- **Seeded `cookie_consent` FormKit profile:** text controls use the UiKit 2.1 `input_full` slot (`nowo-ui-input nowo-ui-input--full`) instead of `nowo-ui-input`; the collection wrapper gets no input classes. Hosts that define their own `nowo_form_kit.profiles.cookie_consent` are not affected.
+- **Cookie inventory list:** the name uses the UiKit `code` slot; name, category, duration and default do not wrap; the purpose is clamped to two lines with the full text in `title`.
+- The admin list and form pages link `bundles/nowocookieconsent/nowo-cookie-consent-admin.css` (layout of the bundle's own data blocks; reads UiKit tokens) in `nowo_ui_styles` — run `assets:install` after upgrading.
+- **Demo:** the intro and legal texts say MySQL (the demos run MySQL 8.4, not SQLite); in dev the banner and the preferences bubble sit above the open WebProfiler toolbar; smaller blocked-iframe placeholder; `list_page_size: 10`. New e2e checks: dark-turquoise preferences contrast / footer / accent, inventory row layout, cookie form grid + translations table with a validation and save round-trip.
+
 ## [1.16.0] - 2026-10-18
 
 Admin UI on the UiKit 2.1 standard page contract (REQ-UI-003): list, form and settings scaffolds, area navigation in the page header, one host theme; `web_ui.chrome` bridged into `nowo_ui_kit.theme.bundles`. Validation errors instead of 500 on empty cookie fields; unique row delete forms; correct list pagination. See [UPGRADING](UPGRADING.md#to-1160).
