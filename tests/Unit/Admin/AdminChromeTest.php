@@ -121,13 +121,18 @@ final class AdminChromeTest extends TestCase
         ]);
 
         self::assertSame([
-            'page_header'  => ['value' => 'mb-4', 'framework_defaults' => false],
-            'tab'          => ['value' => 'tab', 'framework_defaults' => false],
-            'tab_active'   => ['value' => 'tab is-on', 'framework_defaults' => false],
-            'table_wrap'   => ['value' => 'panel', 'framework_defaults' => false],
-            'table'        => ['value' => 'data-table', 'framework_defaults' => false],
-            'form_actions' => ['value' => 'form-actions', 'framework_defaults' => false],
+            'tab'        => ['value' => 'tab', 'framework_defaults' => false],
+            'tab_active' => ['value' => 'tab is-on', 'framework_defaults' => false],
+            'table_wrap' => ['value' => 'panel', 'framework_defaults' => false],
+            'table'      => ['value' => 'data-table', 'framework_defaults' => false],
         ], $theme['classes'] ?? null);
+        self::assertSame([
+            'form' => ['classes' => [
+                'page_header'  => ['value' => 'mb-4', 'framework_defaults' => false],
+                'form_actions' => ['value' => 'form-actions', 'framework_defaults' => false],
+            ]],
+            'settings' => ['classes' => ['form_actions' => ['value' => 'settings-actions', 'framework_defaults' => false]]],
+        ], $theme['pages'] ?? null, 'one-page keys go to theme.bundles.<Bundle>.pages.<type>');
         self::assertSame([
             'tabs'       => ['data-testid' => 'area', 'data-extra' => '1'],
             'table_wrap' => ['data-testid' => 'cookie-consent-definitions-table'],
@@ -135,11 +140,36 @@ final class AdminChromeTest extends TestCase
         self::assertSame(['tabs' => 'kit/_tabs.html.twig'], $theme['partials'] ?? null, 'the removed 1.x default partial is not bridged');
     }
 
-    public function testPageHeaderWinsOverPageHeaderForm(): void
+    public function testPageHeaderAndPageHeaderFormGoToTheirPageTypes(): void
     {
-        $theme = AdminChrome::toUiKitTheme(['classes' => ['page_header' => 'toolbar', 'page_header_form' => 'mb-4']]);
+        $theme = AdminChrome::toUiKitTheme([
+            'classes'    => ['page_header' => 'toolbar', 'page_header_form' => 'mb-4'],
+            'attributes' => ['page_header' => ['data-a' => '1'], 'page_header_form' => ['data-b' => '2'], 'settings_actions' => ['data-c' => '3']],
+        ]);
 
-        self::assertSame(['page_header' => ['value' => 'toolbar', 'framework_defaults' => false]], $theme['classes'] ?? null);
+        self::assertArrayNotHasKey('classes', $theme);
+        self::assertArrayNotHasKey('attributes', $theme);
+        self::assertSame([
+            'list' => [
+                'classes'    => ['page_header' => ['value' => 'toolbar', 'framework_defaults' => false]],
+                'attributes' => ['page_header' => ['data-a' => '1']],
+            ],
+            'form' => [
+                'classes'    => ['page_header' => ['value' => 'mb-4', 'framework_defaults' => false]],
+                'attributes' => ['page_header' => ['data-b' => '2']],
+            ],
+            'settings' => [
+                'attributes' => ['form_actions' => ['data-c' => '3']],
+            ],
+        ], $theme['pages'] ?? null);
+    }
+
+    public function testPageScopedKeysMapToKnownPageTypesAndSlots(): void
+    {
+        foreach (AdminChrome::PAGE_SCOPED as $key => $page) {
+            self::assertContains($page, ThemeSlots::PAGE_TYPES, $key);
+            self::assertTrue(ThemeSlots::has(AdminChrome::SLOT_MAP[$key]), $key);
+        }
     }
 
     public function testBeaconHostThemeBridgesEveryMappedKey(): void
@@ -150,9 +180,13 @@ final class AdminChromeTest extends TestCase
         $theme = AdminChrome::toUiKitTheme($config['web_ui']['chrome']);
 
         self::assertSame(
-            ['page_header', 'page_title', 'page_intro', 'tabs', 'table_wrap', 'table', 'form_panel', 'section', 'card_body', 'form', 'form_actions', 'card_title', 'card_intro', 'btn_primary', 'btn_secondary', 'btn_danger'],
+            ['page_title', 'page_intro', 'tabs', 'table_wrap', 'table', 'form_panel', 'section', 'card_body', 'form', 'card_title', 'card_intro', 'btn_primary', 'btn_secondary', 'btn_danger'],
             array_keys($theme['classes'] ?? []),
         );
+        self::assertSame('nowo-ui-toolbar flex flex-wrap items-center justify-between gap-2 mb-2', $theme['pages']['list']['classes']['page_header']['value'] ?? null);
+        self::assertSame('mb-4', $theme['pages']['form']['classes']['page_header']['value'] ?? null);
+        self::assertSame('nowo-ui-form-actions', $theme['pages']['form']['classes']['form_actions']['value'] ?? null);
+        self::assertSame('nowo-ui-form-actions', $theme['pages']['settings']['classes']['form_actions']['value'] ?? null);
         self::assertSame('nowo-ui-table nowo-ui-table--striped min-w-full text-sm text-left data-table', $theme['classes']['table']['value'] ?? null);
         self::assertSame(['tabs', 'table_wrap', 'form_panel', 'section'], array_keys($theme['attributes'] ?? []));
         self::assertSame(['tabs' => '@Test/tabs.html.twig', 'pagination' => '@Test/pagination.html.twig'], $theme['partials'] ?? null);

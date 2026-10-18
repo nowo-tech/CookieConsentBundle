@@ -8,6 +8,8 @@ use InvalidArgumentException;
 
 use function array_key_exists;
 use function array_keys;
+use function array_unique;
+use function array_values;
 use function implode;
 use function in_array;
 use function is_array;
@@ -77,7 +79,8 @@ final class AdminChrome
 
     /**
      * 1.x element key => UiKit theme slot (null = no equivalent slot: the value is ignored). When several 1.x keys
-     * map to one slot, the later key of this list wins for classes and the attributes are merged in this order.
+     * map to one slot (of the same page scope), the later key of this list wins for classes and the attributes are
+     * merged in this order.
      *
      * @var array<string, string|null>
      */
@@ -117,9 +120,23 @@ final class AdminChrome
     ];
 
     /**
+     * 1.x element keys that painted one admin page only => UiKit page type: bridged into
+     * `theme.bundles.NowoCookieConsentBundle.pages.<type>` (UiKit 2.1) instead of the bundle-wide slot, so e.g.
+     * `page_header` (cookie inventory) and `page_header_form` (cookie definition form) keep their own classes.
+     *
+     * @var array<string, string>
+     */
+    public const PAGE_SCOPED = [
+        'page_header'      => 'list',
+        'page_header_form' => 'form',
+        'form_actions'     => 'form',
+        'settings_actions' => 'settings',
+    ];
+
+    /**
      * 1.x partial / theme keys (`web_ui.chrome.templates`); null = not set. `tabs` and `pagination` are bridged to
-     * the UiKit partials of the same name; `form_theme`, `form_fields` and `styles_after` are still applied by the
-     * admin templates.
+     * the UiKit partials of the same name; `form_theme` becomes the admin forms' `formThemes` (UiKit 2.1);
+     * `form_fields` and `styles_after` are still applied by the admin templates.
      *
      * @var array<string, null>
      */
@@ -200,39 +217,39 @@ final class AdminChrome
      * Bridges an explicit `web_ui.chrome` config into the UiKit theme exception of this bundle
      * (`nowo_ui_kit.theme.bundles.NowoCookieConsentBundle`). 1.x class strings replaced the whole default class
      * list, so each bridged slot drops the UiKit framework defaults (`framework_defaults: false`): the elements keep
-     * the host classes they had. Empty result = nothing to bridge.
+     * the host classes they had. Keys of one page ({@see self::PAGE_SCOPED}) go to `pages.<type>`. Empty result =
+     * nothing to bridge.
      *
      * @param array<string, mixed> $config `web_ui.chrome` subtree
      *
-     * @return array{classes?: array<string, array{value: string, framework_defaults: false}>, attributes?: array<string, array<string, string>>, partials?: array<string, string>}
+     * @return array{classes?: array<string, array{value: string, framework_defaults: false}>, attributes?: array<string, array<string, string>>, partials?: array<string, string>, pages?: array<string, array{classes?: array<string, array{value: string, framework_defaults: false}>, attributes?: array<string, array<string, string>>}>}
      */
     public static function toUiKitTheme(array $config): array
     {
         $chrome = self::resolve($config);
 
-        $classes = [];
-        foreach (self::SLOT_MAP as $key => $slot) {
-            $value = $chrome['classes'][$key] ?? null;
-            if ($slot === null || $value === null) {
-                continue;
-            }
-            if ($key === 'page_header_form' && array_key_exists('page_header', $chrome['classes'])) {
-                continue;
-            }
-            $value = trim($value);
-            if ($slot === 'tab_active' && isset($chrome['classes']['tab_item'])) {
-                // 1.x printed tab_item + tab_item_active on the current tab; the tab_active slot replaces tab.
-                $value = trim($chrome['classes']['tab_item'] . ' ' . $value);
-            }
-            $classes[$slot] = ['value' => $value, 'framework_defaults' => false];
-        }
-
+        // [page type|'' => [slot => entry]]; '' = bundle-wide.
+        $classes    = [];
         $attributes = [];
         foreach (self::SLOT_MAP as $key => $slot) {
-            if ($slot === null || !isset($chrome['attributes'][$key])) {
+            if ($slot === null) {
                 continue;
             }
-            $attributes[$slot] = ($attributes[$slot] ?? []) + $chrome['attributes'][$key];
+            $scope = self::PAGE_SCOPED[$key] ?? '';
+
+            $value = $chrome['classes'][$key] ?? null;
+            if ($value !== null) {
+                $value = trim($value);
+                if ($slot === 'tab_active' && isset($chrome['classes']['tab_item'])) {
+                    // 1.x printed tab_item + tab_item_active on the current tab; the tab_active slot replaces tab.
+                    $value = trim($chrome['classes']['tab_item'] . ' ' . $value);
+                }
+                $classes[$scope][$slot] = ['value' => $value, 'framework_defaults' => false];
+            }
+
+            if (isset($chrome['attributes'][$key])) {
+                $attributes[$scope][$slot] = ($attributes[$scope][$slot] ?? []) + $chrome['attributes'][$key];
+            }
         }
 
         $partials = [];
@@ -243,14 +260,22 @@ final class AdminChrome
         }
 
         $theme = [];
-        if ($classes !== []) {
-            $theme['classes'] = $classes;
+        if (isset($classes[''])) {
+            $theme['classes'] = $classes[''];
         }
-        if ($attributes !== []) {
-            $theme['attributes'] = $attributes;
+        if (isset($attributes[''])) {
+            $theme['attributes'] = $attributes[''];
         }
         if ($partials !== []) {
             $theme['partials'] = $partials;
+        }
+        foreach (array_unique(array_values(self::PAGE_SCOPED)) as $page) {
+            if (isset($classes[$page])) {
+                $theme['pages'][$page]['classes'] = $classes[$page];
+            }
+            if (isset($attributes[$page])) {
+                $theme['pages'][$page]['attributes'] = $attributes[$page];
+            }
         }
 
         return $theme;

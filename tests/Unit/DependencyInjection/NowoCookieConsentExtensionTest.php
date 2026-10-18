@@ -332,6 +332,40 @@ final class NowoCookieConsentExtensionTest extends TestCase
         self::assertSame('kit/_pagination.html.twig', $processed['theme']['bundles']['NowoCookieConsentBundle']['partials']['pagination'] ?? null);
     }
 
+    public function testPrependBridgesPageScopedChromeKeysIntoBundlePageTypes(): void
+    {
+        $container = $this->containerWithUiKit();
+        $container->prependExtensionConfig('nowo_cookie_consent', [
+            'web_ui' => ['chrome' => [
+                'classes'    => ['page_header' => 'host-toolbar', 'page_header_form' => 'host-form-header', 'settings_actions' => 'host-actions'],
+                'attributes' => ['page_header_form' => ['data-testid' => 'form-header']],
+            ]],
+        ]);
+
+        (new NowoCookieConsentExtension())->prepend($container);
+
+        $configs   = $container->getExtensionConfig('nowo_ui_kit');
+        $processed = (new Processor())->processConfiguration(new UiKitConfiguration(), $configs);
+        $pages     = $processed['theme']['bundles']['NowoCookieConsentBundle']['pages'] ?? [];
+
+        self::assertSame('host-toolbar', $pages['list']['classes']['page_header']['value'] ?? null);
+        self::assertSame('host-form-header', $pages['form']['classes']['page_header']['value'] ?? null);
+        self::assertSame(['data-testid' => 'form-header'], $pages['form']['attributes']['page_header'] ?? null);
+        self::assertSame('host-actions', $pages['settings']['classes']['form_actions']['value'] ?? null);
+        self::assertSame([], $processed['theme']['bundles']['NowoCookieConsentBundle']['classes'] ?? [], 'nothing bundle-wide');
+    }
+
+    public function testDeprecatedChromeFormThemeBecomesTheAdminFormThemes(): void
+    {
+        $container = new ContainerBuilder();
+        (new NowoCookieConsentExtension())->load([['web_ui' => ['chrome' => ['templates' => ['form_theme' => 'admin/form_theme.html.twig']]]]], $container);
+        self::assertSame(['admin/form_theme.html.twig'], $container->getDefinition(AdminPageFactory::class)->getArgument('$formThemes'));
+
+        $container = new ContainerBuilder();
+        (new NowoCookieConsentExtension())->load([[]], $container);
+        self::assertSame([], $container->getDefinition(AdminPageFactory::class)->getArgument('$formThemes'));
+    }
+
     public function testPrependDoesNotTouchUiKitWithoutLegacyKeys(): void
     {
         $container = $this->containerWithUiKit();
