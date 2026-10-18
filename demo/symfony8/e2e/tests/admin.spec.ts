@@ -41,4 +41,59 @@ test.describe('CookieConsent bundle admin (UiKit page contract)', () => {
     await expect(page).toHaveURL(/\/settings\/appearance$/);
     await expect(page.locator('[data-nowo-ui-region="tabs"] a[aria-current="page"]')).toHaveAttribute('href', /\/settings\/appearance$/);
   });
+
+  test('cookie inventory: one-line row actions, short columns on one line, purpose clamped with its full text', async ({ page }) => {
+    await page.goto(COOKIES);
+    const row = page.locator('[data-nowo-ui-region="table"] tbody tr').first();
+    const actions = row.locator('.nowo-ui-row-actions > *');
+    await expect(actions).toHaveCount(2);
+    const [edit, del] = [await actions.nth(0).boundingBox(), await actions.nth(1).boundingBox()];
+    expect(Math.abs((edit?.y ?? 0) - (del?.y ?? 100))).toBeLessThan(2);
+    const purpose = row.locator('.nowo-cc-admin-clamp');
+    await expect(purpose).toHaveAttribute('title', /\S/);
+    const lines = await purpose.evaluate((el) => el.getBoundingClientRect().height / parseFloat(getComputedStyle(el).lineHeight));
+    expect(lines).toBeLessThanOrEqual(2.05);
+    await expect(page.locator('[data-nowo-ui-region="table"] tbody tr')).toHaveCount(10); // demo list_page_size
+  });
+
+  test('cookie definition form: field grid, translations table per locale, save round-trip keeps CSRF and validation', async ({
+    page,
+  }) => {
+    await page.goto(COOKIES);
+    await page.locator('[data-nowo-ui-region="table"] tbody tr').first().locator('a.nowo-ui-action--edit').click();
+    const form = page.locator('[data-nowo-ui-page="form"] form[name="cookie_definition"]');
+    await expect(form).toBeVisible();
+
+    const grid = form.locator('[data-nowo-cc-region="definition-fields"]');
+    const [name, duration] = [await grid.locator('#cookie_definition_name').boundingBox(), await grid.locator('#cookie_definition_duration').boundingBox()];
+    expect(Math.abs((name?.y ?? 0) - (duration?.y ?? 100))).toBeLessThan(2); // two columns
+    expect(Math.abs((name?.width ?? 0) - (duration?.width ?? 0))).toBeLessThan(2); // same width
+
+    const translations = form.locator('[data-nowo-cc-region="translations"]');
+    const enRow = translations.locator('tr[data-nowo-cc-translation="en"]');
+    await expect(enRow).toHaveCount(1);
+    await expect(translations.locator('legend')).not.toHaveText(/^\s*\d+\s*$/);
+    const provider = enRow.locator('input[name$="[provider]"]');
+    const original = await provider.inputValue();
+
+    // Server-side validation (browser validation off): an empty locale is rejected (422) and reported in its row.
+    const editUrl = page.url();
+    await form.evaluate((el) => ((el as HTMLFormElement).noValidate = true));
+    await enRow.locator('input[name$="[locale]"]').fill('');
+    await form.locator('button[type="submit"]').click();
+    await expect(page).toHaveURL(editUrl);
+    await expect(page.locator('[data-nowo-cc-region="translations"] tbody .invalid-feedback, [data-nowo-cc-region="translations"] tbody .form-error-message').first()).toBeVisible();
+
+    await page.goto(editUrl);
+    await form.locator('tr[data-nowo-cc-translation="en"] input[name$="[provider]"]').fill(`${original} (e2e)`);
+    await form.locator('button[type="submit"]').click();
+    await expect(page).toHaveURL(/\/cookies$/);
+    await expect(page.locator('[data-nowo-ui-region="table"]')).toContainText(`${original} (e2e)`);
+
+    // Restore the seeded value.
+    await page.locator('[data-nowo-ui-region="table"] tbody tr').first().locator('a.nowo-ui-action--edit').click();
+    await page.locator('tr[data-nowo-cc-translation="en"] input[name$="[provider]"]').fill(original);
+    await page.locator('form[name="cookie_definition"] button[type="submit"]').click();
+    await expect(page).toHaveURL(/\/cookies$/);
+  });
 });

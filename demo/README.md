@@ -1,6 +1,6 @@
 # Cookie Consent Bundle — Symfony 8.1 demos
 
-FrankenPHP demos with SQLite, cookie consent modal, optional consent logging (`demo_dashboard_cookie_log`), and a configuration CRUD per locale.
+FrankenPHP demos with MySQL 8.4, cookie consent modal, optional consent logging (`demo_dashboard_cookie_log`), and a configuration CRUD per locale.
 
 | Demo | UI | Port |
 | --- | --- | --- |
@@ -15,7 +15,7 @@ make -C demo/symfony8-tailwind up
 # Demo started at: http://localhost:8015
 ```
 
-Use the top navigation **Cookie consent config** to manage modal copy (title, intro, read-more label) stored in SQLite. Use the **language dropdown** (EN / ES / IT / FR) in the navbar to switch locale and preview the modal in each language.
+Use the top navigation **Cookie consent config** to manage modal copy (title, intro, read-more label) stored in MySQL. Use the **language dropdown** (EN / ES / IT / FR) in the navbar to switch locale and preview the modal in each language.
 
 ```bash
 make test

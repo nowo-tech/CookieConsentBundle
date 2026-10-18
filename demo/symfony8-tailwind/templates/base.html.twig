@@ -7,6 +7,13 @@
         <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 128 128%22><text y=%221.2em%22 font-size=%2296%22>🍪</text></svg>">
         <script src="https://cdn.tailwindcss.com"></script>
         {% block stylesheets %}{% endblock %}
+        {% if app.debug %}
+            {#- Dev only: keep the consent banner and the preferences bubble clear of the open WebProfiler toolbar (36px). -#}
+            <style>
+                body:has(.sf-toolbar-opened) .nowo-cookie-consent.show { padding-bottom: calc(1rem + 36px); }
+                body:has(.sf-toolbar-opened) .nowo-cookie-consent__preferences-bubble[class*='--bottom-'] { bottom: calc(1.25rem + 36px); }
+            </style>
+        {% endif %}
     </head>
     <body class="min-h-screen bg-slate-50 text-slate-900 antialiased">
         {% block body %}{% endblock %}

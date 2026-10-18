@@ -28,7 +28,7 @@ nowo_cookie_consent:
         - preferences
     web_ui:
         enabled: true
-        list_page_size: 20
+        list_page_size: 10
     # DEMO ONLY — production hosts must keep allow_unauthenticated: false and protect the admin prefix.
     security:
         allow_unauthenticated: true
