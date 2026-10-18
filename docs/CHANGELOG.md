@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## Table of contents
 
 - [[Unreleased]](#unreleased)
+- [[1.16.3] - 2026-10-18](#1163---2026-10-18)
 - [[1.16.2] - 2026-10-18](#1162---2026-10-18)
 - [[1.16.1] - 2026-10-18](#1161---2026-10-18)
 - [[1.16.0] - 2026-10-18](#1160---2026-10-18)
@@ -64,6 +65,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.16.3] - 2026-10-18
+
+Enabled locales accept %parameters% and env vars (no compile error with a parameter). See [UPGRADING](UPGRADING.md#to-1163).
+
 ### Fixed
 
 - `enabled_locales` given as a container parameter or env var (`'%kernel.enabled_locales%'`, `'%app.locales%'`,
@@ -72,6 +77,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   defined yet), and the node only accepted a literal list. `prepend()` now processes only the `web_ui` node (so any
   list option may be a build-time parameter), `enabled_locales` accepts a list or a parameter / env placeholder, and
   an env var is read at runtime by the locale resolver. See [CONFIGURATION](CONFIGURATION.md#locale-detection).
+
+[1.16.3]: https://github.com/nowo-tech/CookieConsentBundle/releases/tag/v1.16.3
 
 ## [1.16.2] - 2026-10-18
 
