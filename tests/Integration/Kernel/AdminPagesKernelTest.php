@@ -80,6 +80,16 @@ final class AdminPagesKernelTest extends TestCase
         self::assertMatchesRegularExpression('/name="delete_cookie_definition_\d+\[_token\]"/', $html);
     }
 
+    /** 1.17: the "allowed by default" checkbox and its label share one check row (label no longer under the box). */
+    public function testAllowedByDefaultIsOneCheckRow(): void
+    {
+        [$configId] = $this->boot([]);
+
+        $html = (string) $this->get(sprintf('/cookie-consent-config/%d/cookies/new', $configId))->getContent();
+
+        self::assertMatchesRegularExpression('#<div class="nowo-cc-admin-form__check" data-nowo-cc-region="allowed-by-default">\s*<div>(?=[^\n]*<label for="cookie_definition_allowedByDefault")(?=[^\n]*type="checkbox"[^>]*name="cookie_definition\[allowedByDefault\]")#', $html);
+    }
+
     /** Invalid (here: no CSRF token) submissions re-render the form page with 422. */
     public function testInvalidSubmitReturns422(): void
     {

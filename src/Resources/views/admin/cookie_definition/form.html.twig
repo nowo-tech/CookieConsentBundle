@@ -30,7 +30,10 @@
         </div>
     {% endif %}
     {% if form.allowedByDefault is defined and not form.allowedByDefault.rendered %}
-        {{ form_row(form.allowedByDefault) }}
+        {#- 1.17: one check row (box, then the label on the same line, help below) whatever the host form theme. -#}
+        <div class="nowo-cc-admin-form__check" data-nowo-cc-region="allowed-by-default">
+            {{ form_row(form.allowedByDefault) }}
+        </div>
     {% endif %}
     {% if form.translations is defined and not form.translations.rendered %}
         {{ include('@NowoCookieConsentBundle/admin/cookie_definition/_translations_table.html.twig', {translations: form.translations, bundle: page.bundle}, false) }}
