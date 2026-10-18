@@ -92,8 +92,3 @@
   min-width: 14rem;
   overflow: hidden;
 }
-
-/* Edit + delete stay on one line: the table gives the actions cell its min-content width only. */
-[data-testid='cookie-consent-definitions'] .nowo-ui-table__actions > .nowo-ui-row-actions {
-  flex-wrap: nowrap;
-}

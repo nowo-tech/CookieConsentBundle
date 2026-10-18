@@ -71,7 +71,7 @@ the UiKit `input_full` slot.
 
 **Bundle stylesheet.** The list and form pages append `bundles/nowocookieconsent/nowo-cookie-consent-admin.css` to
 `nowo_ui_styles` (local asset, no CDN). It only lays out the bundle's own data-block markup (`nowo-cc-admin-*` classes:
-form grid, translations table, nowrap / clamp cells, one-line row actions of the inventory) and reads UiKit tokens; a
+form grid, translations table, nowrap / clamp cells of the inventory; one-line row actions come from UiKit 2.2) and reads UiKit tokens; a
 host theme can override it like any stylesheet loaded after UiKit's.
 
 ## Unique pages

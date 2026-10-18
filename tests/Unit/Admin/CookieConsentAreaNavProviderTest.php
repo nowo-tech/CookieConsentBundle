@@ -15,6 +15,7 @@ use Nowo\UiKitBundle\View\AreaNavItem;
 use Nowo\UiKitBundle\View\FormPage;
 use Nowo\UiKitBundle\View\Label;
 use PHPUnit\Framework\TestCase;
+use Symfony\Component\Form\FormView;
 
 use function array_map;
 
@@ -71,6 +72,7 @@ final class CookieConsentAreaNavProviderTest extends TestCase
         $form   = AdminPageFixtures::definitionForm()['page'];
         self::assertInstanceOf(FormPage::class, $form);
         $view = $form->form;
+        self::assertInstanceOf(FormView::class, $view, 'UiKit 2.2: FormPage::$form is nullable (body-only mode)');
 
         $own     = new AdminPageFactory(AdminPageFixtures::urlGenerator());
         $ownTabs = new AreaNavRegistry([new CookieConsentAreaNavProvider($own)]);
