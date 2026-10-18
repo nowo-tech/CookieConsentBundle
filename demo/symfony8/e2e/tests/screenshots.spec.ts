@@ -1,9 +1,11 @@
 import { test, expect, type Page } from '@playwright/test';
 import { mkdirSync } from 'node:fs';
 import { resolve } from 'node:path';
+import { frameShot } from './frame';
 
 /**
- * REQ-DEMO-013 — demo screenshots (PNG captures, converted to WebP by scripts/to-webp.mjs).
+ * REQ-DEMO-013 — demo screenshots (PNG captures, converted to WebP by scripts/to-webp.mjs), framed as a padded
+ * union clip of the demo navbar → main → WebProfiler toolbar with a tall viewport (frame.ts).
  *
  * - overview: home page with the consent banner (demo default profile: page overlay on)
  * - interaction: preferences step with the Analytics category switched on and expanded
@@ -82,7 +84,7 @@ test.describe.serial('CookieConsent screenshots', () => {
   test('overview — consent banner on the demo home', async ({ page }) => {
     await openHome(page);
     await page.waitForTimeout(400);
-    await page.screenshot({ path: resolve(outDir, 'overview.png') });
+    await frameShot(page, resolve(outDir, 'overview.png'));
   });
 
   test('interaction — preferences step with Analytics enabled and expanded', async ({ page }) => {
@@ -101,14 +103,14 @@ test.describe.serial('CookieConsent screenshots', () => {
       await details.scrollIntoViewIfNeeded();
     }
     await page.waitForTimeout(800); // toggle knob transition
-    await page.screenshot({ path: resolve(outDir, 'interaction.png') });
+    await frameShot(page, resolve(outDir, 'interaction.png'));
   });
 
   test('modal with page overlay (disable_page_interaction on)', async ({ page }) => {
     await setOverlay(page, true);
     const host = await openPreferences(page);
     await expect(host).toHaveAttribute('data-nowo-disable-page-interaction', 'true');
-    await page.screenshot({ path: resolve(outDir, 'cookie-consent-modal-overlay.png') });
+    await frameShot(page, resolve(outDir, 'cookie-consent-modal-overlay.png'));
   });
 
   test('modal without page overlay (default)', async ({ page }) => {
@@ -116,7 +118,7 @@ test.describe.serial('CookieConsent screenshots', () => {
     try {
       const host = await openPreferences(page);
       await expect(host).toHaveAttribute('data-nowo-disable-page-interaction', 'false');
-      await page.screenshot({ path: resolve(outDir, 'cookie-consent-modal-default.png') });
+      await frameShot(page, resolve(outDir, 'cookie-consent-modal-default.png'));
     } finally {
       await setOverlay(page, true); // restore the demo preset
     }
@@ -129,18 +131,18 @@ test.describe('CookieConsent admin screenshots', () => {
   test('admin — cookie inventory (page/list)', async ({ page }) => {
     await page.goto('/cookie-consent-config/1/cookies');
     await expect(page.locator('[data-nowo-ui-page="list"]')).toBeVisible();
-    await page.screenshot({ path: resolve(outDir, 'admin-cookie-definitions.png') });
+    await frameShot(page, resolve(outDir, 'admin-cookie-definitions.png'));
   });
 
   test('admin — cookie definition form (page/form)', async ({ page }) => {
     await page.goto('/cookie-consent-config/1/cookies/1/edit');
     await expect(page.locator('[data-nowo-ui-page="form"]')).toBeVisible();
-    await page.screenshot({ path: resolve(outDir, 'admin-cookie-definition-form.png') });
+    await frameShot(page, resolve(outDir, 'admin-cookie-definition-form.png'));
   });
 
   test('admin — profile settings with section tabs (page/settings)', async ({ page }) => {
     await page.goto('/cookie-consent-config/1/settings/appearance');
     await expect(page.locator('[data-nowo-ui-page="settings"]')).toBeVisible();
-    await page.screenshot({ path: resolve(outDir, 'admin-settings.png') });
+    await frameShot(page, resolve(outDir, 'admin-settings.png'));
   });
 });
