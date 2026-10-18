@@ -19,6 +19,17 @@ function ruleBody(selectorFragment: string): string {
   return css.slice(open + 1, css.indexOf('}', open));
 }
 
+describe('cookie-consent.css without host utilities', () => {
+  it('hides the closed modal and places the Tailwind overlay itself', () => {
+    expect(ruleBody('.nowo-cookie-consent:not(.show) {')).toContain('display: none !important;');
+    const overlay = ruleBody(".nowo-cookie-consent[data-nowo-ui-theme='tailwind'] {");
+    expect(overlay).toContain('position: fixed;');
+    expect(overlay).toContain('inset: 0;');
+    expect(ruleBody(".nowo-cookie-consent[data-nowo-ui-theme='tailwind'] .nowo-cookie-consent__dialog {")).toContain('max-width: 56rem;');
+    expect(ruleBody(".nowo-cookie-consent[data-nowo-ui-theme='tailwind'].show {")).toContain('padding-left: 1rem;');
+  });
+});
+
 describe('cookie-consent.css custom properties', () => {
   it('declares every --nowo-cc-* custom property it reads', () => {
     const declared = declaredProperties();
