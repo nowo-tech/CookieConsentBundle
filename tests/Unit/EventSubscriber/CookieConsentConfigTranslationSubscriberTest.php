@@ -25,7 +25,7 @@ final class CookieConsentConfigTranslationSubscriberTest extends TestCase
     public function testSubscribedEvents(): void
     {
         self::assertSame(
-            [KernelEvents::REQUEST => ['onKernelRequest', 19]],
+            [KernelEvents::REQUEST => ['onKernelRequest', 15]],
             CookieConsentConfigTranslationSubscriber::getSubscribedEvents(),
         );
     }

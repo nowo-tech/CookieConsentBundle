@@ -24,6 +24,9 @@ use function is_string;
  */
 final class CookieConsentConfigTranslationSubscriber implements EventSubscriberInterface
 {
+    /** kernel.request priority: after LocaleListener (16). */
+    public const PRIORITY = 15;
+
     /**
      * Creates a new config translation subscriber.
      *
@@ -42,8 +45,10 @@ final class CookieConsentConfigTranslationSubscriber implements EventSubscriberI
      */
     public static function getSubscribedEvents(): array
     {
+        // 15: after Symfony's LocaleListener (16), so `/{_locale}/…` resolves the profile copy of that locale, not
+        // the default locale (mixed languages in the modal otherwise); still before the firewall (8).
         return [
-            KernelEvents::REQUEST => ['onKernelRequest', 19],
+            KernelEvents::REQUEST => ['onKernelRequest', self::PRIORITY],
         ];
     }
 
