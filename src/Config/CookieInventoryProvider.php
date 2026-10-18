@@ -73,6 +73,8 @@ final class CookieInventoryProvider implements ResetInterface
 
     /**
      * Clears in-memory inventory caches (FrankenPHP worker request boundary).
+     *
+     * @return void
      */
     public function clearRuntimeCache(): void
     {

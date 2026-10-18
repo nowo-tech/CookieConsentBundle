@@ -23,6 +23,8 @@ final class ColdStartRequestAttributes
 
     /**
      * Returns whether database-backed consent work must be skipped for this request.
+     *
+     * @return bool
      */
     public static function shouldSkipDatabaseAccess(Request $request): bool
     {

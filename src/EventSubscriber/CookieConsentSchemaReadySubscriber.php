@@ -73,6 +73,8 @@ final class CookieConsentSchemaReadySubscriber implements EventSubscriberInterfa
 
     /**
      * Forgets the memoized positive probe (e.g. after dropping the schema in tests or tooling).
+     *
+     * @return void
      */
     public function clearSchemaReadyMemo(): void
     {

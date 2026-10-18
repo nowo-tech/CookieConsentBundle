@@ -26,6 +26,8 @@ enum CookieConsentConfigSettingsSection: string
 
     /**
      * Translation key suffix under nowo_cookie_consent.admin.config.settings.section.*.
+     *
+     * @return string
      */
     public function translationSuffix(): string
     {
@@ -58,6 +60,8 @@ enum CookieConsentConfigSettingsSection: string
 
     /**
      * Route requirement pattern for {section}.
+     *
+     * @return string
      */
     public static function routeRequirement(): string
     {

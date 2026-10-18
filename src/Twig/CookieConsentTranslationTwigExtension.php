@@ -51,6 +51,8 @@ final class CookieConsentTranslationTwigExtension extends AbstractExtension
      *
      * @param string $id The translation message id (e.g. nowo_cookie_consent.title)
      * @param mixed $displayConfig The resolved config passed to the template; defaults to the one stored on the request
+     *
+     * @return string
      */
     public function trans(string $id, mixed $displayConfig = null): string
     {
@@ -72,6 +74,8 @@ final class CookieConsentTranslationTwigExtension extends AbstractExtension
      * (`nowo_cookie_consent.privacy_route`), else the configured `privacy_route` fallback; null for no link.
      *
      * @param mixed $displayConfig The resolved config passed to the template; defaults to the one stored on the request
+     *
+     * @return ?string
      */
     public function privacyRoute(mixed $displayConfig = null): ?string
     {

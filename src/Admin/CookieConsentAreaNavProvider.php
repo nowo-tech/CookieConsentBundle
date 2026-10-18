@@ -33,6 +33,8 @@ final readonly class CookieConsentAreaNavProvider implements AreaNavProviderInte
 
     /**
      * @param array<string, mixed> $context
+     *
+     * @return ?AreaNav
      */
     public function areaNav(string $area, array $context = []): ?AreaNav
     {

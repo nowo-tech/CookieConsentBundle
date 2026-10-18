@@ -25,6 +25,8 @@ class TablePrefixListener
      * Prefixes bundle entity table names when Doctrine loads class metadata.
      *
      * @param LoadClassMetadataEventArgs $event The Doctrine metadata load event
+     *
+     * @return void
      */
     public function loadClassMetadata(LoadClassMetadataEventArgs $event): void
     {
