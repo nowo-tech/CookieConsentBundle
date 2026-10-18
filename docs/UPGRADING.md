@@ -3,6 +3,7 @@
 ## Table of contents
 
 - [Unreleased](#unreleased)
+- [To 1.16.0](#to-1160)
   - [Template contract (1.16)](#template-contract-116)
 - [To 1.15.2](#to-1152)
 - [To 1.15.1](#to-1151)
@@ -97,6 +98,14 @@
 - [Getting help](#getting-help)
 
 ## Unreleased
+
+## To 1.16.0
+
+From **1.15.2**:
+
+```bash
+composer update nowo-tech/cookie-consent-bundle
+```
 
 ### Template contract (1.16)
 
@@ -221,7 +230,6 @@ nowo_ui_kit:
                     btn_primary: { value: 'btn-primary', framework_defaults: false }
                 attributes: { table_wrap: { data-testid: cookie-consent-definitions-table } }
 ```
-
 
 ## To 1.15.2
 

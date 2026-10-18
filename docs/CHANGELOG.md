@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## Table of contents
 
 - [[Unreleased]](#unreleased)
+- [[1.16.0] - 2026-10-18](#1160---2026-10-18)
 - [[1.15.2] - 2026-10-13](#1152---2026-10-13)
 - [[1.15.1] - 2026-10-13](#1151---2026-10-13)
 - [[1.15.0] - 2026-10-13](#1150---2026-10-13)
@@ -61,6 +62,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.16.0] - 2026-10-18
+
+Admin UI on the UiKit 2.1 standard page contract (REQ-UI-003): list, form and settings scaffolds, area navigation in the page header, one host theme; `web_ui.chrome` bridged into `nowo_ui_kit.theme.bundles`. Validation errors instead of 500 on empty cookie fields; unique row delete forms; correct list pagination. See [UPGRADING](UPGRADING.md#to-1160).
+
 ### Added
 
 - **UiKit 2.x page contract (REQ-UI-003):** the admin pages extend the UiKit scaffolds — cookie inventory → `page/list`, cookie definition → `page/form`, profile settings → `page/settings` — and the controllers pass UiKit view models built by the new `Admin\AdminPageFactory`. Page header, area and section tabs, table, row actions, delete confirm dialogs, pagination, empty state, form frame and flashes are painted by the UiKit theme slots, so `nowo_ui_kit.theme` themes them together with every other Nowo bundle. See [TEMPLATES.md](TEMPLATES.md).
@@ -92,6 +97,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `web_ui.css_framework` and `web_ui.icon_set` (default now `null`): set `nowo_ui_kit.css_framework` / `icon_set`. When set they still seed UiKit.
 - Twig globals `nowo_cookie_consent_layout_template`, `nowo_cookie_consent_css_framework`, `nowo_cookie_consent_icon_set` (no longer read by the bundle).
 - `admin/_admin_area_nav.html.twig` (no longer used by the pages; renders the area-nav registry's navigation for 1.x host templates).
+
+[1.16.0]: https://github.com/nowo-tech/CookieConsentBundle/releases/tag/v1.16.0
 
 ## [1.15.2] - 2026-10-13
 
