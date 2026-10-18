@@ -13,7 +13,6 @@ use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use Symfony\Bundle\FrameworkBundle\KernelBrowser;
 use Symfony\Component\DependencyInjection\ContainerInterface;
-use Symfony\Component\Filesystem\Filesystem;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 
@@ -21,10 +20,7 @@ use function array_filter;
 use function array_merge;
 use function array_unique;
 use function array_values;
-use function bin2hex;
-use function random_bytes;
 use function sprintf;
-use function sys_get_temp_dir;
 
 /**
  * The admin pages through a real kernel (FrameworkBundle, Twig, Doctrine on SQLite, UiKit, FormKit): UiKit layout by
@@ -39,7 +35,6 @@ final class AdminPagesKernelTest extends TestCase
     {
         $this->kernel?->shutdown();
         $this->kernel = null;
-        (new Filesystem())->remove(sys_get_temp_dir() . '/nowo_cookie_consent_kernel');
     }
 
     /**
@@ -225,7 +220,7 @@ final class AdminPagesKernelTest extends TestCase
         $this->kernel = new CookieConsentTestKernel(false, [
             'web_ui'   => ['enabled' => true] + $webUi,
             'security' => ['allow_unauthenticated' => true],
-        ], bin2hex(random_bytes(6)));
+        ]);
         $this->kernel->boot();
 
         $container = $this->kernel->getContainer()->get('test.service_container');

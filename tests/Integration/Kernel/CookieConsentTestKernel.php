@@ -22,16 +22,28 @@ use Symfony\Component\HttpKernel\Kernel;
 use Symfony\Component\Routing\Loader\Configurator\RoutingConfigurator;
 use Twig\Extra\TwigExtraBundle\TwigExtraBundle;
 
+use function getmypid;
+use function hash;
+use function serialize;
 use function sys_get_temp_dir;
 
 use const PHP_VERSION_ID;
 
 /**
  * Minimal real application kernel: compiles the bundle exactly like a host app (with or without SecurityBundle).
+ *
+ * Cache layout: one root per PHPUnit process ({@see KernelCacheExtension} removes it when the run starts and ends)
+ * and one directory per kernel configuration inside it, never deleted while the process runs. The dumped container
+ * class name only depends on the kernel class/env/debug and its inner namespace on the generated code, so once PHP
+ * has loaded a container class every later kernel with the same configuration reuses that class, whose __DIR__ (lazy
+ * ghost proxy files on PHP < 8.4) points at the directory it was first dumped to. Deleting that directory between
+ * tests breaks the reused container with "Failed opening required .../UriSignerGhost*.php".
  */
 final class CookieConsentTestKernel extends Kernel
 {
     use MicroKernelTrait;
+
+    private readonly string $cacheKey;
 
     /**
      * @param array<string, mixed> $bundleConfig nowo_cookie_consent configuration
@@ -39,9 +51,17 @@ final class CookieConsentTestKernel extends Kernel
     public function __construct(
         private readonly bool $withSecurity,
         private readonly array $bundleConfig,
-        private readonly string $cacheKey,
     ) {
+        $this->cacheKey = hash('xxh128', serialize([$withSecurity, $bundleConfig]));
         parent::__construct('test', false);
+    }
+
+    /**
+     * Cache root of the current PHPUnit process (removed before and after the run by {@see KernelCacheExtension}).
+     */
+    public static function processCacheRoot(): string
+    {
+        return sys_get_temp_dir() . '/nowo_cookie_consent_kernel/' . getmypid();
     }
 
     /**
@@ -68,12 +88,12 @@ final class CookieConsentTestKernel extends Kernel
 
     public function getCacheDir(): string
     {
-        return sys_get_temp_dir() . '/nowo_cookie_consent_kernel/' . $this->cacheKey . '/cache';
+        return self::processCacheRoot() . '/' . $this->cacheKey . '/cache';
     }
 
     public function getLogDir(): string
     {
-        return sys_get_temp_dir() . '/nowo_cookie_consent_kernel/' . $this->cacheKey . '/log';
+        return self::processCacheRoot() . '/' . $this->cacheKey . '/log';
     }
 
     protected function configureContainer(ContainerBuilder $container, LoaderInterface $loader): void

@@ -8,11 +8,9 @@ use Nowo\CookieConsentBundle\EventSubscriber\CookieConsentAdminAccessSubscriber;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
-use Symfony\Component\Filesystem\Filesystem;
 use Symfony\Component\HttpKernel\KernelEvents;
 
 use function is_array;
-use function sys_get_temp_dir;
 
 /**
  * Regression (1.15.1): CookieConsentSecurityPass registered the subscriber without a class, so a real
@@ -26,7 +24,6 @@ final class AdminAccessSubscriberKernelTest extends TestCase
     {
         $this->kernel?->shutdown();
         $this->kernel = null;
-        (new Filesystem())->remove(sys_get_temp_dir() . '/nowo_cookie_consent_kernel');
     }
 
     /**
@@ -53,7 +50,7 @@ final class AdminAccessSubscriberKernelTest extends TestCase
     #[DataProvider('applications')]
     public function testRealKernelCompilesAndRegistersTheAdminAccessSubscriber(bool $withSecurity, array $bundleConfig): void
     {
-        $this->kernel = new CookieConsentTestKernel($withSecurity, $bundleConfig, bin2hex(random_bytes(6)));
+        $this->kernel = new CookieConsentTestKernel($withSecurity, $bundleConfig);
         $this->kernel->boot();
 
         $dispatcher = $this->kernel->getContainer()->get('event_dispatcher');

@@ -11,7 +11,6 @@ use Nowo\CookieConsentBundle\Form\Settings\CookieConsentConfigAppearanceSettings
 use Nowo\CookieConsentBundle\Form\Settings\CookieConsentConfigFullSettingsType;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\DependencyInjection\ContainerInterface;
-use Symfony\Component\Filesystem\Filesystem;
 use Symfony\Component\Form\FormFactoryInterface;
 use Symfony\Component\Form\FormTypeInterface;
 use Twig\Environment;
@@ -21,7 +20,6 @@ use function array_filter;
 use function preg_match;
 use function preg_match_all;
 use function preg_split;
-use function sys_get_temp_dir;
 
 use const PREG_SPLIT_NO_EMPTY;
 
@@ -38,7 +36,6 @@ final class AdminSettingsFormRenderTest extends TestCase
     {
         $this->kernel?->shutdown();
         $this->kernel = null;
-        (new Filesystem())->remove(sys_get_temp_dir() . '/nowo_cookie_consent_kernel');
     }
 
     public function testOverlayCheckboxRendersOneIdOneClassAndOneWrapper(): void
@@ -85,7 +82,7 @@ final class AdminSettingsFormRenderTest extends TestCase
      */
     private function render(string $type, object $data, string $expression): string
     {
-        $this->kernel = new CookieConsentTestKernel(false, ['web_ui' => ['enabled' => false]], bin2hex(random_bytes(6)));
+        $this->kernel = new CookieConsentTestKernel(false, ['web_ui' => ['enabled' => false]]);
         $this->kernel->boot();
         $container = $this->kernel->getContainer()->get('test.service_container');
         self::assertInstanceOf(ContainerInterface::class, $container);
