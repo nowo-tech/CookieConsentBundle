@@ -100,6 +100,12 @@
 
 ## Unreleased
 
+Requires UiKit **^2.2** (`composer require nowo-tech/ui-kit-bundle:^2.2`). No configuration change. What hosts may
+notice (UiKit UPGRADING "Template contract (2.2)"): the settings section tabs under the Settings / Cookie inventory
+area nav use the `tabs_secondary` slot (Bootstrap pills); badges are subtle; table headers are small uppercase labels
+with striped rows; the delete confirm uses `btn_danger_solid` (hosts that themed `btn_danger` set it too). Hosts with
+their own UiKit script list in the admin layout include `{{ include(nowo_ui_partial('scripts')) }}` instead.
+
 ## To 1.16.1
 
 From **1.16.0**:

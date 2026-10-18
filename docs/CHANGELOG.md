@@ -63,6 +63,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- Requires `nowo-tech/ui-kit-bundle` **^2.2** (default-theme polish: table header hierarchy, striped rows, subtle
+  badges, secondary-level section tabs under the area nav, solid destructive confirm button with a close button). See
+  [UPGRADING](UPGRADING.md#unreleased).
+
+### Removed
+
+- The inventory's scoped `flex-wrap: nowrap` rule for the edit / delete row actions
+  (`nowo-cookie-consent-admin.css`): UiKit 2.2 keeps row actions on one line in every list (`width: 1%;
+  white-space: nowrap` actions column).
+
+### Demo
+
+- The host layouts print the UiKit runtimes through the UiKit `scripts` partial; the Tailwind demo themes
+  `btn_danger_solid` (danger confirm buttons) next to `btn_danger`.
+
 ## [1.16.1] - 2026-10-18
 
 Readable dark preferences modal (full token sets, accent save button), cookie definition form grid and translations table, one-line inventory rows; demo fixes. See [UPGRADING](UPGRADING.md#to-1161).
