@@ -3,6 +3,7 @@
 ## Table of contents
 
 - [Unreleased](#unreleased)
+- [To 1.16.1](#to-1161)
 - [To 1.16.0](#to-1160)
   - [Template contract (1.16)](#template-contract-116)
 - [To 1.15.2](#to-1152)
@@ -98,6 +99,14 @@
 - [Getting help](#getting-help)
 
 ## Unreleased
+
+## To 1.16.1
+
+From **1.16.0**:
+
+```bash
+composer update nowo-tech/cookie-consent-bundle
+```
 
 ## To 1.16.0
 

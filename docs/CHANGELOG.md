@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## Table of contents
 
 - [[Unreleased]](#unreleased)
+- [[1.16.1] - 2026-10-18](#1161---2026-10-18)
 - [[1.16.0] - 2026-10-18](#1160---2026-10-18)
 - [[1.15.2] - 2026-10-13](#1152---2026-10-13)
 - [[1.15.1] - 2026-10-13](#1151---2026-10-13)
@@ -62,6 +63,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.16.1] - 2026-10-18
+
+Readable dark preferences modal (full token sets, accent save button), cookie definition form grid and translations table, one-line inventory rows; demo fixes. See [UPGRADING](UPGRADING.md#to-1161).
+
 UI polish after the UiKit page-contract migration: readable dark preferences modal, cookie definition form and inventory list layout, demo fixes.
 
 ### Fixed
@@ -78,6 +83,8 @@ UI polish after the UiKit page-contract migration: readable dark preferences mod
 - **Cookie inventory list:** the name uses the UiKit `code` slot; name, category, duration and default do not wrap; the purpose is clamped to two lines with the full text in `title`.
 - The admin list and form pages link `bundles/nowocookieconsent/nowo-cookie-consent-admin.css` (layout of the bundle's own data blocks; reads UiKit tokens) in `nowo_ui_styles` — run `assets:install` after upgrading.
 - **Demo:** the intro and legal texts say MySQL (the demos run MySQL 8.4, not SQLite); in dev the banner and the preferences bubble sit above the open WebProfiler toolbar; smaller blocked-iframe placeholder; `list_page_size: 10`. New e2e checks: dark-turquoise preferences contrast / footer / accent, inventory row layout, cookie form grid + translations table with a validation and save round-trip.
+
+[1.16.1]: https://github.com/nowo-tech/CookieConsentBundle/releases/tag/v1.16.1
 
 ## [1.16.0] - 2026-10-18
 
