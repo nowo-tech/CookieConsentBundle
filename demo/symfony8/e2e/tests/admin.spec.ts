@@ -13,6 +13,8 @@ test.describe('CookieConsent bundle admin (UiKit page contract)', () => {
     expect(response?.ok()).toBeTruthy();
     await expect(page.locator('[data-nowo-ui-page="list"]')).toBeVisible();
     await expect(page.locator('[data-nowo-ui-region="area-nav"] a[aria-current="page"]')).toHaveAttribute('href', COOKIES);
+    // UiKit 2.1 area navigation: inside the page header, 1.x data-turbo="false" kept on the <nav>.
+    await expect(page.locator('[data-nowo-ui-region="header"] [data-nowo-ui-region="area-nav"]')).toHaveAttribute('data-turbo', 'false');
     await expect(page.locator('[data-nowo-ui-region="table"] tbody tr').first()).toBeVisible();
     await expect(page.locator('.nowo-cookie-consent')).toHaveCount(0);
   });
