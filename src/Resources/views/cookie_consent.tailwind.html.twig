@@ -87,7 +87,8 @@
                     <div class="nowo-cookie-consent__btn-group nowo-cookie-consent__section-footer flex flex-wrap justify-end gap-2 border-t px-6 py-4">
                         {% for child in form %}
                             {% if child.vars.name == 'save' %}
-                                {{ form_row(child) }}
+                                {# Only action of the preferences step: render it as the primary (accent) button. #}
+                                {{ form_row(child, {attr: child.vars.attr|merge({class: 'btn nowo-cookie-consent__btn nowo-cookie-consent__btn--save'})}) }}
                             {% endif %}
                         {% endfor %}
                     </div>

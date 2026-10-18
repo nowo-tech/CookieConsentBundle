@@ -34,14 +34,15 @@
   --nowo-cc-toggle-readonly-bg: #d5dee2;
   --nowo-cc-toggle-readonly-knob-bg: #ffffff;
   --nowo-cc-toggle-readonly-icon: #8fa0a8;
-  --nowo-cc-card-required-bg: color-mix(in srgb, #30363c 10%, #f0f4f7);
-  --nowo-cc-card-required-border: color-mix(in srgb, #30363c 22%, #e4eaed);
-  --nowo-cc-card-analytics-bg: color-mix(in srgb, #3b82f6 10%, #f0f4f7);
-  --nowo-cc-card-analytics-border: color-mix(in srgb, #3b82f6 28%, #e4eaed);
-  --nowo-cc-card-preferences-bg: color-mix(in srgb, #d97706 10%, #f0f4f7);
-  --nowo-cc-card-preferences-border: color-mix(in srgb, #d97706 28%, #e4eaed);
-  --nowo-cc-card-marketing-bg: color-mix(in srgb, #a855f7 10%, #f0f4f7);
-  --nowo-cc-card-marketing-border: color-mix(in srgb, #a855f7 28%, #e4eaed);
+  /* Category header tints derive from the block tokens so a theme that only sets those stays coherent. */
+  --nowo-cc-card-required-bg: color-mix(in srgb, #30363c 10%, var(--nowo-cc-category-block-bg));
+  --nowo-cc-card-required-border: color-mix(in srgb, #30363c 22%, var(--nowo-cc-category-block-border));
+  --nowo-cc-card-analytics-bg: color-mix(in srgb, #3b82f6 10%, var(--nowo-cc-category-block-bg));
+  --nowo-cc-card-analytics-border: color-mix(in srgb, #3b82f6 28%, var(--nowo-cc-category-block-border));
+  --nowo-cc-card-preferences-bg: color-mix(in srgb, #d97706 10%, var(--nowo-cc-category-block-bg));
+  --nowo-cc-card-preferences-border: color-mix(in srgb, #d97706 28%, var(--nowo-cc-category-block-border));
+  --nowo-cc-card-marketing-bg: color-mix(in srgb, #a855f7 10%, var(--nowo-cc-category-block-bg));
+  --nowo-cc-card-marketing-border: color-mix(in srgb, #a855f7 28%, var(--nowo-cc-category-block-border));
   background-color: transparent;
   color: var(--nowo-cc-primary);
   font-family: var(--nowo-cc-font-family);
@@ -302,6 +303,13 @@
   overflow-y: auto;
   overscroll-behavior: contain;
   -webkit-overflow-scrolling: touch;
+  scroll-padding-block: 1rem;
+}
+
+/* Keep the last category / cookie row clear of the footer edge when scrolled to the end. */
+.nowo-cookie-consent .nowo-cookie-consent__preferences-body.modal-body,
+.nowo-cookie-consent .nowo-cookie-consent__preferences-body.nowo-cookie-consent__scrollable {
+  padding-bottom: 1.5rem;
 }
 
 .nowo-cookie-consent:not(.nowo-cookie-consent--two-step) .modal-body {
@@ -494,8 +502,8 @@ body.nowo-cookie-consent-page-blocked {
   --nowo-cc-btn-secondary-hover-border: color-mix(in srgb, #c2d0e0 40%, transparent);
   --nowo-cc-link: #c2d0e0;
   --nowo-cc-separator: #22282c;
-  --nowo-cc-footer-bg: #252b30;
-  --nowo-cc-footer-border: #22282c;
+  --nowo-cc-footer-bg: var(--nowo-cc-bg);
+  --nowo-cc-footer-border: #2a3136;
   --nowo-cc-overlay: rgba(0, 0, 0, 0.65);
   --nowo-cc-btn-radius: 0.4rem;
   --nowo-cc-modal-radius: 0.75rem;
@@ -578,8 +586,8 @@ html[data-theme='dark'] .nowo-cookie-consent.nowo-cookie-consent--dark-mode {
   --nowo-cc-btn-secondary-hover-border: color-mix(in srgb, #c2d0e0 40%, transparent);
   --nowo-cc-link: #c2d0e0;
   --nowo-cc-separator: #22282c;
-  --nowo-cc-footer-bg: #252b30;
-  --nowo-cc-footer-border: #22282c;
+  --nowo-cc-footer-bg: var(--nowo-cc-bg);
+  --nowo-cc-footer-border: #2a3136;
   --nowo-cc-overlay: rgba(4, 10, 8, 0.72);
   --nowo-cc-category-block-bg: #252b30;
   --nowo-cc-category-block-border: #30363a;
@@ -608,8 +616,19 @@ html[data-theme='dark'] .nowo-cookie-consent.nowo-cookie-consent--dark-mode {
   --nowo-cc-secondary: #b1bdc3;
   --nowo-cc-btn-primary-bg: #60fed2;
   --nowo-cc-btn-primary-color: #000000;
+  --nowo-cc-btn-primary-hover-bg: #2bd5a8;
+  --nowo-cc-btn-primary-hover-color: #000000;
   --nowo-cc-btn-secondary-bg: #242c31;
   --nowo-cc-btn-secondary-color: #eff4f6;
+  --nowo-cc-btn-secondary-border: #30363a;
+  --nowo-cc-btn-secondary-hover-bg: #2d363c;
+  --nowo-cc-btn-secondary-hover-color: #eff4f6;
+  --nowo-cc-btn-secondary-hover-border: color-mix(in srgb, #60fed2 40%, #30363a);
+  --nowo-cc-link: #60fed2;
+  --nowo-cc-separator: #242c31;
+  /* Footer sits on the modal surface (no light strip under a dark body). */
+  --nowo-cc-footer-bg: var(--nowo-cc-bg);
+  --nowo-cc-footer-border: #242c31;
   --nowo-cc-overlay: rgba(4, 6, 8, 0.85);
   --nowo-cc-btn-radius: 0.5rem;
   --nowo-cc-category-block-bg: #242c31;
@@ -620,8 +639,18 @@ html[data-theme='dark'] .nowo-cookie-consent.nowo-cookie-consent--dark-mode {
   --nowo-cc-toggle-off-bg: #525f6b;
   --nowo-cc-toggle-on-bg: #eff4f6;
   --nowo-cc-toggle-on-knob-bg: var(--nowo-cc-bg);
-  --nowo-cc-toggle-readonly-bg: #343c40;
+  --nowo-cc-toggle-knob-bg: #ffffff;
+  --nowo-cc-toggle-readonly-bg: #4b565d;
   --nowo-cc-toggle-readonly-icon: #9aa6ad;
+  /* Category headers: dark tints of the category hue, never light pastels (title text uses --nowo-cc-primary). */
+  --nowo-cc-card-required-bg: color-mix(in srgb, #60fed2 10%, #242c31);
+  --nowo-cc-card-required-border: color-mix(in srgb, #60fed2 30%, transparent);
+  --nowo-cc-card-analytics-bg: color-mix(in srgb, #60a5fa 14%, #242c31);
+  --nowo-cc-card-analytics-border: color-mix(in srgb, #60a5fa 36%, transparent);
+  --nowo-cc-card-preferences-bg: color-mix(in srgb, #f59e0b 14%, #242c31);
+  --nowo-cc-card-preferences-border: color-mix(in srgb, #f59e0b 36%, transparent);
+  --nowo-cc-card-marketing-bg: color-mix(in srgb, #c084fc 14%, #242c31);
+  --nowo-cc-card-marketing-border: color-mix(in srgb, #c084fc 36%, transparent);
 }
 
 .nowo-cookie-consent--theme-light-funky {
@@ -637,6 +666,10 @@ html[data-theme='dark'] .nowo-cookie-consent.nowo-cookie-consent--dark-mode {
   --nowo-cc-category-block-border: #dfe7f9;
   --nowo-cc-category-block-hover-bg: #e3ebfc;
   --nowo-cc-category-block-hover-border: #d5e0f9;
+  --nowo-cc-footer-bg: #eef3ff;
+  --nowo-cc-footer-border: #dfe7f9;
+  --nowo-cc-separator: #dfe7f9;
+  --nowo-cc-link: #3859d0;
 }
 
 .nowo-cookie-consent--theme-elegant-black {
@@ -646,18 +679,38 @@ html[data-theme='dark'] .nowo-cookie-consent.nowo-cookie-consent--dark-mode {
   --nowo-cc-secondary: #b1bdc3;
   --nowo-cc-btn-primary-bg: #ffffff;
   --nowo-cc-btn-primary-color: #000000;
+  --nowo-cc-btn-primary-hover-bg: #d4d4d4;
+  --nowo-cc-btn-primary-hover-color: #000000;
   --nowo-cc-btn-secondary-bg: rgba(255, 255, 255, 0.04);
   --nowo-cc-btn-secondary-color: #eff4f6;
+  --nowo-cc-btn-secondary-border: #333333;
+  --nowo-cc-btn-secondary-hover-bg: #1c1c1c;
+  --nowo-cc-btn-secondary-hover-color: #ffffff;
+  --nowo-cc-btn-secondary-hover-border: #525252;
+  --nowo-cc-link: #ffffff;
+  --nowo-cc-separator: #1f1f1f;
+  --nowo-cc-footer-bg: var(--nowo-cc-bg);
+  --nowo-cc-footer-border: #1f1f1f;
   --nowo-cc-overlay: rgba(0, 0, 0, 0.9);
   --nowo-cc-category-block-bg: #141414;
   --nowo-cc-category-block-border: #2a2a2a;
   --nowo-cc-category-block-hover-bg: #1c1c1c;
   --nowo-cc-category-block-hover-border: #333333;
+  --nowo-cc-category-expanded-bg: transparent;
   --nowo-cc-toggle-off-bg: #525252;
   --nowo-cc-toggle-on-bg: #ffffff;
   --nowo-cc-toggle-on-knob-bg: var(--nowo-cc-bg);
-  --nowo-cc-toggle-readonly-bg: #2a2a2a;
+  --nowo-cc-toggle-knob-bg: #ffffff;
+  --nowo-cc-toggle-readonly-bg: #404040;
   --nowo-cc-toggle-readonly-icon: #888888;
+  --nowo-cc-card-required-bg: #141414;
+  --nowo-cc-card-required-border: #333333;
+  --nowo-cc-card-analytics-bg: color-mix(in srgb, #60a5fa 10%, #141414);
+  --nowo-cc-card-analytics-border: color-mix(in srgb, #60a5fa 30%, transparent);
+  --nowo-cc-card-preferences-bg: color-mix(in srgb, #f59e0b 10%, #141414);
+  --nowo-cc-card-preferences-border: color-mix(in srgb, #f59e0b 30%, transparent);
+  --nowo-cc-card-marketing-bg: color-mix(in srgb, #c084fc 10%, #141414);
+  --nowo-cc-card-marketing-border: color-mix(in srgb, #c084fc 30%, transparent);
 }
 
 .nowo-cookie-consent[class*='nowo-cookie-consent--theme-'] .modal-content {
@@ -1127,6 +1180,7 @@ html[data-theme='dark'] .nowo-cookie-consent.nowo-cookie-consent--dark-mode {
 }
 
 .nowo-cookie-consent__cookie-table code {
+  color: var(--nowo-cc-primary, inherit);
   font-size: 0.75rem;
 }
 
