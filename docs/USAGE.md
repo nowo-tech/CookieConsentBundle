@@ -192,8 +192,9 @@ The 1.13–1.15 `web_ui.chrome` map still works for one minor version: it is **d
 `nowo_ui_kit.theme.bundles.NowoCookieConsentBundle` (mapping table in
 [UPGRADING — Template contract](UPGRADING.md#template-contract-116)).
 
-**Blocks.** Data blocks of the scaffolds (`nowo_ui_list_row`, `nowo_ui_form_body`, `nowo_ui_settings_section`) plus
-`nowo_cookie_consent_admin_area_nav` (the Settings / Cookie inventory tabs above the page header). The 1.x
+**Blocks.** Data blocks of the scaffolds (`nowo_ui_list_row`, `nowo_ui_form_body`, `nowo_ui_settings_section`). The
+Settings / Cookie inventory tabs are the page header's area navigation (`page.header.tabs`, UiKit `AreaNav`), also
+available to other bundles through `nowo_ui_area_nav('cookie_consent', {configId: …})`. The 1.x
 `nowo_cookie_consent_admin_*` chrome blocks (page header, table wrapper, pagination, form actions…) are gone: those
 regions belong to the scaffold now.
 
@@ -232,7 +233,7 @@ Controllers and Twig use logical names such as `@NowoCookieConsentBundle/cookie_
 | `_preference_sections.html.twig` | Preferences step category blocks |
 | `_preferences_intro.html.twig` | Intro text on the preferences step |
 | `_diagnostics_script.html.twig` | Optional diagnostics script partial |
-| `admin/_admin_area_nav.html.twig` | Settings / Cookie inventory area tabs (UiKit `tabs` partial) |
+| `admin/_admin_area_nav.html.twig` | **Deprecated** — Settings / Cookie inventory area tabs for 1.x host templates (the pages use `page.header.tabs`) |
 | `admin/cookie_definition/index.html.twig` | Cookie inventory list (`page/list`; prefer `web_ui.templates.cookie_definition_index`) |
 | `admin/cookie_definition/form.html.twig` | Create/edit cookie definition (`page/form`; prefer `web_ui.templates.cookie_definition_form`) |
 | `admin/config/settings.html.twig` | Profile settings sections (`page/settings`; prefer `web_ui.templates.settings`) |

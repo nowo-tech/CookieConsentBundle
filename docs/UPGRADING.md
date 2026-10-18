@@ -100,8 +100,9 @@
 
 ### Template contract (1.16)
 
-The admin pages follow the **UiKit 2.0 page contract** (REQ-UI-003). Hosts that only configured
-`nowo_cookie_consent` / `nowo_ui_kit` need no template work; check the points below.
+The admin pages follow the **UiKit 2.x page contract** (REQ-UI-003) and require **`nowo-tech/ui-kit-bundle` ^2.1**
+(`composer update nowo-tech/ui-kit-bundle`). Hosts that only configured `nowo_cookie_consent` / `nowo_ui_kit` need no
+template work; check the points below.
 
 **Pages → scaffolds** ([TEMPLATES.md](TEMPLATES.md))
 
@@ -111,7 +112,10 @@ The admin pages follow the **UiKit 2.0 page contract** (REQ-UI-003). Hosts that 
 | Cookie definition | `admin/cookie_definition/form.html.twig` | `page/form` / `FormPage` | `nowo_ui_form_body` |
 | Profile settings | `admin/config/settings.html.twig` | `page/settings` / `SettingsPage` | `nowo_ui_settings_section` |
 
-Bundle block kept: `nowo_cookie_consent_admin_area_nav`.
+No bundle block of its own: the pages do not override `nowo_ui_page_header` or `nowo_ui_content`. The area
+navigation (Settings | Cookie inventory) is `page.header.tabs` (UiKit `AreaNav`), rendered by the UiKit page header
+under the title row (region `area-nav`, `<nav data-turbo="false">` as in 1.x), and is published to the UiKit
+area-nav registry (area `cookie_consent`, `Admin\CookieConsentAreaNavProvider`).
 
 **What hosts may notice**
 
@@ -124,7 +128,8 @@ Bundle block kept: `nowo_cookie_consent_admin_area_nav`.
    that only rendered `body` / `title` / `stylesheets` / `javascripts` needs those blocks (UiKit
    `docs/PAGE_CONTRACT.md#example-host-integration` has a one-file bridge).
 2. **Form theme.** `bootstrap_5_layout.html.twig` is no longer forced on the admin forms: set `twig.form_themes`
-   (or keep the deprecated `web_ui.chrome.templates.form_theme`).
+   (or keep the deprecated `web_ui.chrome.templates.form_theme`, passed to the scaffolds as `FormPage::$formThemes` /
+   `SettingsSection::$formThemes`).
 3. **Markup.** Header, tabs, table, row actions, confirm `<dialog>`s, pagination, empty state and form frame are UiKit
    markup (`nowo-ui-*` + theme slots). CSS or tests targeting 1.x classes (`.card.shadow-sm`, `.table-responsive`,
    `nowo-ui-action-create` / `-save` / `-cancel`, `nowo-ui-tabs__list`) should use the theme slots and the regions
@@ -134,16 +139,23 @@ Bundle block kept: `nowo_cookie_consent_admin_area_nav`.
    `delete_cookie_definition[_token]` and keeps the CSRF token ids (`delete-cookie-definition-<id>`).
 4. **Row actions** inherit `nowo_ui_kit.row_actions_display` (default `icon`); 1.x showed text. Keep the text with
    `nowo_ui_kit.row_actions_display: text` (or the deprecated `web_ui.chrome.row_actions_display: text`).
-5. **Template context.** Templates set through `web_ui.templates.<page>` receive `page` (the view model) and
-   `area_nav`; the 1.x variables stay (`config`, `definitions`, `delete_forms`, `pages`, `total`, `pageSize`,
-   `definition`, `form`, `isNew`, `section`, `sections`) except `page`, which was the page number (use
-   `page.pagination.page`).
+5. **Template context.** Templates set through `web_ui.templates.<page>` receive `page` (the view model; area
+   navigation in `page.header.tabs`); the 1.x variables stay (`config`, `definitions`, `delete_forms`, `pages`,
+   `total`, `pageSize`, `definition`, `form`, `isNew`, `section`, `sections`) except `page`, which was the page number
+   (use `page.pagination.page`).
+6. **Area navigation.** The tabs moved from above the page header (block `nowo_cookie_consent_admin_area_nav`,
+   removed) into the UiKit page header, below the title row. A host
+   `page_header` partial override (`theme.partials.page_header`) renders them only if it renders `header.tabs` (UiKit
+   UPGRADING "To 2.1.0"). To replace or drop the tabs, register an `AreaNavProviderInterface` for area
+   `cookie_consent` with a higher priority than the bundle's (return an empty `AreaNav` to drop them).
+   `admin/_admin_area_nav.html.twig` is deprecated: it renders the registry's navigation for 1.x host templates that
+   include it.
 
 **Removed templates:** `admin/layout.html.twig`, `admin/base.html.twig`, `admin/_pagination.html.twig`,
 `admin/_tabs.html.twig`, `admin/_chrome.html.twig`, `admin/cookie_definition/_table.html.twig`,
 `admin/config/_settings_section_tabs.html.twig`, `admin/cookie_definition/layout.html.twig`,
-`admin/config/layout.html.twig`. **Removed blocks:** `nowo_cookie_consent_admin_page_header|page_title|page_intro|
-page_actions|table_wrapper|pagination|table_head|row_actions|empty_state|form_wrapper|form_body|form_actions|
+`admin/config/layout.html.twig`. **Removed blocks:** `nowo_cookie_consent_admin_area_nav|page_header|page_title|
+page_intro|page_actions|table_wrapper|pagination|table_head|row_actions|empty_state|form_wrapper|form_body|form_actions|
 section_tabs|settings_section|section_header|styles_after` → use the scaffold data blocks, the UiKit theme or a
 scaffold override (`templates/bundles/NowoUiKitBundle/page/*.html.twig`).
 
@@ -159,7 +171,7 @@ bundle-specific change use `web_ui.templates.<page>` with a thin
 | `web_ui.icon_set` | `nowo_ui_kit.icon_set` (same) |
 | `web_ui.chrome.classes.*` / `attributes.*` | `nowo_ui_kit.theme.bundles.NowoCookieConsentBundle.classes` / `.attributes` (bridged automatically, table below) |
 | `web_ui.chrome.templates.tabs` / `pagination` | `…NowoCookieConsentBundle.partials.tabs` / `pagination` (bridged; the partials now receive UiKit's input: `items` / `pagination`) |
-| `web_ui.chrome.templates.form_theme` | `twig.form_themes` (still applied) |
+| `web_ui.chrome.templates.form_theme` | `twig.form_themes` (still applied, as `FormPage` / `SettingsSection::$formThemes`) |
 | `web_ui.chrome.templates.form_fields` | `web_ui.templates.<page>` overriding `nowo_ui_form_body` / `nowo_ui_settings_section` (still applied) |
 | `web_ui.chrome.templates.styles_after` | your layout's `nowo_ui_styles` or `theme.tokens` (still applied) |
 | `web_ui.chrome.row_actions_display` | `nowo_ui_kit.row_actions_display` (still applied when not `inherit`) |
@@ -171,7 +183,7 @@ whole class list as in 1.x; a host `nowo_ui_kit.theme.bundles.NowoCookieConsentB
 
 | 1.x key | UiKit slot |
 | --- | --- |
-| `page_header` (else `page_header_form`) | `page_header` |
+| `page_header` / `page_header_form` | `page_header` of the list / form page (`…NowoCookieConsentBundle.pages.list` / `.pages.form`, UiKit 2.1) |
 | `page_title` / `page_intro` | `page_title` / `page_intro` |
 | `area_nav`, `section_tabs` | `tabs` |
 | `tab_item` / `tab_item_active` | `tab` / `tab_active` (= `tab_item` + `tab_item_active`) |
@@ -181,7 +193,7 @@ whole class list as in 1.x; a host `nowo_ui_kit.theme.bundles.NowoCookieConsentB
 | `form_panel` | `form_panel` |
 | `settings_panel` / `settings_panel_body` | `section` / `card_body` |
 | `form` | `form` |
-| `settings_actions`, `form_actions` | `form_actions` |
+| `settings_actions` / `form_actions` | `form_actions` of the settings / form page (`.pages.settings` / `.pages.form`) |
 | `section_title` / `section_lead` | `card_title` / `card_intro` |
 | `button_primary` / `button_secondary` / `confirm_delete` | `btn_primary` / `btn_secondary` / `btn_danger` |
 | `pagination` / `pagination_summary` / `pagination_button` | `pagination` / `pagination_info` / `pagination_link` |

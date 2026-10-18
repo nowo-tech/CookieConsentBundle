@@ -63,19 +63,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- **UiKit 2.0 page contract (REQ-UI-003):** the admin pages extend the UiKit scaffolds — cookie inventory → `page/list`, cookie definition → `page/form`, profile settings → `page/settings` — and the controllers pass UiKit view models built by the new `Admin\AdminPageFactory`. Page header, area and section tabs, table, row actions, delete confirm dialogs, pagination, empty state, form frame and flashes are painted by the UiKit theme slots, so `nowo_ui_kit.theme` themes them together with every other Nowo bundle. See [TEMPLATES.md](TEMPLATES.md).
+- **UiKit 2.x page contract (REQ-UI-003):** the admin pages extend the UiKit scaffolds — cookie inventory → `page/list`, cookie definition → `page/form`, profile settings → `page/settings` — and the controllers pass UiKit view models built by the new `Admin\AdminPageFactory`. Page header, area and section tabs, table, row actions, delete confirm dialogs, pagination, empty state, form frame and flashes are painted by the UiKit theme slots, so `nowo_ui_kit.theme` themes them together with every other Nowo bundle. See [TEMPLATES.md](TEMPLATES.md).
 - `web_ui.templates.<page>` (`cookie_definition_index`, `cookie_definition_form`, `settings`): per-page template override.
 - `docs/TEMPLATES.md` (page → scaffold, data blocks, view-model fields) and a contract test (`PageContractTest`, UiKit `PageContractTestCase`) plus real-kernel tests of the admin pages.
+- **Area navigation on the UiKit 2.1 contract:** Settings | Cookie inventory is the page header's `PageHeader::$tabs` (`View\AreaNav`, `<nav data-turbo="false">` as in 1.x), rendered by the UiKit page header; `Admin\CookieConsentAreaNavProvider` publishes it to the UiKit area-nav registry (area `cookie_consent`) for DashboardMenu / host menus, and the page headers read it from the registry (a host provider can replace or drop the tabs).
 - Admin screenshots (`admin-cookie-definitions`, `admin-cookie-definition-form`, `admin-settings`) in the docs.
 
 ### Changed
 
-- **Template contract** — see [UPGRADING](UPGRADING.md#template-contract-116): the admin page templates were rewritten on the scaffolds (their 1.x `nowo_cookie_consent_admin_*` chrome blocks, except `…_area_nav`, are gone); `web_ui.layout_template` defaults to `null` (UiKit `nowo_ui_kit.layouts.admin`) and must render the UiKit canonical blocks; the controllers pass `page` (view model) and `area_nav` next to the 1.x variables (`page` is no longer the page number).
+- **Template contract** — see [UPGRADING](UPGRADING.md#template-contract-116): the admin page templates were rewritten on the scaffolds (their 1.x `nowo_cookie_consent_admin_*` chrome blocks, `…_area_nav` included, are gone); `web_ui.layout_template` defaults to `null` (UiKit `nowo_ui_kit.layouts.admin`) and must render the UiKit canonical blocks; the controllers pass `page` (view model, area navigation in `page.header.tabs`) next to the 1.x variables (`page` is no longer the page number). The area tabs now sit inside the UiKit page header, below the title row (1.x: above the header).
 - Removed the local chrome: `admin/layout.html.twig` (Bootstrap from a CDN), `admin/base.html.twig`, `admin/_pagination.html.twig`, `admin/_tabs.html.twig`, `admin/_chrome.html.twig`, `admin/cookie_definition/_table.html.twig`, `admin/config/_settings_section_tabs.html.twig` and the `admin/cookie_definition/layout.html.twig` / `admin/config/layout.html.twig` aliases. No admin template loads CSS or JS from a CDN.
 - The admin forms no longer force `bootstrap_5_layout.html.twig`: they use the host form theme (`twig.form_themes`).
 - The seeded `cookie_consent` FormKit profile sets `auto_help: false` (the bundle ships no `{form}.{field}.help` keys: they rendered raw on the cookie definition form) and no longer adds `mb-2` to every row; `nowo-tech/form-kit-bundle` ^2.9. `FormKitPlaceholders` stays (explicit-placeholder handling the profile cannot express).
 - No framework utility classes in bundle markup / form types (`DeleteCookieDefinitionType` lost `d-inline`, the bubble icon textarea `font-monospace`).
-- `nowo-tech/ui-kit-bundle` ^2.0.
+- `nowo-tech/ui-kit-bundle` ^2.1 (area navigation, per-page form themes and per-bundle page-type theme exceptions; the 2.0-based pre-release templates overrode `nowo_ui_page_header` for the tabs and `nowo_ui_content` for the form theme — no page overrides them now, and the `nowo_cookie_consent_admin_area_nav` block and the `area_nav` context variable of the pre-release are gone).
+- The deprecated `web_ui.chrome.templates.form_theme` reaches the admin forms as `FormPage` / `SettingsSection::$formThemes`; the one-page `web_ui.chrome` keys are bridged per page type (`page_header` → list, `page_header_form` → form, `form_actions` → form, `settings_actions` → settings: `theme.bundles.NowoCookieConsentBundle.pages.<type>`) instead of one key winning over the other.
 - Removed the unused translation keys `nowo_cookie_consent.admin.layout.title`, `admin.pagination.*` and `admin.config.settings.section_tabs_label`; added `nowo_cookie_consent.admin.config.settings.lead` (all locales).
 
 ### Fixed
@@ -89,6 +91,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `web_ui.chrome` (`classes`, `attributes`, `templates`, `page_title_tag`, `row_actions_display`) and the `Admin\AdminChrome` class: the class and attribute maps and the `tabs` / `pagination` partials are bridged into `nowo_ui_kit.theme.bundles.NowoCookieConsentBundle`; `templates.form_theme|form_fields|styles_after` and `row_actions_display` are still applied; `page_title_tag` is ignored. Removed in 2.0.
 - `web_ui.css_framework` and `web_ui.icon_set` (default now `null`): set `nowo_ui_kit.css_framework` / `icon_set`. When set they still seed UiKit.
 - Twig globals `nowo_cookie_consent_layout_template`, `nowo_cookie_consent_css_framework`, `nowo_cookie_consent_icon_set` (no longer read by the bundle).
+- `admin/_admin_area_nav.html.twig` (no longer used by the pages; renders the area-nav registry's navigation for 1.x host templates).
 
 ## [1.15.2] - 2026-10-13
 

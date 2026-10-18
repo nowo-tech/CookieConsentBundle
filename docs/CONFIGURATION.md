@@ -539,8 +539,8 @@ blocks and view-model fields: [TEMPLATES.md](TEMPLATES.md).
 | `web_ui.list_page_size` | `20` | Page size for cookie definition admin lists |
 | `web_ui.css_framework` | `null` | **Deprecated since 1.16.** When set and `nowo_ui_kit.css_framework` is not, seeds it (as before) |
 | `web_ui.icon_set` | `null` | **Deprecated since 1.16.** When set and `nowo_ui_kit.icon_set` is not, seeds it |
-| `web_ui.chrome.classes` / `.attributes` / `.templates.tabs` / `.templates.pagination` | `{}` | **Deprecated since 1.16.** Bridged into `nowo_ui_kit.theme.bundles.NowoCookieConsentBundle` (classes → slots with `framework_defaults: false`, attributes → slot attributes, partials → UiKit partials); mapping in [UPGRADING — Template contract](UPGRADING.md#template-contract-116) |
-| `web_ui.chrome.templates.form_theme` / `.form_fields` / `.styles_after` | `~` | **Deprecated since 1.16**, still applied by the admin pages (no theme slot equivalent) |
+| `web_ui.chrome.classes` / `.attributes` / `.templates.tabs` / `.templates.pagination` | `{}` | **Deprecated since 1.16.** Bridged into `nowo_ui_kit.theme.bundles.NowoCookieConsentBundle` (classes → slots with `framework_defaults: false`, attributes → slot attributes, partials → UiKit partials; one-page keys → `pages.<type>`); mapping in [UPGRADING — Template contract](UPGRADING.md#template-contract-116) |
+| `web_ui.chrome.templates.form_theme` / `.form_fields` / `.styles_after` | `~` | **Deprecated since 1.16**, still applied by the admin pages (no theme slot equivalent; `form_theme` as the UiKit `formThemes` of the admin forms) |
 | `web_ui.chrome.row_actions_display` | `inherit` | **Deprecated since 1.16.** `text` / `icon` / `icon_text` forces the display of the list row actions; `inherit` = `nowo_ui_kit.row_actions_display` |
 | `web_ui.chrome.page_title_tag` | `h1` | **Deprecated since 1.16 and ignored** — the heading comes from the UiKit `page_header` partial |
 
