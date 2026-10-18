@@ -25,8 +25,6 @@ final class DeleteCookieDefinitionType extends AbstractType
 
     /**
      * Name of the delete form of one row (`delete_cookie_definition_<id>`; payload `delete_cookie_definition_<id>[_token]`).
-     *
-     * @return string
      */
     public static function formName(int $definitionId): string
     {

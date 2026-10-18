@@ -72,8 +72,6 @@ final class AdminPageFactory
 
     /**
      * Template of an admin page (`web_ui.templates.<page>`, else the shipped one; see Configuration::PAGE_TEMPLATES).
-     *
-     * @return string
      */
     public function template(string $page): string
     {
@@ -87,8 +85,6 @@ final class AdminPageFactory
      *
      * @param CookieConsentConfig|int $config consent profile (or its id)
      * @param string|null $current active section ({@see self::AREA_SETTINGS}, {@see self::AREA_COOKIES}; null = none)
-     *
-     * @return AreaNav
      */
     public function areaNav(CookieConsentConfig|int $config, ?string $current = null): AreaNav
     {
@@ -113,8 +109,6 @@ final class AdminPageFactory
      *
      * @param iterable<CookieDefinition> $definitions current page of definitions
      * @param array<int, FormView> $deleteForms CSRF-only delete forms keyed by definition id
-     *
-     * @return ListPage
      */
     public function definitionList(
         CookieConsentConfig $config,
@@ -202,8 +196,6 @@ final class AdminPageFactory
 
     /**
      * Cookie definition create / edit form (`page/form`).
-     *
-     * @return FormPage
      */
     public function definitionForm(CookieConsentConfig $config, CookieDefinition $definition, FormView $form, bool $isNew): FormPage
     {
@@ -227,8 +219,6 @@ final class AdminPageFactory
 
     /**
      * Profile settings, one section (tab) per route (`page/settings`); only the current section has its form.
-     *
-     * @return SettingsPage
      */
     public function settings(CookieConsentConfig $config, CookieConsentConfigSettingsSection $current, FormView $form): SettingsPage
     {
