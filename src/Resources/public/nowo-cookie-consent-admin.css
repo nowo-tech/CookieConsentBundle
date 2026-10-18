@@ -1,0 +1,99 @@
+/*
+ * CookieConsentBundle admin pages: layout of the bundle's own data blocks inside the UiKit scaffolds (REQ-UI-003).
+ * Chrome (tables, inputs, buttons, badges) comes from UiKit and its theme; this file only arranges bundle markup and
+ * reads UiKit tokens (--nowo-ui-*), with neutral fallbacks for hosts without the UiKit stylesheet.
+ */
+
+/* Cookie definition form: scalar fields in two columns (one on narrow screens). */
+.nowo-cc-admin-form__grid {
+  display: grid;
+  gap: 0 1.25rem;
+  grid-template-columns: minmax(0, 1fr);
+}
+
+@media (min-width: 48rem) {
+  .nowo-cc-admin-form__grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+.nowo-cc-admin-form__grid > * {
+  min-width: 0;
+}
+
+/* Translations: one table row per locale, full width. */
+.nowo-cc-admin-translations {
+  border: 0;
+  margin: 1.25rem 0 0;
+  min-width: 0;
+  padding: 0;
+}
+
+.nowo-cc-admin-translations__legend {
+  float: none;
+  font-size: 1rem;
+  font-weight: 600;
+  margin: 0 0 0.25rem;
+  padding: 0;
+  width: auto;
+}
+
+.nowo-cc-admin-translations__help {
+  font-size: 0.875rem;
+  margin: 0 0 0.5rem;
+}
+
+.nowo-cc-admin-translations__table {
+  width: 100%;
+}
+
+.nowo-cc-admin-translations__table th,
+.nowo-cc-admin-translations__table td {
+  vertical-align: top;
+}
+
+.nowo-cc-admin-translations__table tbody th {
+  font-weight: inherit;
+}
+
+.nowo-cc-admin-translations__locale {
+  width: 7rem;
+}
+
+.nowo-cc-admin-translations__provider {
+  width: 28%;
+}
+
+.nowo-cc-admin-translations__table input,
+.nowo-cc-admin-translations__table textarea {
+  box-sizing: border-box;
+  max-width: none;
+  width: 100%;
+}
+
+.nowo-cc-admin-translations__table textarea {
+  line-height: 1.45;
+  min-height: 4.75rem;
+  resize: vertical;
+}
+
+/* Cookie inventory list: short columns never wrap, the purpose is clamped (full text in the title attribute). */
+.nowo-cc-admin-nowrap {
+  white-space: nowrap;
+}
+
+.nowo-cc-admin-clamp {
+  -webkit-box-orient: vertical;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  /* Bounded so the short columns and the row actions keep their natural width on a desktop table. */
+  max-width: 24rem;
+  min-width: 14rem;
+  overflow: hidden;
+}
+
+/* Edit + delete stay on one line: the table gives the actions cell its min-content width only. */
+[data-testid='cookie-consent-definitions'] .nowo-ui-table__actions > .nowo-ui-row-actions {
+  flex-wrap: nowrap;
+}

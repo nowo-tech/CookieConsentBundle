@@ -425,6 +425,9 @@ final class NowoCookieConsentExtensionTest extends TestCase
             }
             if (isset($cfg['profiles']['cookie_consent'])) {
                 $foundProfile = true;
+                // Text controls: UiKit input_full slot; the collection wrapper gets no input classes.
+                self::assertSame('nowo-ui-input nowo-ui-input--full', $cfg['profiles']['cookie_consent']['defaults']['attr']['class']);
+                self::assertSame('', $cfg['profiles']['cookie_consent']['field_types']['collection']['attr']['class']);
             }
         }
         self::assertTrue($foundCss);

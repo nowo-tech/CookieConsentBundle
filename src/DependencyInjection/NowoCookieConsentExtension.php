@@ -12,6 +12,7 @@ use Nowo\CookieConsentBundle\Security\AllowAllCookieConsentAccessChecker;
 use Nowo\CookieConsentBundle\Security\ConfigurableCookieConsentAccessChecker;
 use Nowo\CookieConsentBundle\Security\CookieConsentAccessCheckerInterface;
 use Nowo\CookieConsentBundle\Twig\CookieConsentAdminTwigExtension;
+use Nowo\UiKitBundle\Theme\ThemeSlots;
 use Symfony\Component\Config\FileLocator;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\Definition;
@@ -292,11 +293,17 @@ class NowoCookieConsentExtension extends Extension implements PrependExtensionIn
                     // The host form theme (e.g. bootstrap_5_layout) adds form-control / form-select /
                     // form-check-input, the .form-check wrapper and the row spacing itself: repeating them here
                     // doubled the classes and nested a second .form-check around checkboxes. No framework
-                    // utility classes here (REQ-UI-003): rows get their spacing from the form theme.
+                    // utility classes here (REQ-UI-003): rows get their spacing from the form theme. Text controls
+                    // use the UiKit `input_full` slot (`nowo-ui-input nowo-ui-input--full`): the form grid cells and
+                    // the translations table size them, so every input of a row lines up.
                     'defaults' => [
-                        'attr' => ['class' => 'nowo-ui-input'],
+                        'attr' => ['class' => ThemeSlots::semantic('input_full')],
                     ],
                     'field_types' => [
+                        // The collection wrapper is not a control: no input classes (they capped it at 20rem).
+                        'collection' => [
+                            'attr' => ['class' => ''],
+                        ],
                         'checkbox' => [
                             'attr' => ['class' => ''],
                         ],

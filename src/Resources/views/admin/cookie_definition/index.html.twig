@@ -2,13 +2,15 @@
   Cookie inventory of a consent profile (REQ-UI-003): UiKit list scaffold.
   View model: page (View\ListPage, AdminPageFactory::definitionList()); rows are plain arrays (id, name, provider,
   purpose, category: View\Label, duration, allowedByDefault).
-  Data blocks: nowo_ui_list_row (cells).
+  Data blocks: nowo_ui_list_row (cells). Name (UiKit `code` slot), category, duration and the default badge do not
+  wrap; the purpose is clamped to two lines with the full text in its title (nowo-cookie-consent-admin.css).
   Header, actions, table frame, row actions + confirm dialogs, pagination and empty state come from the scaffold.
 #}
 {% extends '@NowoUiKit/page/list.html.twig' %}
 
 {% block nowo_ui_styles %}
     {{ parent() }}
+    <link rel="stylesheet" href="{{ asset('bundles/nowocookieconsent/nowo-cookie-consent-admin.css') }}">
     {%- if nowo_cookie_consent_admin_chrome.templates.styles_after|default(null) %}{{ include(nowo_cookie_consent_admin_chrome.templates.styles_after) }}{% endif -%}
 {% endblock %}
 
@@ -16,14 +18,14 @@
     {% set _b = page.bundle %}
     {% set _cell = nowo_ui_class('table_cell', _b) %}
     {% set _muted = _cell ~ ' ' ~ nowo_ui_class('table_cell_muted', _b) %}
-    <td class="{{ _cell }}" data-label="{{ page.columns[0].label|nowo_ui_trans }}"><code>{{ row.name }}</code></td>
+    <td class="{{ _cell }} nowo-cc-admin-nowrap" data-label="{{ page.columns[0].label|nowo_ui_trans }}"><code class="{{ nowo_ui_class('code', _b) }}">{{ row.name }}</code></td>
     <td class="{{ row.provider ? _cell : _muted }}" data-label="{{ page.columns[1].label|nowo_ui_trans }}" data-nowo-ui-priority="2">{{ row.provider ?: '—' }}</td>
     <td class="{{ row.purpose ? _cell : _muted }}" data-label="{{ page.columns[2].label|nowo_ui_trans }}" data-nowo-ui-priority="3">
-        {%- if row.purpose %}<span class="{{ nowo_ui_class('muted', _b) }}">{{ row.purpose }}</span>{% else %}—{% endif -%}
+        {%- if row.purpose %}<span class="{{ nowo_ui_class('muted', _b) }} nowo-cc-admin-clamp" title="{{ row.purpose }}">{{ row.purpose }}</span>{% else %}—{% endif -%}
     </td>
-    <td class="{{ _cell }}" data-label="{{ page.columns[3].label|nowo_ui_trans }}">{{ row.category|nowo_ui_trans }}</td>
-    <td class="{{ row.duration ? _cell : _muted }}" data-label="{{ page.columns[4].label|nowo_ui_trans }}" data-nowo-ui-priority="2">{{ row.duration ?: '—' }}</td>
-    <td class="{{ _cell }}" data-label="{{ page.columns[5].label|nowo_ui_trans }}" data-nowo-ui-priority="3">
+    <td class="{{ _cell }} nowo-cc-admin-nowrap" data-label="{{ page.columns[3].label|nowo_ui_trans }}">{{ row.category|nowo_ui_trans }}</td>
+    <td class="{{ row.duration ? _cell : _muted }} nowo-cc-admin-nowrap" data-label="{{ page.columns[4].label|nowo_ui_trans }}" data-nowo-ui-priority="2">{{ row.duration ?: '—' }}</td>
+    <td class="{{ _cell }} nowo-cc-admin-nowrap" data-label="{{ page.columns[5].label|nowo_ui_trans }}" data-nowo-ui-priority="3">
         <span class="{{ nowo_ui_class(row.allowedByDefault ? 'badge_success' : 'badge_neutral', _b) }}">
             {{- (row.allowedByDefault ? 'nowo_cookie_consent.admin.cookie_definition.yes' : 'nowo_cookie_consent.admin.cookie_definition.no')|trans({}, 'NowoCookieConsentBundle') -}}
         </span>

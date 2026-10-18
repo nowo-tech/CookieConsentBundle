@@ -73,7 +73,7 @@ final class AdminPagesKernelTest extends TestCase
 
         $html = (string) $this->get(sprintf('/cookie-consent-config/%d/cookies', $configId))->getContent();
 
-        self::assertStringContainsString('<code>_ga</code>', $html);
+        self::assertMatchesRegularExpression('#<code class="[^"]*nowo-ui-code[^"]*">_ga</code>#', $html);
         self::assertStringContainsString('Google', $html);
         self::assertStringContainsString('Cookies declared for this consent profile and shown in the preferences modal.', $html);
         self::assertStringContainsString('data-nowo-ui-confirm', $html);

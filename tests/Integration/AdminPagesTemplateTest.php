@@ -121,7 +121,10 @@ final class AdminPagesTemplateTest extends PageContractTestCase
     {
         $content = $this->render(self::VIEWS . 'cookie_definition/index.html.twig', AdminPageFixtures::definitionList())->blockHtml('nowo_ui_content');
 
-        self::assertStringContainsString('<code>_ga</code>', $content);
+        self::assertMatchesRegularExpression('#<code class="[^"]*pc-code[^"]*">_ga</code>#', $content);
+        self::assertStringContainsString('class="nowo-ui-muted pc-muted nowo-cc-admin-clamp" title="Distinguishes visitors for Google Analytics."', $content);
+        self::assertSame(4 * 3, substr_count($content, 'nowo-cc-admin-nowrap'), 'name, category, duration and default never wrap (3 rows)');
+        self::assertStringContainsString('href="/assets/bundles/nowocookieconsent/nowo-cookie-consent-admin.css"', $this->render(self::VIEWS . 'cookie_definition/index.html.twig', AdminPageFixtures::definitionList())->blockHtml('nowo_ui_styles'));
         self::assertStringContainsString('Analytics', $content);
         self::assertStringContainsString('Required', $content);
         self::assertStringContainsString('Distinguishes visitors for Google Analytics.', $content);
@@ -180,6 +183,26 @@ final class AdminPagesTemplateTest extends PageContractTestCase
         self::assertStringContainsString('name="cookie_definition[name]"', $content);
         self::assertStringContainsString('Edit cookie _ga', $page->blockHtml('nowo_ui_document_title'));
         self::assertStringContainsString('New cookie', $this->render(self::VIEWS . 'cookie_definition/form.html.twig', AdminPageFixtures::definitionForm(true))->blockHtml('nowo_ui_document_title'));
+    }
+
+    public function testFormLaysOutScalarFieldsInAGridAndTranslationsAsATablePerLocale(): void
+    {
+        $page    = $this->render(self::VIEWS . 'cookie_definition/form.html.twig', AdminPageFixtures::definitionForm());
+        $content = $page->blockHtml('nowo_ui_content');
+
+        self::assertStringContainsString('href="/assets/bundles/nowocookieconsent/nowo-cookie-consent-admin.css"', $page->blockHtml('nowo_ui_styles'));
+        self::assertMatchesRegularExpression('#<div class="nowo-cc-admin-form__grid" data-nowo-cc-region="definition-fields">.*name="cookie_definition\[name\]".*name="cookie_definition\[sortOrder\]".*</div>#s', $content);
+        self::assertStringContainsString('<legend class="nowo-cc-admin-translations__legend">Translations</legend>', $content);
+        self::assertStringNotContainsString('<legend class="col-form-label required">0</legend>', $content, 'no numbered fieldset per entry');
+        self::assertMatchesRegularExpression('#<table class="[^"]*pc-table[^"]*nowo-cc-admin-translations__table"#', $content);
+        foreach (['en', 'es'] as $index => $locale) {
+            self::assertStringContainsString('data-nowo-cc-translation="' . $locale . '"', $content);
+            self::assertStringContainsString('name="cookie_definition[translations][' . $index . '][purpose]"', $content);
+            self::assertStringContainsString('aria-label="Provider (' . $locale . ')"', $content);
+        }
+        self::assertStringContainsString('ISO language code, e.g. en or es', $content);
+        self::assertStringContainsString('name="cookie_definition[_token]"', $content, 'CSRF token still rendered by parent()');
+        self::assertSame(1, substr_count($content, 'name="cookie_definition[name]"'), 'every field renders once');
     }
 
     public function testDeprecatedStylesAfterFormThemeAndFormFieldsStillApply(): void

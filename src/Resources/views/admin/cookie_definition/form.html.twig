@@ -1,8 +1,10 @@
 {#
   Cookie definition create / edit (REQ-UI-003): UiKit form scaffold.
   View model: page (View\FormPage, AdminPageFactory::definitionForm()).
-  Data blocks: nowo_ui_form_body (REQ-TWIG-003 child loop; the deprecated web_ui.chrome.templates.form_fields partial
-  renders first when configured).
+  Data blocks: nowo_ui_form_body — scalar fields in a two-column grid (one column on narrow screens), the
+  "allowed by default" checkbox on its own row, the translations as a table (one row per locale:
+  _translations_table.html.twig), then parent() renders whatever is left (CSRF token, host extensions). The deprecated
+  web_ui.chrome.templates.form_fields partial renders first when configured (fields it renders are skipped).
   Area navigation: page.header.tabs (View\AreaNav, rendered by the UiKit page header). Form theme: the host's
   twig.form_themes; the deprecated web_ui.chrome.templates.form_theme reaches the scaffold as
   page.formThemes.
@@ -11,6 +13,7 @@
 
 {% block nowo_ui_styles %}
     {{ parent() }}
+    <link rel="stylesheet" href="{{ asset('bundles/nowocookieconsent/nowo-cookie-consent-admin.css') }}">
     {%- if nowo_cookie_consent_admin_chrome.templates.styles_after|default(null) %}{{ include(nowo_cookie_consent_admin_chrome.templates.styles_after) }}{% endif -%}
 {% endblock %}
 
@@ -18,5 +21,19 @@
     {%- if nowo_cookie_consent_admin_chrome.templates.form_fields|default(null) %}
         {{ include(nowo_cookie_consent_admin_chrome.templates.form_fields, {form: form}, false) }}
     {% endif -%}
+    {% set _grid_fields = ['name', 'duration', 'category', 'type', 'sortOrder']|filter(name => form[name] is defined and not form[name].rendered) %}
+    {% if _grid_fields is not empty %}
+        <div class="nowo-cc-admin-form__grid" data-nowo-cc-region="definition-fields">
+            {% for name in _grid_fields %}
+                {{ form_row(form[name]) }}
+            {% endfor %}
+        </div>
+    {% endif %}
+    {% if form.allowedByDefault is defined and not form.allowedByDefault.rendered %}
+        {{ form_row(form.allowedByDefault) }}
+    {% endif %}
+    {% if form.translations is defined and not form.translations.rendered %}
+        {{ include('@NowoCookieConsentBundle/admin/cookie_definition/_translations_table.html.twig', {translations: form.translations, bundle: page.bundle}, false) }}
+    {% endif %}
     {{ parent() }}
 {% endblock %}

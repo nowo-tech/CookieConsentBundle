@@ -82,6 +82,8 @@ final class AdminPageFixtures
         $definition = $isNew ? new CookieDefinition() : self::definition(7, '_ga', 'analytics', '2 years', 'Google', 'Distinguishes visitors.', false);
         if ($isNew) {
             $definition->addTranslation((new CookieDefinitionTranslation())->setLocale('en'));
+        } else {
+            $definition->addTranslation((new CookieDefinitionTranslation())->setLocale('es')->setProvider('Google')->setPurpose('Distingue a los visitantes.'));
         }
         $form = self::forms()->create(CookieDefinitionType::class, $definition)->createView();
 
