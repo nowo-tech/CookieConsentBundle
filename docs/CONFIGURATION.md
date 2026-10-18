@@ -157,7 +157,7 @@ nowo_cookie_consent:
 | Key | Default | Description |
 |-----|---------|-------------|
 | `default_locale` | `en` | Fallback locale (see [Locale detection](#locale-detection)) |
-| `enabled_locales` | `[en, es, it, fr, de, pt, nl, pl, ca]` | Locales supported by the modal |
+| `enabled_locales` | `[en, es, it, fr, de, pt, nl, pl, ca]` | Locales supported by the modal. A list, or a parameter / env var holding one (`'%kernel.enabled_locales%'`, `'%app.locales%'`, `'%env(json:APP_LOCALES)%'`) — see [Locale detection](#locale-detection) |
 | `detect_locale_from_accept_language` | `true` | Use `Accept-Language` when no explicit locale is available |
 
 ### Appearance and behaviour of the modal
@@ -224,6 +224,19 @@ The bundle resolves the modal locale automatically in this order:
 6. `default_locale`
 
 Configure supported languages with `enabled_locales`. Bundle translations ship for `en`, `es`, `it`, `fr`, `de`, `pt`, `nl`, `pl`, and `ca`.
+
+`enabled_locales` can reuse the host's locale list instead of repeating it:
+
+```yaml
+nowo_cookie_consent:
+    enabled_locales: '%kernel.enabled_locales%'   # framework.enabled_locales, or '%app.locales%'
+    # enabled_locales: '%env(json:APP_LOCALES)%'  # APP_LOCALES='["en","es"]' (or '%env(csv:APP_LOCALES)%' with APP_LOCALES=en,es)
+```
+
+Parameters are resolved when the container is built (`nowo_cookie_consent.enabled_locales` holds the resolved list).
+An env var is read at runtime by the locale resolver (and `nowo_cookie_consent_enabled_locales()`). Values are trimmed
+and de-duplicated. Any other list option (`target_routes`, `disabled_routes`, …) can also be a
+build-time parameter: `prepend()` no longer processes the whole raw configuration.
 
 ### UI theme
 

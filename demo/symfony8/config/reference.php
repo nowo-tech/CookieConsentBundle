@@ -1044,7 +1044,7 @@ use Symfony\Component\Config\Loader\ParamConfigurator as Param;
  *     route_targeting_mode?: "all"|"only"|"except"|Param, // Controls where the modal auto-opens: all pages, only listed routes, or all except listed routes. // Default: "all"
  *     target_routes?: list<scalar|Param|null>,
  *     default_locale?: scalar|Param|null, // Fallback locale when no supported language can be detected. // Default: "en"
- *     enabled_locales?: list<scalar|Param|null>,
+ *     enabled_locales?: mixed, // Locales supported by the cookie consent UI and locale detection. A list, or a parameter / env var holding one: "%app.locales%", "%kernel.enabled_locales%", "%env(json:APP_LOCALES)%" (resolved at runtime). // Default: ["en","es","it","fr","de","pt","nl","pl","ca"]
  *     detect_locale_from_accept_language?: bool|Param, // Use the Accept-Language request header when no explicit locale is available. // Default: true
  *     ui_theme?: "bootstrap"|"tailwind"|Param, // UI framework used by the bundled cookie consent modal templates. // Default: "bootstrap"
  *     color_theme?: "light"|"dark"|"dark-turquoise"|"light-funky"|"elegant-black"|Param, // Default: "light"

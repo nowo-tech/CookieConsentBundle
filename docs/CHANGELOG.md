@@ -64,6 +64,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- `enabled_locales` given as a container parameter or env var (`'%kernel.enabled_locales%'`, `'%app.locales%'`,
+  `'%env(json:APP_LOCALES)%'`) no longer breaks the container build ("Expected array, but got string"): `prepend()`
+  processed the whole raw host config, where the parameter is still a string (and `kernel.enabled_locales` is not
+  defined yet), and the node only accepted a literal list. `prepend()` now processes only the `web_ui` node (so any
+  list option may be a build-time parameter), `enabled_locales` accepts a list or a parameter / env placeholder, and
+  an env var is read at runtime by the locale resolver. See [CONFIGURATION](CONFIGURATION.md#locale-detection).
+
 ## [1.16.2] - 2026-10-18
 
 Requires UiKit ^2.2; locale and route-pattern placeholders are translated keys. See [UPGRADING](UPGRADING.md#to-1162).

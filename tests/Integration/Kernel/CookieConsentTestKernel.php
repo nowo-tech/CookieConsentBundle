@@ -47,12 +47,16 @@ final class CookieConsentTestKernel extends Kernel
 
     /**
      * @param array<string, mixed> $bundleConfig nowo_cookie_consent configuration
+     * @param array<string, mixed> $hostParameters container parameters of the host app (e.g. app.locales)
+     * @param array<string, mixed> $frameworkConfig extra framework configuration (e.g. enabled_locales)
      */
     public function __construct(
         private readonly bool $withSecurity,
         private readonly array $bundleConfig,
+        private readonly array $hostParameters = [],
+        private readonly array $frameworkConfig = [],
     ) {
-        $this->cacheKey = hash('xxh128', serialize([$withSecurity, $bundleConfig]));
+        $this->cacheKey = hash('xxh128', serialize([$withSecurity, $bundleConfig, $hostParameters, $frameworkConfig]));
         parent::__construct('test', false);
     }
 
@@ -98,7 +102,12 @@ final class CookieConsentTestKernel extends Kernel
 
     protected function configureContainer(ContainerBuilder $container, LoaderInterface $loader): void
     {
-        $container->loadFromExtension('framework', [
+        foreach ($this->hostParameters as $name => $value) {
+            $container->setParameter($name, $value);
+        }
+        // Env vars of the host (no process env mutation in tests): read through Symfony's env var loaders.
+        $container->register(TestEnvVarLoader::class, TestEnvVarLoader::class)->addTag('container.env_var_loader');
+        $container->loadFromExtension('framework', $this->frameworkConfig + [
             'secret'               => 'test',
             'test'                 => true,
             'http_method_override' => false,

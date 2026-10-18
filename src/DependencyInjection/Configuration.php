@@ -15,6 +15,7 @@ use Symfony\Component\Config\Definition\ConfigurationInterface;
 use function array_diff_key;
 use function array_keys;
 use function implode;
+use function is_array;
 use function is_string;
 use function sprintf;
 use function trim;
@@ -174,10 +175,13 @@ class Configuration implements ConfigurationInterface
                     ->info('Fallback locale when no supported language can be detected.')
                     ->example('en')
                 ->end()
-                ->arrayNode('enabled_locales')
-                    ->scalarPrototype()->end()
+                ->variableNode('enabled_locales')
                     ->defaultValue(['en', 'es', 'it', 'fr', 'de', 'pt', 'nl', 'pl', 'ca'])
-                    ->info('Locales supported by the cookie consent UI and locale detection.')
+                    ->info('Locales supported by the cookie consent UI and locale detection. A list, or a parameter / env var holding one: "%app.locales%", "%kernel.enabled_locales%", "%env(json:APP_LOCALES)%" (resolved at runtime).')
+                    ->validate()
+                        ->ifTrue(static fn (mixed $v): bool => !is_string($v) && !self::isLocaleList($v))
+                        ->thenInvalid('Invalid nowo_cookie_consent.enabled_locales %s: use a list of locale codes or a parameter / env placeholder holding one.')
+                    ->end()
                 ->end()
                 ->booleanNode('detect_locale_from_accept_language')
                     ->defaultTrue()
@@ -392,5 +396,19 @@ class Configuration implements ConfigurationInterface
         }
 
         return $webUi;
+    }
+
+    private static function isLocaleList(mixed $v): bool
+    {
+        if (!is_array($v)) {
+            return false;
+        }
+        foreach ($v as $locale) {
+            if (!is_string($locale)) {
+                return false;
+            }
+        }
+
+        return true;
     }
 }

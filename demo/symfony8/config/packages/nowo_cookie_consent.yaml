@@ -6,16 +6,8 @@ nowo_cookie_consent:
     use_cookie_inventory: true
     fetch_config_via_api: true
     default_locale: en
-    enabled_locales:
-        - en
-        - es
-        - it
-        - fr
-        - de
-        - pt
-        - nl
-        - pl
-        - ca
+    # Same list as framework.enabled_locales (an env var also works: '%env(json:APP_LOCALES)%').
+    enabled_locales: '%kernel.enabled_locales%'
     detect_locale_from_accept_language: false
     # The bundle admin pages (UiKit layout) never render the consent banner.
     skip_render_routes:

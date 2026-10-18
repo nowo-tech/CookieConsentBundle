@@ -8,6 +8,8 @@ use Nowo\CookieConsentBundle\Admin\AdminChrome;
 use Nowo\CookieConsentBundle\Admin\AdminPageFactory;
 use Nowo\CookieConsentBundle\Config\CookieInventoryNormalizer;
 use Nowo\CookieConsentBundle\EventSubscriber\CookieConsentConfigTranslationSubscriber;
+use Nowo\CookieConsentBundle\Locale\ConfiguredLocales;
+use Nowo\CookieConsentBundle\Locale\LocaleResolver;
 use Nowo\CookieConsentBundle\Security\AllowAllCookieConsentAccessChecker;
 use Nowo\CookieConsentBundle\Security\ConfigurableCookieConsentAccessChecker;
 use Nowo\CookieConsentBundle\Security\CookieConsentAccessCheckerInterface;
@@ -69,7 +71,13 @@ class NowoCookieConsentExtension extends Extension implements PrependExtensionIn
         $container->setParameter('nowo_cookie_consent.route_targeting_mode', $config['route_targeting_mode']);
         $container->setParameter('nowo_cookie_consent.target_routes', $config['target_routes']);
         $container->setParameter('nowo_cookie_consent.default_locale', $config['default_locale']);
-        $container->setParameter('nowo_cookie_consent.enabled_locales', $config['enabled_locales']);
+        // enabled_locales may be a parameter (%app.locales%, %kernel.enabled_locales%): the kernel resolves it before
+        // load(), a direct load() caller may not. An env var (%env(json:APP_LOCALES)%) stays a placeholder until runtime.
+        $enabledLocales = $container->getParameterBag()->resolveValue($config['enabled_locales']);
+        $usedEnvs       = [];
+        $container->resolveEnvPlaceholders($enabledLocales, null, $usedEnvs);
+        $runtimeLocales = $usedEnvs !== [];
+        $container->setParameter('nowo_cookie_consent.enabled_locales', $runtimeLocales ? $enabledLocales : ConfiguredLocales::normalize($enabledLocales));
         $container->setParameter('nowo_cookie_consent.detect_locale_from_accept_language', $config['detect_locale_from_accept_language']);
         $container->setParameter('nowo_cookie_consent.ui_theme', $config['ui_theme']);
         $container->setParameter('nowo_cookie_consent.color_theme', $config['color_theme']);
@@ -118,6 +126,13 @@ class NowoCookieConsentExtension extends Extension implements PrependExtensionIn
             $formTheme = $chrome['templates']['form_theme'];
             $container->getDefinition(AdminPageFactory::class)
                 ->setArgument('$formThemes', $formTheme !== null ? [$formTheme] : []);
+        }
+
+        if ($runtimeLocales) {
+            // Env var locales are only known at runtime: normalized by a factory when the resolver is created.
+            $container->getDefinition(LocaleResolver::class)->setArgument('$enabledLocales', (new Definition('array'))
+                ->setFactory([ConfiguredLocales::class, 'normalize'])
+                ->setArguments(['%nowo_cookie_consent.enabled_locales%']));
         }
 
         $this->registerAccessChecker($container, $security);
@@ -219,7 +234,16 @@ class NowoCookieConsentExtension extends Extension implements PrependExtensionIn
             return;
         }
 
-        $config = $this->processConfiguration(new Configuration(), $container->getExtensionConfig(Configuration::ALIAS));
+        // Only the web_ui node is processed here: prepend() sees the raw host config, where other keys may still be
+        // "%parameter%" / env placeholders (e.g. enabled_locales: '%kernel.enabled_locales%', defined by
+        // FrameworkExtension::load() after prepend).
+        $webUiConfigs = [];
+        foreach ($container->getExtensionConfig(Configuration::ALIAS) as $cfg) {
+            if (is_array($cfg['web_ui'] ?? null)) {
+                $webUiConfigs[] = ['web_ui' => $cfg['web_ui']];
+            }
+        }
+        $config = $this->processConfiguration(new Configuration(), $webUiConfigs);
         $webUi  = is_array($config['web_ui'] ?? null) ? $config['web_ui'] : [];
 
         $hostHasCssFramework = false;

@@ -26,6 +26,7 @@ services:
       - '../../Security/AllowAllCookieConsentAccessChecker.php'
       - '../../Security/ConfigurableCookieConsentAccessChecker.php'
       - '../../Clock/'
+      - '../../Locale/ConfiguredLocales.php'
 
   Nowo\CookieConsentBundle\Clock\SystemClock: ~
 
