@@ -68,7 +68,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [1.17.0] - 2026-10-18
 
-Config `privacy_route` fallback for the privacy link of the modal. See [UPGRADING](UPGRADING.md#to-1170).
+Config `privacy_route` fallback for the privacy link of the modal; profile copy in the locale of the URL; the modal
+no longer depends on the host Tailwind build; "allowed by default" check row. See [UPGRADING](UPGRADING.md#to-1170).
 
 ### Added
 
@@ -77,6 +78,18 @@ Config `privacy_route` fallback for the privacy link of the modal. See [UPGRADIN
   value still wins. Used by the server-rendered modal (both themes) and the config API payload (`privacyRoute`);
   container parameter `nowo_cookie_consent.privacy_route`; Twig function `nowo_cookie_consent_privacy_route()`.
   LegalKitBundle sets it to `legal_privacy` unless the host does (one line instead of a translation edit per host).
+
+### Fixed
+
+- The database profile copy is resolved after Symfony's `LocaleListener`: `CookieConsentConfigTranslationSubscriber`
+  ran at `kernel.request` priority 19, before the locale of `/{_locale}/…` was applied (16), so `/en/…` on an
+  application whose default locale is `es` showed the Spanish profile copy mixed with English bundle strings. It now
+  runs at priority 15 (real-kernel regression test with a prefixed non-default locale).
+- The Tailwind modal no longer needs the host Tailwind build to scan the bundle views: the bundle stylesheet hides the
+  closed modal (`.nowo-cookie-consent:not(.show)`) and positions the overlay (`fixed`, `inset: 0`, padding, dialog
+  width) itself instead of relying on the `hidden` / `fixed` / `inset-0` / `p-4` / `max-w-4xl` utilities.
+- Admin "new / edit cookie" form: the "allowed by default" checkbox and its label share one check row (the label
+  wrapped under the checkbox with some host form themes); help and errors stay below.
 
 ## [1.16.3] - 2026-10-18
 

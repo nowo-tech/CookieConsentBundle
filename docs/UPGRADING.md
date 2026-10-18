@@ -123,6 +123,15 @@ Host overrides of `cookie_consent.html.twig` / `cookie_consent.tailwind.html.twi
 `nowo_cookie_consent_trans('nowo_cookie_consent.privacy_route', …)` keep working; call
 `nowo_cookie_consent_privacy_route(display_config ?? null)` to get the fallback too.
 
+Behaviour fixes to be aware of:
+
+- Profile copy follows the URL locale: a listener of yours that relied on `nowo_cookie_consent_config` being set before
+  the `LocaleListener` (priority > 16) must now run below priority 15.
+- Tailwind hosts may drop a `@source` / `content` entry they added only so Tailwind would scan
+  `vendor/nowo-tech/cookie-consent-bundle/src/Resources/views` for the modal utilities.
+- Overrides of `admin/cookie_definition/form.html.twig` that render `form.allowedByDefault` themselves can wrap it in
+  `<div class="nowo-cc-admin-form__check">` to get the one-line check row.
+
 ## To 1.16.3
 
 From **1.16.2**:
