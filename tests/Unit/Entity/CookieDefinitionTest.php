@@ -41,4 +41,16 @@ final class CookieDefinitionTest extends TestCase
         self::assertNull($definition->findTranslation('en'));
         self::assertNull($translation->getDefinition());
     }
+
+    public function testTranslationsAreKeyedByLocaleUnlessTheLocaleIsEmptyOrTaken(): void
+    {
+        $definition = new CookieDefinition();
+        $es         = (new CookieDefinitionTranslation())->setLocale('es');
+        $duplicate  = (new CookieDefinitionTranslation())->setLocale('es');
+        $blank      = (new CookieDefinitionTranslation())->setLocale('');
+        $definition->addTranslation($es)->addTranslation($duplicate)->addTranslation($blank)->addTranslation($es);
+
+        self::assertSame(['es', 0, 1], array_keys($definition->getTranslations()->toArray()));
+        self::assertSame($definition, $blank->getDefinition());
+    }
 }

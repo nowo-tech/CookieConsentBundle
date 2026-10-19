@@ -7,6 +7,7 @@ namespace Nowo\CookieConsentBundle\Tests\Integration;
 use Nowo\CookieConsentBundle\Admin\CookieConsentConfigSettingsSection;
 use Nowo\CookieConsentBundle\Tests\Support\AdminPageFixtures;
 use Nowo\CookieConsentBundle\Twig\CookieConsentAdminTwigExtension;
+use Nowo\FormKitBundle\Twig\LocaleTabsTwigExtension;
 use Nowo\UiKitBundle\Test\PageContractTestCase;
 use Nowo\UiKitBundle\Test\PageFixture;
 use PHPUnit\Framework\Attributes\DataProvider;
@@ -62,7 +63,9 @@ final class PageContractTest extends PageContractTestCase
         $collector = $twig->getExtension(TranslationExtension::class)->getTranslator();
         assert($collector instanceof DataCollectorTranslator);
         $html = $twig->render($fixture->template, $fixture->context);
-        if (str_contains($html, '[locale]')) {
+        // 1.18: the default form renders the locale as a hidden input (one tab per locale); a visible locale field
+        // (host form theme / override) shows the catalogue example
+        if (preg_match('/<input type="text"[^>]*\[locale\]/', $html) === 1) {
             self::assertStringContainsString('placeholder="en"', $html, 'The locale example comes from the catalogue.');
         }
 
@@ -75,7 +78,10 @@ final class PageContractTest extends PageContractTestCase
 
     protected static function templatePaths(): array
     {
-        return ['NowoCookieConsentBundle' => dirname(__DIR__, 2) . '/src/Resources/views'];
+        return [
+            'NowoCookieConsentBundle' => dirname(__DIR__, 2) . '/src/Resources/views',
+            'NowoFormKitBundle'       => dirname(__DIR__, 2) . '/vendor/nowo-tech/form-kit-bundle/src/Resources/views',
+        ];
     }
 
     protected static function translationDirs(): array
@@ -90,6 +96,7 @@ final class PageContractTest extends PageContractTestCase
 
     protected function configureTwig(Environment $twig): void
     {
+        $twig->addExtension(new LocaleTabsTwigExtension());
         $twig->addExtension(new CookieConsentAdminTwigExtension());
     }
 }

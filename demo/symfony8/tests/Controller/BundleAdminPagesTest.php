@@ -63,8 +63,8 @@ final class BundleAdminPagesTest extends WebTestCase
             'cookie_definition[name]' => '_gid',
             'cookie_definition[duration]' => '1 day',
             'cookie_definition[category]' => 'analytics',
-            'cookie_definition[translations][0][provider]' => 'Google',
-            'cookie_definition[translations][0][purpose]' => 'Distinguishes users.',
+            'cookie_definition[translations][en][provider]' => 'Google',
+            'cookie_definition[translations][en][purpose]' => 'Distinguishes users.',
         ]);
         self::assertResponseRedirects(sprintf('/cookie-consent-config/%d/cookies', $configId));
         $crawler = $client->followRedirect();

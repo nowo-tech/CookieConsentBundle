@@ -8,7 +8,6 @@ use Doctrine\ORM\EntityManagerInterface;
 use Nowo\CookieConsentBundle\Admin\AdminPageFactory;
 use Nowo\CookieConsentBundle\Entity\CookieConsentConfig;
 use Nowo\CookieConsentBundle\Entity\CookieDefinition;
-use Nowo\CookieConsentBundle\Entity\CookieDefinitionTranslation;
 use Nowo\CookieConsentBundle\Form\CookieDefinitionType;
 use Nowo\CookieConsentBundle\Form\DeleteCookieDefinitionType;
 use Nowo\CookieConsentBundle\Repository\CookieConsentConfigRepository;
@@ -105,7 +104,6 @@ final class CookieDefinitionAdminController extends AbstractController
     {
         $config     = $this->getConfig($configId);
         $definition = (new CookieDefinition())->setConfig($config);
-        $this->ensureTranslationForLocale($definition, $request->getLocale());
 
         return $this->handleForm($request, $entityManager, $config, $definition, true);
     }
@@ -125,10 +123,6 @@ final class CookieDefinitionAdminController extends AbstractController
     {
         $config     = $this->getConfig($configId);
         $definition = $this->getDefinition($config, $id);
-
-        if ($definition->getTranslations()->isEmpty()) {
-            $this->ensureTranslationForLocale($definition, $request->getLocale());
-        }
 
         return $this->handleForm($request, $entityManager, $config, $definition, false);
     }
@@ -263,17 +257,6 @@ final class CookieDefinitionAdminController extends AbstractController
             'form'       => $view,
             'isNew'      => $isNew,
         ], new Response(null, $form->isSubmitted() ? Response::HTTP_UNPROCESSABLE_ENTITY : Response::HTTP_OK));
-    }
-
-    private function ensureTranslationForLocale(CookieDefinition $definition, string $locale): void
-    {
-        if ($definition->findTranslation($locale) instanceof CookieDefinitionTranslation) {
-            return;
-        }
-
-        $definition->addTranslation(
-            (new CookieDefinitionTranslation())->setLocale($locale !== '' ? $locale : 'en'),
-        );
     }
 
     private function getConfig(int $configId): CookieConsentConfig

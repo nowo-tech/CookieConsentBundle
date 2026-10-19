@@ -84,8 +84,10 @@ final class AdminPageFixtures
             $definition->addTranslation((new CookieDefinitionTranslation())->setLocale('en'));
         } else {
             $definition->addTranslation((new CookieDefinitionTranslation())->setLocale('es')->setProvider('Google')->setPurpose('Distingue a los visitantes.'));
+            // a locale that is not enabled: kept, listed read-only under the tabs
+            $definition->addTranslation((new CookieDefinitionTranslation())->setLocale('de')->setProvider('Google')->setPurpose('Unterscheidet Besucher.'));
         }
-        $form = self::forms()->create(CookieDefinitionType::class, $definition)->createView();
+        $form = self::forms()->create(CookieDefinitionType::class, $definition, ['enabled_locales' => ['en', 'es'], 'default_locale' => 'en'])->createView();
 
         return [
             'page' => $factory->definitionForm($config, $definition, $form, $isNew),

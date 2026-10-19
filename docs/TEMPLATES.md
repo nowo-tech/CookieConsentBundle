@@ -26,7 +26,7 @@ scaffolds and keeps its own templates and CSS (no CDN assets).
 | Page | Template | Scaffold | View model | Data blocks filled |
 | --- | --- | --- | --- | --- |
 | Cookie inventory of a profile | `admin/cookie_definition/index.html.twig` | `page/list` | `ListPage` (columns: name, provider, purpose, category, duration, allowedByDefault; rowActions: edit, delete with `Confirm`; pagination; empty state with a create action; header action: create) | `nowo_ui_list_row` |
-| Cookie definition (new / edit) | `admin/cookie_definition/form.html.twig` | `page/form` | `FormPage` (submit "Save cookie", cancel → inventory) | `nowo_ui_form_body` (scalar fields in a two-column grid, "allowed by default", translations table `_translations_table.html.twig`, then `parent()` for the rest; deprecated `form_fields` partial first when configured — the fields it renders are skipped) |
+| Cookie definition (new / edit) | `admin/cookie_definition/form.html.twig` | `page/form` | `FormPage` (submit "Save cookie", cancel → inventory) | `nowo_ui_form_body` (scalar fields in a two-column grid, "allowed by default", translations as locale tabs `_translations_tabs.html.twig`, then `parent()` for the rest; deprecated `form_fields` partial first when configured — the fields it renders are skipped) |
 | Profile settings (one section per route: profile, behavior, appearance, consent-modal, preferences-modal, route-targeting) | `admin/config/settings.html.twig` | `page/settings` | `SettingsPage` (six `SettingsSection`s with `href` = tabs, `current` = the route section; only the current one carries its form) | `nowo_ui_settings_section` (`parent()`; deprecated `form_fields` partial when configured) |
 
 Root attributes (`ListPage::attributes` etc.) for tests: `data-testid="cookie-consent-definitions"`,
@@ -62,10 +62,12 @@ category, duration and default carry `nowo-cc-admin-nowrap`, the purpose `nowo-c
 
 **Cookie definition form.** `nowo_ui_form_body` renders `name`, `duration`, `category`, `type`, `sortOrder` inside
 `<div class="nowo-cc-admin-form__grid" data-nowo-cc-region="definition-fields">`, then `allowedByDefault`, then the
-translations through `admin/cookie_definition/_translations_table.html.twig` (`<fieldset data-nowo-cc-region="translations">`
-with a legend, the locale help and a table built from the `table_wrap` / `table` / `table_head*` / `table_row` /
-`table_cell` slots: one `<tr data-nowo-cc-translation="<locale>">` per entry, the locale widget in the row header cell,
-provider and purpose widgets with per-row `aria-label`s and their errors), then `parent()` renders whatever is left
+translations through `admin/cookie_definition/_translations_tabs.html.twig` (1.18; `<fieldset data-nowo-cc-region="translations">`
+with a legend and a help line, then `@NowoFormKitBundle/form/_locale_tabs.html.twig` in `entries` mode rendered by the
+UiKit `locale_tabs` partial: one fixed tab per `nowo_cookie_consent.enabled_locales`, the default locale first and
+starred, DOM ids `tab-nowo-cc-definition-translations-<locale>` / `…-<locale>-panel`, the locale as a hidden input,
+provider and purpose in the panel, the first tab with errors opened; translations of locales that are not enabled are
+listed read-only in `<div data-nowo-cc-region="other-translations">` and kept on save), then `parent()` renders whatever is left
 (CSRF token, fields a host form extension adds). Text controls come from the seeded `cookie_consent` FormKit profile with
 the UiKit `input_full` slot.
 

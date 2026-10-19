@@ -9,6 +9,7 @@ use Nowo\CookieConsentBundle\Admin\AdminPageFactory;
 use Nowo\CookieConsentBundle\Admin\CookieConsentConfigSettingsSection;
 use Nowo\CookieConsentBundle\Tests\Support\AdminPageFixtures;
 use Nowo\CookieConsentBundle\Twig\CookieConsentAdminTwigExtension;
+use Nowo\FormKitBundle\Twig\LocaleTabsTwigExtension;
 use Nowo\UiKitBundle\Test\PageContractTestCase;
 use Nowo\UiKitBundle\Test\PageFixture;
 use Nowo\UiKitBundle\Test\RenderedPage;
@@ -44,7 +45,10 @@ final class AdminPagesTemplateTest extends PageContractTestCase
 
     protected static function templatePaths(): array
     {
-        return ['NowoCookieConsentBundle' => dirname(__DIR__, 2) . '/src/Resources/views'];
+        return [
+            'NowoCookieConsentBundle' => dirname(__DIR__, 2) . '/src/Resources/views',
+            'NowoFormKitBundle'       => dirname(__DIR__, 2) . '/vendor/nowo-tech/form-kit-bundle/src/Resources/views',
+        ];
     }
 
     protected static function translationDirs(): array
@@ -68,6 +72,7 @@ final class AdminPagesTemplateTest extends PageContractTestCase
 
     protected function configureTwig(Environment $twig): void
     {
+        $twig->addExtension(new LocaleTabsTwigExtension());
         $twig->addExtension(new CookieConsentAdminTwigExtension(chrome: AdminChrome::resolve($this->chrome)));
     }
 
@@ -185,24 +190,42 @@ final class AdminPagesTemplateTest extends PageContractTestCase
         self::assertStringContainsString('New cookie', $this->render(self::VIEWS . 'cookie_definition/form.html.twig', AdminPageFixtures::definitionForm(true))->blockHtml('nowo_ui_document_title'));
     }
 
-    public function testFormLaysOutScalarFieldsInAGridAndTranslationsAsATablePerLocale(): void
+    public function testFormLaysOutScalarFieldsInAGridAndTranslationsAsLocaleTabs(): void
     {
         $page    = $this->render(self::VIEWS . 'cookie_definition/form.html.twig', AdminPageFixtures::definitionForm());
         $content = $page->blockHtml('nowo_ui_content');
+        $id      = 'nowo-cc-definition-translations';
 
         self::assertStringContainsString('href="/assets/bundles/nowocookieconsent/nowo-cookie-consent-admin.css"', $page->blockHtml('nowo_ui_styles'));
         self::assertMatchesRegularExpression('#<div class="nowo-cc-admin-form__grid" data-nowo-cc-region="definition-fields">.*name="cookie_definition\[name\]".*name="cookie_definition\[sortOrder\]".*</div>#s', $content);
         self::assertStringContainsString('<legend class="nowo-cc-admin-translations__legend">Translations</legend>', $content);
-        self::assertStringNotContainsString('<legend class="col-form-label required">0</legend>', $content, 'no numbered fieldset per entry');
-        self::assertMatchesRegularExpression('#<table class="[^"]*pc-table[^"]*nowo-cc-admin-translations__table"#', $content);
-        foreach (['en', 'es'] as $index => $locale) {
-            self::assertStringContainsString('data-nowo-cc-translation="' . $locale . '"', $content);
-            self::assertStringContainsString('name="cookie_definition[translations][' . $index . '][purpose]"', $content);
-            self::assertStringContainsString('aria-label="Provider (' . $locale . ')"', $content);
+        self::assertStringNotContainsString('nowo-cc-admin-translations__table', $content, 'no add / delete rows table any more');
+        self::assertStringContainsString('data-testid="' . $id . '"', $content);
+        self::assertStringContainsString('data-nowo-ui-locale-tabs', $content);
+        // one fixed tab per enabled locale, the default (en) first
+        self::assertSame(2, substr_count($content, 'role="tab"'));
+        self::assertLessThan(strpos($content, 'id="tab-' . $id . '-es"'), strpos($content, 'id="tab-' . $id . '-en"'));
+        self::assertMatchesRegularExpression('/id="tab-' . $id . '-en"[^>]*data-default/s', $content);
+        foreach (['en', 'es'] as $locale) {
+            self::assertStringContainsString('<input type="hidden" id="cookie_definition_translations_' . $locale . '_locale" name="cookie_definition[translations][' . $locale . '][locale]" value="' . $locale . '">', $content);
+            self::assertStringContainsString('name="cookie_definition[translations][' . $locale . '][purpose]"', $content);
+            self::assertStringContainsString('id="tab-' . $id . '-' . $locale . '-panel"', $content);
         }
-        self::assertStringContainsString('ISO language code, e.g. en or es', $content);
+        self::assertStringContainsString('value="Google"', $content);
+        // a translation of a locale that is not enabled (de) is kept and listed read-only, not as a tab
+        self::assertStringNotContainsString('id="tab-' . $id . '-de"', $content);
+        self::assertStringNotContainsString('[translations][de]', $content);
+        self::assertMatchesRegularExpression('#data-nowo-cc-region="other-translations">.*\(DE\).*<dt lang="de">.*DE</code> Google</dt>\s*<dd lang="de">Unterscheidet Besucher\.</dd>#s', $content);
         self::assertStringContainsString('name="cookie_definition[_token]"', $content, 'CSRF token still rendered by parent()');
         self::assertSame(1, substr_count($content, 'name="cookie_definition[name]"'), 'every field renders once');
+    }
+
+    public function testNewDefinitionShowsEmptyTabsAndNoOtherLocalesNotice(): void
+    {
+        $content = $this->render(self::VIEWS . 'cookie_definition/form.html.twig', AdminPageFixtures::definitionForm(true))->blockHtml('nowo_ui_content');
+
+        self::assertSame(2, substr_count($content, 'role="tab"'));
+        self::assertStringNotContainsString('other-translations', $content);
     }
 
     public function testDeprecatedStylesAfterFormThemeAndFormFieldsStillApply(): void

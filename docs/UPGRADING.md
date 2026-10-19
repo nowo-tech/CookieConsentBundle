@@ -3,6 +3,9 @@
 ## Table of contents
 
 - [Unreleased](#unreleased)
+- [To 1.18.0](#to-1180)
+  - [Cookie definition translations: fixed locale tabs](#cookie-definition-translations-fixed-locale-tabs)
+  - [Bubble icon allow-list (documentation)](#bubble-icon-allow-list-documentation)
 - [To 1.17.0](#to-1170)
 - [To 1.16.3](#to-1163)
 - [To 1.16.2](#to-1162)
@@ -102,6 +105,49 @@
 - [Getting help](#getting-help)
 
 ## Unreleased
+
+## To 1.18.0
+
+From **1.17.0**:
+
+```bash
+composer update nowo-tech/cookie-consent-bundle
+```
+
+### Cookie definition translations: fixed locale tabs
+
+The cookie definition form no longer has a free-text locale per row. It shows one tab per enabled locale
+(`nowo_cookie_consent.enabled_locales`) with the provider and purpose of that language.
+
+- **Composer**: `nowo-tech/form-kit-bundle` **^2.13** and `nowo-tech/ui-kit-bundle` **^2.5.1**.
+- **Data**: nothing is migrated or deleted. Translations whose locale is not in `enabled_locales` are kept as they
+  are on every save and listed read-only under the tabs ("Texts for languages that are not enabled (JA) are kept…").
+  Add the locale to `enabled_locales` to edit them again. Emptying both provider and purpose of a tab deletes that
+  language's translation; a tab left empty creates nothing.
+- **Posted field names / DOM ids** changed: `cookie_definition[translations][0][provider]` →
+  `cookie_definition[translations][<locale>][provider]` (ids `cookie_definition_translations_<locale>_provider`);
+  the `locale` input is hidden and its submitted value is ignored (the tab decides). Tabs:
+  `#tab-nowo-cc-definition-translations-<locale>`, panels `…-<locale>-panel`, wrapper
+  `[data-testid="nowo-cc-definition-translations"]`. Rows `tr[data-nowo-cc-translation]` are gone. Update E2E tests
+  and functional tests that post the form.
+- **Templates**: `admin/cookie_definition/_translations_table.html.twig` is removed; the form renders
+  `_translations_tabs.html.twig` (variables `form`, `bundle`). Host overrides of the table no longer apply; host
+  templates that loop `form.translations` get one entry per enabled locale keyed by locale — or include
+  `@NowoFormKitBundle/form/_locale_tabs.html.twig` with `field: form.translations, mode: 'entries',
+  locales: form.vars.enabled_locales, default_locale: form.vars.default_locale` and load `nowo-ui-tabs.js`.
+- **Form type**: `CookieDefinitionType::translations` is unmapped (`mapped: false`, no `allow_add` / `allow_delete`);
+  new options `enabled_locales` and `default_locale`. Code that set `translations` data directly should add
+  translations to the entity instead.
+- **Entity**: `CookieDefinition::$translations` uses `indexBy: 'locale'` (Doctrine metadata only, no migration);
+  `getTranslations()` is keyed by locale.
+- **Controller**: new / edit no longer add an empty translation for the request locale.
+
+### Bubble icon allow-list (documentation)
+
+No code change. `preferences_bubble_icon` values with SVG filters (`<filter>`, `feDropShadow`, …) or an `<img>` were
+already rejected in 1.17.0 (YAML: container compilation error; admin: form error; stored value: default icon). See
+[CONFIGURATION — Bubble icon allow-list](CONFIGURATION.md#bubble-icon-allow-list) for the allowed elements and
+attributes and an `<img>` → inline SVG example; move shadows to CSS on `.nowo-cookie-consent__preferences-bubble`.
 
 ## To 1.17.0
 

@@ -56,9 +56,9 @@ class CookieDefinition
     #[ORM\JoinColumn(nullable: false, onDelete: 'CASCADE')]
     private ?CookieConsentConfig $config = null;
 
-    /** @var Collection<int, CookieDefinitionTranslation> */
+    /** @var Collection<array-key, CookieDefinitionTranslation> */
     #[Assert\Valid]
-    #[ORM\OneToMany(targetEntity: CookieDefinitionTranslation::class, mappedBy: 'definition', cascade: ['persist', 'remove'], orphanRemoval: true)]
+    #[ORM\OneToMany(targetEntity: CookieDefinitionTranslation::class, mappedBy: 'definition', cascade: ['persist', 'remove'], orphanRemoval: true, indexBy: 'locale')]
     private Collection $translations;
 
     /**
@@ -257,7 +257,7 @@ class CookieDefinition
     /**
      * Returns all locale-specific translations.
      *
-     * @return Collection<int, CookieDefinitionTranslation> Translation entities
+     * @return Collection<array-key, CookieDefinitionTranslation> Translation entities
      */
     public function getTranslations(): Collection
     {
@@ -292,7 +292,12 @@ class CookieDefinition
     public function addTranslation(CookieDefinitionTranslation $translation): self
     {
         if (!$this->translations->contains($translation)) {
-            $this->translations->add($translation);
+            // Keyed by locale (indexBy, 1.18) like a loaded collection: validation errors map to the locale tab.
+            if ($translation->getLocale() !== '' && !$this->translations->containsKey($translation->getLocale())) {
+                $this->translations->set($translation->getLocale(), $translation);
+            } else {
+                $this->translations->add($translation);
+            }
             $translation->setDefinition($this);
         }
 

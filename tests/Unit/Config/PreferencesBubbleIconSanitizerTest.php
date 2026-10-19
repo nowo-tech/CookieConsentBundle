@@ -8,6 +8,16 @@ use InvalidArgumentException;
 use Nowo\CookieConsentBundle\Config\PreferencesBubbleIconSanitizer;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
+use ReflectionClass;
+
+use function dirname;
+use function file_get_contents;
+use function preg_match;
+use function preg_quote;
+use function preg_replace;
+use function strpos;
+use function substr;
+use function trim;
 
 final class PreferencesBubbleIconSanitizerTest extends TestCase
 {
@@ -96,5 +106,38 @@ final class PreferencesBubbleIconSanitizerTest extends TestCase
     {
         self::assertNull(PreferencesBubbleIconSanitizer::sanitizeOrNull('<svg/onload=alert(1)>'));
         self::assertSame('<b>x</b>', PreferencesBubbleIconSanitizer::sanitizeOrNull('<b>x</b>'));
+    }
+
+    /**
+     * docs/CONFIGURATION.md "Bubble icon allow-list" documents every allowed element and attribute; this keeps the
+     * table in sync with the sanitizer constants and checks the documented rejections and the img -> inline SVG example.
+     */
+    public function testDocumentedAllowListMatchesTheSanitizer(): void
+    {
+        $docs = (string) file_get_contents(dirname(__DIR__, 3) . '/docs/CONFIGURATION.md');
+        self::assertStringContainsString('### Bubble icon allow-list', $docs);
+        $section = substr($docs, (int) strpos($docs, '### Bubble icon allow-list'));
+        $section = substr($section, 0, (int) strpos($section, "\n## "));
+
+        $class = new ReflectionClass(PreferencesBubbleIconSanitizer::class);
+        foreach (['SVG_ELEMENTS', 'HTML_ELEMENTS', 'ATTRIBUTES'] as $constant) {
+            $names = $class->getConstant($constant);
+            self::assertIsArray($names);
+            foreach ($names as $name) {
+                self::assertIsString($name);
+                self::assertMatchesRegularExpression('/`' . preg_quote($name, '/') . '`/i', $section, $constant . ': ' . $name);
+            }
+        }
+
+        foreach (['<filter id="s"><feDropShadow dx="0" dy="1"/></filter>', '<feDropShadow/>', '<img src="/cookie.svg" alt=""/>', '<foreignObject/>', '<br>'] as $rejected) {
+            self::assertNull(PreferencesBubbleIconSanitizer::sanitizeOrNull('<svg>' . $rejected . '</svg>'), $rejected);
+        }
+        self::assertSame('<svg><circle r="1"/></svg>', PreferencesBubbleIconSanitizer::sanitize('<svg><circle r="1" filter="url(#s)" style="opacity:.5"/></svg>'));
+
+        self::assertSame(1, preg_match('/preferences_bubble_icon: >-\n((?: {8}.+\n)+)/', $section, $example));
+        $icon      = (string) preg_replace('/\s*\n\s*/', ' ', trim($example[1]));
+        $sanitized = PreferencesBubbleIconSanitizer::sanitize($icon);
+        self::assertNotNull($sanitized);
+        self::assertStringContainsString('<circle cx="12" cy="12" r="10" fill="currentColor"/>', $sanitized);
     }
 }

@@ -8,7 +8,6 @@ use App\Demo\DemoLocale;
 use Doctrine\ORM\EntityManagerInterface;
 use Nowo\CookieConsentBundle\Entity\CookieConsentConfig;
 use Nowo\CookieConsentBundle\Entity\CookieDefinition;
-use Nowo\CookieConsentBundle\Entity\CookieDefinitionTranslation;
 use Nowo\CookieConsentBundle\Form\CookieDefinitionType;
 use Nowo\CookieConsentBundle\Repository\CookieConsentConfigRepository;
 use Nowo\CookieConsentBundle\Repository\CookieDefinitionRepository;
@@ -49,7 +48,6 @@ class CookieDefinitionController extends AbstractController
     {
         $config     = $this->getConfig($configId);
         $definition = (new CookieDefinition())->setConfig($config);
-        $this->ensureAllDemoTranslations($definition);
 
         return $this->handleForm($request, $entityManager, $config, $definition, true);
     }
@@ -59,7 +57,6 @@ class CookieDefinitionController extends AbstractController
     {
         $config     = $this->getConfig($configId);
         $definition = $this->getDefinition($config, $id);
-        $this->ensureAllDemoTranslations($definition);
 
         return $this->handleForm($request, $entityManager, $config, $definition, false);
     }
@@ -121,7 +118,6 @@ class CookieDefinitionController extends AbstractController
             'definition'           => $definition,
             'form'                 => $form,
             'isNew'                => $isNew,
-            'translationTabLocale' => DemoLocale::isSupported($request->getLocale()) ? $request->getLocale() : DemoLocale::DEFAULT,
         ]);
     }
 
@@ -134,24 +130,6 @@ class CookieDefinitionController extends AbstractController
             'category_label_prefix' => 'demo.cookies.category.',
             'type_label_prefix'     => 'demo.cookies.type.',
         ];
-    }
-
-    private function ensureAllDemoTranslations(CookieDefinition $definition): void
-    {
-        foreach (DemoLocale::ALL as $locale) {
-            $this->ensureTranslationForLocale($definition, $locale);
-        }
-    }
-
-    private function ensureTranslationForLocale(CookieDefinition $definition, string $locale): void
-    {
-        if ($definition->findTranslation($locale) instanceof CookieDefinitionTranslation) {
-            return;
-        }
-
-        $definition->addTranslation(
-            (new CookieDefinitionTranslation())->setLocale($locale !== '' ? $locale : 'en'),
-        );
     }
 
     private function getConfig(int $configId): CookieConsentConfig
