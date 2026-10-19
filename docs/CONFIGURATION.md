@@ -494,6 +494,42 @@ Set `preferences_bubble_border_color` (hex, e.g. `#60fed2`) for the transparent 
 
 Set `preferences_bubble_icon` to custom inline SVG or simple inline HTML (e.g. an emoji wrapped in a `<span>`). The markup must be well-formed XML and is allowlist-sanitized (SVG shapes/gradients and `span`/`i`/`b`/`strong`/`em`/`small`; no scripts, event handlers, `style`, external `href`/`url()`); invalid YAML values fail container compilation, invalid admin input is rejected and unsafe stored values fall back to the default icon. With `use_database_config: true`, configure per profile via `CookieConsentConfig::preferencesBubbleIcon` in the admin settings form. Leave empty to use the default cookie SVG.
 
+### Bubble icon allow-list
+
+`PreferencesBubbleIconSanitizer` parses the icon as XML (wrapped in a root element, so several top-level nodes are
+fine), re-serializes it from the DOM and keeps only what is listed here:
+
+| Kind | Allowed |
+| --- | --- |
+| SVG elements (SVG namespace or none) | `svg`, `g`, `path`, `circle`, `ellipse`, `rect`, `line`, `polyline`, `polygon`, `title`, `desc`, `defs`, `symbol`, `use`, `linearGradient`, `radialGradient`, `stop`, `clipPath`, `mask`, `text`, `tspan` |
+| HTML elements (XHTML namespace or none) | `span`, `i`, `b`, `strong`, `em`, `small` |
+| Attributes | `class`, `id`, `role`, `aria-hidden`, `aria-label`, `focusable`, `viewBox`, `width`, `height`, `version`, `preserveAspectRatio`, `fill`, `fill-rule`, `fill-opacity`, `stroke`, `stroke-width`, `stroke-linecap`, `stroke-linejoin`, `stroke-miterlimit`, `stroke-dasharray`, `stroke-dashoffset`, `stroke-opacity`, `clip-rule`, `clip-path`, `mask`, `d`, `cx`, `cy`, `r`, `rx`, `ry`, `fx`, `fy`, `x`, `y`, `x1`, `y1`, `x2`, `y2`, `dx`, `dy`, `points`, `transform`, `opacity`, `offset`, `stop-color`, `stop-opacity`, `gradientUnits`, `gradientTransform`, `spreadMethod`, `maskUnits`, `clipPathUnits`, `vector-effect`, `shape-rendering`, `text-anchor`, `font-size`, `font-family`, `font-weight`, `color`, `href` / `xlink:href` |
+
+- **Rejected** (the whole icon fails: container compilation for YAML, a form error in the admin, the default icon for a
+  stored value): any other element — notably `img`, `image`, `script`, `style`, `foreignObject`, `a`, `iframe` and the
+  SVG filter primitives (`filter`, `feDropShadow`, `feGaussianBlur`, `feOffset`, …) and `animate*` / `set`; `on*`
+  attributes; `href` other than a local fragment (`#id`); `url(…)` other than `url(#id)`; `javascript:`, `vbscript:`,
+  `data:` and `expression(` anywhere in a value; malformed XML (unclosed tags, HTML-only syntax such as `<br>`).
+- **Dropped silently**: attributes not listed (including `style` and `filter`) and attributes in other namespaces;
+  comments and processing instructions. Text is kept (escaped).
+- Element names keep their case (`linearGradient`); the allow-list check is case-insensitive.
+
+Effects that need a filter (drop shadows, blur) belong in CSS on the bubble button
+(`.nowo-cookie-consent__preferences-bubble`), not in the icon. To use an image file, inline its SVG source instead of
+an `<img>`:
+
+```yaml
+nowo_cookie_consent:
+    # Before (rejected: img)
+    # preferences_bubble_icon: '<img src="/images/cookie.svg" alt="">'
+    # After: the <svg> of /images/cookie.svg, without filters or style attributes
+    preferences_bubble_icon: >-
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" aria-hidden="true">
+        <circle cx="12" cy="12" r="10" fill="currentColor"/>
+        <circle cx="9" cy="9" r="1.5" fill="#fff"/><circle cx="15" cy="13" r="1.5" fill="#fff"/>
+        </svg>
+```
+
 Twig helpers:
 
 - `nowo_cookie_consent_preferences_bubble_enabled()`

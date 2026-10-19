@@ -4,6 +4,7 @@
 
 - [Unreleased](#unreleased)
   - [Cookie definition translations: fixed locale tabs](#cookie-definition-translations-fixed-locale-tabs)
+  - [Bubble icon allow-list (documentation)](#bubble-icon-allow-list-documentation)
 - [To 1.17.0](#to-1170)
 - [To 1.16.3](#to-1163)
 - [To 1.16.2](#to-1162)
@@ -131,6 +132,13 @@ The cookie definition form no longer has a free-text locale per row. It shows on
 - **Entity**: `CookieDefinition::$translations` uses `indexBy: 'locale'` (Doctrine metadata only, no migration);
   `getTranslations()` is keyed by locale.
 - **Controller**: new / edit no longer add an empty translation for the request locale.
+
+### Bubble icon allow-list (documentation)
+
+No code change. `preferences_bubble_icon` values with SVG filters (`<filter>`, `feDropShadow`, …) or an `<img>` were
+already rejected in 1.17.0 (YAML: container compilation error; admin: form error; stored value: default icon). See
+[CONFIGURATION — Bubble icon allow-list](CONFIGURATION.md#bubble-icon-allow-list) for the allowed elements and
+attributes and an `<img>` → inline SVG example; move shadows to CSS on `.nowo-cookie-consent__preferences-bubble`.
 
 ## To 1.17.0
 

@@ -90,6 +90,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Template `admin/cookie_definition/_translations_table.html.twig` (replaced by `_translations_tabs.html.twig`).
 
+### Documentation
+
+- CONFIGURATION "Bubble icon allow-list": every SVG / HTML element and attribute `preferences_bubble_icon` keeps, what is rejected (filters such as `feDropShadow`, `img`, `foreignObject`, external `href` / `url()`) or silently dropped (`style`, `filter`, unknown attributes), and an example converting an `<img>` icon to inline SVG. A unit test keeps the table in sync with the sanitizer.
+
 ## [1.17.0] - 2026-10-18
 
 Config `privacy_route` fallback for the privacy link of the modal; profile copy in the locale of the URL; the modal
