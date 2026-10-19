@@ -110,7 +110,8 @@ final class AdminPagesKernelTest extends TestCase
         yield 'missing name' => [['name' => null], 'cookie_definition[name]'];
         yield 'empty category' => [['category' => ''], 'cookie_definition[category]'];
         yield 'empty party' => [['type' => ''], 'cookie_definition[type]'];
-        yield 'empty translation locale' => [['translations' => [['locale' => '', 'provider' => '', 'purpose' => '']]], 'cookie_definition[translations][0][locale]'];
+        // 1.18: the locale is the tab (fixed); a too long provider is an error on its own field, inside its tab
+        yield 'provider too long' => [['translations' => ['es' => ['locale' => 'es', 'provider' => str_repeat('p', 121), 'purpose' => 'x']]], 'cookie_definition[translations][es][provider]'];
     }
 
     /**
@@ -133,7 +134,7 @@ final class AdminPagesKernelTest extends TestCase
             'category'     => 'analytics',
             'type'         => 'first_party',
             'sortOrder'    => '',
-            'translations' => [['locale' => 'en', 'provider' => '', 'purpose' => '']],
+            'translations' => ['en' => ['locale' => 'en', 'provider' => '', 'purpose' => '']],
             '_token'       => $token,
         ], $override);
         $data = array_filter($data, static fn (mixed $value): bool => $value !== null);
@@ -152,15 +153,111 @@ final class AdminPagesKernelTest extends TestCase
         $crawler    = $browser->request('GET', sprintf('/cookie-consent-config/%d/cookies/new', $configId));
 
         $browser->submit($crawler->filter('form[name="cookie_definition"]')->form(), [
-            'cookie_definition[name]'                      => '_gid',
-            'cookie_definition[duration]'                  => '',
-            'cookie_definition[sortOrder]'                 => '',
-            'cookie_definition[translations][0][provider]' => '',
-            'cookie_definition[translations][0][purpose]'  => '',
+            'cookie_definition[name]'                       => '_gid',
+            'cookie_definition[duration]'                   => '',
+            'cookie_definition[sortOrder]'                  => '',
+            'cookie_definition[translations][en][provider]' => '',
+            'cookie_definition[translations][en][purpose]'  => '',
         ]);
 
         self::assertSame(Response::HTTP_FOUND, $browser->getResponse()->getStatusCode(), (string) $browser->getResponse()->getContent());
         self::assertSame(2, $this->definitionCount());
+    }
+
+    /**
+     * 1.18: one fixed tab per enabled locale. A filled tab adds its translation, an emptied one removes it, and a
+     * translation of a locale that is not enabled is kept (and listed read-only).
+     */
+    public function testTranslationsTabsAddRemoveAndKeepLocalesThatAreNotEnabled(): void
+    {
+        [$configId] = $this->boot([]);
+        $id         = $this->addDefinitionWithTranslations('_gid', ['en' => 'Google EN', 'xx' => 'Kept provider']);
+        $browser    = $this->browser();
+        $crawler    = $browser->request('GET', sprintf('/cookie-consent-config/%d/cookies/%d/edit', $configId, $id));
+
+        self::assertCount(9, $crawler->filter('[data-testid="nowo-cc-definition-translations"] [role="tab"]'));
+        self::assertSame('en', $crawler->filter('[data-testid="nowo-cc-definition-translations"] [role="tab"]')->first()->attr('data-locale'), 'default locale first');
+        self::assertSame('Google EN', $crawler->filter('input[name="cookie_definition[translations][en][provider]"]')->attr('value'));
+        self::assertSame('hidden', $crawler->filter('input[name="cookie_definition[translations][es][locale]"]')->attr('type'));
+        self::assertStringContainsString('Kept provider', $crawler->filter('[data-nowo-cc-region="other-translations"]')->text());
+        self::assertCount(0, $crawler->filter('input[name="cookie_definition[translations][xx][provider]"]'));
+
+        $browser->submit($crawler->filter('form[name="cookie_definition"]')->form(), [
+            'cookie_definition[translations][en][provider]' => '',
+            'cookie_definition[translations][en][purpose]'  => '',
+            'cookie_definition[translations][es][provider]' => 'Google ES',
+            'cookie_definition[translations][es][purpose]'  => 'Distingue visitantes.',
+            'cookie_definition[translations][es][locale]'   => 'zz',
+        ]);
+
+        self::assertSame(Response::HTTP_FOUND, $browser->getResponse()->getStatusCode(), (string) $browser->getResponse()->getContent());
+        self::assertSame(['es' => 'Google ES', 'xx' => 'Kept provider'], $this->providers($id));
+    }
+
+    public function testInvalidTranslationTabIsMarkedAndOpened(): void
+    {
+        [$configId] = $this->boot([]);
+        $browser    = $this->browser();
+        $crawler    = $browser->request('GET', sprintf('/cookie-consent-config/%d/cookies/new', $configId));
+        $crawler    = $browser->submit($crawler->filter('form[name="cookie_definition"]')->form(), [
+            'cookie_definition[name]'                       => '_gid',
+            'cookie_definition[translations][fr][provider]' => str_repeat('p', 121),
+        ]);
+
+        self::assertSame(Response::HTTP_UNPROCESSABLE_ENTITY, $browser->getResponse()->getStatusCode());
+        $tabs = $crawler->filter('[data-testid="nowo-cc-definition-translations"] [data-nowo-ui-tabs]');
+        self::assertSame('nowo-cc-definition-translations-fr', $tabs->attr('data-nowo-ui-tabs-active'));
+        $fr = $crawler->filter('#tab-nowo-cc-definition-translations-fr');
+        self::assertSame('true', $fr->attr('aria-selected'));
+        self::assertNotNull($fr->attr('data-invalid'));
+        self::assertSame('true', $crawler->filter('input[name="cookie_definition[translations][fr][provider]"]')->attr('aria-invalid'));
+        self::assertSame(1, $this->definitionCount(), 'nothing persisted');
+    }
+
+    /**
+     * @param array<string, string> $providers locale => provider
+     */
+    private function addDefinitionWithTranslations(string $name, array $providers): int
+    {
+        $em     = $this->entityManager();
+        $config = $em->getRepository(CookieConsentConfig::class)->findOneBy([]);
+        self::assertInstanceOf(CookieConsentConfig::class, $config);
+        $definition = (new CookieDefinition())->setName($name)->setCategory('analytics')->setConfig($config);
+        foreach ($providers as $locale => $provider) {
+            $definition->addTranslation((new CookieDefinitionTranslation())->setLocale($locale)->setProvider($provider)->setPurpose('Purpose ' . $locale));
+        }
+        $em->persist($definition);
+        $em->flush();
+
+        return (int) $definition->getId();
+    }
+
+    /**
+     * @return array<string, string> locale => provider, sorted by locale
+     */
+    private function providers(int $id): array
+    {
+        $em = $this->entityManager();
+        $em->clear();
+        $definition = $em->find(CookieDefinition::class, $id);
+        self::assertInstanceOf(CookieDefinition::class, $definition);
+        $out = [];
+        foreach ($definition->getTranslations() as $translation) {
+            $out[$translation->getLocale()] = $translation->getProvider();
+        }
+        ksort($out);
+
+        return $out;
+    }
+
+    private function entityManager(): EntityManagerInterface
+    {
+        $container = $this->kernel()->getContainer()->get('test.service_container');
+        self::assertInstanceOf(ContainerInterface::class, $container);
+        $em = $container->get('doctrine.orm.entity_manager');
+        self::assertInstanceOf(EntityManagerInterface::class, $em);
+
+        return $em;
     }
 
     /**

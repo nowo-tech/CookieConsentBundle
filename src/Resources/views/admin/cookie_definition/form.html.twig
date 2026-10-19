@@ -2,8 +2,8 @@
   Cookie definition create / edit (REQ-UI-003): UiKit form scaffold.
   View model: page (View\FormPage, AdminPageFactory::definitionForm()).
   Data blocks: nowo_ui_form_body — scalar fields in a two-column grid (one column on narrow screens), the
-  "allowed by default" checkbox on its own row, the translations as a table (one row per locale:
-  _translations_table.html.twig), then parent() renders whatever is left (CSRF token, host extensions). The deprecated
+  "allowed by default" checkbox on its own row, the translations as locale tabs (one tab per enabled locale:
+  _translations_tabs.html.twig), then parent() renders whatever is left (CSRF token, host extensions). The deprecated
   web_ui.chrome.templates.form_fields partial renders first when configured (fields it renders are skipped).
   Area navigation: page.header.tabs (View\AreaNav, rendered by the UiKit page header). Form theme: the host's
   twig.form_themes; the deprecated web_ui.chrome.templates.form_theme reaches the scaffold as
@@ -36,7 +36,7 @@
         </div>
     {% endif %}
     {% if form.translations is defined and not form.translations.rendered %}
-        {{ include('@NowoCookieConsentBundle/admin/cookie_definition/_translations_table.html.twig', {translations: form.translations, bundle: page.bundle}, false) }}
+        {{ include('@NowoCookieConsentBundle/admin/cookie_definition/_translations_tabs.html.twig', {form: form, bundle: page.bundle}, false) }}
     {% endif %}
     {{ parent() }}
 {% endblock %}

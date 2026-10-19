@@ -21,7 +21,7 @@
   min-width: 0;
 }
 
-/* Translations: one table row per locale, full width. */
+/* Translations (1.18): one locale tab per enabled locale (FormKit / UiKit locale tabs), full width. */
 .nowo-cc-admin-translations {
   border: 0;
   margin: 1.25rem 0 0;
@@ -43,38 +43,34 @@
   margin: 0 0 0.5rem;
 }
 
-.nowo-cc-admin-translations__table {
-  width: 100%;
+.nowo-cc-admin-translations .nowo-ui-locale-tabs__fieldset {
+  display: flex;
+  flex-direction: column;
+  gap: var(--nowo-ui-form-row-gap, 1rem);
 }
 
-.nowo-cc-admin-translations__table th,
-.nowo-cc-admin-translations__table td {
-  vertical-align: top;
-}
-
-.nowo-cc-admin-translations__table tbody th {
-  font-weight: inherit;
-}
-
-.nowo-cc-admin-translations__locale {
-  width: 7rem;
-}
-
-.nowo-cc-admin-translations__provider {
-  width: 28%;
-}
-
-.nowo-cc-admin-translations__table input,
-.nowo-cc-admin-translations__table textarea {
-  box-sizing: border-box;
-  max-width: none;
-  width: 100%;
-}
-
-.nowo-cc-admin-translations__table textarea {
+.nowo-cc-admin-translations textarea {
   line-height: 1.45;
   min-height: 4.75rem;
   resize: vertical;
+}
+
+/* Translations of locales that are not enabled: kept, read-only. */
+.nowo-cc-admin-translations__others {
+  margin-top: var(--nowo-ui-form-row-gap, 1rem);
+  font-size: 0.875rem;
+}
+
+.nowo-cc-admin-translations__others > p {
+  margin: 0 0 0.25rem;
+}
+
+.nowo-cc-admin-translations__others-list {
+  margin: 0;
+}
+
+.nowo-cc-admin-translations__others-list > dd {
+  margin: 0 0 0.5rem;
 }
 
 /* Cookie inventory list: short columns never wrap, the purpose is clamped (full text in the title attribute). */

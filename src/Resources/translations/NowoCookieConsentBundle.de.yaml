@@ -65,6 +65,8 @@ nowo_cookie_consent.admin.cookie_definition.fields.translations: 'Übersetzungen
 nowo_cookie_consent.admin.cookie_definition.fields.locale: 'Sprache'
 nowo_cookie_consent.admin.cookie_definition.fields.locale_help: 'ISO-Sprachcode, z. B. en oder de'
 nowo_cookie_consent.admin.cookie_definition.fields.locale_placeholder: 'en'
+nowo_cookie_consent.admin.cookie_definition.fields.translations_help: 'Ein Tab pro aktivierter Sprache. Anbieter und Zweck leer lassen, um den Text einer Sprache zu entfernen.'
+nowo_cookie_consent.admin.cookie_definition.fields.other_translations: 'Texte für nicht aktivierte Sprachen (%locales%) bleiben erhalten und sind hier nicht bearbeitbar:'
 nowo_cookie_consent.admin.cookie_definition.category.required: 'Erforderlich'
 nowo_cookie_consent.admin.cookie_definition.category.functionality: 'Funktionalität'
 nowo_cookie_consent.admin.cookie_definition.category.preferences: 'Präferenzen'

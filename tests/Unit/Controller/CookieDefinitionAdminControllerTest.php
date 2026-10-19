@@ -8,14 +8,12 @@ use Doctrine\ORM\EntityManagerInterface;
 use Nowo\CookieConsentBundle\Controller\CookieDefinitionAdminController;
 use Nowo\CookieConsentBundle\Entity\CookieConsentConfig;
 use Nowo\CookieConsentBundle\Entity\CookieDefinition;
-use Nowo\CookieConsentBundle\Entity\CookieDefinitionTranslation;
 use Nowo\CookieConsentBundle\Form\CookieDefinitionType;
 use Nowo\CookieConsentBundle\Form\DeleteCookieDefinitionType;
 use Nowo\CookieConsentBundle\Repository\CookieConsentConfigRepository;
 use Nowo\CookieConsentBundle\Repository\CookieDefinitionRepository;
 use Nowo\CookieConsentBundle\Tests\Support\AdminPageFixtures;
 use Nowo\CookieConsentBundle\Tests\Unit\Support\AbstractControllerTestCase;
-use ReflectionMethod;
 use ReflectionProperty;
 use SensitiveParameter;
 use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
@@ -363,7 +361,7 @@ final class CookieDefinitionAdminControllerTest extends AbstractControllerTestCa
         $controller->index(99, Request::create('/'));
     }
 
-    public function testEditAddsTranslationWhenMissing(): void
+    public function testEditNoLongerAttachesABlankTranslationForTheRequestLocale(): void
     {
         $config     = $this->createEnabledConfig(1);
         $definition = (new CookieDefinition())->setName('_ga')->setConfig($config);
@@ -378,35 +376,9 @@ final class CookieDefinitionAdminControllerTest extends AbstractControllerTestCa
         $controller = $this->createDefinitionController(config: $config, definitionRepository: $definitionRepository);
         $response   = $controller->edit(1, 5, $request, $this->createMock(EntityManagerInterface::class));
 
+        // 1.18: the form shows one tab per enabled locale; nothing is attached until a tab is filled
         self::assertSame(200, $response->getStatusCode());
-        self::assertNotNull($definition->findTranslation('fr'));
-    }
-
-    public function testEditAddsEnglishTranslationWhenLocaleEmpty(): void
-    {
-        $config     = $this->createEnabledConfig(1);
-        $definition = (new CookieDefinition())->setName('_ga')->setConfig($config);
-        $this->setEntityId($definition, 5);
-
-        $controller = $this->createDefinitionController(config: $config);
-        $method     = new ReflectionMethod(CookieDefinitionAdminController::class, 'ensureTranslationForLocale');
-        $method->invoke($controller, $definition, '');
-
-        self::assertNotNull($definition->findTranslation('en'));
-    }
-
-    public function testEnsureTranslationIsIdempotentWhenLocaleExists(): void
-    {
-        $config     = $this->createEnabledConfig(1);
-        $definition = (new CookieDefinition())->setName('_ga')->setConfig($config);
-        $definition->addTranslation((new CookieDefinitionTranslation())->setLocale('en'));
-        $this->setEntityId($definition, 5);
-
-        $controller = $this->createDefinitionController(config: $config);
-        $method     = new ReflectionMethod(CookieDefinitionAdminController::class, 'ensureTranslationForLocale');
-        $method->invoke($controller, $definition, 'en');
-
-        self::assertCount(1, $definition->getTranslations());
+        self::assertCount(0, $definition->getTranslations());
     }
 
     public function testEditThrowsWhenDefinitionBelongsToAnotherConfig(): void

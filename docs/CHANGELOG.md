@@ -66,6 +66,30 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- **Cookie definition translations as locale tabs** (breaking for template overrides and posted field names): the
+  add / delete rows table with a free-text locale is replaced by one fixed tab per enabled locale
+  (`nowo_cookie_consent.enabled_locales`, default locale first) through the FormKit `locale_tabs` include (entries
+  mode) and the UiKit `locale_tabs` partial. `CookieDefinitionType::translations` is unmapped and keyed by locale
+  (`cookie_definition[translations][es][provider]`); on submit a filled tab adds its translation, an emptied tab
+  (no provider, no purpose) removes it, and translations of locales that are not enabled are never touched (listed
+  read-only under the tabs). New options `enabled_locales` (default: the locale resolver's list) and `default_locale`.
+- `CookieDefinition::$translations` is indexed by locale (`indexBy: 'locale'`, no schema change) so validation errors
+  map to the field in its tab; `addTranslation()` keys a translation by its locale.
+- The admin controller no longer attaches a blank translation for the request locale on new / edit.
+- Requires `nowo-tech/form-kit-bundle` **^2.13** (was ^2.9) and `nowo-tech/ui-kit-bundle` **^2.5.1** (was ^2.2).
+- Demos: the host cookie form of both demos uses the same include; e2e test and the `admin-cookie-definition-form` screenshot updated.
+
+### Added
+
+- Translation keys `nowo_cookie_consent.admin.cookie_definition.fields.translations_help` and `.other_translations`
+  in every shipped locale.
+
+### Removed
+
+- Template `admin/cookie_definition/_translations_table.html.twig` (replaced by `_translations_tabs.html.twig`).
+
 ## [1.17.0] - 2026-10-18
 
 Config `privacy_route` fallback for the privacy link of the modal; profile copy in the locale of the URL; the modal

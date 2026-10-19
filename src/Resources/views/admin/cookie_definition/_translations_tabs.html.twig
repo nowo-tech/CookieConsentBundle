@@ -1,0 +1,40 @@
+{#
+  Translations of a cookie definition (1.18): one fixed tab per enabled locale (nowo_cookie_consent.enabled_locales,
+  default locale first) through the FormKit locale_tabs include (entries mode, UiKit locale_tabs partial): provider
+  and purpose of each locale in its panel, the locale itself a hidden input. Translations of locales that are not
+  enabled are kept on save and listed read-only below the tabs.
+  DOM: tab `tab-nowo-cc-definition-translations-<locale>`, panel `…-<locale>-panel`, inputs
+  `cookie_definition[translations][<locale>][provider|purpose]`.
+  Variables: form (the CookieDefinitionType view), bundle (UiKit bundle key).
+#}
+{% set _domain = 'NowoCookieConsentBundle' %}
+{% set _prefix = 'nowo_cookie_consent.admin.cookie_definition.fields.' %}
+{% set _translations = form.translations %}
+<fieldset class="nowo-cc-admin-translations" id="{{ _translations.vars.id }}" data-nowo-cc-region="translations">
+    <legend class="nowo-cc-admin-translations__legend">{{ (_prefix ~ 'translations')|trans({}, _domain) }}</legend>
+    <p class="{{ nowo_ui_class('muted', bundle) }} nowo-cc-admin-translations__help">{{ (_prefix ~ 'translations_help')|trans({}, _domain) }}</p>
+    {{ form_errors(_translations) }}
+    {{ include('@NowoFormKitBundle/form/_locale_tabs.html.twig', {
+        field: _translations,
+        mode: 'entries',
+        locales: form.vars.enabled_locales,
+        default_locale: form.vars.default_locale,
+        tabs_id: 'nowo-cc-definition-translations',
+        testid: 'nowo-cc-definition-translations',
+        tabs_label: (_prefix ~ 'translations')|trans({}, _domain),
+        bundle: bundle,
+    }, with_context: false) }}
+    {% set _others = form.vars.other_translations|default({}) %}
+    {% if _others is not empty %}
+        <div class="nowo-cc-admin-translations__others" role="note" data-nowo-cc-region="other-translations">
+            <p class="{{ nowo_ui_class('muted', bundle) }}">{{ (_prefix ~ 'other_translations')|trans({'%locales%': _others|keys|map(l => l|upper)|join(', ')}, _domain) }}</p>
+            <dl class="nowo-cc-admin-translations__others-list">
+                {% for _locale, _t in _others %}
+                    <dt lang="{{ _locale|replace({_: '-'}) }}"><code class="{{ nowo_ui_class('code', bundle) }}">{{ _locale|upper }}</code> {{ _t.provider }}</dt>
+                    <dd lang="{{ _locale|replace({_: '-'}) }}">{{ _t.purpose }}</dd>
+                {% endfor %}
+            </dl>
+        </div>
+    {% endif %}
+</fieldset>
+{% do _translations.setRendered() %}

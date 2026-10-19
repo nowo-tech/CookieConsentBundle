@@ -29,7 +29,17 @@
                 <div class="border-t border-slate-200 pt-4">
                     <h2 class="text-sm font-semibold uppercase tracking-wide text-slate-700">{{ 'demo.cookies.fields.translations'|trans }}</h2>
                     <p class="mt-1 text-sm text-slate-500">{{ 'demo.cookies.translations_lead'|trans }}</p>
-                    <div class="mt-3">{% include 'demo/cookies/_translation_tabs.html.twig' %}</div>
+                    <div class="mt-3">{# Bundle 1.18: one fixed tab per enabled locale (FormKit locale_tabs, entries mode; UiKit renderer). #}
+                    {{ include('@NowoFormKitBundle/form/_locale_tabs.html.twig', {
+                        field: form.translations,
+                        mode: 'entries',
+                        locales: form.vars.enabled_locales,
+                        default_locale: form.vars.default_locale,
+                        tabs_id: 'nowo-cc-definition-translations',
+                        testid: 'nowo-cc-definition-translations',
+                        legend: false,
+                    }, with_context: false) }}
+                    {{ form_errors(form.translations) }}</div>
                 </div>
 
                 <div class="flex flex-wrap gap-2 pt-2">
@@ -39,4 +49,9 @@
             {{ form_end(form) }}
         </div>
     </main>
+{% endblock %}
+
+{% block javascripts %}
+    {{ parent() }}
+    <script src="{{ asset('js/nowo-ui-tabs.js', 'nowo_ui_kit') }}" defer></script>
 {% endblock %}

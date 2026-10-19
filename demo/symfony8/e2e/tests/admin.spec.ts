@@ -56,7 +56,7 @@ test.describe('CookieConsent bundle admin (UiKit page contract)', () => {
     await expect(page.locator('[data-nowo-ui-region="table"] tbody tr')).toHaveCount(10); // demo list_page_size
   });
 
-  test('cookie definition form: field grid, translations table per locale, save round-trip keeps CSRF and validation', async ({
+  test('cookie definition form: field grid, one translation tab per enabled locale, save round-trip keeps CSRF and validation', async ({
     page,
   }) => {
     await page.goto(COOKIES);
@@ -69,30 +69,36 @@ test.describe('CookieConsent bundle admin (UiKit page contract)', () => {
     expect(Math.abs((name?.y ?? 0) - (duration?.y ?? 100))).toBeLessThan(2); // two columns
     expect(Math.abs((name?.width ?? 0) - (duration?.width ?? 0))).toBeLessThan(2); // same width
 
-    const translations = form.locator('[data-nowo-cc-region="translations"]');
-    const enRow = translations.locator('tr[data-nowo-cc-translation="en"]');
-    await expect(enRow).toHaveCount(1);
-    await expect(translations.locator('legend')).not.toHaveText(/^\s*\d+\s*$/);
-    const provider = enRow.locator('input[name$="[provider]"]');
+    // 1.18: fixed locale tabs (UiKit locale_tabs), the default locale first; the locale is a hidden input.
+    const tabs = form.locator('[data-testid="nowo-cc-definition-translations"]');
+    await expect(tabs.locator('[data-nowo-ui-tabs-ready]')).toHaveCount(1);
+    await expect(tabs.locator('[role="tab"]').first()).toHaveAttribute('data-locale', 'en');
+    await expect(form.locator('input[name="cookie_definition[translations][en][locale]"]')).toHaveAttribute('type', 'hidden');
+    const provider = form.locator('input[name="cookie_definition[translations][en][provider]"]');
     const original = await provider.inputValue();
 
-    // Server-side validation (browser validation off): an empty locale is rejected (422) and reported in its row.
+    // Server-side validation (browser validation off): a too long provider in another tab is rejected (422); that tab
+    // opens and is marked invalid.
     const editUrl = page.url();
     await form.evaluate((el) => ((el as HTMLFormElement).noValidate = true));
-    await enRow.locator('input[name$="[locale]"]').fill('');
+    await page.locator('#tab-nowo-cc-definition-translations-es').click();
+    await form.locator('input[name="cookie_definition[translations][es][provider]"]').fill('p'.repeat(121));
+    await page.locator('#tab-nowo-cc-definition-translations-en').click();
     await form.locator('button[type="submit"]').click();
     await expect(page).toHaveURL(editUrl);
-    await expect(page.locator('[data-nowo-cc-region="translations"] tbody .invalid-feedback, [data-nowo-cc-region="translations"] tbody .form-error-message').first()).toBeVisible();
+    await expect(page.locator('#tab-nowo-cc-definition-translations-es')).toHaveAttribute('aria-selected', 'true');
+    await expect(page.locator('#tab-nowo-cc-definition-translations-es')).toHaveAttribute('data-invalid', '');
+    await expect(page.locator('input[name="cookie_definition[translations][es][provider]"]')).toBeVisible();
 
     await page.goto(editUrl);
-    await form.locator('tr[data-nowo-cc-translation="en"] input[name$="[provider]"]').fill(`${original} (e2e)`);
+    await page.locator('input[name="cookie_definition[translations][en][provider]"]').fill(`${original} (e2e)`);
     await form.locator('button[type="submit"]').click();
     await expect(page).toHaveURL(/\/cookies$/);
     await expect(page.locator('[data-nowo-ui-region="table"]')).toContainText(`${original} (e2e)`);
 
     // Restore the seeded value.
     await page.locator('[data-nowo-ui-region="table"] tbody tr').first().locator('a.nowo-ui-action--edit').click();
-    await page.locator('tr[data-nowo-cc-translation="en"] input[name$="[provider]"]').fill(original);
+    await page.locator('input[name="cookie_definition[translations][en][provider]"]').fill(original);
     await page.locator('form[name="cookie_definition"] button[type="submit"]').click();
     await expect(page).toHaveURL(/\/cookies$/);
   });
