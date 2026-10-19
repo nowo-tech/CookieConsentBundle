@@ -103,6 +103,11 @@
 
 ## Unreleased
 
+No code change. `preferences_bubble_icon` values with SVG filters (`<filter>`, `feDropShadow`, …) or an `<img>` were
+already rejected in 1.17.0 (YAML: container compilation error; admin: form error; stored value: default icon). See
+[CONFIGURATION — Bubble icon allow-list](CONFIGURATION.md#bubble-icon-allow-list) for the allowed elements and
+attributes and an `<img>` → inline SVG example; move shadows to CSS on `.nowo-cookie-consent__preferences-bubble`.
+
 ## To 1.17.0
 
 From **1.16.3**:
