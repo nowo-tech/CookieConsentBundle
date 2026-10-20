@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## Table of contents
 
 - [[Unreleased]](#unreleased)
+- [[1.18.2] - 2026-10-20](#1182---2026-10-20)
 - [[1.18.1] - 2026-10-20](#1181---2026-10-20)
 - [[1.18.0] - 2026-10-19](#1180---2026-10-19)
 - [[1.17.0] - 2026-10-18](#1170---2026-10-18)
@@ -67,6 +68,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - [[1.0.0] - 2026-06-15](#100---2026-06-15)
 
 ## [Unreleased]
+
+## [1.18.2] - 2026-10-20
+
+Dependency refresh (bundle and demos), php-cs-fixer ParallelConfig(2). See [UPGRADING](UPGRADING.md#to-1182).
 
 ### Changed
 
