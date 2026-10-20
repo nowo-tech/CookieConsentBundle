@@ -1,6 +1,6 @@
 # Cookie Consent Bundle — Symfony 8.1 demos
 
-FrankenPHP demos with MySQL 8.4, cookie consent modal, optional consent logging (`demo_dashboard_cookie_log`), and a configuration CRUD per locale.
+FrankenPHP demos with MySQL 8.4 (dev vs production start, `FRANKENPHP_MODE`, troubleshooting: see [docs/DEMO-FRANKENPHP.md](../docs/DEMO-FRANKENPHP.md)), cookie consent modal, optional consent logging (`demo_dashboard_cookie_log`), and a configuration CRUD per locale.
 
 | Demo | UI | Port |
 | --- | --- | --- |

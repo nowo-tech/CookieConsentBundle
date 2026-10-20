@@ -17,8 +17,8 @@ Regenerate with `make -C demo/symfony8 demo-screenshots` (REQ-DEMO-013).
 ## Table of contents
 
 - [Screenshots](#screenshots)
-
 - [Embed the modal](#embed-the-modal)
+  - [CSP-safe modal CSS](#csp-safe-modal-css)
 - [Conditional scripts](#conditional-scripts)
 - [Cookie inventory in the modal](#cookie-inventory-in-the-modal)
 - [Cookie inventory admin](#cookie-inventory-admin)

@@ -2,7 +2,7 @@
 
 **Baseline spec**: [`spec.md`](spec.md)  
 **Package**: `nowo-tech/cookie-consent-bundle`  
-**Last audited**: 2026-09-24
+**Last audited**: 2026-10-20
 
 ## TypeScript production (`src/Resources/assets/src/`)
 
@@ -23,8 +23,10 @@
 | `Resources/assets/src/inject-styles.ts` | Runtime CSS injection + CSP nonce | FR-CSP-002 |
 | `Resources/assets/src/preferences-bubble.ts` | Bubble accent via CSSOM | FR-CSP-001 |
 | `Resources/assets/src/step-manager.ts` | Step wizard UI | FR-UI-013 |
+| `Resources/assets/src/csrf.ts` | SameOrigin CSRF helpers for XHR consent posts | FR-SEC-002 |
+| `Resources/assets/src/vite-env.d.ts` | Vite client type declarations (build-time only) | FR-BUILD-001 |
 
-## TypeScript tests (`src/Resources/assets/src/*.test.ts`)
+## TypeScript tests (co-located Vitest)
 
 Co-located Vitest sources under `src/` (compiled/tested in CI; not shipped to Packagist as runtime API).
 
@@ -42,6 +44,10 @@ Co-located Vitest sources under `src/` (compiled/tested in CI; not shipped to Pa
 | `Resources/assets/src/logger.test.ts` | Vitest: logger | FR-TEST-TS-001 |
 | `Resources/assets/src/preferences-bubble.test.ts` | Vitest: bubble accent | FR-TEST-TS-001 |
 | `Resources/assets/src/step-manager.test.ts` | Vitest: step manager | FR-TEST-TS-001 |
+| `Resources/assets/src/cookie-consent-css.test.ts` | Vitest: CSP-safe modal CSS | FR-TEST-TS-001 |
+| `Resources/assets/src/csrf.test.ts` | Vitest: CSRF helpers | FR-TEST-TS-001 |
+| `Resources/assets/src/inject-styles.test.ts` | Vitest: nonce-aware style injection | FR-TEST-TS-001 |
+| `Resources/assets/src/theme-contrast.test.ts` | Vitest: theme contrast | FR-TEST-TS-001 |
 
 ## Symfony config, assets, translations, Twig (`src/Resources/`)
 
@@ -67,26 +73,20 @@ Co-located Vitest sources under `src/` (compiled/tested in CI; not shipped to Pa
 | `Resources/views/_preferences_bubble_icon_default.html.twig` | Bubble icon partial | FR-TWIG-003 |
 | `Resources/views/_preferences_intro.html.twig` | Intro partial | FR-TWIG-003 |
 | `Resources/views/admin/_admin_area_nav.html.twig` | Admin area tabs | FR-TWIG-003, 002 FR-CHROME-002 |
-| `Resources/views/admin/_chrome.html.twig` | Admin chrome `attrs()` macro | 002 FR-CHROME-001 |
-| `Resources/views/admin/_pagination.html.twig` | Admin pagination | FR-TWIG-003, 002 FR-CHROME-002 |
-| `Resources/views/admin/_tabs.html.twig` | Admin default tab strip | 002 FR-CHROME-002 |
-| `Resources/views/admin/base.html.twig` | Admin intermediate shell | FR-TWIG-003, 002 FR-CHROME-003 |
-| `Resources/views/admin/config/_settings_section_tabs.html.twig` | Admin settings section tabs | FR-TWIG-003, 002 FR-CHROME-002 |
-| `Resources/views/admin/layout.html.twig` | Admin shell layout | FR-TWIG-003 |
-| `Resources/views/admin/config/layout.html.twig` | Admin layout | FR-TWIG-003 |
 | `Resources/views/admin/config/settings.html.twig` | Admin settings | FR-TWIG-003 |
-| `Resources/views/admin/cookie_definition/_table.html.twig` | Admin table | FR-TWIG-003 |
 | `Resources/views/admin/cookie_definition/form.html.twig` | Admin form | FR-TWIG-003 |
 | `Resources/views/admin/cookie_definition/index.html.twig` | Admin index | FR-TWIG-003 |
-| `Resources/views/admin/cookie_definition/layout.html.twig` | Admin layout | FR-TWIG-003 |
 | `Resources/views/cookie_consent.html.twig` | Bootstrap modal | FR-TWIG-003 |
 | `Resources/views/cookie_consent.tailwind.html.twig` | Tailwind modal | FR-TWIG-003 |
 | `Resources/views/cookie_consent_manage_link.html.twig` | Manage link | FR-TWIG-003 |
 | `Resources/views/cookie_consent_preferences_bubble.html.twig` | Preferences bubble | FR-TWIG-003 |
 | `Resources/views/form/cookie_consent_theme.html.twig` | Form theme Bootstrap | FR-TWIG-003 |
 | `Resources/views/form/cookie_consent_theme.tailwind.html.twig` | Form theme Tailwind | FR-TWIG-003 |
+| `Resources/public/nowo-cookie-consent.css` | CSP-safe modal stylesheet (no injected inline styles needed) | FR-ASSET-002, FR-CSP-002 |
+| `Resources/public/nowo-cookie-consent-admin.css` | Admin UI stylesheet on UiKit tokens | FR-ASSET-002, FR-ADMIN-001 |
+| `Resources/views/admin/cookie_definition/_translations_tabs.html.twig` | Per-locale translation tabs (FormKit `locale_tabs`) | FR-TWIG-003, FR-I18N-002 |
 
-## PHP classes (`src/**/*.php`)
+## PHP classes
 | `Admin/AdminChrome.php` | Admin chrome hooks (class/attribute map, partial paths) | 002 FR-CHROME-001 |
 | `Config/CmpUxOptionsResolver.php` | Config helper | FR-CFG-003 |
 | `Config/CookieConsentConfigPayloadFactory.php` | Config helper | FR-CFG-003 |
@@ -143,13 +143,30 @@ Co-located Vitest sources under `src/` (compiled/tested in CI; not shipped to Pa
 | `Twig/CookieConsentAdminTwigExtension.php` | Admin Twig globals | FR-TWIG-002 |
 | `Twig/CookieConsentTranslationTwigExtension.php` | DB profile `nowo_cookie_consent_trans` | FR-WORKER-003 |
 | `Twig/CookieConsentTwigExtension.php` | Twig extension | FR-TWIG-002 |
+| `Admin/AdminPageFactory.php` | UiKit admin page view models (list / form / settings) | FR-ADMIN-001 |
+| `Admin/CookieConsentAreaNavProvider.php` | UiKit area-nav registry provider (`cookie_consent`) | FR-ADMIN-001 |
+| `Admin/CookieConsentConfigSettingsSection.php` | Admin settings sections (slug + FormType per tab) | FR-ADMIN-002 |
+| `Form/DeleteCookieDefinitionType.php` | CSRF-protected delete row action | FR-FORM-001 |
+| `Form/FormKitPlaceholders.php` | FormKit placeholder key handling | FR-FORM-002 |
+| `Form/Settings/AbstractCookieConsentConfigSettingsType.php` | Per-section settings form | FR-ADMIN-002, FR-FORM-001 |
+| `Form/Settings/CookieConsentConfigAppearanceSettingsType.php` | Per-section settings form | FR-ADMIN-002, FR-FORM-001 |
+| `Form/Settings/CookieConsentConfigBehaviorSettingsType.php` | Per-section settings form | FR-ADMIN-002, FR-FORM-001 |
+| `Form/Settings/CookieConsentConfigConsentModalSettingsType.php` | Per-section settings form | FR-ADMIN-002, FR-FORM-001 |
+| `Form/Settings/CookieConsentConfigFullSettingsType.php` | Per-section settings form | FR-ADMIN-002, FR-FORM-001 |
+| `Form/Settings/CookieConsentConfigPreferencesModalSettingsType.php` | Per-section settings form | FR-ADMIN-002, FR-FORM-001 |
+| `Form/Settings/CookieConsentConfigProfileSettingsType.php` | Per-section settings form | FR-ADMIN-002, FR-FORM-001 |
+| `Form/Settings/CookieConsentConfigRouteTargetingSettingsType.php` | Per-section settings form | FR-ADMIN-002, FR-FORM-001 |
+| `Http/ColdStartRequestAttributes.php` | Cold-start request attribute contract (skip DB-backed consent) | FR-CFG-004 |
+| `Locale/ConfiguredLocales.php` | `enabled_locales` normalizer (list / parameter / env) | FR-I18N-002 |
 
 ## Coverage summary
 
 | Category | Files | Mapped |
 | --- | ---: | ---: |
-| TypeScript production | 13 | 13 |
-| TypeScript tests (Vitest) | 11 | 11 |
-| Resources (YAML/CSS/JS/i18n/Twig) | 38 | 38 |
-| PHP classes | 56 | 56 |
-| **Total production sources** | **118** | **118** |
+| TypeScript production | 17 | 17 |
+| TypeScript tests (Vitest) | 16 | 16 |
+| Resources (YAML/CSS/JS/i18n/Twig) | 32 | 32 |
+| PHP classes | 71 | 71 |
+| **Total production sources** | **136** | **136** |
+
+Audit command: `git ls-files src | wc -l` → 136 (co-located Vitest files included as `FR-TEST-TS-001`).

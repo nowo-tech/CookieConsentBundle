@@ -10,6 +10,21 @@
 | Original verdict | ❌ Not viable (as of `v1.9.7` / `e36c6b8`) — `CookieChecker` and `CookieLogger` captured the main `Request` in their constructor |
 | Remediation (shipped in `v1.10.0`) | W-01…W-06 resolved: `CookieChecker`/`CookieLogger` use `RequestStack` per call; `nowo_cookie_consent_trans()` replaces `Translator::addResource()`; `CookieConsentRuntimeCacheResetSubscriber` (`kernel.request` 4096, main only); extended Doctrine invalidation; `CookieLogger` uses `ManagerRegistry` + `detach()`; API locale normalized. Regression tests simulate consecutive requests on the same instances without `reset()` |
 
+## Table of contents
+
+- [Execution model assumed](#execution-model-assumed)
+- [Summary](#summary)
+- [Services reviewed](#services-reviewed)
+- [Findings](#findings)
+  - [W-01 — `CookieChecker` freezes the first visitor's consent cookies (High)](#w-01--cookiechecker-freezes-the-first-visitors-consent-cookies-high)
+  - [W-02 — `CookieLogger` records the first visitor's IP for every consent (High)](#w-02--cookielogger-records-the-first-visitors-ip-for-every-consent-high)
+  - [W-03 — Database translations are appended to the Translator on every request (Medium)](#w-03--database-translations-are-appended-to-the-translator-on-every-request-medium)
+  - [W-04 — Runtime config caches depend on `kernel.reset`, invalidation is partial and keys are user-controlled (Medium, scenario B)](#w-04--runtime-config-caches-depend-on-kernelreset-invalidation-is-partial-and-keys-are-user-controlled-medium-scenario-b)
+  - [W-05 — Doctrine EntityManager state relies on DoctrineBundle's reset (Medium, scenario B)](#w-05--doctrine-entitymanager-state-relies-on-doctrinebundles-reset-medium-scenario-b)
+  - [W-06 — Unvalidated `locale` in the config API creates translator catalogues (Medium)](#w-06--unvalidated-locale-in-the-config-api-creates-translator-catalogues-medium)
+- [Usage recommendations in worker mode](#usage-recommendations-in-worker-mode)
+- [Re-audit triggers](#re-audit-triggers)
+
 ## Execution model assumed
 
 FrankenPHP worker mode boots the Symfony kernel once per worker and serves many requests with the same container. This audit assumes the **strict** variant: the kernel is **not** rebooted between requests, so every shared service, static property and PHP global survives from one request to the next. Two scenarios are evaluated:

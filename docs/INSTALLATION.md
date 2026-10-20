@@ -11,6 +11,8 @@
 - [Assets](#assets)
   - [AssetMapper](#assetmapper)
 - [Database](#database)
+- [Twig Extra Bundle (REQ-TWIG-004)](#twig-extra-bundle-req-twig-004)
+- [UiKit Bundle (REQ-UI-001)](#uikit-bundle-req-ui-001)
 
 ## Requirements
 

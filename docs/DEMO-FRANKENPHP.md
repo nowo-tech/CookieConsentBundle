@@ -15,18 +15,7 @@ This document describes how the **Cookie Consent Bundle** demo applications run 
 - [Troubleshooting](#troubleshooting)
   - [Twig or PHP changes do not appear](#twig-or-php-changes-do-not-appear)
   - [Demo does not start](#demo-does-not-start)
-  - [Database / config admin empty](#database-config-admin-empty)
-
-## Contents
-
-- [Overview](#overview)
-- [What the demos include](#what-the-demos-include)
-- [Development configuration](#development-configuration)
-- [Production configuration](#production-configuration)
-- [Switching classic vs worker (`FRANKENPHP_MODE`)](#switching-classic-vs-worker-frankenphp_mode)
-- [Troubleshooting](#troubleshooting)
-
----
+  - [Database / config admin empty](#database--config-admin-empty)
 
 ## Overview
 

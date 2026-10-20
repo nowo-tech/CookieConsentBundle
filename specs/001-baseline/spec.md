@@ -51,6 +51,7 @@ GDPR **cookie consent** for Symfony: modal with category toggles, granular per-c
 - **FR-CFG-001**: `Configuration` — doctrine connection/prefix, categories, logger, route targeting, visual/theme, admin, CMP options.
 - **FR-CFG-002**: `NowoCookieConsentExtension`, `TablePrefixListener`, `TwigPathsPass`.
 - **FR-CFG-003**: Config resolver stack (`CookieConsentConfigSelector`, route pattern matcher, inventory provider/normalizer).
+- **FR-CFG-004**: `ColdStartRequestAttributes` — request attribute contract that skips database-backed consent during cold start.
 - **FR-DI-002**: `SystemClock` implements `Psr\Clock\ClockInterface` when the host does not provide a clock.
 - **FR-SEC-001**: Admin access checker interface + configurable/allow-all implementations; `CookieConsentSecurityPass`; `CookieConsentAdminAccessSubscriber` enforces roles on admin CRUD (demo may use allow-all).
 
@@ -75,7 +76,13 @@ GDPR **cookie consent** for Symfony: modal with category toggles, granular per-c
 
 ### Forms & events
 
-- **FR-FORM-001**: Consent, config settings, definition types.
+- **FR-FORM-001**: Consent, config settings, definition types (incl. CSRF-protected `DeleteCookieDefinitionType`).
+- **FR-FORM-002**: `FormKitPlaceholders` — neutralises FormKit's injected `attr.placeholder` keys the bundle does not ship.
+
+### Admin (UiKit page contract)
+
+- **FR-ADMIN-001**: `AdminPageFactory` builds the UiKit admin page view models (cookie inventory list, definition form, profile settings); `CookieConsentAreaNavProvider` publishes the Settings | Cookie inventory area nav to the UiKit registry; admin CSS on UiKit tokens.
+- **FR-ADMIN-002**: `CookieConsentConfigSettingsSection` maps admin tabs to per-section settings form types (`Form/Settings/*`, plus a single-page `Full` type for legacy hosts).
 - **FR-EVT-001**: Form, translation, schema-ready and runtime-cache-reset subscribers.
 - **FR-EVT-002**: Schema-ready subscriber memoizes a positive table probe per worker for `schema_ready_cache_ttl` seconds (default 60, `0` disables); negative probes are never memoized; the memo is not reset per request.
 - **FR-CSP-001**: Every bundle-rendered `<script>`/`<style>` carries `nonce` from request attribute `csp_nonce` when present (`app.request` null-safe); no inline event handlers or inline `style` attributes in bundle templates.
@@ -90,12 +97,15 @@ GDPR **cookie consent** for Symfony: modal with category toggles, granular per-c
 
 - **FR-UI-001–013**: Modal entry, category/granular toggles, iframe manager, step wizard, theme/visual config, diagnostics, logger.
 - **FR-BUILD-001**: Vite output `nowo-consent-modal.js`.
-- **FR-TEST-TS-001**: Co-located Vitest under `src/Resources/assets/src/*.test.ts` (14 files).
+- **FR-SEC-002**: `csrf.ts` — SameOrigin CSRF helpers for XHR consent posts.
+- **FR-TEST-TS-001**: Co-located Vitest under `src/Resources/assets/src/*.test.ts` (16 files).
 
 ### i18n & assets
 
 - **FR-I18N-001**: Nine locale YAML files (incl. Catalan, Polish).
 - **FR-ASSET-001**: Legacy/built CSS themes.
+- **FR-ASSET-002**: CSP-safe stylesheets `nowo-cookie-consent.css` (modal) and `nowo-cookie-consent-admin.css` (admin).
+- **FR-I18N-002**: `ConfiguredLocales` normalises `enabled_locales` (literal list, container parameter or env var); admin cookie definitions edit one translation tab per enabled locale.
 
 ### Routing & DI
 
@@ -106,7 +116,7 @@ GDPR **cookie consent** for Symfony: modal with category toggles, granular per-c
 
 ## Success Criteria
 
-- **SC-001**: Production sources under `src/` mapped in [`code-inventory.md`](code-inventory.md) (includes co-located Vitest).
+- **SC-001**: **136/136** files under `src/` mapped in [`code-inventory.md`](code-inventory.md) (includes 16 co-located Vitest files; audited 2026-10-20).
 - **SC-002**: Config keys match `docs/CONFIGURATION.md`.
 - **SC-003**: `composer qa`, `pnpm test`, PHPUnit, PHPStan pass.
 - **SC-004**: FrankenPHP worker scenario B (`reset_kernel false`) viable per [`docs/FRANKENPHP-WORKER-AUDIT.md`](../../docs/FRANKENPHP-WORKER-AUDIT.md).

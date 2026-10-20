@@ -67,6 +67,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Documentation
+
+- Documentation: wave-1 REQ compliance — canonical issue templates, README documentation list order (PSR under Additional documentation), CONTRIBUTING Cursor Agent queue settings (REQ-IDE-006) and Code of Conduct link, tables of contents on long docs, demo README links DEMO-FRANKENPHP, commented demo `.env.example`, Spec Kit inventory refresh after the UiKit admin migration (136/136).
+
 ## [1.18.0] - 2026-10-19
 
 Cookie definition translations as fixed locale tabs (one per enabled locale; other locales kept read-only); bubble icon allow-list docs. See [UPGRADING](UPGRADING.md#to-1180).
