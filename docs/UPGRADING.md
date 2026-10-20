@@ -3,6 +3,7 @@
 ## Table of contents
 
 - [Unreleased](#unreleased)
+- [To 1.18.1](#to-1181)
 - [To 1.18.0](#to-1180)
   - [Cookie definition translations: fixed locale tabs](#cookie-definition-translations-fixed-locale-tabs)
   - [Bubble icon allow-list (documentation)](#bubble-icon-allow-list-documentation)
@@ -105,6 +106,14 @@
 - [Getting help](#getting-help)
 
 ## Unreleased
+
+## To 1.18.1
+
+From **1.18.0**:
+
+```bash
+composer update nowo-tech/cookie-consent-bundle
+```
 
 ## To 1.18.0
 
