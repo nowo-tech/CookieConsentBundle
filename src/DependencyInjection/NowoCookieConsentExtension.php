@@ -30,6 +30,8 @@ use function is_string;
 
 /**
  * Loads bundle configuration and registers services in the container.
+ *
+ * @final since 1.19, will be final in 2.0 (not an extension point; decorate or replace the service instead)
  */
 class NowoCookieConsentExtension extends Extension implements PrependExtensionInterface
 {

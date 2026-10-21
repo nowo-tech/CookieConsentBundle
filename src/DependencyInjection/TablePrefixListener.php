@@ -8,6 +8,8 @@ use Doctrine\ORM\Event\LoadClassMetadataEventArgs;
 
 /**
  * Applies a configurable table prefix to bundle entity metadata.
+ *
+ * @final since 1.19, will be final in 2.0 (not an extension point; decorate or replace the service instead)
  */
 class TablePrefixListener
 {

@@ -134,3 +134,4 @@ Before each release, the maintainer confirms each item (note in the release PR o
 | Cryptography N/A (no custom crypto in bundle) | ☐ |
 | Routes and admin demo paths documented; least privilege in consumer apps | ☐ |
 | Rate limits / DoS: consent endpoints are lightweight; consumer apps should apply standard HTTP limits | ☐ |
+| AI security audit (REQ-SEC-004): latest grade still current for this release (re-audit when consent handling, admin UI or the config API change) | ☐ |

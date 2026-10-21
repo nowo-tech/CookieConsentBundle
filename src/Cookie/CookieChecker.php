@@ -20,6 +20,8 @@ use const JSON_THROW_ON_ERROR;
  *
  * The request is looked up on every call: the service is shared and may outlive
  * a single request (FrankenPHP worker mode), so no request data is stored on it.
+ *
+ * @final since 1.19, will be final in 2.0 (not an extension point; decorate or replace the service instead)
  */
 class CookieChecker
 {

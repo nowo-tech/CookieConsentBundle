@@ -95,8 +95,8 @@
     "minimum-stability": "stable",
     "prefer-stable": true,
     "scripts": {
-        "test": "phpunit",
-        "test-coverage": "phpunit --coverage-html coverage --coverage-clover coverage.xml --coverage-text=coverage-output.txt",
+        "test": "@php -d memory_limit=512M vendor/bin/phpunit",
+        "test-coverage": "@php -d memory_limit=512M vendor/bin/phpunit --colors=always --coverage-html coverage --coverage-clover coverage.xml --coverage-text",
         "coverage-check": "phpunit --colors=always --coverage-text=coverage-output.txt --coverage-clover coverage.xml && sh .scripts/coverage-fail-under.sh coverage-output.txt 99",
         "cs-check": "php-cs-fixer fix --dry-run --diff",
         "cs-fix": "php-cs-fixer fix",

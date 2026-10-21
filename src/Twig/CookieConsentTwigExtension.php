@@ -22,6 +22,8 @@ use function is_string;
 
 /**
  * Exposes cookie consent helpers as Twig functions.
+ *
+ * @final since 1.19, will be final in 2.0 (not an extension point; decorate or replace the service instead)
  */
 class CookieConsentTwigExtension extends AbstractExtension
 {

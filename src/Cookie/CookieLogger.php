@@ -28,6 +28,8 @@ use const FILTER_VALIDATE_IP;
  *
  * The request and the entity manager are resolved on every {@see self::log()} call: the
  * service is shared and may outlive a single request (FrankenPHP worker mode).
+ *
+ * @final since 1.19, will be final in 2.0 (not an extension point; decorate or replace the service instead)
  */
 class CookieLogger
 {

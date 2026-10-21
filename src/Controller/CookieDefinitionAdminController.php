@@ -45,6 +45,7 @@ final class CookieDefinitionAdminController extends AbstractController
      * @param TranslatorInterface $translator Symfony translator for flash messages
      * @param ParameterBagInterface $parameterBag Container parameters (list page size)
      * @param AdminPageFactory $pages UiKit view models and templates of the admin pages (REQ-UI-003)
+     * @param FormFactoryInterface|null $formFactory Form factory for the per-row delete forms (autowired)
      */
     public function __construct(
         private readonly CookieConsentConfigRepository $configRepository,
@@ -52,6 +53,7 @@ final class CookieDefinitionAdminController extends AbstractController
         private readonly TranslatorInterface $translator,
         private readonly ParameterBagInterface $parameterBag,
         private readonly AdminPageFactory $pages,
+        private readonly ?FormFactoryInterface $formFactory = null,
     ) {
     }
 
@@ -185,8 +187,9 @@ final class CookieDefinitionAdminController extends AbstractController
      */
     private function createDeleteForms(int $configId, array $definitions): array
     {
-        $forms       = [];
-        $formFactory = $this->container->get('form.factory');
+        $forms = [];
+        // REQ-SF-003: injected (autowired) instead of pulled from the service container.
+        $formFactory = $this->formFactory;
         if (!$formFactory instanceof FormFactoryInterface) {
             return $forms;
         }

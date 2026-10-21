@@ -34,6 +34,8 @@ use function trim;
  * is removed, and translations of locales that are not enabled are never touched.
  *
  * @extends AbstractType<CookieDefinition>
+ *
+ * @final since 1.19, will be final in 2.0 (not an extension point; decorate or replace the service instead)
  */
 #[FormKitConfig('cookie_consent')]
 class CookieDefinitionType extends AbstractType

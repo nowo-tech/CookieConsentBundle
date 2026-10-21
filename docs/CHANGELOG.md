@@ -69,6 +69,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- Services, controllers, form types, the Twig extension and the DI classes that are not extension points are marked `@final` (real `final` in 2.0); `CookieConsentConfigFullSettingsType` (extended by the settings form) and the bundle class stay open (REQ-PHP-001). See [UPGRADING](UPGRADING.md).
+- `CookieDefinitionAdminController` receives the form factory through its constructor (autowired) instead of `$this->container->get('form.factory')` (REQ-SF-003).
+- Demos build on `dunglas/frankenphp:1-php8.5-alpine`, the newest PHP allowed by `require.php` (REQ-DEMO-010).
+- `make test-coverage` prints the PHPUnit text summary, publishes `coverage-php.txt` and fails under 99% lines (`coverage-check` is now an alias); `release-check` starts with `ensure-up` and runs `validate-translations`, which now checks key parity against `en` (REQ-MAKE-002, REQ-MAKE-004, REQ-TEST-008).
+- README and badge publish the measured PHP and TypeScript coverage (REQ-TEST-003, REQ-TEST-007); the release security checklist gains the AI security audit item (REQ-SEC-002); the co-author check accepts git worktrees.
+
 ## [1.18.2] - 2026-10-20
 
 Dependency refresh (bundle and demos), php-cs-fixer ParallelConfig(2). See [UPGRADING](UPGRADING.md#to-1182).

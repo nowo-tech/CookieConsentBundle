@@ -73,10 +73,10 @@ test-with-db: test
 test-coverage: ensure-up
 	@$(COMPOSE) exec -T $(SERVICE_PHP) composer test-coverage | tee coverage-php.txt
 	@./.scripts/php-coverage-percent.sh coverage-php.txt
+	@sh .scripts/coverage-fail-under.sh coverage-php.txt 99
 
-coverage-check: ensure-up
-	@$(COMPOSE) exec -T $(SERVICE_PHP) sh -lc 'composer test-coverage | tee coverage-php.txt'
-	@./.scripts/coverage-fail-under.sh coverage-output.txt 99
+# Alias kept for existing scripts/docs
+coverage-check: test-coverage
 
 test-coverage-with-db: test-coverage
 
@@ -99,8 +99,7 @@ phpstan: ensure-up
 	@$(COMPOSE) exec -T $(SERVICE_PHP) composer phpstan
 
 validate-translations: ensure-up
-	@echo "Translation files validated (YAML syntax only)."
-	@$(COMPOSE) exec -T $(SERVICE_PHP) php -r 'require "vendor/autoload.php"; foreach (glob("src/Resources/translations/*.yaml") as $$f) { Symfony\Component\Yaml\Yaml::parseFile($$f); } echo "OK\n";'
+	@$(COMPOSE) exec -T $(SERVICE_PHP) php .scripts/validate-translations.php
 
 qa: cs-check twig-lint test test-ts
 
@@ -112,7 +111,7 @@ check-twig-extra:
 # Run Igor worker-state audit (REQ-CS-008)
 igor: ensure-up
 	$(COMPOSE) exec -T php composer igor
-release-check: check-no-cursor-coauthor check-open-prs check-twig-extra ensure-up assets composer-sync cs-fix cs-check rector-dry phpstan igor validate-phpdoc coverage-check test-ts release-check-demos
+release-check: ensure-up check-no-cursor-coauthor check-open-prs check-twig-extra validate-translations assets composer-sync cs-fix cs-check rector-dry phpstan igor validate-phpdoc test-coverage test-ts release-check-demos
 
 release-check-demos:
 	@if [ -f demo/Makefile ]; then $(MAKE) -C demo release-check; else true; fi

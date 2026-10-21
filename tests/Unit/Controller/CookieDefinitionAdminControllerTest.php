@@ -475,12 +475,14 @@ final class CookieDefinitionAdminControllerTest extends AbstractControllerTestCa
         $translator = $this->createMock(TranslatorInterface::class);
         $translator->method('trans')->willReturn('translated');
 
+        $formFactory ??= $this->createFormFactory();
         $controller = new CookieDefinitionAdminController(
             $configRepository,
             $definitionRepository,
             $translator,
             $this->createParameterBag(),
             AdminPageFixtures::factory(),
+            $formFactory,
         );
         $this->configureController(
             $controller,

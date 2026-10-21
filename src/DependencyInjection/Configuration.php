@@ -22,6 +22,8 @@ use function trim;
 
 /**
  * Defines the configuration tree for the cookie consent bundle.
+ *
+ * @final since 1.19, will be final in 2.0 (not an extension point; decorate or replace the service instead)
  */
 class Configuration implements ConfigurationInterface
 {

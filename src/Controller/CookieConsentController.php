@@ -13,6 +13,8 @@ use Symfony\Component\Routing\Attribute\Route;
  * HTTP entry points for the consent modal (ESI / legacy {@code render(path(...))} embeds).
  *
  * Prefer {@code {{ nowo_cookie_consent_render() }}} in host layouts to avoid a kernel sub-request.
+ *
+ * @final since 1.19, will be final in 2.0 (not an extension point; decorate or replace the service instead)
  */
 class CookieConsentController
 {

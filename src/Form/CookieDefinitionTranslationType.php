@@ -16,6 +16,8 @@ use Symfony\Component\OptionsResolver\OptionsResolver;
  * Symfony form type for a single cookie definition locale translation.
  *
  * @extends AbstractType<CookieDefinitionTranslation>
+ *
+ * @final since 1.19, will be final in 2.0 (not an extension point; decorate or replace the service instead)
  */
 #[FormKitConfig('cookie_consent')]
 class CookieDefinitionTranslationType extends AbstractType
