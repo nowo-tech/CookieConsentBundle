@@ -3,6 +3,7 @@
 ## Table of contents
 
 - [Unreleased](#unreleased)
+- [To 1.19.0](#to-1190)
 - [To 1.18.2](#to-1182)
 - [To 1.18.1](#to-1181)
 - [To 1.18.0](#to-1180)
@@ -107,6 +108,14 @@
 - [Getting help](#getting-help)
 
 ## Unreleased
+
+## To 1.19.0
+
+From **1.18.2**:
+
+```bash
+composer update nowo-tech/cookie-consent-bundle
+```
 
 - `CookieChecker`, `CookieHandler`, `CookieLogger`, the controllers, form types (except `CookieConsentConfigFullSettingsType`), `CookieConsentTwigExtension`, `CookieConsentFormSubscriber` and the DI classes are now `@final`: Symfony's debug class loader reports a deprecation if your application extends them. They become `final` in 2.0, so decorate the services (`#[AsDecorator]`) or replace them instead.
 
