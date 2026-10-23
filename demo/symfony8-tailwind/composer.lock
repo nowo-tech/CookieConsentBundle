@@ -1122,7 +1122,7 @@
             "dist": {
                 "type": "path",
                 "url": "/var/cookie-consent-bundle",
-                "reference": "d32fa367d830920b3c3e6f71d1f4422e3c18266f"
+                "reference": "5a53215fb3b52e5ec54945b1df5f0dec7f666bed"
             },
             "require": {
                 "doctrine/doctrine-bundle": "^2.10 || ^3.0",
@@ -1181,10 +1181,10 @@
             },
             "scripts": {
                 "test": [
-                    "phpunit"
+                    "@php -d memory_limit=512M vendor/bin/phpunit"
                 ],
                 "test-coverage": [
-                    "phpunit --coverage-html coverage --coverage-clover coverage.xml --coverage-text=coverage-output.txt"
+                    "@php -d memory_limit=512M vendor/bin/phpunit --colors=always --coverage-html coverage --coverage-clover coverage.xml --coverage-text"
                 ],
                 "coverage-check": [
                     "phpunit --colors=always --coverage-text=coverage-output.txt --coverage-clover coverage.xml && sh .scripts/coverage-fail-under.sh coverage-output.txt 99"
@@ -1374,16 +1374,16 @@
         },
         {
             "name": "nowo-tech/ui-kit-bundle",
-            "version": "v2.5.3",
+            "version": "v2.6.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/nowo-tech/UiKitBundle.git",
-                "reference": "5ddc3eff7a01e610a643edf6893bbedaa935a3d3"
+                "reference": "1e0944a99055b820204e3c64aa024d088de06fc7"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/nowo-tech/UiKitBundle/zipball/5ddc3eff7a01e610a643edf6893bbedaa935a3d3",
-                "reference": "5ddc3eff7a01e610a643edf6893bbedaa935a3d3",
+                "url": "https://api.github.com/repos/nowo-tech/UiKitBundle/zipball/1e0944a99055b820204e3c64aa024d088de06fc7",
+                "reference": "1e0944a99055b820204e3c64aa024d088de06fc7",
                 "shasum": ""
             },
             "require": {
@@ -1464,7 +1464,7 @@
                 "issues": "https://github.com/nowo-tech/UiKitBundle/issues",
                 "source": "https://github.com/nowo-tech/UiKitBundle"
             },
-            "time": "2026-10-20T08:01:25+00:00"
+            "time": "2026-10-21T19:29:07+00:00"
         },
         {
             "name": "psr/cache",
@@ -6123,16 +6123,16 @@
         },
         {
             "name": "nowo-tech/hot-reload-bundle",
-            "version": "v1.6.1",
+            "version": "v1.6.2",
             "source": {
                 "type": "git",
                 "url": "https://github.com/nowo-tech/HotReloadBundle.git",
-                "reference": "6d3117328bd9d7f55a70743567d04ee25d6bc366"
+                "reference": "cf84e69a6f93f95f06876638337f9f792b2bcb0a"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/nowo-tech/HotReloadBundle/zipball/6d3117328bd9d7f55a70743567d04ee25d6bc366",
-                "reference": "6d3117328bd9d7f55a70743567d04ee25d6bc366",
+                "url": "https://api.github.com/repos/nowo-tech/HotReloadBundle/zipball/cf84e69a6f93f95f06876638337f9f792b2bcb0a",
+                "reference": "cf84e69a6f93f95f06876638337f9f792b2bcb0a",
                 "shasum": ""
             },
             "require": {
@@ -6210,7 +6210,7 @@
                 "issues": "https://github.com/nowo-tech/HotReloadBundle/issues",
                 "source": "https://github.com/nowo-tech/HotReloadBundle"
             },
-            "time": "2026-10-13T10:57:34+00:00"
+            "time": "2026-10-21T05:26:17+00:00"
         },
         {
             "name": "nowo-tech/twig-inspector-bundle",
