@@ -72,7 +72,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- **Consent modal (REQ-TWIG-003):** `cookie_consent.html.twig` and `cookie_consent.tailwind.html.twig` keep their custom layout (buttons placed by name in the banner / preferences steps, categories grouped by `preference_sections`, rule 3) and end with a child loop that renders every child the layout did not place (the CSRF token, host extensions), followed by `form_end(form)` instead of an explicit `_token` widget and `render_rest: false`. `_preference_sections.html.twig` skips children already rendered and, when preference sections are configured, marks the categories no section lists and the per-cookie toggles no category table showed as rendered, so they stay hidden as before. The rendered markup is unchanged.
 - **Demo (REQ-TWIG-003):** both demos (`symfony8`, `symfony8-tailwind`) render `demo/config/settings`, `demo/config/_form` and `demo/cookies/form` through the child loop (`form_row(child)`) instead of one `form_row(form.x)` per field; the settings sections open at the first field of each section, the cookie definition grid keeps its custom layout (rule 3) and translations keep the locale tabs.
+
+### Fixed
+
+- **Consent modal:** with granular cookie selection and no preference sections, the modal no longer fails with "Field cookies has already been rendered" (`_preference_sections.html.twig` now skips children the category tables already rendered).
 
 ## [1.19.0] - 2026-10-21
 
