@@ -71,6 +71,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- **Developer tooling (REQ-MAKE-002):** `make release-check` runs the full REQ-MAKE-002 chain in order (ensure-up, co-author and open-PR gates, check-twig-extra, validate-translations, assets, composer-sync, cs-fix, cs-check, rector-dry, phpstan, igor, validate-phpdoc, test-coverage, demo release-check, test-ts); the demo release-check now runs before test-ts. New `make check-no-raw-html-form` target (`.scripts/check-no-raw-html-form.sh`, REQ-TWIG-005); it joins the chain once the remaining raw form markup in the demos is migrated.
+
 ## [1.19.1] - 2026-10-24
 
 Bundle views render form bodies through the child loop (REQ-TWIG-003). See [UPGRADING](UPGRADING.md#to-1191).

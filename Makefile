@@ -12,7 +12,7 @@ export DOCKER_CONFIG := $(BUNDLE_ROOT)/.docker
 .PHONY: help ensure-up up down down-dev build shell install assets assets-test test-ts test test-coverage test-with-db \ check-twig-extra
 	test-coverage-with-db coverage-check cs-check cs-fix rector rector-dry phpstan validate-phpdoc qa release-check \
 	release-check-demos demo-smoke composer-sync clean update validate validate-translations \
-	setup-hooks check-no-cursor-coauthor check-open-prs strip-cursor-coauthor-from-history
+	setup-hooks check-no-cursor-coauthor check-open-prs check-no-raw-html-form strip-cursor-coauthor-from-history
 
 help:
 	@echo "Cookie Consent Bundle - Development Commands"
@@ -111,7 +111,10 @@ check-twig-extra:
 # Run Igor worker-state audit (REQ-CS-008)
 igor: ensure-up
 	$(COMPOSE) exec -T php composer igor
-release-check: ensure-up check-no-cursor-coauthor check-open-prs check-twig-extra validate-translations assets composer-sync cs-fix cs-check rector-dry phpstan igor validate-phpdoc test-coverage test-ts release-check-demos
+
+# Pre-release (REQ-MAKE-002)
+# check-no-raw-html-form (REQ-TWIG-005) is wired once the remaining raw form markup is migrated
+release-check: ensure-up check-no-cursor-coauthor check-open-prs check-twig-extra validate-translations assets composer-sync cs-fix cs-check rector-dry phpstan igor validate-phpdoc test-coverage release-check-demos test-ts
 
 release-check-demos:
 	@if [ -f demo/Makefile ]; then $(MAKE) -C demo release-check; else true; fi
@@ -146,6 +149,10 @@ setup-hooks:
 check-no-cursor-coauthor:
 	@chmod +x .scripts/check-no-cursor-coauthor.sh
 	@./.scripts/check-no-cursor-coauthor.sh HEAD
+
+# Fail on raw <form>/<input>/<textarea>/<select> in Twig (REQ-TWIG-005)
+check-no-raw-html-form:
+	@bash .scripts/check-no-raw-html-form.sh
 
 check-open-prs:
 	@chmod +x .scripts/check-open-prs.sh
