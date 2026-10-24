@@ -24,7 +24,12 @@
                     {{ form_row(form.type) }}
                     {{ form_row(form.sortOrder) }}
                 </div>
-                {{ form_row(form.allowedByDefault) }}
+                {# Name/duration and category/type/sortOrder keep their grid (custom layout, rendered above); the loop renders the remaining fields; translations use the locale tabs below. #}
+                {% for child in form %}
+                    {% if not child.rendered and child.vars.name != 'translations' %}
+                        {{ form_row(child) }}
+                    {% endif %}
+                {% endfor %}
 
                 <div class="border-t border-slate-200 pt-4">
                     <h2 class="text-sm font-semibold uppercase tracking-wide text-slate-700">{{ 'demo.cookies.fields.translations'|trans }}</h2>

@@ -70,6 +70,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- **Demo (REQ-TWIG-003):** both demos (`symfony8`, `symfony8-tailwind`) render `demo/config/settings`, `demo/config/_form` and `demo/cookies/form` through the child loop (`form_row(child)`) instead of one `form_row(form.x)` per field; the settings sections open at the first field of each section, the cookie definition grid keeps its custom layout (rule 3) and translations keep the locale tabs.
+
 ## [1.19.0] - 2026-10-21
 
 @final public services, injected form factory, PHP 8.5 demos, coverage and translation gates. See [UPGRADING](UPGRADING.md#to-1190).

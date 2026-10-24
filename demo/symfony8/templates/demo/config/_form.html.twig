@@ -2,14 +2,11 @@
 {% form_theme form with ['bootstrap_5_layout.html.twig'] %}
 {{ form_start(form) }}
     <p class="text-muted small mb-4">{{ 'demo.config.form.lead'|trans }}</p>
-    {{ form_row(form.locale) }}
-    {{ form_row(form.consentModalTitle) }}
-    {{ form_row(form.consentModalDescription) }}
-    {{ form_row(form.consentModalFooter) }}
-    {{ form_row(form.consentModalAcceptAllBtn) }}
-    {{ form_row(form.consentModalAcceptNecessaryBtn) }}
-    {{ form_row(form.preferencesModalSavePreferencesBtn) }}
-    {{ form_row(form.privacyRoute) }}
+    {% for child in form %}
+        {% if not child.rendered %}
+            {{ form_row(child) }}
+        {% endif %}
+    {% endfor %}
 
     <div class="d-flex gap-2">
         <button type="submit" class="btn btn-primary">{{ submit_label|default('Save') }}</button>

@@ -1,14 +1,11 @@
 {% import 'demo/_routes.html.twig' as demo_route %}
 {{ form_start(form, {attr: {class: 'space-y-4'}}) }}
     <p class="text-sm text-slate-600">{{ 'demo.config.form.lead'|trans }}</p>
-    {{ form_row(form.locale) }}
-    {{ form_row(form.consentModalTitle) }}
-    {{ form_row(form.consentModalDescription) }}
-    {{ form_row(form.consentModalFooter) }}
-    {{ form_row(form.consentModalAcceptAllBtn) }}
-    {{ form_row(form.consentModalAcceptNecessaryBtn) }}
-    {{ form_row(form.preferencesModalSavePreferencesBtn) }}
-    {{ form_row(form.privacyRoute) }}
+    {% for child in form %}
+        {% if not child.rendered %}
+            {{ form_row(child) }}
+        {% endif %}
+    {% endfor %}
 
     <div class="flex flex-wrap gap-2 pt-2">
         <button type="submit" class="inline-flex rounded-md bg-indigo-600 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-500">{{ submit_label|default('Save') }}</button>
