@@ -42,6 +42,7 @@ services:
     arguments:
       $clock: '@Psr\Clock\ClockInterface'
       $schemaReadyCacheTtl: '%nowo_cookie_consent.schema_ready_cache_ttl%'
+      $tablePrefix: '%nowo_cookie_consent.doctrine.table_prefix%'
 
   Nowo\CookieConsentBundle\Cookie\CookieLogger:
     arguments:

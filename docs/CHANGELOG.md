@@ -72,6 +72,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- **Consent was never saved with stateless CSRF.** `CookieConsentType` had no `csrf_token_id`, so the token fell back
+  to the form name `cookie_consent`: `framework.form.csrf_protection.token_id` only applies to the application's own
+  form types, and `cookie_consent` is not in `stateless_token_ids`. Accept / reject / save returned 200 with the form
+  error "The CSRF token is invalid" and no `Cookie_Consent` cookie. The form now uses the `submit` token id
+  (`CookieConsentType::CSRF_TOKEN_ID`, in the default `stateless_token_ids`; still a valid session token id when CSRF
+  is not stateless).
+- **Consent was never saved with `doctrine.table_prefix`.** The cold-start probe (`CookieConsentSchemaReadySubscriber`,
+  1.8.0) looked for `dashboard_cookie_config` without the configured prefix, so every request was flagged "schema not
+  ready" and the consent form handler skipped saving. The probe now checks `<table_prefix>dashboard_cookie_config`.
+  The demo functional and Playwright tests assert `Cookie_Consent` is set after accept / reject / save.
+
 ## [1.19.2] - 2026-10-25
 
 Reproducible consent modal script (build id instead of build time) and a read-only validate-phpdoc. See [UPGRADING](UPGRADING.md#to-1192).

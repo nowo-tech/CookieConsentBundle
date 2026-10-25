@@ -36,6 +36,13 @@ final class CookieConsentTypeTest extends TypeTestCase
         self::assertSame('NowoCookieConsentBundle', $view->vars['translation_domain']);
     }
 
+    public function testUsesTheStatelessSubmitCsrfTokenId(): void
+    {
+        $form = $this->factory->create(CookieConsentType::class);
+
+        self::assertSame('submit', $form->getConfig()->getOption('csrf_token_id'));
+    }
+
     public function testPreSubmitSetsAllCategoriesWhenAcceptAllClicked(): void
     {
         $form = $this->factory->create(CookieConsentType::class);

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Nowo\CookieConsentBundle\EventSubscriber;
 
 use Doctrine\DBAL\Connection;
+use Nowo\CookieConsentBundle\DependencyInjection\TablePrefixListener;
 use Nowo\CookieConsentBundle\Entity\CookieConsentConfig;
 use Nowo\CookieConsentBundle\Http\ColdStartRequestAttributes;
 use Psr\Clock\ClockInterface;
@@ -35,11 +36,13 @@ final class CookieConsentSchemaReadySubscriber implements EventSubscriberInterfa
 
     /**
      * @param int $schemaReadyCacheTtl Seconds a positive probe is reused within one worker; 0 disables the memo
+     * @param string $tablePrefix doctrine.table_prefix, prepended to the probed table like {@see TablePrefixListener}
      */
     public function __construct(
         private readonly Connection $connection,
         private readonly ?ClockInterface $clock = null,
         private readonly int $schemaReadyCacheTtl = self::DEFAULT_SCHEMA_READY_CACHE_TTL,
+        private readonly string $tablePrefix = '',
     ) {
     }
 
@@ -111,16 +114,21 @@ final class CookieConsentSchemaReadySubscriber implements EventSubscriberInterfa
         return $this->clock instanceof ClockInterface ? $this->clock->now()->getTimestamp() : time();
     }
 
+    private function configTableName(): string
+    {
+        return $this->tablePrefix . CookieConsentConfig::TABLE_NAME;
+    }
+
     private function configTableExists(): bool
     {
         try {
             $schemaManager = $this->connection->createSchemaManager();
 
-            return $schemaManager->tablesExist([CookieConsentConfig::TABLE_NAME]);
+            return $schemaManager->tablesExist([$this->configTableName()]);
         } catch (Throwable) {
             try {
                 // Fallback when SchemaManager / platform differs.
-                $this->connection->executeQuery('SELECT 1 FROM ' . CookieConsentConfig::TABLE_NAME . ' LIMIT 1');
+                $this->connection->executeQuery('SELECT 1 FROM ' . $this->configTableName() . ' LIMIT 1');
 
                 return true;
             } catch (Throwable) {

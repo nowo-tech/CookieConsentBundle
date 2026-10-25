@@ -111,6 +111,10 @@
 
 ## Unreleased
 
+No action required. The consent form now posts with the CSRF token id `submit`. If your app lists custom
+`framework.csrf_protection.stateless_token_ids` without `submit`, add it (or keep session-based CSRF, which accepts
+any token id).
+
 ## To 1.19.2
 
 From **1.19.1**:

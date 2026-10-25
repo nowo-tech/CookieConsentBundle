@@ -41,6 +41,12 @@ class CookieConsentType extends AbstractType
     use FormOptionsTrait;
 
     /**
+     * CSRF token id of the consent form: "submit" is in the default framework.csrf_protection.stateless_token_ids,
+     * and works as a plain session token id when CSRF is not stateless.
+     */
+    public const CSRF_TOKEN_ID = 'submit';
+
+    /**
      * Creates a new cookie consent form type.
      *
      * @param list<string> $cookieCategories
@@ -347,6 +353,9 @@ class CookieConsentType extends AbstractType
         $resolver->setDefaults([
             'translation_domain' => 'NowoCookieConsentBundle',
             'csrf_protection'    => $this->csrfProtection,
+            // framework.form.csrf_protection.token_id only reaches the app's own form types; without an explicit id the
+            // token falls back to the form name, which is not a stateless id, so the consent post never validated.
+            'csrf_token_id' => self::CSRF_TOKEN_ID,
         ]);
     }
 }

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Tests\Controller;
 
+use PHPUnit\Framework\Attributes\DataProvider;
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
 
 final class DemoControllerTest extends WebTestCase
@@ -39,5 +40,31 @@ final class DemoControllerTest extends WebTestCase
         self::assertResponseIsSuccessful();
         self::assertSelectorTextContains('.alert-success', 'Consent cookies cleared');
         self::assertSelectorExists('#cookieconsent');
+    }
+
+    /**
+     * @return iterable<string, array{string}>
+     */
+    public static function consentButtonProvider(): iterable
+    {
+        yield 'accept' => ['use_all_cookies'];
+        yield 'reject' => ['use_only_functional_cookies'];
+        yield 'save preferences' => ['save'];
+    }
+
+    #[DataProvider('consentButtonProvider')]
+    public function testConsentSubmitSetsConsentCookie(string $button): void
+    {
+        $client  = static::createClient();
+        $crawler = $client->request('GET', '/en/');
+        self::assertResponseIsSuccessful();
+
+        // Same-origin XHR post, as the consent script sends it (stateless CSRF validates the Origin header).
+        $form = $crawler->filter(sprintf('#cookieconsent button[name="cookie_consent[%s]"]', $button))->form();
+        $client->submit($form, [], ['HTTP_ORIGIN' => 'http://localhost']);
+
+        self::assertResponseIsSuccessful();
+        self::assertBrowserHasCookie('Cookie_Consent');
+        self::assertBrowserHasCookie('Cookie_Consent_Key');
     }
 }

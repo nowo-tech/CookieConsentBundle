@@ -84,4 +84,22 @@ test.describe('CookieConsent demo', () => {
     expect(report.saveBg).toBe('rgb(96, 254, 210)'); // dark-turquoise accent
     expect(report.saveContrast).toBeGreaterThanOrEqual(4.5);
   });
+
+  for (const button of ['use_all_cookies', 'use_only_functional_cookies', 'save']) {
+    test(`consent submit (${button}) sets the Cookie_Consent cookie`, async ({ page }) => {
+      await page.context().clearCookies();
+      await page.goto('/en/');
+      const host = page.locator('.nowo-cookie-consent').first();
+      await expect(host).toBeVisible({ timeout: 10000 });
+      if (button === 'save') {
+        await host.locator('[data-nowo-show-preferences]').first().click();
+      }
+      const posted = page.waitForResponse((response) => response.request().method() === 'POST');
+      await host.locator(`button[name="cookie_consent[${button}]"]`).first().click();
+      expect((await posted).ok()).toBeTruthy();
+      await expect
+        .poll(async () => (await page.context().cookies()).map((cookie) => cookie.name))
+        .toContain('Cookie_Consent');
+    });
+  }
 });

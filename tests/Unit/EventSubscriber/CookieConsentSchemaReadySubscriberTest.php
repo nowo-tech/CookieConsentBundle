@@ -37,6 +37,23 @@ final class CookieConsentSchemaReadySubscriberTest extends TestCase
         self::assertFalse($request->attributes->get(ColdStartRequestAttributes::COOKIE_CONSENT_SCHEMA_READY));
     }
 
+    public function testProbesTheConfigTableWithTheDoctrineTablePrefix(): void
+    {
+        $schemaManager = $this->createMock(AbstractSchemaManager::class);
+        $schemaManager->expects(self::once())->method('tablesExist')->with(['demo_dashboard_cookie_config'])->willReturn(true);
+
+        $connection = $this->createStub(Connection::class);
+        $connection->method('createSchemaManager')->willReturn($schemaManager);
+
+        $subscriber = new CookieConsentSchemaReadySubscriber($connection, null, 0, 'demo_');
+        $request    = Request::create('/');
+        $event      = new RequestEvent($this->createMock(HttpKernelInterface::class), $request, HttpKernelInterface::MAIN_REQUEST);
+
+        $subscriber->onKernelRequest($event);
+
+        self::assertFalse($request->attributes->has(ColdStartRequestAttributes::COOKIE_CONSENT_SCHEMA_READY));
+    }
+
     public function testLeavesReadyWhenConfigTableExists(): void
     {
         $schemaManager = $this->createStub(AbstractSchemaManager::class);
