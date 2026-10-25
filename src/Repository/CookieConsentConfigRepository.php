@@ -53,6 +53,9 @@ class CookieConsentConfigRepository extends ServiceEntityRepository implements R
         $this->allEnabledNonDefault = null;
     }
 
+    /**
+     * Clears the memoized enabled profiles (kernel reset / worker mode).
+     */
     public function reset(): void
     {
         $this->clearRuntimeCache();

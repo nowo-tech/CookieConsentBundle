@@ -20,6 +20,9 @@ final readonly class ConfigurableCookieConsentAccessChecker implements CookieCon
     ) {
     }
 
+    /**
+     * Grants access when the user has one of the configured roles; an empty role list denies access.
+     */
     public function canAccess(): bool
     {
         // Empty access_roles = deny (fail-closed). Use allow_unauthenticated or AllowAll* for demos.

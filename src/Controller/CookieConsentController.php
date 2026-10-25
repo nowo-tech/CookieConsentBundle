@@ -18,6 +18,9 @@ use Symfony\Component\Routing\Attribute\Route;
  */
 class CookieConsentController
 {
+    /**
+     * Uses the modal renderer to build the consent modal HTML.
+     */
     public function __construct(
         private readonly CookieConsentModalRenderer $modalRenderer,
     ) {

@@ -12,6 +12,9 @@ use Psr\Clock\ClockInterface;
  */
 final class SystemClock implements ClockInterface
 {
+    /**
+     * Returns the current time.
+     */
     public function now(): DateTimeImmutable
     {
         return new DateTimeImmutable();

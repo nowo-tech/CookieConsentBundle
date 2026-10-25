@@ -22,12 +22,18 @@ final readonly class CookieConsentAdminAccessSubscriber implements EventSubscrib
         'nowo_cookie_consent_config_settings_',
     ];
 
+    /**
+     * Receives the access checker and whether the admin web UI is enabled.
+     */
     public function __construct(
         private CookieConsentAccessCheckerInterface $accessChecker,
         private bool $webUiEnabled = true,
     ) {
     }
 
+    /**
+     * Listens to the controller event to guard the admin routes.
+     */
     public static function getSubscribedEvents(): array
     {
         return [
@@ -35,6 +41,9 @@ final readonly class CookieConsentAdminAccessSubscriber implements EventSubscrib
         ];
     }
 
+    /**
+     * Answers 404 when the web UI is disabled and denies access when the checker refuses it.
+     */
     public function onKernelController(ControllerEvent $event): void
     {
         $route = $event->getRequest()->attributes->get('_route');

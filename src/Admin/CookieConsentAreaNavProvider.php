@@ -26,6 +26,9 @@ final readonly class CookieConsentAreaNavProvider implements AreaNavProviderInte
 {
     public const AREA = 'cookie_consent';
 
+    /**
+     * Uses the admin page factory to build the area navigation.
+     */
     public function __construct(
         private AdminPageFactory $pages,
     ) {

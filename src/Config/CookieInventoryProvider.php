@@ -82,6 +82,9 @@ final class CookieInventoryProvider implements ResetInterface
         $this->hasDatabaseDefinitionsCache = [];
     }
 
+    /**
+     * Clears the memoized cookie definitions and locale lists (kernel reset / worker mode).
+     */
     public function reset(): void
     {
         $this->clearRuntimeCache();

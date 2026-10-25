@@ -43,12 +43,18 @@ final class CookieConsentSchemaReadySubscriber implements EventSubscriberInterfa
     ) {
     }
 
+    /**
+     * Listens to the main request after the SiteBackup cold-start probe and before the consent translations.
+     */
     public static function getSubscribedEvents(): array
     {
         // After SiteBackup cold-start probe (35/34); before CookieConsent translations (19).
         return [KernelEvents::REQUEST => ['onKernelRequest', 33]];
     }
 
+    /**
+     * Flags the main request as not schema-ready when the consent config table does not exist yet.
+     */
     public function onKernelRequest(RequestEvent $event): void
     {
         if (!$event->isMainRequest()) {

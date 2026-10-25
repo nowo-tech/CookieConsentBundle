@@ -25,6 +25,9 @@ use Nowo\CookieConsentBundle\Repository\CookieConsentConfigRepository;
 #[AsDoctrineListener(event: Events::postRemove)]
 final class CookieConsentConfigRuntimeCacheListener
 {
+    /**
+     * Receives the services whose runtime caches are cleared.
+     */
     public function __construct(
         private readonly CookieConsentConfigRepository $configRepository,
         private readonly CookieConsentConfigResolver $configResolver,
@@ -32,21 +35,33 @@ final class CookieConsentConfigRuntimeCacheListener
     ) {
     }
 
+    /**
+     * Clears the caches after a consent entity is created.
+     */
     public function postPersist(PostPersistEventArgs $args): void
     {
         $this->invalidateWhenConfigChanged($args->getObject());
     }
 
+    /**
+     * Clears the caches after a consent entity is updated.
+     */
     public function postUpdate(PostUpdateEventArgs $args): void
     {
         $this->invalidateWhenConfigChanged($args->getObject());
     }
 
+    /**
+     * Clears the caches after a consent entity is removed.
+     */
     public function postRemove(PostRemoveEventArgs $args): void
     {
         $this->invalidateWhenConfigChanged($args->getObject());
     }
 
+    /**
+     * Clears the caches when the entity is a consent config, a cookie definition or one of their translations.
+     */
     public function invalidateWhenConfigChanged(object $entity): void
     {
         if (!$entity instanceof CookieConsentConfig

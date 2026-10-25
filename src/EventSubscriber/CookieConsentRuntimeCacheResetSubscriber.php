@@ -21,6 +21,9 @@ use Symfony\Component\HttpKernel\KernelEvents;
  */
 final class CookieConsentRuntimeCacheResetSubscriber implements EventSubscriberInterface
 {
+    /**
+     * Receives the services whose per-request caches are cleared.
+     */
     public function __construct(
         private readonly CookieConsentConfigResolver $configResolver,
         private readonly CookieInventoryProvider $inventoryProvider,
@@ -38,6 +41,9 @@ final class CookieConsentRuntimeCacheResetSubscriber implements EventSubscriberI
         ];
     }
 
+    /**
+     * Clears the per-request caches on every main request; sub-requests keep them.
+     */
     public function onKernelRequest(RequestEvent $event): void
     {
         if (!$event->isMainRequest()) {

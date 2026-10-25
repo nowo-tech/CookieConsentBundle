@@ -44,6 +44,9 @@ class CookieDefinitionType extends AbstractType
         resolveFieldOptions as private resolveFieldOptionsFromFormKit;
     }
 
+    /**
+     * Uses the locale resolver, when available, to list the translation locales.
+     */
     public function __construct(
         private readonly ?LocaleResolver $localeResolver = null,
     ) {

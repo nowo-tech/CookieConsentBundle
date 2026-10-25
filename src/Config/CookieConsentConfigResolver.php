@@ -45,6 +45,9 @@ final class CookieConsentConfigResolver implements ResetInterface
         $this->resolvedByLocaleAndRoute = [];
     }
 
+    /**
+     * Clears the memoized resolved profiles (kernel reset / worker mode).
+     */
     public function reset(): void
     {
         $this->clearRuntimeCache();

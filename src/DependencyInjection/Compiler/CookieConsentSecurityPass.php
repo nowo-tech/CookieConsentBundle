@@ -22,6 +22,9 @@ use Symfony\Component\DependencyInjection\Reference;
  */
 final class CookieConsentSecurityPass implements CompilerPassInterface
 {
+    /**
+     * Registers the admin access subscriber with the access checker that matches the security configuration.
+     */
     public function process(ContainerBuilder $container): void
     {
         if (!$container->hasParameter(Configuration::ALIAS . '.web_ui.enabled')) {

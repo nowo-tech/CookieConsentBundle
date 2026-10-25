@@ -31,6 +31,9 @@ abstract class AbstractCookieConsentConfigSettingsType extends AbstractType
 
     private ?FormOptionsMerger $cookieConsentFormOptionsMerger = null;
 
+    /**
+     * Injects the FormKit options merger used to resolve per-field options.
+     */
     public function setFormOptionsMerger(FormOptionsMerger $formOptionsMerger): void
     {
         // @igor-ignore - Request-scoped Twig/Form wiring; not a shared worker singleton.
@@ -67,6 +70,9 @@ abstract class AbstractCookieConsentConfigSettingsType extends AbstractType
         return $choices;
     }
 
+    /**
+     * Declares the options shared by every consent-config settings form.
+     */
     public function configureOptions(OptionsResolver $resolver): void
     {
         $resolver->setDefaults([

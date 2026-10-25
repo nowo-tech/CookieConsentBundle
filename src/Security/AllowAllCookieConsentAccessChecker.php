@@ -9,6 +9,9 @@ namespace Nowo\CookieConsentBundle\Security;
  */
 final class AllowAllCookieConsentAccessChecker implements CookieConsentAccessCheckerInterface
 {
+    /**
+     * Always grants access.
+     */
     public function canAccess(): bool
     {
         return true;

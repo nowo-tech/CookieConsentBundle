@@ -1,13 +1,32 @@
-import { copyFileSync } from 'node:fs';
-import { resolve } from 'node:path';
+import { createHash } from 'node:crypto';
+import { copyFileSync, readdirSync, readFileSync, statSync } from 'node:fs';
+import { join, resolve } from 'node:path';
 import { defineConfig } from 'vite';
 
 const cssSource = resolve(__dirname, 'src/Resources/assets/src/cookie-consent.css');
 const cssPublic = resolve(__dirname, 'src/Resources/public/nowo-cookie-consent.css');
 
+/**
+ * Deterministic build id: a hash of the TypeScript/CSS sources and pnpm-lock.yaml. It only changes when the code or
+ * the dependencies change, so rebuilding unchanged sources (e.g. in `make release-check`) leaves the committed bundle
+ * byte-identical (the former wall-clock stamp rewrote it on every build).
+ */
+function sourceBuildId(dir: string): string {
+  const hash = createHash('sha256');
+  const files = (readdirSync(dir, { recursive: true }) as string[])
+    .filter((file) => !file.includes('.test.') && statSync(join(dir, file)).isFile())
+    .sort();
+  for (const file of files) {
+    hash.update(file).update(readFileSync(join(dir, file)));
+  }
+  hash.update(readFileSync(join(__dirname, 'pnpm-lock.yaml')));
+
+  return hash.digest('hex').slice(0, 12);
+}
+
 export default defineConfig({
   define: {
-    __COOKIE_CONSENT_BUILD_TIME__: JSON.stringify(new Date().toISOString()),
+    __COOKIE_CONSENT_BUILD_TIME__: JSON.stringify(sourceBuildId(resolve(__dirname, 'src/Resources/assets/src'))),
   },
   build: {
     outDir: 'src/Resources/public',

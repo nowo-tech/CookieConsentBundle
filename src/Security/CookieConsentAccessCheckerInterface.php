@@ -9,5 +9,8 @@ namespace Nowo\CookieConsentBundle\Security;
  */
 interface CookieConsentAccessCheckerInterface
 {
+    /**
+     * Whether the current user may use the cookie consent admin pages.
+     */
     public function canAccess(): bool;
 }
