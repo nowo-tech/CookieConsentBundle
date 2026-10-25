@@ -3,6 +3,7 @@
 ## Table of contents
 
 - [Unreleased](#unreleased)
+- [To 1.19.3](#to-1193)
 - [To 1.19.2](#to-1192)
 - [To 1.19.1](#to-1191)
 - [To 1.19.0](#to-1190)
@@ -110,6 +111,14 @@
 - [Getting help](#getting-help)
 
 ## Unreleased
+
+## To 1.19.3
+
+From **1.19.2**:
+
+```bash
+composer update nowo-tech/cookie-consent-bundle
+```
 
 No action required. The consent form now posts with the CSRF token id `submit`. If your app lists custom
 `framework.csrf_protection.stateless_token_ids` without `submit`, add it (or keep session-based CSRF, which accepts

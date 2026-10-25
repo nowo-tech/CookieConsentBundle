@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## Table of contents
 
 - [[Unreleased]](#unreleased)
+- [[1.19.3] - 2026-10-25](#1193---2026-10-25)
 - [[1.19.2] - 2026-10-25](#1192---2026-10-25)
 - [[1.19.1] - 2026-10-24](#1191---2026-10-24)
 - [[1.19.0] - 2026-10-21](#1190---2026-10-21)
@@ -71,6 +72,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - [[1.0.0] - 2026-06-15](#100---2026-06-15)
 
 ## [Unreleased]
+
+## [1.19.3] - 2026-10-25
+
+Consent is saved again with stateless CSRF (submit token id) and with doctrine.table_prefix (cold-start probe). See [UPGRADING](UPGRADING.md#to-1193).
 
 ### Fixed
 
