@@ -12,7 +12,9 @@ use Nowo\CookieConsentBundle\Entity\CookieConsentConfigTranslation;
 use Nowo\CookieConsentBundle\Form\Settings\CookieConsentConfigFullSettingsType;
 use Nowo\CookieConsentBundle\Repository\CookieConsentConfigRepository;
 use Nowo\CookieConsentBundle\Repository\CookieConsentConfigTranslationRepository;
+use Nowo\FormKitBundle\Form\CsrfOnlyFormFactory;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\Form\FormInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
@@ -30,6 +32,7 @@ class CookieConsentConfigController extends AbstractController
         private readonly CookieConsentConfigRepository $configRepository,
         private readonly CookieConsentConfigTranslationRepository $translationRepository,
         private readonly TranslatorInterface $translator,
+        private readonly CsrfOnlyFormFactory $csrfOnlyFormFactory,
     ) {
     }
 
@@ -77,9 +80,24 @@ class CookieConsentConfigController extends AbstractController
     {
         $config = $this->getConfig($configId);
 
+        $deleteForms = [];
+        foreach ($config->getTranslations() as $translation) {
+            $deleteForms[$translation->getId()] = $this->csrfForm(
+                'demo_cookie_consent_config_delete',
+                ['id' => $translation->getId()],
+                'delete-cookie-consent-config-' . $translation->getId(),
+            )->createView();
+        }
+
         return $this->render('demo/config/show.html.twig', [
             'config' => $config,
             'translations' => $config->getTranslations(),
+            'delete_forms' => $deleteForms,
+            'delete_profile_form' => $this->csrfForm(
+                'demo_cookie_consent_config_delete_profile',
+                ['configId' => $config->getId()],
+                'delete-cookie-consent-profile-' . $config->getId(),
+            )->createView(),
         ]);
     }
 
@@ -137,7 +155,7 @@ class CookieConsentConfigController extends AbstractController
         $translation = $this->getTranslation($id);
         $tokenId = 'delete-cookie-consent-config-' . $translation->getId();
 
-        if (!$this->isCsrfTokenValid($tokenId, (string) $request->request->get('_token'))) {
+        if (!$this->isCsrfFormValid('demo_cookie_consent_config_delete', ['id' => $translation->getId()], $tokenId, $request)) {
             throw $this->createAccessDeniedException('Invalid CSRF token.');
         }
 
@@ -165,7 +183,7 @@ class CookieConsentConfigController extends AbstractController
 
         $tokenId = 'delete-cookie-consent-profile-' . $config->getId();
 
-        if (!$this->isCsrfTokenValid($tokenId, (string) $request->request->get('_token'))) {
+        if (!$this->isCsrfFormValid('demo_cookie_consent_config_delete_profile', ['configId' => $config->getId()], $tokenId, $request)) {
             throw $this->createAccessDeniedException('Invalid CSRF token.');
         }
 
@@ -248,5 +266,28 @@ class CookieConsentConfigController extends AbstractController
                 $config->setDefault(false);
             }
         }
+    }
+
+    /**
+     * REQ-TWIG-005: CSRF-only Form (FormKit CsrfOnlyType, flat _token, same token id as before).
+     *
+     * @param array<string, mixed> $params
+     *
+     * @return FormInterface<mixed>
+     */
+    private function csrfForm(string $route, array $params, string $tokenId): FormInterface
+    {
+        return $this->csrfOnlyFormFactory->create($this->generateUrl($route, $params), $tokenId);
+    }
+
+    /**
+     * @param array<string, mixed> $params
+     */
+    private function isCsrfFormValid(string $route, array $params, string $tokenId, Request $request): bool
+    {
+        $form = $this->csrfForm($route, $params, $tokenId);
+        $form->submit($request->request->all());
+
+        return $form->isValid();
     }
 }

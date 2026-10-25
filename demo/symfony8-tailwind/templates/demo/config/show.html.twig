@@ -54,10 +54,15 @@
                                 <td class="max-w-xs truncate px-4 py-3 text-slate-600">{{ translation.consentModalDescription }}</td>
                                 <td class="px-4 py-3 text-right">
                                     <a class="mr-2 inline-flex rounded-md border border-slate-300 px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50" href="{{ demo_route.path('demo_cookie_consent_config_edit', { id: translation.id }) }}">{{ 'demo.config.edit'|trans }}</a>
-                                    <form method="post" action="{{ demo_route.path('demo_cookie_consent_config_delete', { id: translation.id }) }}" class="inline" onsubmit="return confirm('{{ 'demo.config.delete_confirm'|trans({'%locale%': translation.locale})|e('js') }}');">
-                                        <input type="hidden" name="_token" value="{{ csrf_token('delete-cookie-consent-config-' ~ translation.id) }}">
+                                    {% set delete_form_view = delete_forms[translation.id] %}
+                                    {{ form_start(delete_form_view, {attr: {class: 'inline', onsubmit: "return confirm('" ~ ('demo.config.delete_confirm'|trans({'%locale%': translation.locale})|e('js')) ~ "');"}}) }}
+                                        {% for child in delete_form_view %}
+                                            {% if not child.rendered %}
+                                                {{ form_row(child) }}
+                                            {% endif %}
+                                        {% endfor %}
                                         <button type="submit" class="inline-flex rounded-md border border-rose-300 px-3 py-1.5 text-xs font-medium text-rose-700 hover:bg-rose-50">{{ 'demo.config.delete'|trans }}</button>
-                                    </form>
+                                    {{ form_end(delete_form_view) }}
                                 </td>
                             </tr>
                         {% else %}
@@ -73,10 +78,14 @@
         </div>
 
         {% if not config.default %}
-            <form method="post" action="{{ demo_route.path('demo_cookie_consent_config_delete_profile', { configId: config.id }) }}" class="mt-6" onsubmit="return confirm('{{ 'demo.config.delete_profile_confirm'|trans({'%name%': config.displayName})|e('js') }}');">
-                <input type="hidden" name="_token" value="{{ csrf_token('delete-cookie-consent-profile-' ~ config.id) }}">
+            {{ form_start(delete_profile_form, {attr: {class: 'mt-6', onsubmit: "return confirm('" ~ ('demo.config.delete_profile_confirm'|trans({'%name%': config.displayName})|e('js')) ~ "');"}}) }}
+                {% for child in delete_profile_form %}
+                    {% if not child.rendered %}
+                        {{ form_row(child) }}
+                    {% endif %}
+                {% endfor %}
                 <button type="submit" class="inline-flex rounded-md border border-rose-300 px-4 py-2 text-sm font-semibold text-rose-700 hover:bg-rose-50">{{ 'demo.config.delete_profile'|trans }}</button>
-            </form>
+            {{ form_end(delete_profile_form) }}
         {% endif %}
     </main>
 {% endblock %}

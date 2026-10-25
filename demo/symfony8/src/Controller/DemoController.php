@@ -6,9 +6,12 @@ namespace App\Controller;
 
 use App\Demo\DemoLocale;
 use Nowo\CookieConsentBundle\Enum\CookieNameEnum;
+use Nowo\FormKitBundle\Form\CsrfOnlyFormFactory;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
+use Symfony\Component\Form\FormInterface;
 use Symfony\Component\HttpFoundation\Cookie;
+use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Contracts\Translation\TranslatorInterface;
@@ -30,18 +33,25 @@ class DemoController extends AbstractController
         #[Autowire('%nowo_cookie_consent.http_only%')]
         private readonly bool $httpOnly,
         private readonly TranslatorInterface $translator,
+        private readonly CsrfOnlyFormFactory $csrfOnlyFormFactory,
     ) {
     }
 
     #[Route('/', name: 'home')]
     public function home(): Response
     {
-        return $this->render('demo/home.html.twig');
+        return $this->render('demo/home.html.twig', [
+            'reset_form' => $this->csrfForm('demo_reset_consent', [], 'demo_reset_consent')->createView(),
+        ]);
     }
 
     #[Route('/demo/reset-consent', name: 'reset_consent', methods: ['POST'])]
-    public function resetConsent(): Response
+    public function resetConsent(Request $request): Response
     {
+        if (!$this->isCsrfFormValid('demo_reset_consent', [], 'demo_reset_consent', $request)) {
+            throw $this->createAccessDeniedException('Invalid CSRF token.');
+        }
+
         $response = $this->redirectToRoute('demo_home');
         $expiredAt = new \DateTimeImmutable('1970-01-01');
 
@@ -76,5 +86,28 @@ class DemoController extends AbstractController
         }
 
         return $names;
+    }
+
+    /**
+     * REQ-TWIG-005: CSRF-only Form (FormKit CsrfOnlyType, flat _token, same token id as before).
+     *
+     * @param array<string, mixed> $params
+     *
+     * @return FormInterface<mixed>
+     */
+    private function csrfForm(string $route, array $params, string $tokenId): FormInterface
+    {
+        return $this->csrfOnlyFormFactory->create($this->generateUrl($route, $params), $tokenId);
+    }
+
+    /**
+     * @param array<string, mixed> $params
+     */
+    private function isCsrfFormValid(string $route, array $params, string $tokenId, Request $request): bool
+    {
+        $form = $this->csrfForm($route, $params, $tokenId);
+        $form->submit($request->request->all());
+
+        return $form->isValid();
     }
 }

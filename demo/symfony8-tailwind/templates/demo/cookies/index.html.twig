@@ -52,10 +52,15 @@
                                 <td class="px-4 py-3">{{ definition.allowedByDefault ? 'demo.cookies.yes'|trans : 'demo.cookies.no'|trans }}</td>
                                 <td class="px-4 py-3 text-right">
                                     <a class="mr-2 inline-flex rounded-md border border-slate-300 px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50" href="{{ demo_route.path('demo_cookie_consent_cookies_edit', { configId: config.id, id: definition.id }) }}">{{ 'demo.cookies.edit'|trans }}</a>
-                                    <form method="post" action="{{ demo_route.path('demo_cookie_consent_cookies_delete', { configId: config.id, id: definition.id }) }}" class="inline" onsubmit="return confirm('{{ 'demo.cookies.delete_confirm'|trans({'%name%': definition.name})|e('js') }}');">
-                                        <input type="hidden" name="_token" value="{{ csrf_token('delete-cookie-definition-' ~ definition.id) }}">
+                                    {% set delete_form_view = delete_forms[definition.id] %}
+                                    {{ form_start(delete_form_view, {attr: {class: 'inline', onsubmit: "return confirm('" ~ ('demo.cookies.delete_confirm'|trans({'%name%': definition.name})|e('js')) ~ "');"}}) }}
+                                        {% for child in delete_form_view %}
+                                            {% if not child.rendered %}
+                                                {{ form_row(child) }}
+                                            {% endif %}
+                                        {% endfor %}
                                         <button type="submit" class="inline-flex rounded-md border border-rose-300 px-3 py-1.5 text-xs font-medium text-rose-700 hover:bg-rose-50">{{ 'demo.cookies.delete'|trans }}</button>
-                                    </form>
+                                    {{ form_end(delete_form_view) }}
                                 </td>
                             </tr>
                         {% else %}

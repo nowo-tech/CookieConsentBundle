@@ -73,6 +73,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- Demo: the reset-consent, delete cookie definition, delete profile copy and delete profile buttons of both demos (`symfony8`, `symfony8-tailwind`) render FormKit `CsrfOnlyType` forms (`form_start` / child loop / `form_end`, same `_token` token ids; reset consent is now CSRF-protected) and the demo controllers validate the submitted Form (REQ-TWIG-005).
+- The two checkbox form themes document that they are the allowlisted REQ-TWIG-005 "Form themes" exception (comment only).
+
+### Added
+
+- `make check-no-raw-html-form` now runs in `release-check` (REQ-TWIG-005), with an explicit allowlist for the two form-theme files.
+
 ## [1.19.3] - 2026-10-25
 
 Consent is saved again with stateless CSRF (submit token id) and with doctrine.table_prefix (cold-start probe). See [UPGRADING](UPGRADING.md#to-1193).

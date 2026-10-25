@@ -23,7 +23,7 @@ help:
 	@echo "Dependencies: install assets"
 	@echo "Tests: test test-coverage test-with-db test-coverage-with-db test-ts"
 	@echo "Quality: cs-check cs-fix rector rector-dry phpstan qa validate-translations"
-	@echo "Release: release-check demo-smoke composer-sync"
+	@echo "Release: release-check demo-smoke composer-sync check-no-raw-html-form (REQ-TWIG-005)"
 	@echo "Cleanup: clean"
 	@echo "Composer: update update-deps validate"
 
@@ -113,8 +113,7 @@ igor: ensure-up
 	$(COMPOSE) exec -T php composer igor
 
 # Pre-release (REQ-MAKE-002)
-# check-no-raw-html-form (REQ-TWIG-005) is wired once the remaining raw form markup is migrated
-release-check: ensure-up check-no-cursor-coauthor check-open-prs check-twig-extra validate-translations assets composer-sync cs-fix cs-check rector-dry phpstan igor validate-phpdoc test-coverage release-check-demos test-ts
+release-check: ensure-up check-no-cursor-coauthor check-open-prs check-twig-extra check-no-raw-html-form validate-translations assets composer-sync cs-fix cs-check rector-dry phpstan igor validate-phpdoc test-coverage release-check-demos test-ts
 
 release-check-demos:
 	@if [ -f demo/Makefile ]; then $(MAKE) -C demo release-check; else true; fi

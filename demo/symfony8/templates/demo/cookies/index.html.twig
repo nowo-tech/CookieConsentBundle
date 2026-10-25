@@ -52,10 +52,15 @@
                                 <td>{{ definition.allowedByDefault ? 'demo.cookies.yes'|trans : 'demo.cookies.no'|trans }}</td>
                                 <td class="text-end">
                                     <a class="btn btn-sm btn-outline-secondary" href="{{ demo_route.path('demo_cookie_consent_cookies_edit', { configId: config.id, id: definition.id }) }}">{{ 'demo.cookies.edit'|trans }}</a>
-                                    <form method="post" action="{{ demo_route.path('demo_cookie_consent_cookies_delete', { configId: config.id, id: definition.id }) }}" class="d-inline" onsubmit="return confirm('{{ 'demo.cookies.delete_confirm'|trans({'%name%': definition.name})|e('js') }}');">
-                                        <input type="hidden" name="_token" value="{{ csrf_token('delete-cookie-definition-' ~ definition.id) }}">
+                                    {% set delete_form_view = delete_forms[definition.id] %}
+                                    {{ form_start(delete_form_view, {attr: {class: 'd-inline', onsubmit: "return confirm('" ~ ('demo.cookies.delete_confirm'|trans({'%name%': definition.name})|e('js')) ~ "');"}}) }}
+                                        {% for child in delete_form_view %}
+                                            {% if not child.rendered %}
+                                                {{ form_row(child) }}
+                                            {% endif %}
+                                        {% endfor %}
                                         <button type="submit" class="btn btn-sm btn-outline-danger">{{ 'demo.cookies.delete'|trans }}</button>
-                                    </form>
+                                    {{ form_end(delete_form_view) }}
                                 </td>
                             </tr>
                         {% else %}

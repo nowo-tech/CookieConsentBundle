@@ -30,6 +30,7 @@ Regenerate with `make -C demo/symfony8 demo-screenshots` (REQ-DEMO-013).
 - [Overriding templates (REQ-TWIG-001)](#overriding-templates-req-twig-001)
 - [Database profile copy (`nowo_cookie_consent_trans`)](#database-profile-copy-nowo_cookie_consent_trans)
 - [Demo](#demo)
+  - [Forms (REQ-TWIG-005)](#forms-req-twig-005)
 
 ## Embed the modal
 
@@ -256,3 +257,20 @@ calls `Translator::addResource()` per request. See [FRANKENPHP-WORKER-AUDIT.md](
 See `demo/symfony8/` for a FrankenPHP demo application (port **8014**). Tailwind variant: `demo/symfony8-tailwind/` (port **8015**).
 
 Seed sample inventory: `php bin/console demo:seed-cookie-definitions --if-empty`
+
+### Forms (REQ-TWIG-005)
+
+Bundle views and both demos render every form through Symfony Form Types (Form Kit) with `form_start` / the child loop / `form_end`. The demo's CSRF-only buttons (reset consent, delete cookie definition, delete profile copy, delete profile) use FormKit's `CsrfOnlyType` (via `CsrfOnlyFormFactory`, flat `_token`, same token ids) and the controllers validate the submitted Form:
+
+```twig
+{{ form_start(reset_form, {attr: {class: 'd-flex gap-2'}}) }}
+    {% for child in reset_form %}
+        {% if not child.rendered %}
+            {{ form_row(child) }}
+        {% endif %}
+    {% endfor %}
+    <button type="submit" class="btn btn-outline-danger">…</button>
+{{ form_end(reset_form) }}
+```
+
+Host templates and demos **must not** reintroduce raw `<form>`, `<input>`, `<textarea>` or `<select>` markup. `make check-no-raw-html-form` (part of `release-check`) enforces it; the only allowlisted files are the two form themes (`form/cookie_consent_theme*.html.twig`), which implement Symfony's `checkbox_widget` block.

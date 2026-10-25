@@ -1,3 +1,4 @@
+{# REQ-TWIG-005 "Form themes" exception: this theme implements Symfony's checkbox_widget block, so it emits <input> by design (allowlisted in .scripts/check-no-raw-html-form.sh). #}
 {% use 'tailwind_2_layout.html.twig' %}
 
 {% block checkbox_widget %}

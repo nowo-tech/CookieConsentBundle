@@ -11,7 +11,9 @@ use Nowo\CookieConsentBundle\Entity\CookieDefinition;
 use Nowo\CookieConsentBundle\Form\CookieDefinitionType;
 use Nowo\CookieConsentBundle\Repository\CookieConsentConfigRepository;
 use Nowo\CookieConsentBundle\Repository\CookieDefinitionRepository;
+use Nowo\FormKitBundle\Form\CsrfOnlyFormFactory;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\Form\FormInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
@@ -29,6 +31,7 @@ class CookieDefinitionController extends AbstractController
         private readonly CookieConsentConfigRepository $configRepository,
         private readonly CookieDefinitionRepository $definitionRepository,
         private readonly TranslatorInterface $translator,
+        private readonly CsrfOnlyFormFactory $csrfOnlyFormFactory,
     ) {
     }
 
@@ -37,9 +40,20 @@ class CookieDefinitionController extends AbstractController
     {
         $config = $this->getConfig($configId);
 
+        $definitions = $this->definitionRepository->findByConfigOrdered($config);
+        $deleteForms = [];
+        foreach ($definitions as $definition) {
+            $deleteForms[$definition->getId()] = $this->csrfForm(
+                'demo_cookie_consent_cookies_delete',
+                ['configId' => $configId, 'id' => $definition->getId()],
+                'delete-cookie-definition-' . $definition->getId(),
+            )->createView();
+        }
+
         return $this->render('demo/cookies/index.html.twig', [
-            'config'      => $config,
-            'definitions' => $this->definitionRepository->findByConfigOrdered($config),
+            'config'       => $config,
+            'definitions'  => $definitions,
+            'delete_forms' => $deleteForms,
         ]);
     }
 
@@ -67,7 +81,7 @@ class CookieDefinitionController extends AbstractController
         $config     = $this->getConfig($configId);
         $definition = $this->getDefinition($config, $id);
 
-        if (!$this->isCsrfTokenValid('delete-cookie-definition-' . $definition->getId(), (string) $request->request->get('_token'))) {
+        if (!$this->isCsrfFormValid('demo_cookie_consent_cookies_delete', ['configId' => $configId, 'id' => $definition->getId()], 'delete-cookie-definition-' . $definition->getId(), $request)) {
             throw $this->createAccessDeniedException();
         }
 
@@ -152,5 +166,28 @@ class CookieDefinitionController extends AbstractController
         }
 
         return $definition;
+    }
+
+    /**
+     * REQ-TWIG-005: CSRF-only Form (FormKit CsrfOnlyType, flat _token, same token id as before).
+     *
+     * @param array<string, mixed> $params
+     *
+     * @return FormInterface<mixed>
+     */
+    private function csrfForm(string $route, array $params, string $tokenId): FormInterface
+    {
+        return $this->csrfOnlyFormFactory->create($this->generateUrl($route, $params), $tokenId);
+    }
+
+    /**
+     * @param array<string, mixed> $params
+     */
+    private function isCsrfFormValid(string $route, array $params, string $tokenId, Request $request): bool
+    {
+        $form = $this->csrfForm($route, $params, $tokenId);
+        $form->submit($request->request->all());
+
+        return $form->isValid();
     }
 }

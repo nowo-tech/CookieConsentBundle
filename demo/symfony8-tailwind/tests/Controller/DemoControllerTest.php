@@ -29,8 +29,10 @@ final class DemoControllerTest extends WebTestCase
 
     public function testResetConsentClearsCookiesAndRedirectsHome(): void
     {
-        $client = static::createClient();
-        $client->request('POST', '/en/demo/reset-consent');
+        $client  = static::createClient();
+        $crawler = $client->request('GET', '/en/');
+        // REQ-TWIG-005: the reset button posts a CSRF-only Form Type (FormKit CsrfOnlyType).
+        $client->submit($crawler->filter('form[action="/en/demo/reset-consent"]')->form());
 
         self::assertResponseRedirects('/en/');
         self::assertStringContainsString('Cookie_Consent=', (string) $client->getResponse()->headers->get('Set-Cookie'));

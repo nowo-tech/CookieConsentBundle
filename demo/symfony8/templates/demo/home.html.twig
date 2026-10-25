@@ -29,12 +29,17 @@
                             {% endfor %}
                         {% endfor %}
 
-                        <form method="post" action="{{ demo_route.path('demo_reset_consent') }}" class="d-flex flex-wrap gap-2 align-items-center mt-4">
+                        {{ form_start(reset_form, {attr: {class: 'd-flex flex-wrap gap-2 align-items-center mt-4'}}) }}
+                            {% for child in reset_form %}
+                                {% if not child.rendered %}
+                                    {{ form_row(child) }}
+                                {% endif %}
+                            {% endfor %}
                             <button type="submit" class="btn btn-outline-danger">
                                 {{ 'demo.home.reset'|trans }}
                             </button>
                             <span class="small text-muted">{{ 'demo.home.reset_help'|trans }}</span>
-                        </form>
+                        {{ form_end(reset_form) }}
                     </div>
                 </div>
             </div>
