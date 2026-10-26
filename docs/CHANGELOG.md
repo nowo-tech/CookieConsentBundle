@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## Table of contents
 
 - [[Unreleased]](#unreleased)
+- [[1.19.4] - 2026-10-26](#1194---2026-10-26)
 - [[1.19.3] - 2026-10-25](#1193---2026-10-25)
 - [[1.19.2] - 2026-10-25](#1192---2026-10-25)
 - [[1.19.1] - 2026-10-24](#1191---2026-10-24)
@@ -72,6 +73,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - [[1.0.0] - 2026-06-15](#100---2026-06-15)
 
 ## [Unreleased]
+
+## [1.19.4] - 2026-10-26
+
+Forms in the bundle views are Symfony Form Types rendered with form_start / child loop / form_end, no raw form controls (REQ-TWIG-005). See [UPGRADING](UPGRADING.md#to-1194).
 
 ### Changed
 
