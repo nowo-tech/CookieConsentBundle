@@ -20,8 +20,10 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Event\ResponseEvent;
 use Symfony\Component\HttpKernel\KernelEvents;
 
+use function bin2hex;
 use function in_array;
 use function is_array;
+use function random_bytes;
 
 /**
  * Handles cookie consent form submission on the HTTP response event.
@@ -137,7 +139,8 @@ class CookieConsentFormSubscriber implements EventSubscriberInterface
 
     protected function getCookieConsentKey(Request $request): string
     {
-        return $request->cookies->get(CookieNameEnum::COOKIE_CONSENT_KEY_NAME) ?? uniqid('', true);
+        // The key identifies the visitor's consent log rows (proof of consent): unguessable, not time-based.
+        return $request->cookies->get(CookieNameEnum::COOKIE_CONSENT_KEY_NAME) ?? bin2hex(random_bytes(16));
     }
 
     /**

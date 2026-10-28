@@ -74,6 +74,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Security
+
+- **Unguessable consent key.** A new visitor's consent key (stored in the consent cookie and in every
+  `CookieConsentLog` row) fell back to `uniqid('', true)`, which is derived from the clock and can be guessed. It is now
+  128 random bits (`bin2hex(random_bytes(16))`). Existing keys are unchanged.
+
 ## [1.19.4] - 2026-10-26
 
 Forms in the bundle views are Symfony Form Types rendered with form_start / child loop / form_end, no raw form controls (REQ-TWIG-005). See [UPGRADING](UPGRADING.md#to-1194).

@@ -102,6 +102,35 @@ final class CookieConsentFormSubscriberTest extends TestCase
         $subscriber->onResponse($event);
     }
 
+    public function testNewVisitorGetsARandomConsentKey(): void
+    {
+        $keys    = [];
+        $handler = $this->createMock(CookieHandler::class);
+        $handler->expects(self::exactly(2))->method('save')->willReturnCallback(static function (array $categories, string $key) use (&$keys): void {
+            $keys[] = $key;
+        });
+
+        $form = $this->createMock(FormInterface::class);
+        $form->method('isSubmitted')->willReturn(true);
+        $form->method('isValid')->willReturn(true);
+        $form->method('getData')->willReturn(['required' => true]);
+        $formFactory = $this->createMock(FormFactoryInterface::class);
+        $formFactory->method('create')->willReturn($form);
+
+        $subscriber = new CookieConsentFormSubscriber($formFactory, $this->createMock(CookieLogger::class), $handler, false);
+        foreach ([1, 2] as $ignored) {
+            $subscriber->onResponse(new ResponseEvent(
+                $this->createMock(HttpKernelInterface::class),
+                Request::create('/', 'POST'),
+                HttpKernelInterface::MAIN_REQUEST,
+                new Response(),
+            ));
+        }
+
+        self::assertMatchesRegularExpression('/^[a-f0-9]{32}$/', $keys[0]);
+        self::assertNotSame($keys[0], $keys[1]);
+    }
+
     public function testSkipsLoggerWhenDisabled(): void
     {
         $handler = $this->createMock(CookieHandler::class);
