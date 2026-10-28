@@ -25,6 +25,21 @@ enum CookieConsentConfigSettingsSection: string
     case RouteTargeting   = 'route-targeting';
 
     /**
+     * Tab icon (UiKit 2.17 `icon`, Tabler name; shown when the host's tab style asks for icons).
+     */
+    public function icon(): string
+    {
+        return match ($this) {
+            self::Profile          => 'tabler:id',
+            self::Behavior         => 'tabler:adjustments',
+            self::Appearance       => 'tabler:palette',
+            self::ConsentModal     => 'tabler:message-2',
+            self::PreferencesModal => 'tabler:list-check',
+            self::RouteTargeting   => 'tabler:route',
+        };
+    }
+
+    /**
      * Translation key suffix under nowo_cookie_consent.admin.config.settings.section.*.
      */
     public function translationSuffix(): string

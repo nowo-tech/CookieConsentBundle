@@ -3,6 +3,7 @@
 ## Table of contents
 
 - [Unreleased](#unreleased)
+- [To 1.20.0](#to-1200)
 - [To 1.19.5](#to-1195)
 - [To 1.19.4](#to-1194)
 - [To 1.19.3](#to-1193)
@@ -113,6 +114,11 @@
 - [Getting help](#getting-help)
 
 ## Unreleased
+
+## To 1.20.0
+
+From **1.19.5**: no change needed. The tabs carry icons that show with NowoUiKitBundle **2.17** or later (older 2.x versions ignore
+them), and only when the host sets `data-tab-style="icon-text"` or `"icon"`.
 
 ## To 1.19.5
 

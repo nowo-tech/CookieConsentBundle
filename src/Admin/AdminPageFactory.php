@@ -95,11 +95,15 @@ final class AdminPageFactory
                 $this->label('area_nav.settings'),
                 $this->urlGenerator->generate('nowo_cookie_consent_config_settings_edit', ['configId' => $configId]),
                 $current === self::AREA_SETTINGS,
+                [],
+                'tabler:settings', // UiKit 2.17 icon (positional: older UiKit ignores it)
             ),
             new AreaNavItem(
                 $this->label('area_nav.cookies'),
                 $this->urlGenerator->generate('nowo_cookie_consent_cookie_definitions_index', ['configId' => $configId]),
                 $current === self::AREA_COOKIES,
+                [],
+                'tabler:cookie',
             ),
         ], $this->label('area_nav.label'), self::AREA_NAV_ATTRIBUTES);
     }
@@ -234,6 +238,8 @@ final class AdminPageFactory
                 $this->label('config.settings.section.' . $suffix . '_lead'),
                 $this->label('config.settings.save'),
                 $section === $current ? $this->formThemes : [],
+                [],
+                $section->icon(), // UiKit 2.17 icon (positional: older UiKit ignores it)
             );
         }
 

@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## Table of contents
 
 - [[Unreleased]](#unreleased)
+- [[1.20.0] - 2026-10-28](#1200---2026-10-28)
 - [[1.19.5] - 2026-10-28](#1195---2026-10-28)
 - [[1.19.4] - 2026-10-26](#1194---2026-10-26)
 - [[1.19.3] - 2026-10-25](#1193---2026-10-25)
@@ -74,6 +75,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - [[1.0.0] - 2026-06-15](#100---2026-06-15)
 
 ## [Unreleased]
+
+## [1.20.0] - 2026-10-28
+
+Tab icons (NowoUiKitBundle 2.17)
+
+### Added
+
+- **Tab icons**: the admin area tabs (Settings, Cookie inventory) and the profile settings section tabs carry an icon
+  (UiKit 2.17 `icon`, Tabler names), so they follow the host's tab style (`data-tab-style` on `<html>`: text, icon and
+  text, or icon only). Without that attribute the tabs look as before. Icons need NowoUiKitBundle **2.17** or later;
+  older 2.x versions ignore them.
 
 ## [1.19.5] - 2026-10-28
 

@@ -42,6 +42,7 @@ final class CookieConsentAreaNavProviderTest extends TestCase
                 ['/nowo-cookie-consent-config-settings-edit?configId=1', '/nowo-cookie-consent-cookie-definitions-index?configId=1'],
                 array_map(static fn (AreaNavItem $item): string => $item->href, $nav->items),
             );
+            self::assertSame(['tabler:settings', 'tabler:cookie'], array_map(static fn (AreaNavItem $item): ?string => $item->icon, $nav->items));
             self::assertNull($nav->active());
             self::assertSame(['data-turbo' => 'false'], $nav->attributes);
             self::assertInstanceOf(Label::class, $nav->label);

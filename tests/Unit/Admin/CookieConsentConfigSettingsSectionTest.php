@@ -19,6 +19,7 @@ final class CookieConsentConfigSettingsSectionTest extends TestCase
             self::assertNotSame('', $section->translationSuffix());
             self::assertTrue(class_exists($section->formType()));
             self::assertTrue(is_subclass_of($section->formType(), AbstractCookieConsentConfigSettingsType::class));
+            self::assertStringStartsWith('tabler:', $section->icon());
         }
     }
 }

@@ -14,7 +14,7 @@
 {% if _nav and not _nav.isEmpty() %}
     {% set _items = [] %}
     {% for item in _nav.items %}
-        {% set _items = _items|merge([{label: item.label, href: item.href, current: item.active, attr: item.attributes}]) %}
+        {% set _items = _items|merge([{label: item.label, href: item.href, current: item.active, attr: item.attributes, icon: item.icon}]) %}
     {% endfor %}
     {{ include(nowo_ui_partial('tabs', 'NowoCookieConsentBundle'), {
         items: _items,
