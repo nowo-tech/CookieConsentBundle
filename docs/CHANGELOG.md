@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## Table of contents
 
 - [[Unreleased]](#unreleased)
+- [[1.20.1] - 2026-10-28](#1201---2026-10-28)
 - [[1.20.0] - 2026-10-28](#1200---2026-10-28)
 - [[1.19.5] - 2026-10-28](#1195---2026-10-28)
 - [[1.19.4] - 2026-10-26](#1194---2026-10-26)
@@ -75,6 +76,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - [[1.0.0] - 2026-06-15](#100---2026-06-15)
 
 ## [Unreleased]
+
+## [1.20.1] - 2026-10-28
+
+Dependency update
+
+### Changed
+
+- **Dependencies updated** within their constraints: Doctrine bundle 2.19.2, NowoFormKitBundle 2.14.0, PHPStan 2.3.3, Rector 2.8.1 (development); the JavaScript lock file, which also clears the two Dependabot alerts on development packages (source-map-js, @vitest/mocker). No change in the bundle's behaviour or configuration.
 
 ## [1.20.0] - 2026-10-28
 

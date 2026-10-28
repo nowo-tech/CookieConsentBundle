@@ -3,6 +3,7 @@
 ## Table of contents
 
 - [Unreleased](#unreleased)
+- [To 1.20.1](#to-1201)
 - [To 1.20.0](#to-1200)
 - [To 1.19.5](#to-1195)
 - [To 1.19.4](#to-1194)
@@ -114,6 +115,10 @@
 - [Getting help](#getting-help)
 
 ## Unreleased
+
+## To 1.20.1
+
+From **1.20.0**: no change needed (development dependencies updated).
 
 ## To 1.20.0
 
