@@ -3,6 +3,7 @@
 ## Table of contents
 
 - [Unreleased](#unreleased)
+- [To 1.20.2](#to-1202)
 - [To 1.20.1](#to-1201)
 - [To 1.20.0](#to-1200)
 - [To 1.19.5](#to-1195)
@@ -115,6 +116,8 @@
 - [Getting help](#getting-help)
 
 ## Unreleased
+
+## To 1.20.2
 
 No change needed when `config/routes/nowo_cookie_consent.yaml` imports `@NowoCookieConsentBundle/Resources/config/routing.yaml` (see [INSTALLATION](INSTALLATION.md#routes)). If the consent or admin routes answered on your site without that import (Symfony >= 7.3 with the default `controllers: { resource: routing.controllers }`), add the import.
 
