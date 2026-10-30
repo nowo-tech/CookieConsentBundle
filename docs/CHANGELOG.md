@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## Table of contents
 
 - [[Unreleased]](#unreleased)
+- [[1.20.3] - 2026-10-30](#1203---2026-10-30)
 - [[1.20.2] - 2026-10-30](#1202---2026-10-30)
 - [[1.20.1] - 2026-10-28](#1201---2026-10-28)
 - [[1.20.0] - 2026-10-28](#1200---2026-10-28)
@@ -77,6 +78,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - [[1.0.0] - 2026-06-15](#100---2026-06-15)
 
 ## [Unreleased]
+
+## [1.20.3] - 2026-10-30
+
+Every admin form is a FormKit Type (REQ-TWIG-005 rule 11). See [UPGRADING](UPGRADING.md#to-1203).
+
+### Changed
+
+- **`DeleteCookieDefinitionType` is a FormKit Type**: it carries `#[FormKitConfig('cookie_consent')]` +
+  `FormOptionsTrait` like the other admin forms, so every page form of the bundle is themed through the
+  `nowo_form_kit.profiles.cookie_consent` profile. Its only field (the hidden CSRF token) is added as before: same
+  form name (`delete_cookie_definition_<id>`), field name, id and markup.
+- **Docs**: CONFIGURATION documents the `cookie_consent` FormKit profile and how a host overrides it.
 
 ## [1.20.2] - 2026-10-30
 

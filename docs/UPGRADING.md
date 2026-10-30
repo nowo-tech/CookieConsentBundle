@@ -3,6 +3,7 @@
 ## Table of contents
 
 - [Unreleased](#unreleased)
+- [To 1.20.3](#to-1203)
 - [To 1.20.2](#to-1202)
 - [To 1.20.1](#to-1201)
 - [To 1.20.0](#to-1200)
@@ -116,6 +117,11 @@
 - [Getting help](#getting-help)
 
 ## Unreleased
+
+## To 1.20.3
+
+From **1.20.2**: no change needed. `DeleteCookieDefinitionType` is now a FormKit Type on the `cookie_consent` profile;
+its form name, field names and markup are unchanged.
 
 ## To 1.20.2
 

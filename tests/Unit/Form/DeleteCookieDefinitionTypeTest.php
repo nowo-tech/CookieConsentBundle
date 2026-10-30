@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Nowo\CookieConsentBundle\Tests\Unit\Form;
 
 use Nowo\CookieConsentBundle\Form\DeleteCookieDefinitionType;
+use Nowo\FormKitBundle\Attribute\FormKitConfig;
 use Symfony\Component\Form\PreloadedExtension;
 use Symfony\Component\Form\Test\TypeTestCase;
 use Symfony\Component\Security\Csrf\CsrfToken;
@@ -26,6 +27,12 @@ final class DeleteCookieDefinitionTypeTest extends TypeTestCase
         self::assertSame([], $view->vars['attr'], 'No framework utility class: the UiKit action partial styles the form (REQ-UI-003).');
         self::assertArrayHasKey('_token', $view->children);
         self::assertSame('generated-token', $view->children['_token']->vars['value']);
+    }
+
+    public function testIsAFormKitTypeOnTheCookieConsentProfile(): void
+    {
+        // REQ-TWIG-005 rule 11: page forms are FormKit Types themed by the bundle profile.
+        self::assertSame('cookie_consent', FormKitConfig::nameFrom(new DeleteCookieDefinitionType($this->createMock(CsrfTokenManagerInterface::class))));
     }
 
     protected function getExtensions(): array

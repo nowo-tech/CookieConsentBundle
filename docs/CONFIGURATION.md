@@ -32,6 +32,7 @@
 - [Config API (GET)](#config-api-get)
 - [Admin Web UI](#admin-web-ui)
 - [Admin security](#admin-security)
+- [FormKit profile (REQ-TWIG-005)](#formkit-profile-req-twig-005)
 - [Twig overrides](#twig-overrides)
 - [Twig helpers](#twig-helpers)
 - [Cold start / Site Backup](#cold-start--site-backup)
@@ -673,6 +674,16 @@ security:
 ```
 
 `allow_unauthenticated: true` is for demos/CI only. Production must keep it `false` and require `symfony/security-bundle`. The default `CookieConsentAccessCheckerInterface` implementation grants access when any configured role is granted; set a custom `security.access_checker` service id to replace it.
+
+## FormKit profile (REQ-TWIG-005)
+
+Every form of the bundle (consent modal, admin settings, cookie inventory, row deletes) is a Symfony Form Type built
+with FormKit (`#[FormKitConfig('cookie_consent')]`) and rendered with `form_start` / the child `form_row` loop /
+`form_end` — never raw `<form>` / `<input>` (keep it that way in overrides). The field options come from the FormKit
+profile `nowo_form_kit.profiles.cookie_consent`, which the extension prepends when FormKitBundle is registered and the
+host does not define it (translation domain `NowoCookieConsentBundle`, `auto_help: false`, text controls on the UiKit
+`input_full` slot). Define `profiles.cookie_consent` in your own `nowo_form_kit` config to theme the forms; the bundle
+then does not prepend its default.
 
 ## Twig overrides
 
