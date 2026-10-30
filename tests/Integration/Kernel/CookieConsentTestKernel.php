@@ -49,14 +49,17 @@ final class CookieConsentTestKernel extends Kernel
      * @param array<string, mixed> $bundleConfig nowo_cookie_consent configuration
      * @param array<string, mixed> $hostParameters container parameters of the host app (e.g. app.locales)
      * @param array<string, mixed> $frameworkConfig extra framework configuration (e.g. enabled_locales)
+     * @param bool $importBundleRoutes whether the host imports the bundle routing.yaml (the Symfony default
+     *                                 `routing.controllers` resource is always imported, like a Flex host)
      */
     public function __construct(
         private readonly bool $withSecurity,
         private readonly array $bundleConfig,
         private readonly array $hostParameters = [],
         private readonly array $frameworkConfig = [],
+        private readonly bool $importBundleRoutes = true,
     ) {
-        $this->cacheKey = hash('xxh128', serialize([$withSecurity, $bundleConfig, $hostParameters, $frameworkConfig]));
+        $this->cacheKey = hash('xxh128', serialize([$withSecurity, $bundleConfig, $hostParameters, $frameworkConfig, $importBundleRoutes]));
         parent::__construct('test', false);
     }
 
@@ -152,6 +155,9 @@ final class CookieConsentTestKernel extends Kernel
 
     protected function configureRoutes(RoutingConfigurator $routes): void
     {
-        $routes->import(__DIR__ . '/../../../src/Resources/config/routing.yaml');
+        $routes->import('routing.controllers');
+        if ($this->importBundleRoutes) {
+            $routes->import(__DIR__ . '/../../../src/Resources/config/routing.yaml');
+        }
     }
 }

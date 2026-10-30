@@ -19,6 +19,7 @@ services:
   Nowo\CookieConsentBundle\:
     resource: '../../'
     exclude:
+      - '../../Controller/'
       - '../../DependencyInjection/'
       - '../../Entity/'
       - '../../NowoCookieConsentBundle.php'
@@ -105,9 +106,28 @@ services:
       $disablePageInteraction: '%nowo_cookie_consent.disable_page_interaction%'
       $privacyRouteFallback: '%nowo_cookie_consent.privacy_route%'
 
+  # Controllers are not autoconfigured (REQ-SF-004 rule 7): on Symfony >= 7.3 autoconfiguration tags every #[Route]
+  # class with `routing.controller`, and the host's default `routing.controllers` resource would then load the bundle
+  # routes without the host importing routing.yaml. The tags autoconfiguration gave them are set explicitly instead.
   Nowo\CookieConsentBundle\Controller\:
     resource: '../../Controller/'
+    exclude:
+      - '../../Controller/CookieConsentConfigSettingsAdminController.php'
+      - '../../Controller/CookieDefinitionAdminController.php'
     public: true
+    autoconfigure: false
+    tags: ['controller.service_arguments']
+
+  # AbstractController subclasses: their service locator ($this->container) comes from container.service_subscriber.
+  Nowo\CookieConsentBundle\Controller\CookieConsentConfigSettingsAdminController:
+    public: true
+    autoconfigure: false
+    tags: ['controller.service_arguments', 'container.service_subscriber']
+
+  Nowo\CookieConsentBundle\Controller\CookieDefinitionAdminController:
+    public: true
+    autoconfigure: false
+    tags: ['controller.service_arguments', 'container.service_subscriber']
 
   Nowo\CookieConsentBundle\Entity\CookieConsentLog:
     autowire: false
