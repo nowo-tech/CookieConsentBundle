@@ -77,6 +77,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- **Bundle routes registered without being imported (REQ-SF-004 rule 7).** On Symfony >= 7.3 every autoconfigured `#[Route]` controller gets the `routing.controller` tag, so a host whose `config/routes.yaml` holds the default `controllers: { resource: routing.controllers }` loaded the consent routes (`/cookie_consent`, `/cookie-consent/config`) and the admin routes without importing `@NowoCookieConsentBundle/Resources/config/routing.yaml` (the admin pages stayed behind the bundle access subscriber). The controllers are no longer autoconfigured; their `controller.service_arguments` / `container.service_subscriber` tags are explicit, and the routes exist only where the host imports `routing.yaml`. Regression test with a kernel that only loads `routing.controllers`.
+
 ## [1.20.1] - 2026-10-28
 
 Dependency update

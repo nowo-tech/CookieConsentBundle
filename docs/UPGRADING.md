@@ -116,6 +116,8 @@
 
 ## Unreleased
 
+No change needed when `config/routes/nowo_cookie_consent.yaml` imports `@NowoCookieConsentBundle/Resources/config/routing.yaml` (see [INSTALLATION](INSTALLATION.md#routes)). If the consent or admin routes answered on your site without that import (Symfony >= 7.3 with the default `controllers: { resource: routing.controllers }`), add the import.
+
 ## To 1.20.1
 
 From **1.20.0**: no change needed (development dependencies updated).
