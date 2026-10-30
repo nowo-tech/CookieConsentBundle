@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Nowo\CookieConsentBundle\Form;
 
+use Nowo\FormKitBundle\Attribute\FormKitConfig;
+use Nowo\FormKitBundle\Form\FormOptionsTrait;
 use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\Extension\Core\Type\HiddenType;
 use Symfony\Component\Form\FormBuilderInterface;
@@ -13,10 +15,16 @@ use Symfony\Component\Security\Csrf\CsrfTokenManagerInterface;
 /**
  * CSRF-protected delete form for a cookie definition row action.
  *
+ * A FormKit Type on the `cookie_consent` profile (REQ-TWIG-005 rule 11). Its only field is the hidden CSRF token,
+ * added as is (no profile classes on a hidden input).
+ *
  * @extends AbstractType<null>
  */
+#[FormKitConfig('cookie_consent')]
 final class DeleteCookieDefinitionType extends AbstractType
 {
+    use FormOptionsTrait;
+
     /**
      * Base form name (and 1.x POST payload key `delete_cookie_definition[_token]`). The admin list names each row
      * form {@see self::formName()} so the hidden token inputs get unique DOM ids.
