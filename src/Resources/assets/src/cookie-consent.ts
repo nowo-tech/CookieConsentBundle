@@ -4,6 +4,7 @@
  */
 
 import { applyRemoteConfig, fetchRemoteConfig } from './apply-config';
+import { closeWithEffect, finishClosing } from './motion';
 import { applyThemeOptionsFromElement } from './apply-theme';
 import { applyVisualConfigFromElement, setPageInteractionBlocked } from './apply-visual-config';
 import { collectClientDiagnostics, publishClientDiagnostics } from './diagnostics';
@@ -105,6 +106,7 @@ export function initCookieConsent(): void {
 
   const showModal = (): void => {
     const blockInteraction = shouldBlockPageInteraction(modalElement);
+    finishClosing(modalElement);
 
     if (bootstrapModal) {
       bootstrapModal.show();
@@ -120,17 +122,19 @@ export function initCookieConsent(): void {
   };
 
   const hideModal = (): void => {
-    if (bootstrapModal) {
-      bootstrapModal.hide();
-      setPageInteractionBlocked(modalElement, false);
-      return;
-    }
+    closeWithEffect(modalElement, () => {
+      if (bootstrapModal) {
+        bootstrapModal.hide();
+        setPageInteractionBlocked(modalElement, false);
+        return;
+      }
 
-    modalElement.classList.remove('show');
-    modalElement.classList.add('hidden');
-    modalElement.style.display = 'none';
-    modalElement.setAttribute('aria-hidden', 'true');
-    setPageInteractionBlocked(modalElement, false);
+      modalElement.classList.remove('show');
+      modalElement.classList.add('hidden');
+      modalElement.style.display = 'none';
+      modalElement.setAttribute('aria-hidden', 'true');
+      setPageInteractionBlocked(modalElement, false);
+    });
   };
 
   modalElement.addEventListener('hidden.bs.modal', () => {
