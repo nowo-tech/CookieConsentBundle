@@ -459,6 +459,63 @@ body.nowo-cookie-consent-page-blocked {
   overflow: hidden;
 }
 
+/*
+ * Motion: UiKit's scale, read with own fallbacks. The modal and its overlay fade, the dialog scales a little.
+ * The close waits for this fade (motion.ts), then removes `.show`. disable_transitions still turns it all off.
+ */
+.nowo-cookie-consent {
+  --nowo-cc-motion-open: var(--nowo-ui-motion-medium, 200ms);
+  --nowo-cc-motion-close: var(--nowo-ui-motion-medium-close, 150ms);
+  --nowo-cc-motion-scale: var(--nowo-ui-motion-scale, 0.98);
+}
+
+.nowo-cookie-consent.show {
+  animation: nowo-cc-fade var(--nowo-cc-motion-open) var(--nowo-ui-motion-ease-out, cubic-bezier(0.2, 0, 0, 1));
+}
+
+.nowo-cookie-consent.show :is(.modal-dialog, .nowo-cookie-consent__dialog) {
+  animation: nowo-cc-scale var(--nowo-cc-motion-open) var(--nowo-ui-motion-ease-out, cubic-bezier(0.2, 0, 0, 1));
+}
+
+.nowo-cookie-consent[data-nowo-cc-closing] {
+  animation: none;
+  opacity: 0;
+  transition: opacity var(--nowo-cc-motion-close) var(--nowo-ui-motion-ease-in, cubic-bezier(0.4, 0, 1, 1));
+}
+
+.nowo-cookie-consent[data-nowo-cc-closing] :is(.modal-dialog, .nowo-cookie-consent__dialog) {
+  animation: none;
+  transform: scale(var(--nowo-cc-motion-scale));
+  transition: transform var(--nowo-cc-motion-close) var(--nowo-ui-motion-ease-in, cubic-bezier(0.4, 0, 1, 1));
+}
+
+@keyframes nowo-cc-fade {
+  from {
+    opacity: 0;
+  }
+}
+
+@keyframes nowo-cc-scale {
+  from {
+    transform: scale(var(--nowo-cc-motion-scale));
+  }
+}
+
+/* Reduced motion keeps a short fade and no movement; html[data-motion='full'] keeps the full effect. */
+@media (prefers-reduced-motion: reduce) {
+  html:not([data-motion='full']) .nowo-cookie-consent {
+    --nowo-cc-motion-open: var(--nowo-ui-motion-medium, 80ms);
+    --nowo-cc-motion-close: var(--nowo-ui-motion-medium-close, 80ms);
+    --nowo-cc-motion-scale: 1;
+  }
+}
+
+[data-motion='reduce'] .nowo-cookie-consent {
+  --nowo-cc-motion-open: var(--nowo-ui-motion-medium, 80ms);
+  --nowo-cc-motion-close: var(--nowo-ui-motion-medium-close, 80ms);
+  --nowo-cc-motion-scale: 1;
+}
+
 .nowo-cookie-consent--no-transitions,
 .nowo-cookie-consent--no-transitions * {
   transition: none !important;

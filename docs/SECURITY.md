@@ -11,6 +11,7 @@
 - [Dependencies and updates](#dependencies-and-updates)
 - [Permissions and exposure](#permissions-and-exposure)
 - [Reporting a vulnerability](#reporting-a-vulnerability)
+- [Motion batch audit](#motion-batch-audit)
 - [Release security checklist (12.4.1)](#release-security-checklist-1241)
 
 ## Scope
@@ -118,6 +119,10 @@ Report security issues **privately**:
 4. We will acknowledge and coordinate disclosure after a fix is available.
 
 See also [`.github/SECURITY.md`](../.github/SECURITY.md) for supported versions and reporting policy.
+
+## Motion batch audit
+
+Batch audit Appendix HW (2026-11-07), at `c1c4914`: Pass (good). Consent is saved before the fade starts. HW-L5 fixed at `60d398f`; delta audit: **Pass (good)**.
 
 ## Release security checklist (12.4.1)
 
