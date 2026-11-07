@@ -343,4 +343,34 @@ describe('cookie-consent entrypoint', () => {
 
     vi.unstubAllGlobals();
   });
+
+  it('fades the modal before hiding it, keeping the page blocked until the fade ends', async () => {
+    document.body.innerHTML = `
+      <div id="cookieconsent" class="modal nowo-cookie-consent" data-nowo-open="true" aria-hidden="true">
+        <form class="nowo-cookie-consent__form" action="/consent">
+          <button type="submit" class="nowo-cookie-consent__btn" name="save">Save</button>
+        </form>
+      </div>
+    `;
+    vi.spyOn(XMLHttpRequest.prototype, 'open').mockImplementation(() => undefined);
+    vi.spyOn(XMLHttpRequest.prototype, 'setRequestHeader').mockImplementation(() => undefined);
+    vi.spyOn(XMLHttpRequest.prototype, 'send').mockImplementation(function send(this: XMLHttpRequest) {
+      Object.defineProperty(this, 'status', { value: 204, configurable: true });
+      this.onload?.(new ProgressEvent('load'));
+    });
+
+    await import('./cookie-consent');
+
+    const modal = document.querySelector<HTMLElement>('#cookieconsent');
+    expect(modal?.classList.contains('show')).toBe(true);
+    const style = vi.spyOn(window, 'getComputedStyle').mockReturnValue({ transitionDuration: '150ms', transitionDelay: '0s' } as CSSStyleDeclaration);
+    document.querySelector<HTMLButtonElement>('.nowo-cookie-consent__btn')?.click();
+    expect(modal?.classList.contains('show')).toBe(true);
+    expect(modal?.hasAttribute('data-nowo-cc-closing')).toBe(true);
+    modal?.dispatchEvent(new Event('transitionend'));
+    expect(modal?.classList.contains('show')).toBe(false);
+    expect(modal?.hasAttribute('data-nowo-cc-closing')).toBe(false);
+    expect(modal?.getAttribute('aria-hidden')).toBe('true');
+    style.mockRestore();
+  });
 });

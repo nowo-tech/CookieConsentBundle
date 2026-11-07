@@ -79,6 +79,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- **Modal motion:** the rendered modal (`#cookieconsent.nowo-cookie-consent`; `#cc-main` is not rendered by the bundle) and its overlay open and close on UiKit's `--nowo-ui-motion-medium*`, `--nowo-ui-motion-scale` and easing tokens (own fallbacks: 200 ms in, 150 ms out, scale 0.98). The close after a saved consent waits for the fade before `.show` goes, with a timer if `transitionend` never fires. Reduced motion keeps an 80 ms fade with no movement; `html[data-motion="full"]` keeps the full effect. `disable_transitions` still turns it all off. No new `!important`.
+
 ## [1.20.3] - 2026-10-30
 
 Every admin form is a FormKit Type (REQ-TWIG-005 rule 11). See [UPGRADING](UPGRADING.md#to-1203).
