@@ -122,7 +122,7 @@ See also [`.github/SECURITY.md`](../.github/SECURITY.md) for supported versions 
 
 ## Motion batch audit
 
-Independent audit 2026-11-07 (Appendix HW, PR #92 at `c1c4914`): **Pass (good).** Consent is saved before the fade starts. Can tag. HW-L5 fixed afterwards at `<final SHA>`, a commit outside that audit.
+Batch audit Appendix HW (2026-11-07), at `c1c4914`: Pass (good). Consent is saved before the fade starts. HW-L5 fixed at `60d398f`; delta audit: **Pass (good)**.
 
 ## Release security checklist (12.4.1)
 
