@@ -3,6 +3,7 @@
 ## Table of contents
 
 - [Unreleased](#unreleased)
+- [To 1.21.0](#to-1210)
 - [To 1.20.3](#to-1203)
 - [To 1.20.2](#to-1202)
 - [To 1.20.1](#to-1201)
@@ -117,6 +118,14 @@
 - [Getting help](#getting-help)
 
 ## Unreleased
+
+## To 1.21.0
+
+From **1.20.3**:
+
+```bash
+composer update nowo-tech/cookie-consent-bundle
+```
 
 The close now waits for its fade: the `hidden` state, `dialog.close()` or removal comes up to 150 ms later than before, and a test should wait for the closed state or set the durations to `0ms`. With no transition (`0ms`, or a page without the bundle's CSS) it all happens at once, as before. Durations come from UiKit's `--nowo-ui-motion-*` tokens with fallbacks here, so no UiKit release is needed.
 
