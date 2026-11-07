@@ -80,6 +80,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Security
+
+- **Dev tooling**: raised the `pnpm.overrides` floor for `vite` from `>=6.4.3` to `>=6.4.4`, the first version patched for its two advisories. Resolved versions do not change (`vite` 8.3.5, `happy-dom` 21.0.4). `nowo-consent-modal.js` changes only in its build id, which hashes `pnpm-lock.yaml`.
+
 ## [1.21.0] - 2026-11-07
 
 ### Changed

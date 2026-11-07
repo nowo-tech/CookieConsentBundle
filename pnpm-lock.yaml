@@ -8,7 +8,7 @@ overrides:
   brace-expansion@>=4: '>=5.0.9'
   postcss: '>=8.5.18'
   nanoid: '>=3.3.18'
-  vite: '>=6.4.3'
+  vite: '>=6.4.4'
 
 importers:
 
@@ -27,7 +27,7 @@ importers:
         specifier: ^5.9.3
         version: 5.9.3
       vite:
-        specifier: '>=6.4.3'
+        specifier: '>=6.4.4'
         version: 8.3.5(@types/node@26.6.6)
       vitest:
         specifier: ^4.1.12
@@ -205,7 +205,7 @@ packages:
     resolution: {integrity: sha512-fKShNpKZzupWZuY0z7egydvL0sqW4INEZBEExMBMAa6izlENEVHwoXgdaTCaBZ5fwlr4xf2o1wXC83n9RpO+NA==}
     peerDependencies:
       msw: ^2.4.9
-      vite: '>=6.4.3'
+      vite: '>=6.4.4'
     peerDependenciesMeta:
       msw:
         optional: true
@@ -519,7 +519,7 @@ packages:
       '@vitest/ui': 4.1.12
       happy-dom: '*'
       jsdom: '*'
-      vite: '>=6.4.3'
+      vite: '>=6.4.4'
     peerDependenciesMeta:
       '@edge-runtime/vm':
         optional: true
