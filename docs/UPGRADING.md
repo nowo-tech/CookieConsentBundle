@@ -3,6 +3,7 @@
 ## Table of contents
 
 - [Unreleased](#unreleased)
+- [To 1.22.0](#to-1220)
 - [To 1.21.1](#to-1211)
 - [To 1.21.0](#to-1210)
 - [To 1.20.3](#to-1203)
@@ -119,6 +120,14 @@
 - [Getting help](#getting-help)
 
 ## Unreleased
+
+## To 1.22.0
+
+From **1.21.1**:
+
+```bash
+composer update nowo-tech/cookie-consent-bundle
+```
 
 No action required: every new token falls back to today's value and the bubble stays visible while the modal is open.
 

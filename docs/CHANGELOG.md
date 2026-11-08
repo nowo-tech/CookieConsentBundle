@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## Table of contents
 
 - [[Unreleased]](#unreleased)
+- [[1.22.0] - 2026-11-08](#1220---2026-11-08)
 - [[1.21.1] - 2026-11-07](#1211---2026-11-07)
 - [[1.21.0] - 2026-11-07](#1210---2026-11-07)
 - [[1.20.3] - 2026-10-30](#1203---2026-10-30)
@@ -80,6 +81,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - [[1.0.0] - 2026-06-15](#100---2026-06-15)
 
 ## [Unreleased]
+
+## [1.22.0] - 2026-11-08
+
+Modal and bubble tokens, an open-state class on `<html>` and no inline `display` (Beacon override E6 / CC-1). Audit: Appendix IL, Pass.
 
 ### Added
 
