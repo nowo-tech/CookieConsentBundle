@@ -12,7 +12,7 @@ export function collectClientDiagnostics(modalElement: HTMLElement | null): Reco
     modal_in_dom: modalElement !== null,
     data_nowo_open: modalElement?.dataset.nowoOpen ?? null,
     modal_has_show_class: modalElement?.classList.contains('show') ?? false,
-    modal_display: modalElement?.style.display ?? null,
+    modal_display: modalElement ? window.getComputedStyle(modalElement).display : null,
     config_api_url: modalElement?.dataset.nowoConfigUrl ?? null,
     bootstrap_available:
       typeof window.bootstrap !== 'undefined' && typeof window.bootstrap.Modal !== 'undefined',

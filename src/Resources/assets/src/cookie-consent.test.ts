@@ -12,6 +12,7 @@ describe('cookie-consent entrypoint', () => {
     vi.resetModules();
     vi.restoreAllMocks();
     document.body.innerHTML = '';
+    document.documentElement.classList.remove('nowo-cookie-consent-open');
     setReadyState('complete');
     delete window.bootstrap;
   });
@@ -47,8 +48,9 @@ describe('cookie-consent entrypoint', () => {
     const modal = document.getElementById('cookieconsent');
 
     expect(modal?.classList.contains('show')).toBe(true);
-    expect(modal?.style.display).toBe('block');
+    expect(modal?.style.display).toBe('');
     expect(modal?.getAttribute('aria-hidden')).toBeNull();
+    expect(document.documentElement.classList.contains('nowo-cookie-consent-open')).toBe(true);
   });
 
   it('uses Bootstrap Modal when available', async () => {
@@ -73,6 +75,10 @@ describe('cookie-consent entrypoint', () => {
     );
     expect(show).toHaveBeenCalled();
     expect(hide).not.toHaveBeenCalled();
+    expect(document.documentElement.classList.contains('nowo-cookie-consent-open')).toBe(true);
+
+    document.getElementById('cookieconsent')?.dispatchEvent(new Event('hidden.bs.modal'));
+    expect(document.documentElement.classList.contains('nowo-cookie-consent-open')).toBe(false);
   });
 
   it('does not open the modal when data-nowo-open is false', async () => {
@@ -85,6 +91,7 @@ describe('cookie-consent entrypoint', () => {
     const modal = document.getElementById('cookieconsent');
     expect(modal?.classList.contains('show')).toBe(false);
     expect(modal?.style.display).toBe('');
+    expect(document.documentElement.classList.contains('nowo-cookie-consent-open')).toBe(false);
   });
 
   it('initializes on DOMContentLoaded when the document is still loading', async () => {
@@ -140,7 +147,8 @@ describe('cookie-consent entrypoint', () => {
 
     const modal = document.getElementById('cookieconsent');
     expect(modal?.classList.contains('show')).toBe(false);
-    expect(modal?.style.display).toBe('none');
+    expect(modal?.style.display).toBe('');
+    expect(document.documentElement.classList.contains('nowo-cookie-consent-open')).toBe(false);
   });
 
   it('keeps the modal visible when the XHR response is not successful', async () => {

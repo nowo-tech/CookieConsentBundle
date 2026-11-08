@@ -81,6 +81,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Modal and bubble tokens, read with today's values as fallbacks (never declared, so a host can set them on `:root`):
+  `--nowo-cc-z-index`, `--nowo-cc-viewport-padding-top` / `-bottom`, `--nowo-cc-panel-max-height`,
+  `--nowo-cc-box-max-width`, `--nowo-cc-bubble-z-index`, `--nowo-cc-bubble-offset-top` / `-bottom` / `-inline`,
+  `--nowo-cc-bubble-shadow`, `--nowo-cc-bubble-icon-filter`. The dialog and panel cap follows the viewport paddings,
+  so a host that reserves space for a fixed footer no longer cuts the modal header off.
+- `nowo-cookie-consent-open` on `<html>` while the modal is open, and `--nowo-cc-bubble-display-while-open` (default
+  `inline-flex`, visible as before; `none` hides the preferences bubble while the modal is open).
+
+### Changed
+
+- The CSS fallback (no Bootstrap modal) no longer writes an inline `display` on `#cookieconsent`: the open and closed
+  states come from `.show` and the kit stylesheet only, so hosts need no `display: flex !important`. A server-rendered
+  inline `display` is cleared on open and close. Client diagnostics report the computed `display`.
+
 ## [1.21.1] - 2026-11-07
 
 ### Security

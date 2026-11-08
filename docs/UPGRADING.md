@@ -120,6 +120,18 @@
 
 ## Unreleased
 
+No action required: every new token falls back to today's value and the bubble stays visible while the modal is open.
+
+- **Inline `display` gone (CSS fallback).** Without the Bootstrap modal, `#cookieconsent` is shown and hidden by `.show`
+  and the kit stylesheet only (it already declared `display: flex !important` / `none !important`). If you load neither
+  the injected nor the linked kit CSS, add those two rules. Host rules such as `#cookieconsent.show { display: flex
+  !important; }` can go.
+- **Host overrides that can become tokens:** a padded viewport (`padding-bottom` for a fixed footer) and the panel
+  `max-height` → `--nowo-cc-viewport-padding-bottom` (the cap follows); bubble `bottom` / `right` / `z-index` →
+  `--nowo-cc-bubble-offset-*`, `--nowo-cc-bubble-z-index`; bubble SVG drop shadow → `--nowo-cc-bubble-icon-filter`;
+  hiding the bubble while the modal is open (`#cookieconsent.show ~ .bubble`, `body:has(...)`) →
+  `--nowo-cc-bubble-display-while-open: none`. See [CONFIGURATION — Modal and bubble tokens](CONFIGURATION.md#modal-and-bubble-tokens).
+
 ## To 1.21.1
 
 From **1.21.0**:

@@ -13,6 +13,7 @@
 - [Locale detection](#locale-detection)
   - [UI theme](#ui-theme)
   - [Modal CSS and CSP (style-src nonces)](#modal-css-and-csp-style-src-nonces)
+  - [Modal and bubble tokens](#modal-and-bubble-tokens)
   - [CSP nonce convention (`csp_nonce` request attribute)](#csp-nonce-convention-csp_nonce-request-attribute)
   - [Schema-ready probe (worker mode)](#schema-ready-probe-worker-mode)
   - [Recommended DB profile layout](#recommended-db-profile-layout)
@@ -285,6 +286,42 @@ By default `nowo-consent-modal.js` injects `cookie-consent.css` as a `<style>` t
 
 Markers that skip injection: `link[data-nowo-cookie-consent-css]`, `html[data-nowo-cookie-consent-external-css="true"]`, or `#cookieconsent[data-nowo-external-css="true"]`.
 
+### Modal and bubble tokens
+
+1.22. Geometry tokens a host sets (on `:root` or on `.nowo-cookie-consent`) instead of overriding rules. The kit never
+declares them: each is read with today's value as the fallback, so leaving them unset changes nothing.
+
+| Token | Fallback | Use |
+| --- | --- | --- |
+| `--nowo-cc-z-index` | `60` | Stacking of the modal overlay |
+| `--nowo-cc-viewport-padding-top` | `1rem` | Space above the panel |
+| `--nowo-cc-viewport-padding-bottom` | `1rem` | Space below the panel (for example a fixed footer height + gap) |
+| `--nowo-cc-panel-max-height` | `100dvh` minus both paddings | Cap of the dialog and panel: header and buttons stay in view, the middle scrolls |
+| `--nowo-cc-box-max-width` | `min(32rem, calc(100vw - 2rem))` | Width of the `box` layout |
+| `--nowo-cc-bubble-z-index` | `1040` | Stacking of the preferences bubble |
+| `--nowo-cc-bubble-offset-top` / `-bottom` | `1.25rem` | Distance of the bubble from the top / bottom edge |
+| `--nowo-cc-bubble-offset-inline` | `1.25rem` | Distance of the bubble from the left / right edge |
+| `--nowo-cc-bubble-shadow` | `0 4px 16px rgba(0, 0, 0, 0.12)` | Bubble shadow |
+| `--nowo-cc-bubble-icon-filter` | `none` | Filter on the bubble SVG (the icon sanitizer drops SVG `<filter>`, so a drop shadow goes here) |
+| `--nowo-cc-bubble-display-while-open` | `inline-flex` (visible) | `none` hides the bubble while the modal is open |
+
+The open state is class-driven (no inline `display`): `.show` on `#cookieconsent` and `nowo-cookie-consent-open` on
+`<html>` while the modal is shown (CSS fallback and Bootstrap modal alike). The kit stylesheet (injected or linked)
+must be on the page; it already was for the layout.
+
+With UiKit, map the tokens to its scale (dark mode follows UiKit's own tokens):
+
+```css
+:root {
+  --nowo-cc-z-index: 60;
+  --nowo-cc-viewport-padding-bottom: calc(var(--site-footer-height, 0px) + 0.75rem);
+  --nowo-cc-bubble-offset-bottom: calc(var(--site-footer-height, 0px) + 1.25rem);
+  --nowo-cc-bubble-shadow: var(--nowo-ui-shadow-popover, 0 4px 16px rgba(0, 0, 0, 0.12));
+  --nowo-cc-overlay: var(--nowo-ui-overlay, rgba(0, 0, 0, 0.65));
+  --nowo-cc-bubble-display-while-open: none;
+}
+```
+
 ### CSP nonce convention (`csp_nonce` request attribute)
 
 Shared by all nowo-tech kits: when the host stores the per-request nonce in the request attribute `csp_nonce` (e.g. from a CSP subscriber), every `<script>` the bundle renders carries it:
@@ -507,6 +544,7 @@ Keep the modal in the DOM after consent is saved:
 ```
 
 Position with `preferences_bubble_position`: `bottom-right` (default), `bottom-left`, `top-right`, or `top-left`.
+Offsets, stacking, shadow, and hiding the bubble while the modal is open: [Modal and bubble tokens](#modal-and-bubble-tokens).
 
 Set `preferences_bubble_border_color` (hex, e.g. `#60fed2`) for the transparent bubble outline and cookie icon. With `use_database_config: true`, configure per profile via `CookieConsentConfig::preferencesBubbleBorderColor` in the admin settings form.
 

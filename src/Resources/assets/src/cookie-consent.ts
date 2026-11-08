@@ -104,6 +104,12 @@ export function initCookieConsent(): void {
     log.debug('Bootstrap Modal unavailable, using CSS fallback');
   }
 
+  // 1.22: the open state lives in classes only (no inline `display`): `.show` on the modal and
+  // `nowo-cookie-consent-open` on <html>, which hosts and the bubble token read.
+  const setOpenState = (open: boolean): void => {
+    document.documentElement.classList.toggle('nowo-cookie-consent-open', open);
+  };
+
   const showModal = (): void => {
     const blockInteraction = shouldBlockPageInteraction(modalElement);
     finishClosing(modalElement);
@@ -111,14 +117,16 @@ export function initCookieConsent(): void {
     if (bootstrapModal) {
       bootstrapModal.show();
       setPageInteractionBlocked(modalElement, blockInteraction);
+      setOpenState(true);
       return;
     }
 
     modalElement.classList.add('show');
     modalElement.classList.remove('hidden');
-    modalElement.style.display = 'block';
+    modalElement.style.removeProperty('display');
     modalElement.removeAttribute('aria-hidden');
     setPageInteractionBlocked(modalElement, blockInteraction);
+    setOpenState(true);
   };
 
   const hideModal = (): void => {
@@ -126,19 +134,22 @@ export function initCookieConsent(): void {
       if (bootstrapModal) {
         bootstrapModal.hide();
         setPageInteractionBlocked(modalElement, false);
+        setOpenState(false);
         return;
       }
 
       modalElement.classList.remove('show');
       modalElement.classList.add('hidden');
-      modalElement.style.display = 'none';
+      modalElement.style.removeProperty('display');
       modalElement.setAttribute('aria-hidden', 'true');
       setPageInteractionBlocked(modalElement, false);
+      setOpenState(false);
     });
   };
 
   modalElement.addEventListener('hidden.bs.modal', () => {
     setPageInteractionBlocked(modalElement, false);
+    setOpenState(false);
   });
 
   if (modalElement.dataset.nowoOpen === 'true') {

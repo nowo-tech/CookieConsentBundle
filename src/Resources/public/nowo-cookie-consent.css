@@ -50,7 +50,7 @@
   font-weight: 400;
   -webkit-font-smoothing: antialiased;
   line-height: 1.15;
-  z-index: 60;
+  z-index: var(--nowo-cc-z-index, 60);
 }
 
 .nowo-cookie-consent.modal {
@@ -75,6 +75,11 @@
   max-width: 56rem;
 }
 
+/*
+ * Viewport tokens (1.22). Not declared on the element, so a host can set them on :root (or on the element):
+ * --nowo-cc-viewport-padding-top / -bottom (1rem): free space around the panel, for example above a fixed footer;
+ * --nowo-cc-panel-max-height (100dvh minus both): the dialog and panel cap, so the header and buttons stay in view.
+ */
 .nowo-cookie-consent.show {
   align-items: center;
   display: flex !important;
@@ -82,7 +87,7 @@
   justify-content: flex-start;
   max-height: 100dvh;
   min-height: 100dvh;
-  padding: 1rem 0;
+  padding: var(--nowo-cc-viewport-padding-top, 1rem) 0 var(--nowo-cc-viewport-padding-bottom, 1rem);
 }
 
 .nowo-cookie-consent[data-nowo-ui-theme='tailwind'].show {
@@ -95,8 +100,8 @@
 }
 
 .nowo-cookie-consent.nowo-cookie-consent--preferences-view.show {
-  padding-bottom: 1rem;
-  padding-top: 1rem;
+  padding-bottom: var(--nowo-cc-viewport-padding-bottom, 1rem);
+  padding-top: var(--nowo-cc-viewport-padding-top, 1rem);
 }
 
 .nowo-cookie-consent.nowo-cookie-consent--pos-y-bottom.show {
@@ -133,7 +138,7 @@
   margin-right: auto;
   margin-top: 0;
   margin-bottom: 0;
-  max-height: calc(100dvh - 2rem);
+  max-height: var(--nowo-cc-panel-max-height, calc(100dvh - var(--nowo-cc-viewport-padding-top, 1rem) - var(--nowo-cc-viewport-padding-bottom, 1rem)));
   width: 100%;
 }
 
@@ -151,7 +156,7 @@
 
 .nowo-cookie-consent .modal-dialog.modal-dialog-scrollable {
   height: auto;
-  max-height: calc(100dvh - 2rem);
+  max-height: var(--nowo-cc-panel-max-height, calc(100dvh - var(--nowo-cc-viewport-padding-top, 1rem) - var(--nowo-cc-viewport-padding-bottom, 1rem)));
 }
 
 .nowo-cookie-consent .modal-content,
@@ -164,7 +169,7 @@
   display: flex;
   flex: 1 1 auto;
   flex-direction: column;
-  max-height: calc(100dvh - 2rem);
+  max-height: var(--nowo-cc-panel-max-height, calc(100dvh - var(--nowo-cc-viewport-padding-top, 1rem) - var(--nowo-cc-viewport-padding-bottom, 1rem)));
   min-height: 0;
   overflow: hidden;
 }
@@ -339,11 +344,11 @@
 }
 
 .nowo-cookie-consent[data-nowo-ui-theme='tailwind'] .nowo-cookie-consent__dialog {
-  max-height: calc(100dvh - 2rem);
+  max-height: var(--nowo-cc-panel-max-height, calc(100dvh - var(--nowo-cc-viewport-padding-top, 1rem) - var(--nowo-cc-viewport-padding-bottom, 1rem)));
 }
 
 .nowo-cookie-consent[data-nowo-ui-theme='tailwind'] .nowo-cookie-consent__panel {
-  max-height: calc(100dvh - 2rem);
+  max-height: var(--nowo-cc-panel-max-height, calc(100dvh - var(--nowo-cc-viewport-padding-top, 1rem) - var(--nowo-cc-viewport-padding-bottom, 1rem)));
 }
 
 .nowo-cookie-consent[data-nowo-ui-theme='tailwind'] .nowo-cookie-consent__panel > .border-b,
@@ -388,7 +393,7 @@
 
 .nowo-cookie-consent.nowo-cookie-consent--layout-box .modal-dialog,
 .nowo-cookie-consent.nowo-cookie-consent--layout-box .nowo-cookie-consent__dialog {
-  max-width: min(32rem, calc(100vw - 2rem));
+  max-width: var(--nowo-cc-box-max-width, min(32rem, calc(100vw - 2rem)));
   width: 100%;
 }
 
@@ -1305,7 +1310,7 @@ html[data-theme='dark'] .nowo-cookie-consent.nowo-cookie-consent--dark-mode {
   background: transparent;
   border: 2px solid var(--nowo-cc-bubble-accent, var(--nowo-cc-btn-primary-bg, #30363c));
   border-radius: 999px;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+  box-shadow: var(--nowo-cc-bubble-shadow, 0 4px 16px rgba(0, 0, 0, 0.12));
   color: var(--nowo-cc-bubble-accent, var(--nowo-cc-btn-primary-bg, #30363c));
   cursor: pointer;
   display: inline-flex;
@@ -1316,7 +1321,7 @@ html[data-theme='dark'] .nowo-cookie-consent.nowo-cookie-consent--dark-mode {
   position: fixed;
   transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
   width: 4.25rem;
-  z-index: 1040;
+  z-index: var(--nowo-cc-bubble-z-index, 1040);
 }
 
 .nowo-cookie-consent__preferences-bubble.nowo-cookie-consent__preferences-bubble:hover {
@@ -1340,6 +1345,7 @@ html[data-theme='dark'] .nowo-cookie-consent.nowo-cookie-consent--dark-mode {
 
 .nowo-cookie-consent__preferences-bubble .nowo-cookie-consent__preferences-bubble-svg {
   display: block;
+  filter: var(--nowo-cc-bubble-icon-filter, none);
   height: 100%;
   max-height: 100%;
   max-width: 100%;
@@ -1354,21 +1360,30 @@ html[data-theme='dark'] .nowo-cookie-consent.nowo-cookie-consent--dark-mode {
 }
 
 .nowo-cookie-consent__preferences-bubble--bottom-right {
-  bottom: 1.25rem;
-  right: 1.25rem;
+  bottom: var(--nowo-cc-bubble-offset-bottom, 1.25rem);
+  right: var(--nowo-cc-bubble-offset-inline, 1.25rem);
 }
 
 .nowo-cookie-consent__preferences-bubble--bottom-left {
-  bottom: 1.25rem;
-  left: 1.25rem;
+  bottom: var(--nowo-cc-bubble-offset-bottom, 1.25rem);
+  left: var(--nowo-cc-bubble-offset-inline, 1.25rem);
 }
 
 .nowo-cookie-consent__preferences-bubble--top-right {
-  right: 1.25rem;
-  top: 1.25rem;
+  right: var(--nowo-cc-bubble-offset-inline, 1.25rem);
+  top: var(--nowo-cc-bubble-offset-top, 1.25rem);
 }
 
 .nowo-cookie-consent__preferences-bubble--top-left {
-  left: 1.25rem;
-  top: 1.25rem;
+  left: var(--nowo-cc-bubble-offset-inline, 1.25rem);
+  top: var(--nowo-cc-bubble-offset-top, 1.25rem);
+}
+
+/*
+ * Bubble while the modal is open (1.22). The kit sets `nowo-cookie-consent-open` on <html> while the modal is shown.
+ * --nowo-cc-bubble-display-while-open (default inline-flex: visible, as before); `none` hides the bubble, which only
+ * reopens what is already on screen and can cover the modal buttons on phones.
+ */
+.nowo-cookie-consent-open .nowo-cookie-consent__preferences-bubble.nowo-cookie-consent__preferences-bubble {
+  display: var(--nowo-cc-bubble-display-while-open, inline-flex);
 }
