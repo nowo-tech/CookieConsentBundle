@@ -122,7 +122,7 @@ final class DemoCookieCatalog
             self::cookie(
                 'symfony_csrf',
                 'Session',
-                'functionality',
+                'required',
                 CookieDefinition::TYPE_FIRST_PARTY,
                 11,
                 [
