@@ -3,6 +3,7 @@
 ## Table of contents
 
 - [Unreleased](#unreleased)
+- [To 1.24.0](#to-1240)
   - [To 1.24.0 (target): allowed_by_default defaults to false](#to-1240-target-allowed_by_default-defaults-to-false)
 - [To 1.23.0](#to-1230)
 - [To 1.22.0](#to-1220)
@@ -122,6 +123,14 @@
 - [Getting help](#getting-help)
 
 ## Unreleased
+
+## To 1.24.0
+
+From **1.23.0**:
+
+```bash
+composer update nowo-tech/cookie-consent-bundle
+```
 
 ### To 1.24.0 (target): allowed_by_default defaults to false
 

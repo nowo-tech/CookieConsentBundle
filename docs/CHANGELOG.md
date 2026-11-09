@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## Table of contents
 
 - [[Unreleased]](#unreleased)
+- [[1.24.0] - 2026-11-09](#1240---2026-11-09)
   - [Changed](#changed)
   - [Fixed](#fixed)
 - [[1.23.0] - 2026-11-09](#1230---2026-11-09)
@@ -238,6 +239,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - [Documentation](#documentation-28)
 
 ## [Unreleased]
+
+## [1.24.0] - 2026-11-09
 
 Target: 1.24.0 (owner decision JD-L6, CJEU Planet49). See [UPGRADING](UPGRADING.md#to-1240-target-allowed_by_default-defaults-to-false).
 
