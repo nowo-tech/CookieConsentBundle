@@ -1461,14 +1461,16 @@ html[data-theme='dark'] .nowo-cookie-consent.nowo-cookie-consent--dark-mode {
 }
 
 /*
- * Equal prominence (1.23, owner decision JD-L3 "Both filled the same"). With equal-weight buttons the reject button
- * (`use_only_functional_cookies`) is drawn exactly like accept (`use_all_cookies`): the same filled primary tokens of
- * the active theme (the UiKit / brand --nowo-ui-primary in the default themes, the theme's own colour in the named
- * themes), the same weight, border, shadow and hover. Customize / Save keep their own style. Without equal-weight
- * nothing changes.
+ * Equal prominence (1.23, owner decision JD-L3 "Both filled the same"). With equal-weight buttons the reject button is
+ * drawn exactly like accept: the same filled primary tokens of the active theme (the UiKit / brand --nowo-ui-primary in
+ * the default themes, the theme's own colour in the named themes), the same weight, border, shadow and hover.
+ * Matched by the role class CookieConsentType prints (`nowo-cookie-consent__btn--reject`), and by the rendered name
+ * `cookie_consent[use_only_functional_cookies]` (`[name$=…]`) for host templates that print the buttons themselves.
+ * Customize / Save keep their own style. Without equal-weight nothing changes.
  */
-.nowo-cookie-consent.nowo-cookie-consent--equal-weight-buttons .nowo-cookie-consent__btn--secondary[name='use_only_functional_cookies'],
-.nowo-cookie-consent.nowo-cookie-consent--equal-weight-buttons .nowo-cookie-consent__btn--secondary.btn[name='use_only_functional_cookies'] {
+.nowo-cookie-consent.nowo-cookie-consent--equal-weight-buttons .nowo-cookie-consent__btn--secondary.nowo-cookie-consent__btn--reject,
+.nowo-cookie-consent.nowo-cookie-consent--equal-weight-buttons .nowo-cookie-consent__btn--secondary[name$='[use_only_functional_cookies]'],
+.nowo-cookie-consent.nowo-cookie-consent--equal-weight-buttons .nowo-cookie-consent__btn--secondary[name='use_only_functional_cookies'] {
   --bs-btn-bg: var(--nowo-cc-btn-primary-bg);
   --bs-btn-border-color: var(--nowo-cc-btn-primary-bg);
   --bs-btn-color: var(--nowo-cc-btn-primary-color);
@@ -1482,10 +1484,12 @@ html[data-theme='dark'] .nowo-cookie-consent.nowo-cookie-consent--dark-mode {
   font-weight: 600;
 }
 
+.nowo-cookie-consent.nowo-cookie-consent--equal-weight-buttons .nowo-cookie-consent__btn--secondary.nowo-cookie-consent__btn--reject:hover,
+.nowo-cookie-consent.nowo-cookie-consent--equal-weight-buttons .nowo-cookie-consent__btn--secondary.nowo-cookie-consent__btn--reject:focus-visible,
+.nowo-cookie-consent.nowo-cookie-consent--equal-weight-buttons .nowo-cookie-consent__btn--secondary[name$='[use_only_functional_cookies]']:hover,
+.nowo-cookie-consent.nowo-cookie-consent--equal-weight-buttons .nowo-cookie-consent__btn--secondary[name$='[use_only_functional_cookies]']:focus-visible,
 .nowo-cookie-consent.nowo-cookie-consent--equal-weight-buttons .nowo-cookie-consent__btn--secondary[name='use_only_functional_cookies']:hover,
-.nowo-cookie-consent.nowo-cookie-consent--equal-weight-buttons .nowo-cookie-consent__btn--secondary[name='use_only_functional_cookies']:focus-visible,
-.nowo-cookie-consent.nowo-cookie-consent--equal-weight-buttons .nowo-cookie-consent__btn--secondary.btn[name='use_only_functional_cookies']:hover,
-.nowo-cookie-consent.nowo-cookie-consent--equal-weight-buttons .nowo-cookie-consent__btn--secondary.btn[name='use_only_functional_cookies']:focus-visible {
+.nowo-cookie-consent.nowo-cookie-consent--equal-weight-buttons .nowo-cookie-consent__btn--secondary[name='use_only_functional_cookies']:focus-visible {
   background: var(--nowo-cc-btn-primary-hover-bg);
   border-color: var(--nowo-cc-btn-primary-hover-bg);
   box-shadow: 0 2px 8px rgb(15 28 24 / 12%);

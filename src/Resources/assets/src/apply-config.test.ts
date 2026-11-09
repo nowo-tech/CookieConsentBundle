@@ -1,6 +1,15 @@
 import { describe, expect, it, vi } from 'vitest';
 
-import { applyRemoteConfig, fetchRemoteConfig } from './apply-config';
+import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
+
+import {
+  ACCEPT_BUTTON_SELECTOR,
+  applyRemoteConfig,
+  fetchRemoteConfig,
+  REJECT_BUTTON_SELECTOR,
+  SAVE_BUTTON_SELECTOR,
+} from './apply-config';
 
 describe('applyRemoteConfig', () => {
   it('applies modal copy, gui options, and category labels from API data', () => {
@@ -174,5 +183,44 @@ describe('fetchRemoteConfig', () => {
     await expect(fetchRemoteConfig('/cookie-consent/config')).resolves.toBeNull();
 
     vi.unstubAllGlobals();
+  });
+
+  it('applies the remote button labels to the buttons as the form renders them (JD-I15)', () => {
+    for (const theme of ['bootstrap', 'tailwind']) {
+      const buttons = readFileSync(resolve(__dirname, `../../../../tests/Fixtures/consent_buttons/${theme}.html`), 'utf8');
+      document.body.innerHTML = `<div id="cookieconsent">${buttons}</div>`;
+      const modal = document.getElementById('cookieconsent')!;
+
+      applyRemoteConfig(modal, {
+        language: {
+          default: 'en',
+          translations: {
+            en: {
+              consentModal: { acceptAllBtn: 'Remote accept', acceptNecessaryBtn: 'Remote reject' },
+              preferencesModal: { savePreferencesBtn: 'Remote save' },
+            },
+          },
+        },
+      }, 'en');
+
+      expect(modal.querySelector('[name="cookie_consent[use_all_cookies]"]')?.textContent).toBe('Remote accept');
+      expect(modal.querySelector('[name="cookie_consent[use_only_functional_cookies]"]')?.textContent).toBe('Remote reject');
+      expect(modal.querySelector('[name="cookie_consent[save]"]')?.textContent).toBe('Remote save');
+    }
+  });
+
+  it('matches the role classes, the prefixed name and the bare name', () => {
+    for (const [selector, html] of [
+      [ACCEPT_BUTTON_SELECTOR, '<button class="nowo-cookie-consent__btn nowo-cookie-consent__btn--accept" name="x">A</button>'],
+      [ACCEPT_BUTTON_SELECTOR, '<button class="nowo-cookie-consent__btn" name="host[use_all_cookies]">A</button>'],
+      [ACCEPT_BUTTON_SELECTOR, '<button class="nowo-cookie-consent__btn" name="use_all_cookies">A</button>'],
+      [REJECT_BUTTON_SELECTOR, '<button class="nowo-cookie-consent__btn nowo-cookie-consent__btn--reject" name="x">R</button>'],
+      [REJECT_BUTTON_SELECTOR, '<button class="nowo-cookie-consent__btn" name="host[use_only_functional_cookies]">R</button>'],
+      [SAVE_BUTTON_SELECTOR, '<button class="nowo-cookie-consent__btn" name="cookie_consent[save]">S</button>'],
+      [SAVE_BUTTON_SELECTOR, '<button class="nowo-cookie-consent__btn" name="save">S</button>'],
+    ] as const) {
+      document.body.innerHTML = html;
+      expect(document.querySelector(selector), html).not.toBeNull();
+    }
   });
 });

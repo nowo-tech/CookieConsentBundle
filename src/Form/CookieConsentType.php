@@ -114,13 +114,14 @@ class CookieConsentType extends AbstractType
             ...$this->buildButtonLabelOptions('nowo_cookie_consent.use_only_functional_cookies', $databaseMessages),
             'help'        => false,
             'placeholder' => false,
-            'attr'        => ['class' => 'btn nowo-cookie-consent__btn nowo-cookie-consent__btn--secondary'],
+            // 1.23: stable role classes (the rendered name is `cookie_consent[…]`): equal-prominence CSS, remote labels.
+            'attr' => ['class' => 'btn nowo-cookie-consent__btn nowo-cookie-consent__btn--secondary nowo-cookie-consent__btn--reject'],
         ]);
         $this->addWithDefaults($builder, 'use_all_cookies', SubmitType::class, [
             ...$this->buildButtonLabelOptions('nowo_cookie_consent.use_all_cookies', $databaseMessages),
             'help'        => false,
             'placeholder' => false,
-            'attr'        => ['class' => 'btn nowo-cookie-consent__btn'],
+            'attr'        => ['class' => 'btn nowo-cookie-consent__btn nowo-cookie-consent__btn--accept'],
         ]);
 
         $builder->addEventListener(FormEvents::PRE_SUBMIT, function (FormEvent $event) use ($inventory): void {

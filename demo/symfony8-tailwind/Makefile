@@ -4,7 +4,7 @@
 COMPOSE_BIN := $(shell docker compose version >/dev/null 2>&1 && echo "docker compose" || echo "docker-compose")
 dc = $(SHELL) -c '$(COMPOSE_BIN) $(1)'
 
-.PHONY: help up down build install shell logs test test-coverage cache-clear update-bundle ensure-up restart setup-db composer-install
+.PHONY: help up down build install shell logs test test-coverage cache-clear update-bundle ensure-up restart setup-db composer-install test-e2e-prominence
 
 BUNDLE_ROOT := $(abspath $(dir $(lastword $(MAKEFILE_LIST)))/../..)
 export DOCKER_CONFIG := $(BUNDLE_ROOT)/.docker
@@ -110,3 +110,15 @@ update-bundle: ensure-up
 # REQ-MAKE-008: update-deps (REQ-MAKE-008)
 # Optional: monorepo helper absent on standalone GitHub Actions checkout (REQ-MAKE-009).
 -include $(BUNDLE_ROOT)/../.scripts/Makefile.demo-update-deps.mk
+
+# Audit JD-M1 (1.23): the equal-prominence Playwright check of ../symfony8/e2e against this Tailwind demo.
+PLAYWRIGHT_IMAGE ?= mcr.microsoft.com/playwright:v1.63.0-jammy
+
+test-e2e-prominence: ensure-up
+	@mkdir -p ../symfony8/e2e/node_modules
+	@PORT=$$(grep -E '^PORT=' .env 2>/dev/null | cut -d= -f2); PORT=$${PORT:-8015}; \
+	docker run --rm --network host \
+		-v "$(CURDIR)/../symfony8/e2e:/e2e" -w /e2e \
+		-e DEMO_BASE_URL=http://127.0.0.1:$$PORT \
+		$(PLAYWRIGHT_IMAGE) \
+		bash -lc 'npm install --no-fund --no-audit && npx playwright test equal-prominence --project=chromium --project=prominence-webkit'

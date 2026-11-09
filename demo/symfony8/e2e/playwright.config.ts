@@ -40,6 +40,12 @@ export default defineConfig({
       testIgnore: /screenshots\.spec\.ts/,
     },
     {
+      // Audit JD-M1: the equal-prominence check also runs in WebKit.
+      name: 'prominence-webkit',
+      use: { ...devices['Desktop Safari'] },
+      testMatch: /equal-prominence\.spec\.ts/,
+    },
+    {
       name: 'screenshots',
       use: { ...devices['Desktop Chrome'] },
       testMatch: /screenshots\.spec\.ts/,

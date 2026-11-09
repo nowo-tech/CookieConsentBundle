@@ -160,7 +160,7 @@ describe('cookie-consent.css compact first layer (1.23, MUX-151)', () => {
 describe('cookie-consent.css equal prominence (1.23, JD-L3)', () => {
   it('fills reject with the primary tokens only under equal-weight buttons, outside the phone block', () => {
     const rule = ruleBody(
-      ".nowo-cookie-consent.nowo-cookie-consent--equal-weight-buttons .nowo-cookie-consent__btn--secondary.btn[name='use_only_functional_cookies'] {",
+      ".nowo-cookie-consent.nowo-cookie-consent--equal-weight-buttons .nowo-cookie-consent__btn--secondary[name='use_only_functional_cookies'] {",
     );
     expect(rule).toContain('background: var(--nowo-cc-btn-primary-bg);');
     expect(rule).toContain('color: var(--nowo-cc-btn-primary-color);');

@@ -82,7 +82,11 @@ the EDPB cookie banner taskforce (2023) and the CNIL guidance. The bundle's rule
   (`use_only_functional_cookies`) and accept (`use_all_cookies`) are drawn identically since 1.23 (owner decision
   JD-L3, "both filled the same"): the same filled primary tokens of the active theme, the same size, weight, border,
   shadow, contrast and hover, in the Bootstrap and the Tailwind template and in every colour theme. On phones both
-  share one row at the same size. Vitest `equal-prominence.test.ts` compares their computed styles.
+  share one row at the same size. Matched by the role class `nowo-cookie-consent__btn--reject` (and the rendered name
+  `cookie_consent[use_only_functional_cookies]`). Checked by Vitest `equal-prominence.test.ts` on the markup the form
+  really renders (fixtures kept current by `ConsentButtonsMarkupTest`) and by the demo Playwright
+  `equal-prominence.spec.ts` (Chromium and WebKit, 390px and 1280px, every colour theme, both templates, at rest and
+  on hover).
 - Customize / Save keep the secondary style; they do not record a choice for every category.
 - Nothing is pre-checked; the "Show more" intro toggle (1.23) is a plain `type="button"` and records nothing.
 - Hosts that need equal prominence (recommended for EU traffic) enable equal-weight buttons and must not restyle one

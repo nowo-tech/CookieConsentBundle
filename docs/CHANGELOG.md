@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - [[Unreleased]](#unreleased)
   - [Added](#added)
   - [Changed](#changed)
+  - [Fixed](#fixed)
 - [[1.22.0] - 2026-11-08](#1220---2026-11-08)
 - [[1.21.1] - 2026-11-07](#1211---2026-11-07)
 - [[1.21.0] - 2026-11-07](#1210---2026-11-07)
@@ -113,6 +114,16 @@ Target: 1.23.0 (MUX-151, mobile UX audit 2026-11-09). See [UPGRADING](UPGRADING.
   the active theme (brand `--nowo-ui-primary` in the default themes, the theme colour in the named themes), the same
   weight, border, shadow, contrast and hover. Customize / Save keep the secondary style. Without equal-weight buttons
   the 1.22 styles stay. Same buttons, names and order; nothing recorded changes.
+- Role classes on the consent buttons: `nowo-cookie-consent__btn--reject` (`use_only_functional_cookies`) and
+  `nowo-cookie-consent__btn--accept` (`use_all_cookies`), printed by `CookieConsentType` in both templates. The
+  equal-prominence CSS targets them, with `[name$='[use_only_functional_cookies]']` as a fallback for host templates
+  that print the buttons themselves (the form renders `name="cookie_consent[…]"`, audit JD-M1).
+
+### Fixed
+
+- Remote configuration (`fetch_config_via_api`) now applies the accept, reject and save labels: the selectors matched
+  the bare names `use_all_cookies` / `use_only_functional_cookies` / `save`, but the form renders
+  `cookie_consent[…]` (audit JD-I15). They now match the role classes, then the prefixed and the bare names.
 
 ## [1.22.0] - 2026-11-08
 

@@ -26,20 +26,14 @@ const PROPERTIES = [
   'width',
 ] as const;
 
-/** The footer markup of each template (classes as the form type and form themes print them). */
+/**
+ * The buttons exactly as CookieConsentType renders them through each template's form theme
+ * (`name="cookie_consent[…]"`, role classes). Kept current by tests/Integration/Kernel/ConsentButtonsMarkupTest.php.
+ */
+const fixtures = resolve(__dirname, '../../../../tests/Fixtures/consent_buttons');
 const TEMPLATES: Record<string, string> = {
-  bootstrap: `
-    <div class="modal-footer nowo-cookie-consent__btn-group">
-      <div><button type="submit" name="save" class="btn nowo-cookie-consent__btn nowo-cookie-consent__btn--secondary">Save</button></div>
-      <div><button type="submit" name="use_only_functional_cookies" class="btn nowo-cookie-consent__btn nowo-cookie-consent__btn--secondary">Reject</button></div>
-      <div><button type="submit" name="use_all_cookies" class="btn nowo-cookie-consent__btn">Accept</button></div>
-    </div>`,
-  tailwind: `
-    <div class="nowo-cookie-consent__btn-group nowo-cookie-consent__section-footer flex flex-wrap justify-end gap-2 border-t px-6 py-4">
-      <button type="submit" name="save" class="btn nowo-cookie-consent__btn nowo-cookie-consent__btn--secondary">Save</button>
-      <button type="submit" name="use_only_functional_cookies" class="btn nowo-cookie-consent__btn nowo-cookie-consent__btn--secondary">Reject</button>
-      <button type="submit" name="use_all_cookies" class="btn nowo-cookie-consent__btn">Accept</button>
-    </div>`,
+  bootstrap: readFileSync(resolve(fixtures, 'bootstrap.html'), 'utf8'),
+  tailwind: readFileSync(resolve(fixtures, 'tailwind.html'), 'utf8'),
 };
 
 const THEMES = ['', 'nowo-cookie-consent--theme-light', 'nowo-cookie-consent--theme-light nowo-cookie-consent--dark-mode',
@@ -54,8 +48,8 @@ function render(template: string, theme: string, equalWeight: boolean, brand: bo
     </div>`;
 
   return {
-    reject: document.querySelector<HTMLElement>('[name="use_only_functional_cookies"]')!,
-    accept: document.querySelector<HTMLElement>('[name="use_all_cookies"]')!,
+    reject: document.querySelector<HTMLElement>('[name="cookie_consent[use_only_functional_cookies]"]')!,
+    accept: document.querySelector<HTMLElement>('[name="cookie_consent[use_all_cookies]"]')!,
   };
 }
 
@@ -86,6 +80,12 @@ describe.each(Object.keys(TEMPLATES))('equal-weight reject and accept (%s templa
     const { reject, accept } = render(template, 'nowo-cookie-consent--theme-light', true, true);
     expect(window.getComputedStyle(accept).getPropertyValue('background-color')).toMatch(/31,\s*111,\s*84|#1f6f54/i);
     expect(window.getComputedStyle(reject).getPropertyValue('background-color')).toMatch(/31,\s*111,\s*84|#1f6f54/i);
+  });
+
+  it('also matches a host template that prints the prefixed name without the role class', () => {
+    const { reject, accept } = render(template, 'nowo-cookie-consent--theme-light', true, true);
+    reject.classList.remove('nowo-cookie-consent__btn--reject');
+    expect(styles(reject)).toEqual(styles(accept));
   });
 
   it('keeps the 1.22 secondary reject without equal-weight buttons', () => {
