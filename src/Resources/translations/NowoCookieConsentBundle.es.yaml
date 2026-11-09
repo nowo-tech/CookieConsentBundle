@@ -110,7 +110,7 @@ nowo_cookie_consent.admin.config.settings.fields.default_profile_help: 'Perfil u
 nowo_cookie_consent.admin.config.settings.fields.auto_show: 'Mostrar modal automáticamente'
 nowo_cookie_consent.admin.config.settings.fields.auto_show_help: 'Abre el modal al cargar la página si el visitante aún no ha guardado preferencias.'
 nowo_cookie_consent.admin.config.settings.fields.revision: 'Revisión'
-nowo_cookie_consent.admin.config.settings.fields.revision_help: 'Incremente este número para volver a pedir consentimiento (cambio de política o categorías).'
+nowo_cookie_consent.admin.config.settings.fields.revision_help: 'Etiqueta de versión de este perfil, impresa en el modal como data-nowo-revision. Cambiarla no vuelve a pedir el consentimiento: los consentimientos guardados se mantienen.'
 nowo_cookie_consent.admin.config.settings.fields.manage_script_tags: 'Gestionar etiquetas script'
 nowo_cookie_consent.admin.config.settings.fields.manage_script_tags_help: 'Bloquea o activa scripts según las categorías de cookies seleccionadas.'
 nowo_cookie_consent.admin.config.settings.fields.auto_clear_cookies: 'Borrar cookies automáticamente'
