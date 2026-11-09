@@ -26,6 +26,10 @@ Regenerate with `make -C demo/symfony8 demo-screenshots` (REQ-DEMO-013).
 - [Preferences bubble icon](#preferences-bubble-icon)
 - [AJAX submission](#ajax-submission)
 - [Consent logging](#consent-logging)
+- [Using it from a DDD / hexagonal application](#using-it-from-a-ddd--hexagonal-application)
+  - [Keeping your domain free of the bundle](#keeping-your-domain-free-of-the-bundle)
+  - [Persistence](#persistence)
+  - [Known limitations](#known-limitations)
 - [Asking visitors again (re-consent)](#asking-visitors-again-re-consent)
 - [Theming the admin pages](#theming-the-admin-pages)
 - [Overriding templates (REQ-TWIG-001)](#overriding-templates-req-twig-001)
@@ -190,6 +194,60 @@ $checker->isCookieConsentSavedByUser(); // false while outdated
 ```
 
 From your own code, `$config->requireReconsent(new \DateTimeImmutable())` followed by a flush does the same as *Yes*.
+
+## Using it from a DDD / hexagonal application
+
+CookieConsentBundle is a self-contained bounded context (consent management) plus a presentation layer (modal,
+Twig functions, admin pages). It has its own Doctrine entities (`CookieConsentConfig`, `CookieDefinition`,
+`CookieConsentLog` and their translations) and never maps or references your entities: no
+`resolve_target_entities`, no user relation, no base class or trait to extend.
+
+### Keeping your domain free of the bundle
+
+- Treat it as infrastructure/presentation. Your domain should not import `Nowo\CookieConsentBundle\*`.
+- To ask "may I use analytics for this visitor?", define a port in your domain and implement it with
+  `CookieChecker`, which only reads the request cookies (no database access):
+
+```php
+// Domain
+interface VisitorConsent
+{
+    public function allows(string $category): bool;
+}
+
+// Infrastructure
+final class CookieConsentVisitorConsent implements VisitorConsent
+{
+    public function __construct(private readonly \Nowo\CookieConsentBundle\Cookie\CookieChecker $checker) {}
+
+    public function allows(string $category): bool
+    {
+        return $this->checker->isCookieConsentSavedByUser()
+            && $this->checker->isCategoryAllowedByUser($category);
+    }
+}
+```
+
+- `CookieChecker::isCookieAllowedByUser($cookieName, $category)` and `getGranularPreferences()` cover
+  per-cookie consent.
+- In templates use `nowo_cookie_consent_is_category_allowed('analytics')`.
+- To control who reaches the admin pages, implement `CookieConsentAccessCheckerInterface` and set
+  `nowo_cookie_consent.security.access_checker` to your service id.
+- In the browser, listen to `nowo-cookie-consent-form-submit-successful` on `document` to react after a save.
+
+### Persistence
+
+- The bundle tables (`dashboard_cookie_*`, prefixed by `doctrine.table_prefix`) live on the **default** entity
+  manager. Include them in your migrations like any third-party schema.
+
+### Known limitations
+
+- No PHP event is dispatched when consent is saved. To react on the server, decorate
+  `Nowo\CookieConsentBundle\Cookie\CookieLogger` (with `use_logger: true`) for now.
+- `CookieChecker`, `CookieHandler` and `CookieLogger` are concrete classes (final in 2.0) with no interface. Wrap
+  them behind your own port, as shown above.
+- The entity mapping is registered even when `use_logger` and `use_database_config` are both `false`, and it always
+  uses the default entity manager.
 
 ## Theming the admin pages
 

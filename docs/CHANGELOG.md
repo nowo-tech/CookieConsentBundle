@@ -244,6 +244,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Documentation
+
+- USAGE: new section "Using it from a DDD / hexagonal application" (where the bundle sits in a hexagonal host, the ports, events and DTOs to build an anti-corruption layer on, and the known limitations).
+
 ## [1.25.0] - 2026-11-09
 
 Target: 1.25.0 (owner decision JH-L1, 2026-11-09). See [UPGRADING](UPGRADING.md#to-1250).
