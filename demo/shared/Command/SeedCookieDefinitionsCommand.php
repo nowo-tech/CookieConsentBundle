@@ -75,7 +75,7 @@ final class SeedCookieDefinitionsCommand extends Command
                 ->setCategory((string) $row['category'])
                 ->setType((string) $row['type'])
                 ->setSortOrder((int) $row['sortOrder'])
-                ->setAllowedByDefault((bool) ($row['allowedByDefault'] ?? !in_array($row['category'], ['analytics', 'marketing'], true)));
+                ->setAllowedByDefault((bool) ($row['allowedByDefault'] ?? $row['category'] === 'required'));
 
             foreach ($row['translations'] as $locale => $copy) {
                 if (!is_array($copy)) {

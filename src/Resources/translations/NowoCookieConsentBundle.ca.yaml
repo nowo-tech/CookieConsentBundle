@@ -110,7 +110,7 @@ nowo_cookie_consent.admin.config.settings.fields.default_profile_help: 'Perfil q
 nowo_cookie_consent.admin.config.settings.fields.auto_show: 'Mostrar el modal automàticament'
 nowo_cookie_consent.admin.config.settings.fields.auto_show_help: 'Obre el modal de consentiment en carregar la pàgina si el visitant encara no ha desat les preferències.'
 nowo_cookie_consent.admin.config.settings.fields.revision: 'Revisió'
-nowo_cookie_consent.admin.config.settings.fields.revision_help: 'Incrementeu aquest número per tornar a preguntar als usuaris que ja han donat el consentiment (canvi de política o de categories).'
+nowo_cookie_consent.admin.config.settings.fields.revision_help: 'Etiqueta de versió d''aquest perfil, impresa al modal com a data-nowo-revision. Canviar-la no torna a demanar el consentiment: els consentiments desats es mantenen.'
 nowo_cookie_consent.admin.config.settings.fields.manage_script_tags: 'Gestionar les etiquetes script'
 nowo_cookie_consent.admin.config.settings.fields.manage_script_tags_help: 'Bloqueja o activa les etiquetes script segons les categories de galetes seleccionades.'
 nowo_cookie_consent.admin.config.settings.fields.auto_clear_cookies: 'Esborrar galetes automàticament'

@@ -4,10 +4,12 @@ declare(strict_types=1);
 
 namespace Nowo\CookieConsentBundle\Tests\Unit\Entity;
 
+use Doctrine\ORM\Mapping\Column;
 use Nowo\CookieConsentBundle\Entity\CookieConsentConfig;
 use Nowo\CookieConsentBundle\Entity\CookieDefinition;
 use Nowo\CookieConsentBundle\Entity\CookieDefinitionTranslation;
 use PHPUnit\Framework\TestCase;
+use ReflectionProperty;
 
 final class CookieDefinitionTest extends TestCase
 {
@@ -40,6 +42,21 @@ final class CookieDefinitionTest extends TestCase
         $definition->removeTranslation($translation);
         self::assertNull($definition->findTranslation('en'));
         self::assertNull($translation->getDefinition());
+    }
+
+    public function testAllowedByDefaultIsFalseUnlessSetExplicitly(): void
+    {
+        // Owner decision JD-L6: optional cookies start unticked; an explicit true is still honoured.
+        self::assertFalse((new CookieDefinition())->isAllowedByDefault());
+        self::assertTrue((new CookieDefinition())->setAllowedByDefault(true)->isAllowedByDefault());
+    }
+
+    public function testAllowedByDefaultColumnDefaultsToFalseForNewRows(): void
+    {
+        $attributes = (new ReflectionProperty(CookieDefinition::class, 'allowedByDefault'))->getAttributes(Column::class);
+
+        self::assertCount(1, $attributes);
+        self::assertSame(['default' => false], $attributes[0]->getArguments()['options'] ?? null);
     }
 
     public function testTranslationsAreKeyedByLocaleUnlessTheLocaleIsEmptyOrTaken(): void

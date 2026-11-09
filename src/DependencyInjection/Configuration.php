@@ -13,12 +13,17 @@ use Symfony\Component\Config\Definition\Builder\TreeBuilder;
 use Symfony\Component\Config\Definition\ConfigurationInterface;
 
 use function array_diff_key;
+use function array_key_exists;
 use function array_keys;
 use function implode;
 use function is_array;
+use function is_bool;
 use function is_string;
 use function sprintf;
 use function trim;
+
+use const FILTER_NULL_ON_FAILURE;
+use const FILTER_VALIDATE_BOOL;
 
 /**
  * Defines the configuration tree for the cookie consent bundle.
@@ -109,6 +114,15 @@ class Configuration implements ConfigurationInterface
                     ->defaultValue([])
                     ->info('Static cookie definitions when not using Doctrine entities (ignored when the active profile has CookieDefinition rows).')
                     ->prototype('array')
+                        ->beforeNormalization()
+                            ->ifTrue(static fn (mixed $entry): bool => is_array($entry) && array_key_exists('allowedByDefault', $entry))
+                            ->then(static function (array $entry): array {
+                                $entry['allowed_by_default'] ??= $entry['allowedByDefault'];
+                                unset($entry['allowedByDefault']);
+
+                                return $entry;
+                            })
+                        ->end()
                         ->children()
                             ->scalarNode('name')->isRequired()->cannotBeEmpty()->end()
                             ->scalarNode('duration')->defaultValue('')->end()
@@ -117,6 +131,14 @@ class Configuration implements ConfigurationInterface
                             ->integerNode('sort_order')->defaultValue(0)->end()
                             ->scalarNode('provider')->defaultNull()->end()
                             ->scalarNode('purpose')->defaultNull()->end()
+                            ->scalarNode('allowed_by_default')
+                                ->defaultNull()
+                                ->info('Pre-tick this cookie before consent is saved (granular selection). Null (default) means false, or true for the "required" category (JD-L6). Alias: allowedByDefault.')
+                                ->validate()
+                                    ->ifTrue(static fn (mixed $value): bool => $value !== null && !is_bool($value) && filter_var($value, FILTER_VALIDATE_BOOL, FILTER_NULL_ON_FAILURE) === null)
+                                    ->thenInvalid('allowed_by_default must be a boolean (true/false), got %s.')
+                                ->end()
+                            ->end()
                             ->arrayNode('translations')
                                 ->prototype('array')
                                     ->children()

@@ -110,7 +110,7 @@ nowo_cookie_consent.admin.config.settings.fields.default_profile_help: 'Profil u
 nowo_cookie_consent.admin.config.settings.fields.auto_show: 'Automatycznie pokazuj okno'
 nowo_cookie_consent.admin.config.settings.fields.auto_show_help: 'Otwiera okno zgody po załadowaniu strony, jeśli odwiedzający nie zapisał jeszcze preferencji.'
 nowo_cookie_consent.admin.config.settings.fields.revision: 'Wersja'
-nowo_cookie_consent.admin.config.settings.fields.revision_help: 'Zwiększ tę liczbę, aby ponownie zapytać użytkowników, którzy już wyrazili zgodę (zmiana polityki lub kategorii).'
+nowo_cookie_consent.admin.config.settings.fields.revision_help: 'Etykieta wersji tego profilu, wypisywana w oknie jako data-nowo-revision. Zmiana nie pyta ponownie odwiedzających: zapisane zgody pozostają.'
 nowo_cookie_consent.admin.config.settings.fields.manage_script_tags: 'Zarządzaj tagami script'
 nowo_cookie_consent.admin.config.settings.fields.manage_script_tags_help: 'Blokuje lub aktywuje tagi script na podstawie wybranych kategorii plików cookie.'
 nowo_cookie_consent.admin.config.settings.fields.auto_clear_cookies: 'Automatycznie usuwaj pliki cookie'

@@ -110,7 +110,7 @@ nowo_cookie_consent.admin.config.settings.fields.default_profile_help: 'Fallback
 nowo_cookie_consent.admin.config.settings.fields.auto_show: 'Auto show modal'
 nowo_cookie_consent.admin.config.settings.fields.auto_show_help: 'Opens the consent modal on page load when the visitor has not saved preferences yet.'
 nowo_cookie_consent.admin.config.settings.fields.revision: 'Revision'
-nowo_cookie_consent.admin.config.settings.fields.revision_help: 'Increase this number to ask again users who already consented (policy or categories changed).'
+nowo_cookie_consent.admin.config.settings.fields.revision_help: 'Version label of this profile, printed on the modal as data-nowo-revision. Changing it does not ask visitors again: saved consents are kept.'
 nowo_cookie_consent.admin.config.settings.fields.manage_script_tags: 'Manage script tags'
 nowo_cookie_consent.admin.config.settings.fields.manage_script_tags_help: 'Blocks or activates script tags based on the selected cookie categories.'
 nowo_cookie_consent.admin.config.settings.fields.auto_clear_cookies: 'Auto clear cookies'

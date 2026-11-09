@@ -1029,6 +1029,7 @@ use Symfony\Component\Config\Loader\ParamConfigurator as Param;
  *         sort_order?: int|Param, // Default: 0
  *         provider?: scalar|Param|null, // Default: null
  *         purpose?: scalar|Param|null, // Default: null
+ *         allowed_by_default?: scalar|Param|null, // Pre-tick this cookie before consent is saved (granular selection). Null (default) means false, or true for the "required" category (JD-L6). Alias: allowedByDefault. // Default: null
  *         translations?: list<array{ // Default: []
  *             provider?: scalar|Param|null, // Default: ""
  *             purpose?: scalar|Param|null, // Default: ""

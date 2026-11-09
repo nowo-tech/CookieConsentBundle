@@ -452,7 +452,7 @@ Each entry includes:
 | `type` | `first_party` or `third_party` |
 | `provider` | Vendor or domain (translatable) |
 | `purpose` | GDPR purpose text (translatable) |
-| `allowed_by_default` | Pre-check in granular mode before consent is saved (YAML: `allowed_by_default`; DB column) |
+| `allowed_by_default` | Pre-check in granular mode before consent is saved (YAML: `allowed_by_default`; DB column). Default `false` (since 1.24, JD-L6); `required` cookies are always on |
 
 ### Database entities (recommended for admin CRUD)
 
@@ -499,6 +499,10 @@ nowo_cookie_consent:
                   provider: Google Analytics
                   purpose: Distinguishes users for statistics.
 ```
+
+`allowed_by_default` (alias `allowedByDefault`) is optional. Without it an entry is not pre-ticked, unless its category
+is `required` (since 1.24). It must be a boolean (`true`/`false`, `yes`/`no`, `on`/`off`, `1`/`0`): any other value
+fails the container build.
 
 Database definitions take precedence over YAML when both exist for the active profile.
 

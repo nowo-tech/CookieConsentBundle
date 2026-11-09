@@ -32,6 +32,35 @@ final class CookieConsentTypeGranularTest extends TypeTestCase
         self::assertTrue($form->get('cookies')->has('_fbp'));
     }
 
+    public function testInitialStateIsOptInWhenInventoryOmitsAllowedByDefault(): void
+    {
+        // Owner decision JD-L6: nothing optional is pre-ticked before consent is saved.
+        $form = $this->factory->create(CookieConsentType::class);
+        $view = $form->createView();
+
+        self::assertTrue($form->get('required')->getData());
+        foreach (['analytics', 'marketing'] as $category) {
+            self::assertFalse($form->get($category)->getData());
+            self::assertFalse($view[$category]->vars['checked']);
+        }
+        foreach (['_ga', '_fbp'] as $cookie) {
+            self::assertFalse($form->get('cookies')->get($cookie)->getData());
+            self::assertFalse($view['cookies'][$cookie]->vars['checked']);
+        }
+    }
+
+    public function testSaveWithoutTouchingRecordsOnlyNecessary(): void
+    {
+        $form = $this->factory->create(CookieConsentType::class);
+        $form->submit(['required' => '1', 'save' => '']);
+
+        self::assertTrue($form->get('required')->getData());
+        self::assertFalse($form->get('analytics')->getData());
+        self::assertFalse($form->get('marketing')->getData());
+        self::assertFalse($form->get('cookies')->get('_ga')->getData());
+        self::assertFalse($form->get('cookies')->get('_fbp')->getData());
+    }
+
     public function testPreSubmitSyncsCategoriesFromGranularCookies(): void
     {
         $form = $this->factory->create(CookieConsentType::class);
