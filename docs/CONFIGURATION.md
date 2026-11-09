@@ -500,6 +500,10 @@ nowo_cookie_consent:
                   purpose: Distinguishes users for statistics.
 ```
 
+`allowed_by_default` (alias `allowedByDefault`) is optional. Without it an entry is not pre-ticked, unless its category
+is `required` (since 1.24). It must be a boolean (`true`/`false`, `yes`/`no`, `on`/`off`, `1`/`0`): any other value
+fails the container build.
+
 Database definitions take precedence over YAML when both exist for the active profile.
 
 Twig helper: `nowo_cookie_consent_cookie_inventory()`.
