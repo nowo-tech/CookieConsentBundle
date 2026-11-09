@@ -452,7 +452,7 @@ Each entry includes:
 | `type` | `first_party` or `third_party` |
 | `provider` | Vendor or domain (translatable) |
 | `purpose` | GDPR purpose text (translatable) |
-| `allowed_by_default` | Pre-check in granular mode before consent is saved (YAML: `allowed_by_default`; DB column) |
+| `allowed_by_default` | Pre-check in granular mode before consent is saved (YAML: `allowed_by_default`; DB column). Default `false` (since 1.24, JD-L6); `required` cookies are always on |
 
 ### Database entities (recommended for admin CRUD)
 

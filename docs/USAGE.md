@@ -106,7 +106,7 @@ if ($cookieChecker->isCookieAllowedByUser('_ga', 'analytics')) {
 
 Enable `use_cookie_inventory: true` and populate definitions via YAML or Doctrine (`CookieDefinition` entities). The preferences modal lists cookies per category with provider, purpose, and duration.
 
-With `granular_cookie_selection`, each optional cookie shows an **Allow** toggle. Set `allowed_by_default` on each definition to control the initial state before the visitor saves consent.
+With `granular_cookie_selection`, each optional cookie shows an **Allow** toggle. Set `allowed_by_default` on each definition to control the initial state before the visitor saves consent. It defaults to `false` (since 1.24), so optional cookies start unticked (CJEU Planet49); required cookies are always on.
 
 ## Cookie inventory admin
 

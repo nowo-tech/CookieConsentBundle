@@ -3,6 +3,7 @@
 ## Table of contents
 
 - [Unreleased](#unreleased)
+  - [To 1.24.0 (target): allowed_by_default defaults to false](#to-1240-target-allowed_by_default-defaults-to-false)
 - [To 1.23.0](#to-1230)
 - [To 1.22.0](#to-1220)
 - [To 1.21.1](#to-1211)
@@ -121,6 +122,38 @@
 - [Getting help](#getting-help)
 
 ## Unreleased
+
+### To 1.24.0 (target): allowed_by_default defaults to false
+
+From **1.23.0** (owner decision JD-L6, CJEU Planet49):
+
+```bash
+composer update nowo-tech/cookie-consent-bundle
+```
+
+`allowed_by_default` on cookie definitions now defaults to **`false`**. With a cookie inventory and granular selection,
+the preferences step opens with every optional category and cookie unticked, and Save without touching anything
+records only the necessary category. Required cookies (category `required`) stay on and disabled as before.
+
+What changes for a host:
+
+- **YAML `cookie_inventory`:** an entry without `allowed_by_default` (or `allowedByDefault`) is no longer pre-ticked,
+  unless its category is `required`. An unparsable value also falls back to that default.
+- **Database definitions:** rows already stored keep their value; nothing rewrites them, so a definition saved with
+  `true` is still pre-ticked. `CookieDefinition::$allowedByDefault` and the column default are now `false`, so a new
+  definition (admin form, fixtures, `new CookieDefinition()`, or an SQL insert without the column) starts unticked.
+- **Admin form:** *Allowed by default* is unchecked for a new definition.
+
+Hosts that relied on the implicit `true` must now set it explicitly: `allowed_by_default: true` in YAML, *Allowed by
+default* in the admin, or `setAllowedByDefault(true)` in fixtures and seeds. Before doing so for EU traffic, note that
+pre-ticked boxes are not valid consent (CJEU Planet49); see [SECURITY.md](SECURITY.md).
+
+The bundle ships no migrations. The column default changed from `1` to `0` (new rows only); generate a migration in
+the host (`doctrine:migrations:diff`) or run `doctrine:schema:update` to align it. The generated migration only
+changes the column default, for example on MySQL
+`ALTER TABLE dashboard_cookie_definition CHANGE allowed_by_default allowed_by_default TINYINT(1) DEFAULT 0 NOT NULL`
+(with your `doctrine.table_prefix`). Do not add an `UPDATE` that flips stored rows: they keep the choice made when they
+were saved. Without the migration everything still works, because Doctrine always writes the column explicitly.
 
 ## To 1.23.0
 

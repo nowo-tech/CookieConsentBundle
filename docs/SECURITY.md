@@ -89,11 +89,13 @@ the EDPB cookie banner taskforce (2023) and the CNIL guidance. The bundle's rule
   `equal-prominence.spec.ts` (Chromium and WebKit, 390px and 1280px, every colour theme, both templates, at rest and
   on hover).
 - Customize / Save keep the secondary style; they do not record a choice for every category.
-- Pre-checked categories and cookies: with a cookie inventory, each definition's `allowed_by_default` (default
-  `true`) pre-ticks its toggle in the preferences step, and Save records what is ticked. Pre-ticked boxes are not valid
-  consent under EU law (CJEU Planet49): hosts serving EU traffic should set `allowed_by_default: false` on every
-  non-necessary cookie (audit JD-L6). Accept and reject are unaffected. The "Show more" intro toggle (1.23) is a plain
-  `type="button"` and records nothing.
+- Pre-checked categories and cookies: with a cookie inventory, each definition's `allowed_by_default` pre-ticks its
+  toggle in the preferences step, and Save records what is ticked. Since 1.24 it defaults to `false` (owner decision
+  JD-L6) in the entity, its column default, the YAML normaliser and the admin form, so nothing optional is pre-ticked
+  unless a host sets `allowed_by_default: true` itself; required cookies stay on and disabled. Pre-ticked boxes are not
+  valid consent under EU law (CJEU Planet49): hosts serving EU traffic should keep `false` on every non-necessary
+  cookie, including definitions stored as `true` before 1.24 (those keep their value). Accept and reject are
+  unaffected. The "Show more" intro toggle (1.23) is a plain `type="button"` and records nothing.
 - Hosts that need equal prominence (recommended for EU traffic) enable equal-weight buttons and must not restyle one
   choice alone (`--nowo-cc-btn-primary-*` apply to both).
 
