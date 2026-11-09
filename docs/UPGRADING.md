@@ -143,6 +143,12 @@ ALTER TABLE dashboard_cookie_config ADD reconsent_required_at DATETIME DEFAULT N
 ALTER TABLE dashboard_cookie_log ADD consent_revision INT DEFAULT NULL;
 ```
 
+`reconsent_required_at` uses the bundle's DBAL type `nowo_utc_datetime_immutable` (registered when the bundle boots):
+a plain `DATETIME` that always holds UTC, whatever `date.timezone` is, so a time inside a local DST gap is not
+shifted. With DBAL 3 its column comment is `(DC2Type:nowo_utc_datetime_immutable)`. Keep the clocks of your web and
+admin nodes in sync (NTP): the comparison is between the admin node's clock (*Yes*) and the web node's
+(`Cookie_Consent`).
+
 Do not fill them: `NULL` is the correct value for every existing row (no re-consent requested yet; log rows written
 before 1.25 do not know the revision).
 
@@ -156,20 +162,28 @@ What changes:
   builds its own settings form from these types gets the question too; a host with its own form must call
   `CookieConsentConfig::requireReconsent(new \DateTimeImmutable())` itself.
 - **What a visitor sees after *Yes*.** A consent whose `Cookie_Consent` value (the UTC time the consent was saved, an
-  unchanged 1.x cookie) is older than `reconsent_required_at` counts as no consent: the banner opens again, only
-  necessary cookies apply until the visitor answers (`nowo_cookie_consent_is_saved()` and
-  `nowo_cookie_consent_is_category_allowed()` return `false`, `CookieChecker::isCookieAllowedByUser()` only allows
-  `required`), and the preferences start from `allowed_by_default` like for a new visitor, so earlier optional choices
-  are not pre-ticked. That response expires `Cookie_Consent`, `Cookie_Consent_Granular` and the `Cookie_Category_*`
-  cookies (not `Cookie_Consent_Key`), unless the response is `public`. Answering again stores a fresh time. The check
-  uses the profile resolved for the current route (route targeting): a *Yes* on one profile asks again on the pages
-  that profile serves, and the expired cookies then apply site-wide.
+  unchanged 1.x cookie) is older than `reconsent_required_at` counts as no consent: the banner opens again, and until
+  the visitor answers only necessary cookies apply. On the server, `nowo_cookie_consent_is_saved()` and
+  `nowo_cookie_consent_is_category_allowed()` return `false` and `CookieChecker::isCookieAllowedByUser()` only allows
+  `required`. In the browser, the modal prints `data-nowo-consent-saved="false"` and the JS runtime activates no
+  optional script or iframe placeholder at page load (only `required`). The preferences start from
+  `allowed_by_default` like for a new visitor: earlier choices are not pre-ticked, but a definition still stored with
+  `allowed_by_default: true` is shown ticked as a UI default (it activates nothing until the visitor saves; set those
+  rows to `false` before answering *Yes* if they should start unticked). The answer activates what it allows: a
+  reject never activates pre-ticked categories. The expired cookies are `Cookie_Consent`, `Cookie_Consent_Granular`
+  and `Cookie_Category_*` (not `Cookie_Consent_Key`), written by a late `kernel.response` listener (priority -900,
+  after `#[Cache]` is applied) and skipped on responses that are `public` or carry `s-maxage`. Answering again stores
+  a fresh time. The check uses the profile resolved for the current route (route targeting): a *Yes* on one profile
+  asks again on the pages that profile serves, and the expired cookies then apply site-wide.
 - **No mass re-ask on upgrade.** Every profile has `reconsent_required_at = NULL` after the migration, so consents
   saved before 1.25 (any `Cookie_Consent` value, including the older RFC 2822 format) stay valid. Only a *Yes*
   answered after upgrading asks them again. A `Cookie_Consent` value that is not a date counts as outdated once a
   profile asked for re-consent.
 - **Consent log.** With `use_logger: true`, new `CookieConsentLog` rows carry the profile `revision` the visitor
-  answered (`consent_revision`; `null` without a database profile).
+  answered (`consent_revision`; `null` without a database profile). The consent form carries the page route in a new
+  hidden field `cookie_consent[page_route]`, so with a dedicated `form_action` the row still records the profile of
+  the page the form was shown on. Hosts that render the consent form fields one by one must keep `form_end()` (or
+  render `page_route`).
 - **Hosts and scripts that read consent themselves** should use the Twig helpers or `CookieChecker` (or the new
   `nowo_cookie_consent_is_outdated()` / `CookieChecker::isConsentOutdated()`), not the raw cookies: the raw cookies
   of an outdated consent are only expired on the first private response. The config API exposes

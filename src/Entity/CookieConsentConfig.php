@@ -13,6 +13,7 @@ use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 use InvalidArgumentException;
 use Nowo\CookieConsentBundle\Config\PreferencesBubbleIconSanitizer;
+use Nowo\CookieConsentBundle\Doctrine\UtcDateTimeImmutableType;
 use Nowo\CookieConsentBundle\Repository\CookieConsentConfigRepository;
 
 use function in_array;
@@ -102,7 +103,7 @@ class CookieConsentConfig
      * before this instant (the `Cookie_Consent` timestamp) count as no consent. Stored as UTC wall-clock time; null
      * (every row at upgrade time) means "never", so existing consents stay valid.
      */
-    #[ORM\Column(name: 'reconsent_required_at', type: Types::DATETIME_IMMUTABLE, nullable: true)]
+    #[ORM\Column(name: 'reconsent_required_at', type: UtcDateTimeImmutableType::NAME, nullable: true)]
     private ?DateTimeImmutable $reconsentRequiredAt = null;
 
     #[ORM\Column(name: 'manage_script_tags', options: ['default' => false])]
@@ -340,12 +341,7 @@ class CookieConsentConfig
      */
     public function getReconsentRequiredAt(): ?DateTimeImmutable
     {
-        if (!$this->reconsentRequiredAt instanceof DateTimeImmutable) {
-            return null;
-        }
-
-        // The column has no time zone: it always holds UTC wall-clock time, whatever PHP's default zone is.
-        return new DateTimeImmutable($this->reconsentRequiredAt->format('Y-m-d H:i:s'), new DateTimeZone('UTC'));
+        return $this->reconsentRequiredAt?->setTimezone(new DateTimeZone('UTC'));
     }
 
     /**
@@ -357,10 +353,12 @@ class CookieConsentConfig
      */
     public function setReconsentRequiredAt(?DateTimeInterface $reconsentRequiredAt): self
     {
+        // Built in UTC (never via the default zone: a UTC time inside a local DST gap would shift), seconds only.
         // @igor-ignore - Doctrine entity field; instance-scoped, not a shared service.
         $this->reconsentRequiredAt = $reconsentRequiredAt instanceof DateTimeInterface
             ? new DateTimeImmutable(
                 DateTimeImmutable::createFromInterface($reconsentRequiredAt)->setTimezone(new DateTimeZone('UTC'))->format('Y-m-d H:i:s'),
+                new DateTimeZone('UTC'),
             )
             : null;
 

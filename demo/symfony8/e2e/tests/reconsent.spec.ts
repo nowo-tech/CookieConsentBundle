@@ -11,6 +11,7 @@ import { test, expect, type Browser, type BrowserContext, type Page } from '@pla
 const HOME = '/en/';
 const BEHAVIOR = '/cookie-consent-config/1/settings/behavior';
 const BANNER = '#cookieconsent';
+const COOKIES = '/cookie-consent-config/1/cookies';
 
 /**
  * WebKit (Playwright on Linux) drops `Secure` cookies on http://127.0.0.1, and the bundle always sets `Secure`. There,
@@ -149,5 +150,73 @@ test.describe('Re-consent after a revision change (JH-L1)', () => {
 
     await page.goto(HOME);
     await expect(page.locator(BANNER)).toHaveAttribute('data-nowo-open', 'false');
+  });
+
+  /**
+   * Audit JR-M1: a definition still stored with allowed_by_default = true (kept by JD-L6 from <= 1.23) is shown
+   * pre-ticked to a re-asked visitor, but that is only a UI default: no optional script or iframe runs before they
+   * answer.
+   */
+  test('"Yes" with a pre-ticked stored definition: nothing optional runs before the visitor answers', async ({
+    page,
+    browser,
+    browserName,
+  }) => {
+    const admin = await (await browser.newContext()).newPage();
+    const setAnalyticsDefault = async (allowed: boolean): Promise<void> => {
+      // The first definition whose category cell is Analytics (the list is paginated).
+      let found = false;
+      for (let n = 1; n <= 6 && !found; n += 1) {
+        await admin.goto(`${COOKIES}?page=${n}`);
+        const row = admin
+          .locator('[data-nowo-ui-region="table"] tbody tr')
+          .filter({ has: admin.getByRole('cell', { name: 'Analytics', exact: true }) })
+          .first();
+        if (await row.count()) {
+          await row.locator('a.nowo-ui-action--edit').click();
+          found = true;
+        }
+      }
+      expect(found).toBe(true);
+      const toggle = admin.locator('input[name="cookie_definition[allowedByDefault]"]');
+      await toggle.setChecked(allowed);
+      const saved = admin.waitForResponse((r) => r.request().method() === 'GET' && new URL(r.url()).pathname === COOKIES);
+      await toggle.evaluate((input) => (input as HTMLInputElement).form?.requestSubmit());
+      await saved;
+    };
+
+    try {
+      await setAnalyticsDefault(true);
+
+      mirrorConsentCookies(page, browserName);
+      await page.context().clearCookies();
+      await consentAll(page);
+      await expect.poll(() => page.evaluate(() => (window as unknown as { __demoAnalyticsLoaded?: boolean }).__demoAnalyticsLoaded)).toBe(true);
+      await page.waitForTimeout(1100);
+
+      const yes = await raiseRevision(browser, 'yes');
+      await yes.context().close();
+
+      await page.goto(HOME);
+      const modal = page.locator(BANNER);
+      await expect(modal).toHaveAttribute('data-nowo-open', 'true');
+      await expect(modal).toHaveAttribute('data-nowo-consent-saved', 'false');
+      await expect(modal.locator('input[name="cookie_consent[analytics]"]')).toBeChecked(); // UI default only
+      await page.waitForTimeout(500);
+      const ran = await page.evaluate(() => ({
+        analytics: (window as unknown as { __demoAnalyticsLoaded?: boolean }).__demoAnalyticsLoaded === true,
+        functionality: (window as unknown as { __demoFunctionalityLoaded?: boolean }).__demoFunctionalityLoaded === true,
+        iframes: document.querySelectorAll('[data-nowo-iframe-category] iframe').length,
+      }));
+      expect(ran).toEqual({ analytics: false, functionality: false, iframes: 0 });
+
+      // Rejecting keeps it that way.
+      await modal.locator('button[name="cookie_consent[use_only_functional_cookies]"]:visible').first().click();
+      await expect(page.locator('html')).not.toHaveClass(/nowo-cookie-consent-open/, { timeout: 10000 });
+      expect(await page.evaluate(() => (window as unknown as { __demoAnalyticsLoaded?: boolean }).__demoAnalyticsLoaded === true)).toBe(false);
+    } finally {
+      await setAnalyticsDefault(false);
+      await admin.context().close();
+    }
   });
 });

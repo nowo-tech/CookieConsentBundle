@@ -34,6 +34,9 @@ use const FILTER_VALIDATE_IP;
  */
 class CookieLogger
 {
+    /** Request attribute: the profile of the page the visitor answered on (1.25, audit JR-L3). */
+    public const ANSWERED_CONFIG_ATTRIBUTE = 'nowo_cookie_consent_answered_config';
+
     /** @var list<CookieConsentLog> Entities persisted by the current {@see self::log()} call */
     private array $pendingLogs = [];
 
@@ -119,26 +122,31 @@ class CookieLogger
     }
 
     /**
-     * Returns an open entity manager for {@see CookieConsentLog}, resetting it when a previous failure closed it.
-     */
-    /**
-     * Returns the `revision` of the consent profile active for the request that saved the consent (1.25, JH-L1).
+     * Returns the `revision` of the consent profile the visitor answered (1.25, JH-L1).
+     *
+     * Prefers the profile of the page the form was shown on ({@see self::ANSWERED_CONFIG_ATTRIBUTE}, set from the
+     * form's `page_route`, audit JR-L3), then the profile resolved for the request that saved the consent.
      *
      * @return int|null The profile revision, or null without a database profile
      */
     private function resolveConsentRevision(): ?int
     {
-        foreach ([$this->requestStack->getMainRequest(), $this->requestStack->getCurrentRequest()] as $request) {
-            $resolved = $request?->attributes->get('nowo_cookie_consent_config');
+        foreach ([self::ANSWERED_CONFIG_ATTRIBUTE, 'nowo_cookie_consent_config'] as $attribute) {
+            foreach ([$this->requestStack->getMainRequest(), $this->requestStack->getCurrentRequest()] as $request) {
+                $resolved = $request?->attributes->get($attribute);
 
-            if ($resolved instanceof ResolvedCookieConsentConfig) {
-                return $resolved->getConfig()->getRevision();
+                if ($resolved instanceof ResolvedCookieConsentConfig) {
+                    return $resolved->getConfig()->getRevision();
+                }
             }
         }
 
         return null;
     }
 
+    /**
+     * Returns an open entity manager for {@see CookieConsentLog}, resetting it when a previous failure closed it.
+     */
     private function getEntityManager(): EntityManagerInterface
     {
         if (!$this->managerRegistry instanceof ManagerRegistry) {

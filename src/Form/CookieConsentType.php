@@ -14,6 +14,7 @@ use Nowo\FormKitBundle\Form\FormOptionsTrait;
 use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\Extension\Core\Type\CheckboxType;
 use Symfony\Component\Form\Extension\Core\Type\FormType;
+use Symfony\Component\Form\Extension\Core\Type\HiddenType;
 use Symfony\Component\Form\Extension\Core\Type\SubmitType;
 use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\Form\FormEvent;
@@ -45,6 +46,9 @@ class CookieConsentType extends AbstractType
      * and works as a plain session token id when CSRF is not stateless.
      */
     public const CSRF_TOKEN_ID = 'submit';
+
+    /** Unmapped hidden field: the route of the page the visitor answered on (1.25, audit JR-L3). */
+    public const PAGE_ROUTE_FIELD = 'page_route';
 
     /**
      * Creates a new cookie consent form type.
@@ -101,6 +105,12 @@ class CookieConsentType extends AbstractType
 
             $builder->add($cookiesBuilder);
         }
+
+        $pageRoute = $this->requestStack->getMainRequest()?->attributes->get('_route');
+        $builder->add(self::PAGE_ROUTE_FIELD, HiddenType::class, [
+            'mapped' => false,
+            'data'   => is_string($pageRoute) ? $pageRoute : '',
+        ]);
 
         $databaseMessages = $this->resolveActiveResolvedConfig()?->getTranslationMessages() ?? [];
 

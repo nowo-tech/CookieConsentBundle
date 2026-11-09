@@ -215,6 +215,28 @@ describe('cookie-consent entrypoint', () => {
     expect(document.querySelector('[data-nowo-step="preferences"]')?.classList.contains('nowo-cookie-consent__step--active')).toBe(true);
   });
 
+  it.each([
+    ['false', false],
+    ['true', true],
+    [undefined, false],
+  ])('at load, pre-ticked optional categories activate only with a saved consent (data-nowo-consent-saved=%s, JR-M1)', async (saved, activated) => {
+    document.body.innerHTML = `
+      <script type="text/plain" data-cookie-category="required">window.__nowoRequiredRan = true;</script>
+      <script type="text/plain" data-cookie-category="analytics">window.__nowoAnalyticsRan = true;</script>
+      <div id="cookieconsent" class="modal nowo-cookie-consent" data-nowo-open="false" data-nowo-manage-iframe-placeholders="true"
+           ${saved === undefined ? '' : `data-nowo-consent-saved="${saved}"`} aria-hidden="true">
+        <form class="nowo-cookie-consent__form">
+          <input type="checkbox" name="cookie_consent[analytics]" checked>
+        </form>
+      </div>
+    `;
+
+    await import('./cookie-consent');
+
+    expect(document.querySelector('script[type="text/plain"][data-cookie-category="required"]')).toBeNull();
+    expect(document.querySelector('script[type="text/plain"][data-cookie-category="analytics"]') === null).toBe(activated);
+  });
+
   it('hides through Bootstrap after a successful save and activates consented scripts', async () => {
     const show = vi.fn();
     const hide = vi.fn();

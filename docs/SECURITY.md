@@ -64,7 +64,7 @@ The bundle does **not** expose a CLI that mutates production data, outbound HTTP
 | **Admin authorization** | `CookieConsentAccessCheckerInterface` (default roles from `security.access_roles`) enforced by `CookieConsentAdminAccessSubscriber` on admin routes; keep `security.allow_unauthenticated: false` in production and lock the admin path (`/cookie-consent-config` or your import prefix) with host `access_control`. With `web_ui.enabled: false` the subscriber answers admin routes with 404 |
 | **Custom bubble icon HTML** | `PreferencesBubbleIconSanitizer` allowlist: markup must be well-formed XML using only inline SVG elements (`svg`, `g`, `path`, `circle`, `rect`, gradients, …) or `span`/`i`/`b`/`strong`/`em`/`small`; it is re-serialized from the DOM (unknown attributes and comments dropped, text escaped). Event handlers, non-allowlisted elements, `href` other than `#id`, `javascript:`/`data:` values and external `url()` references are rejected. Applied when persisting, when loading YAML config, and again at render time |
 | **Required cookies** | Category `required` cannot be disabled; granular toggles exclude required cookies |
-| **Re-consent after material changes** *(1.25)* | An admin *Yes* to *Ask visitors to consent again?* stores `reconsent_required_at`; `CookieChecker` then treats a `Cookie_Consent` time before it (or an unreadable one) as no consent, so only `required` applies until the visitor answers, and the stale consent cookies are expired on private responses only (never with `Set-Cookie` on a `public`, cacheable response). The time is the visitor's own cookie: forging it only skips their own re-ask, like forging `Cookie_Consent` itself. Changing the label without answering is refused by the form; CSRF and admin access checks are unchanged |
+| **Re-consent after material changes** *(1.25)* | An admin *Yes* to *Ask visitors to consent again?* stores `reconsent_required_at`; `CookieChecker` then treats a `Cookie_Consent` time before it (or an unreadable one) as no consent, so only `required` applies until the visitor answers, and the stale consent cookies are expired on private responses only (a late `kernel.response` listener, after `#[Cache]` is applied, skips responses that are `public` or carry `s-maxage`). The time is the visitor's own cookie: forging it only skips their own re-ask, like forging `Cookie_Consent` itself. Changing the label without answering is refused by the form; CSRF and admin access checks are unchanged |
 | **Config API** | Read-only GET; returns display copy and GUI options, not secrets |
 
 Integrators should:
@@ -98,7 +98,11 @@ the EDPB cookie banner taskforce (2023) and the CNIL guidance. The bundle's rule
   cookie, including definitions stored as `true` before 1.24 (those keep their value). Accept and reject are
   unaffected. The "Show more" intro toggle (1.23) is a plain `type="button"` and records nothing. To collect
   consent again from visitors who saved pre-ticked choices before 1.24, answer *Yes* to *Ask visitors to consent
-  again?* in the profile settings (1.25): they are asked again with nothing optional pre-ticked.
+  again?* in the profile settings (1.25). They are asked again starting from `allowed_by_default`, so nothing optional
+  is pre-ticked unless a definition is still stored with `allowed_by_default: true`: set those to `false` before
+  answering *Yes*. Pre-ticked boxes are only a UI default: since 1.25 the JS runtime activates optional scripts and
+  iframe placeholders at page load only when the server reports a valid saved consent (`data-nowo-consent-saved`),
+  and after an answer only what the answer allows (a reject never activates pre-ticked categories; audit JR-M1).
 - Hosts that need equal prominence (recommended for EU traffic) enable equal-weight buttons and must not restyle one
   choice alone (`--nowo-cc-btn-primary-*` apply to both).
 

@@ -24,6 +24,7 @@ use Symfony\Component\HttpFoundation\Response;
 
 use function json_decode;
 use function libxml_use_internal_errors;
+use function md5;
 use function sprintf;
 use function strlen;
 use function substr;
@@ -55,6 +56,7 @@ final class ReconsentKernelTest extends TestCase
         [$html, $request, $response] = $this->visit($this->oldCookies());
 
         self::assertSame('false', $this->modalAttribute($html, 'data-nowo-open'));
+        self::assertSame('true', $this->modalAttribute($html, 'data-nowo-consent-saved'));
         self::assertNull($this->modalAttribute($html, 'data-nowo-reconsent-required-at'));
         self::assertTrue($this->checker($request)->isCategoryAllowedByUser('analytics'));
         self::assertSame([], $response->headers->getCookies(), 'nothing expired');
@@ -125,6 +127,7 @@ final class ReconsentKernelTest extends TestCase
         // 1. Old consent: banner again, nothing optional applies or is pre-ticked, browser cookies expired.
         [$html, $request, $response] = $this->visit($this->oldCookies());
         self::assertSame('true', $this->modalAttribute($html, 'data-nowo-open'));
+        self::assertSame('false', $this->modalAttribute($html, 'data-nowo-consent-saved'), 'JS activates nothing optional at load (JR-M1)');
         self::assertNotNull($this->modalAttribute($html, 'data-nowo-reconsent-required-at'));
         $checker = $this->checker($request);
         self::assertTrue($checker->isConsentOutdated());
@@ -175,6 +178,35 @@ final class ReconsentKernelTest extends TestCase
         self::assertNotEmpty($logs);
         foreach ($logs as $log) {
             self::assertSame(2, $log->getConsentRevision());
+        }
+    }
+
+    /**
+     * Audit JR-L3: with a dedicated `form_action` (here the bundle route) and route-targeted profiles, the log records
+     * the revision of the profile of the page the form was shown on (`page_route`), not of the POST route.
+     */
+    public function testLogRecordsTheRevisionOfTheAnsweredPageProfile(): void
+    {
+        $this->boot(logger: true);
+        $em = $this->em();
+        $em->persist((new CookieConsentConfig())->setName('Shop')->setEnabled(true)->setRevision(7)->setRoutePatterns(['shop_*'])->setPriority(10));
+        $em->flush();
+
+        $rendered = $this->kernel()->handle(Request::create('/cookie_consent'));
+        self::assertMatchesRegularExpression('/<input[^>]+name="cookie_consent\[page_route\]"[^>]+value="nowo_cookie_consent\.show"/', (string) $rendered->getContent());
+
+        foreach (['shop_checkout' => 7, '' => 1, 'not a route!' => 1] as $pageRoute => $expected) {
+            $key = 'key-' . $expected . '-' . md5((string) $pageRoute);
+            $this->kernel()->handle(Request::create('/cookie_consent', 'POST', [
+                'cookie_consent' => ['use_all_cookies' => '', 'page_route' => $pageRoute],
+            ], [CookieNameEnum::COOKIE_CONSENT_KEY_NAME => $key]));
+
+            $em->clear();
+            $logs = $em->getRepository(CookieConsentLog::class)->findBy(['cookieConsentKey' => $key]);
+            self::assertNotEmpty($logs, (string) $pageRoute);
+            foreach ($logs as $log) {
+                self::assertSame($expected, $log->getConsentRevision(), 'page_route "' . $pageRoute . '"');
+            }
         }
     }
 

@@ -158,7 +158,8 @@ Before each XHR POST it prepares Symfony CSRF the same way as the Flex `csrf-pro
 ## Consent logging
 
 When `use_logger: true`, each submission creates rows in `CookieConsentLog` with anonymized IP addresses (GDPR-friendly).
-Since 1.25 each row also records the profile `revision` the visitor answered (`consent_revision`).
+Since 1.25 each row also records the profile `revision` the visitor answered (`consent_revision`), resolved from the
+page the form was shown on (hidden `page_route` field), also with a dedicated `form_action`.
 
 ## Asking visitors again (re-consent)
 
@@ -168,7 +169,8 @@ profile settings (*Behavior*), the form asks **Ask visitors to consent again?** 
 - **No** for minor changes (typos, wording): the label changes, saved consents are kept.
 - **Yes** for material changes (new purposes, categories or providers): the profile stores the time of the request
   (`reconsent_required_at`). Every visitor whose consent is older sees the banner again, and until they answer only
-  necessary cookies apply; their earlier optional choices are not pre-ticked. Their consent cookies are expired on the
+  necessary cookies apply (the JS activates no optional script or iframe before they answer); their earlier optional
+  choices are not pre-ticked. Their consent cookies are expired on the
   next private response, except `Cookie_Consent_Key`. You can also answer *Yes* without changing the label.
 
 Consents saved before you upgraded to 1.25 are kept until you answer *Yes* once. In templates and PHP, read consent
