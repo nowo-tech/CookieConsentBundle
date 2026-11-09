@@ -52,6 +52,7 @@ final class CookieConsentConfigPayloadFactory
             'data' => [
                 'autoShow'                  => $config?->isAutoShow() ?? true,
                 'revision'                  => $config?->getRevision() ?? 0,
+                'reconsentRequiredAt'       => $config?->getReconsentRequiredAt()?->format('Y-m-d\\TH:i:s\\Z'),
                 'manageScriptTags'          => $config?->isManageScriptTags() ?? false,
                 'autoClearCookies'          => $config?->isAutoClearCookies() ?? false,
                 'hideFromBots'              => $config?->isHideFromBots() ?? true,

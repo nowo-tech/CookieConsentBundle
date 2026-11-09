@@ -6,6 +6,7 @@ namespace Nowo\CookieConsentBundle\Cookie;
 
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\Persistence\ManagerRegistry;
+use Nowo\CookieConsentBundle\Config\ResolvedCookieConsentConfig;
 use Nowo\CookieConsentBundle\Entity\CookieConsentLog;
 use Psr\Clock\ClockInterface;
 use Psr\Log\LoggerInterface;
@@ -109,7 +110,8 @@ class CookieLogger
             ->setCookieConsentKey($key)
             ->setCookieName($category)
             ->setCookieValue($value)
-            ->setTimestamp($this->clock->now());
+            ->setTimestamp($this->clock->now())
+            ->setConsentRevision($this->resolveConsentRevision());
 
         $this->getEntityManager()->persist($cookieConsentLog);
         // @igor-ignore - Not shared worker service state.
@@ -119,6 +121,24 @@ class CookieLogger
     /**
      * Returns an open entity manager for {@see CookieConsentLog}, resetting it when a previous failure closed it.
      */
+    /**
+     * Returns the `revision` of the consent profile active for the request that saved the consent (1.25, JH-L1).
+     *
+     * @return int|null The profile revision, or null without a database profile
+     */
+    private function resolveConsentRevision(): ?int
+    {
+        foreach ([$this->requestStack->getMainRequest(), $this->requestStack->getCurrentRequest()] as $request) {
+            $resolved = $request?->attributes->get('nowo_cookie_consent_config');
+
+            if ($resolved instanceof ResolvedCookieConsentConfig) {
+                return $resolved->getConfig()->getRevision();
+            }
+        }
+
+        return null;
+    }
+
     private function getEntityManager(): EntityManagerInterface
     {
         if (!$this->managerRegistry instanceof ManagerRegistry) {

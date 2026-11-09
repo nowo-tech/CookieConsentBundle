@@ -751,6 +751,8 @@ then does not prepend its default.
 
 - `nowo_cookie_consent_is_saved()`
 - `nowo_cookie_consent_is_category_allowed('analytics')`
+- `nowo_cookie_consent_is_outdated()` *(1.25)*: the visitor's consent predates the profile's last re-consent request
+  (it then counts as not saved; see [USAGE — Asking visitors again](USAGE.md#asking-visitors-again-re-consent))
 - `nowo_cookie_consent_is_open_by_default(route, disabled_routes)`
 - `nowo_cookie_consent_enabled_locales()`
 - `nowo_cookie_consent_locale()`

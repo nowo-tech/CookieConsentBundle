@@ -12,6 +12,8 @@ use Nowo\FormKitBundle\Form\FormOptionsTrait;
 use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\FormTypeInterface;
 use Symfony\Component\OptionsResolver\OptionsResolver;
+use Symfony\Contracts\Service\Attribute\Required;
+use Symfony\Contracts\Translation\TranslatorInterface;
 
 use function array_key_exists;
 use function is_string;
@@ -31,6 +33,40 @@ abstract class AbstractCookieConsentConfigSettingsType extends AbstractType
 
     private ?FormOptionsMerger $cookieConsentFormOptionsMerger = null;
 
+    private ?TranslatorInterface $cookieConsentTranslator = null;
+
+    /**
+     * Injects the translator used for messages the form adds itself (1.25: the re-consent question).
+     *
+     * @param TranslatorInterface $translator The translator
+     */
+    #[Required]
+    public function setCookieConsentTranslator(TranslatorInterface $translator): void
+    {
+        // @igor-ignore - Container-wired translator; same instance for every request.
+        $this->cookieConsentTranslator = $translator;
+    }
+
+    /**
+     * Translates a message, or returns the fallback when no translator is wired (bare form factories).
+     *
+     * @param string $id The message key
+     * @param string $domain The translation domain
+     * @param string $fallback The English text used without a translator
+     *
+     * @return string The translated message
+     */
+    protected function translate(string $id, string $domain, string $fallback): string
+    {
+        if (!$this->cookieConsentTranslator instanceof TranslatorInterface) {
+            return $fallback;
+        }
+
+        $translated = $this->cookieConsentTranslator->trans($id, [], $domain);
+
+        return $translated !== $id ? $translated : $fallback;
+    }
+
     /**
      * Injects the FormKit options merger used to resolve per-field options.
      */
@@ -49,6 +85,10 @@ abstract class AbstractCookieConsentConfigSettingsType extends AbstractType
     {
         if ($this->cookieConsentFormOptionsMerger instanceof FormOptionsMerger) {
             $type->setFormOptionsMerger($this->cookieConsentFormOptionsMerger);
+        }
+
+        if ($this->cookieConsentTranslator instanceof TranslatorInterface) {
+            $type->setCookieConsentTranslator($this->cookieConsentTranslator);
         }
 
         return $type;

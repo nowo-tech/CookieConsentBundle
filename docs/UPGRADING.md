@@ -3,6 +3,7 @@
 ## Table of contents
 
 - [Unreleased](#unreleased)
+- [To 1.25.0](#to-1250)
 - [To 1.24.0](#to-1240)
   - [To 1.24.0 (target): allowed_by_default defaults to false](#to-1240-target-allowed_by_default-defaults-to-false)
 - [To 1.23.0](#to-1230)
@@ -124,6 +125,58 @@
 
 ## Unreleased
 
+## To 1.25.0
+
+From **1.24.0** (target 1.25.0, owner decision JH-L1):
+
+```bash
+composer update nowo-tech/cookie-consent-bundle
+```
+
+**Add two nullable columns before you deploy** (the bundle ships no migrations; the mapped entities select them, so
+pages fail until they exist). Run `php bin/console doctrine:migrations:diff` and review it, or
+`doctrine:schema:update --force` where you use that. On MySQL 8.4 with DBAL 4 the migration is (add your
+`doctrine.table_prefix` to the table names; DBAL 3 also adds `COMMENT '(DC2Type:datetime_immutable)'`):
+
+```sql
+ALTER TABLE dashboard_cookie_config ADD reconsent_required_at DATETIME DEFAULT NULL;
+ALTER TABLE dashboard_cookie_log ADD consent_revision INT DEFAULT NULL;
+```
+
+Do not fill them: `NULL` is the correct value for every existing row (no re-consent requested yet; log rows written
+before 1.25 do not know the revision).
+
+What changes:
+
+- **Admin question.** The profile settings (*Behavior* tab, and `CookieConsentConfigFullSettingsType`) show *Ask
+  visitors to consent again?* with *Yes* / *No* radios and nothing pre-selected, on every saved profile. If you
+  change `revision`, the save is refused until you answer. *No* is for minor changes (typos, wording): only the label
+  changes and saved consents are kept. *Yes* is for material changes (new purposes, categories or providers): it
+  stores the current time in `reconsent_required_at`. *Yes* also works without changing the label. A host that
+  builds its own settings form from these types gets the question too; a host with its own form must call
+  `CookieConsentConfig::requireReconsent(new \DateTimeImmutable())` itself.
+- **What a visitor sees after *Yes*.** A consent whose `Cookie_Consent` value (the UTC time the consent was saved, an
+  unchanged 1.x cookie) is older than `reconsent_required_at` counts as no consent: the banner opens again, only
+  necessary cookies apply until the visitor answers (`nowo_cookie_consent_is_saved()` and
+  `nowo_cookie_consent_is_category_allowed()` return `false`, `CookieChecker::isCookieAllowedByUser()` only allows
+  `required`), and the preferences start from `allowed_by_default` like for a new visitor, so earlier optional choices
+  are not pre-ticked. That response expires `Cookie_Consent`, `Cookie_Consent_Granular` and the `Cookie_Category_*`
+  cookies (not `Cookie_Consent_Key`), unless the response is `public`. Answering again stores a fresh time. The check
+  uses the profile resolved for the current route (route targeting): a *Yes* on one profile asks again on the pages
+  that profile serves, and the expired cookies then apply site-wide.
+- **No mass re-ask on upgrade.** Every profile has `reconsent_required_at = NULL` after the migration, so consents
+  saved before 1.25 (any `Cookie_Consent` value, including the older RFC 2822 format) stay valid. Only a *Yes*
+  answered after upgrading asks them again. A `Cookie_Consent` value that is not a date counts as outdated once a
+  profile asked for re-consent.
+- **Consent log.** With `use_logger: true`, new `CookieConsentLog` rows carry the profile `revision` the visitor
+  answered (`consent_revision`; `null` without a database profile).
+- **Hosts and scripts that read consent themselves** should use the Twig helpers or `CookieChecker` (or the new
+  `nowo_cookie_consent_is_outdated()` / `CookieChecker::isConsentOutdated()`), not the raw cookies: the raw cookies
+  of an outdated consent are only expired on the first private response. The config API exposes
+  `reconsentRequiredAt` and the modal `data-nowo-reconsent-required-at` (UTC ISO-8601) for front-end code.
+- YAML-only setups (`use_database_config: false`) have no profile and therefore no re-consent request; nothing changes
+  for them.
+
 ## To 1.24.0
 
 From **1.23.0**:
@@ -157,8 +210,9 @@ What changes for a host:
 
 Consents already saved are kept: the consent cookies (`Cookie_Consent`, `Cookie_Category_*`, `Cookie_Consent_Granular`)
 are unchanged, and 1.24 does not ask visitors who saved consent under 1.23 again, including choices that were pre-ticked
-when they were saved. The profile `revision` setting does not ask again either: it is only printed on the modal as
-`data-nowo-revision` and nothing compares it (the admin help text now says so).
+when they were saved. The profile `revision` setting does not ask again either in 1.24: it is only printed on the
+modal as `data-nowo-revision` and nothing compares it. Since 1.25 the admin can ask again explicitly (see
+[To 1.25.0](#to-1250)).
 
 Hosts that relied on the implicit `true` must now set it explicitly: `allowed_by_default: true` in YAML, *Allowed by
 default* in the admin, or `setAllowedByDefault(true)` in fixtures and seeds. Before doing so for EU traffic, note that

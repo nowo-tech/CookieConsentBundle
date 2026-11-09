@@ -6,6 +6,7 @@ namespace Nowo\CookieConsentBundle\EventSubscriber;
 
 use Doctrine\DBAL\Exception as DBALException;
 use Doctrine\ORM\Exception\ORMException;
+use Nowo\CookieConsentBundle\Cookie\CookieChecker;
 use Nowo\CookieConsentBundle\Cookie\CookieHandler;
 use Nowo\CookieConsentBundle\Cookie\CookieLogger;
 use Nowo\CookieConsentBundle\Enum\CookieNameEnum;
@@ -39,6 +40,8 @@ class CookieConsentFormSubscriber implements EventSubscriberInterface
      * @param CookieLogger $cookieLogger Persists optional consent logs
      * @param CookieHandler $cookieHandler Writes consent cookies
      * @param bool $useLogger Whether consent logging is enabled
+     * @param LoggerInterface|null $logger Optional debug logger
+     * @param CookieChecker|null $cookieChecker Detects outdated consents (1.25); null keeps the 1.24 behaviour
      */
     public function __construct(
         private readonly FormFactoryInterface $formFactory,
@@ -46,6 +49,7 @@ class CookieConsentFormSubscriber implements EventSubscriberInterface
         private readonly CookieHandler $cookieHandler,
         private readonly bool $useLogger,
         private readonly ?LoggerInterface $logger = null,
+        private readonly ?CookieChecker $cookieChecker = null,
     ) {
     }
 
@@ -87,13 +91,40 @@ class CookieConsentFormSubscriber implements EventSubscriberInterface
                 /** @var array<string, bool|string> $data */
                 $data = $form->getData();
                 $this->handleFormSubmit($data, $request, $response);
+
+                return;
             }
+
+            $this->expireOutdatedConsent($request, $response);
         } catch (DBALException|ORMException $exception) {
             $this->logger?->debug(
                 'Skipping cookie consent form handling during cold start.',
                 ['exception' => $exception],
             );
         }
+    }
+
+    /**
+     * Expires an outdated consent (1.25, JH-L1) so the browser state matches what the server applies.
+     *
+     * Skipped on responses marked `public`: a shared cache must never store a `Set-Cookie` that would clear the
+     * consent of other visitors. The next private response expires them instead.
+     *
+     * @param Request $request The current request
+     * @param Response $response The response that receives the expired cookies
+     */
+    private function expireOutdatedConsent(Request $request, Response $response): void
+    {
+        if (!$this->cookieChecker instanceof CookieChecker || !$this->cookieChecker->isConsentOutdated()) {
+            return;
+        }
+
+        if ($response->headers->hasCacheControlDirective('public')) {
+            return;
+        }
+
+        // @igor-ignore - Writes expired cookies on this response; CookieHandler holds no state.
+        $this->cookieHandler->clear($request, $response);
     }
 
     /**

@@ -37,6 +37,9 @@
          data-nowo-preferences-equal-weight-buttons="{{ ui.preferencesModalEqualWeightButtons ? 'true' : 'false' }}"
          data-nowo-preferences-flip-buttons="{{ ui.preferencesModalFlipButtons ? 'true' : 'false' }}"
          data-nowo-revision="{{ ui.revision }}"
+         {% if ui.reconsentRequiredAt %}
+             data-nowo-reconsent-required-at="{{ ui.reconsentRequiredAt|date('Y-m-d\\TH:i:s\\Z', 'UTC') }}"
+         {% endif %}
      {% endif %}
      aria-labelledby="nowoCookieConsentTitle"
      aria-hidden="true"
