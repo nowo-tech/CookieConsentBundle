@@ -317,7 +317,8 @@ keep their own palette.
 
 **Compact first layer on phones (1.23).** Below 640px the header, body and footer insets shrink, the intro is clamped
 with a "Show more" toggle (only when the text is cut; only in templates that include `_intro_more.html.twig`), and
-with equal-weight buttons reject and accept share one row at the same size. The body scrolls; header and actions stay
+with equal-weight buttons reject and accept share one row at the same size (one-step modal and the Tailwind template;
+the Bootstrap two-step banner stacks the buttons full width, still the same size). The body scrolls; header and actions stay
 in view. Accept and reject keep the same size, order and weight as on wider screens.
 
 The open state is class-driven (no inline `display`): `.show` on `#cookieconsent` and `nowo-cookie-consent-open` on

@@ -98,7 +98,8 @@ Target: 1.23.0 (MUX-151, mobile UX audit 2026-11-09). See [UPGRADING](UPGRADING.
   template has the toggle (`nowo-cookie-consent--intro-clamp`, set by the script), so an overridden template is never
   cut without a way to read the rest. Tighter insets on phones; with equal-weight buttons the reject and accept
   buttons share one row at the same size and the third action (Customize / Save) takes the row above, so the actions
-  stay in view. Translations `nowo_cookie_consent.intro_more` / `intro_less` (9 locales).
+  stay in view (one-step modal and the Tailwind template; the Bootstrap two-step banner keeps the 1.22 stacked
+  full-width buttons, the same size for both, audit JD-L5). Translations `nowo_cookie_consent.intro_more` / `intro_less` (9 locales).
 
 ### Changed
 
