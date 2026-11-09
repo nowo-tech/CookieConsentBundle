@@ -13,6 +13,7 @@
      tabindex="-1"
      data-nowo-ui-theme="tailwind"
      data-nowo-open="{{ nowo_cookie_consent_is_open_by_default(app.request.attributes.get('_route'), disabled_routes) }}"
+     data-nowo-consent-saved="{{ nowo_cookie_consent_is_saved() ? 'true' : 'false' }}"
      data-nowo-two-step="{{ two_step ? 'true' : 'false' }}"
      data-nowo-open-preferences="{{ nowo_cookie_consent_open_preferences_modal() ? 'true' : 'false' }}"
      data-nowo-color-theme="{{ nowo_cookie_consent_color_theme() }}"
@@ -37,6 +38,9 @@
          data-nowo-preferences-equal-weight-buttons="{{ ui.preferencesModalEqualWeightButtons ? 'true' : 'false' }}"
          data-nowo-preferences-flip-buttons="{{ ui.preferencesModalFlipButtons ? 'true' : 'false' }}"
          data-nowo-revision="{{ ui.revision }}"
+         {% if ui.reconsentRequiredAt %}
+             data-nowo-reconsent-required-at="{{ ui.reconsentRequiredAt|date('Y-m-d\\TH:i:s\\Z', 'UTC') }}"
+         {% endif %}
      {% endif %}
      aria-labelledby="nowoCookieConsentTitle"
      aria-hidden="true"

@@ -6,6 +6,8 @@ namespace Nowo\CookieConsentBundle\EventSubscriber;
 
 use Doctrine\DBAL\Exception as DBALException;
 use Doctrine\ORM\Exception\ORMException;
+use Nowo\CookieConsentBundle\Config\CookieConsentConfigResolver;
+use Nowo\CookieConsentBundle\Config\ResolvedCookieConsentConfig;
 use Nowo\CookieConsentBundle\Cookie\CookieHandler;
 use Nowo\CookieConsentBundle\Cookie\CookieLogger;
 use Nowo\CookieConsentBundle\Enum\CookieNameEnum;
@@ -23,7 +25,10 @@ use Symfony\Component\HttpKernel\KernelEvents;
 use function bin2hex;
 use function in_array;
 use function is_array;
+use function is_string;
+use function preg_match;
 use function random_bytes;
+use function strlen;
 
 /**
  * Handles cookie consent form submission on the HTTP response event.
@@ -39,6 +44,8 @@ class CookieConsentFormSubscriber implements EventSubscriberInterface
      * @param CookieLogger $cookieLogger Persists optional consent logs
      * @param CookieHandler $cookieHandler Writes consent cookies
      * @param bool $useLogger Whether consent logging is enabled
+     * @param LoggerInterface|null $logger Optional debug logger
+     * @param CookieConsentConfigResolver|null $configResolver Resolves the profile of the answered page (1.25)
      */
     public function __construct(
         private readonly FormFactoryInterface $formFactory,
@@ -46,6 +53,7 @@ class CookieConsentFormSubscriber implements EventSubscriberInterface
         private readonly CookieHandler $cookieHandler,
         private readonly bool $useLogger,
         private readonly ?LoggerInterface $logger = null,
+        private readonly ?CookieConsentConfigResolver $configResolver = null,
     ) {
     }
 
@@ -86,6 +94,7 @@ class CookieConsentFormSubscriber implements EventSubscriberInterface
             if ($form->isSubmitted() && $form->isValid()) {
                 /** @var array<string, bool|string> $data */
                 $data = $form->getData();
+                $this->rememberAnsweredProfile($form, $request);
                 $this->handleFormSubmit($data, $request, $response);
             }
         } catch (DBALException|ORMException $exception) {
@@ -93,6 +102,34 @@ class CookieConsentFormSubscriber implements EventSubscriberInterface
                 'Skipping cookie consent form handling during cold start.',
                 ['exception' => $exception],
             );
+        }
+    }
+
+    /**
+     * Stores the profile of the page the visitor answered on (`page_route`), for the consent log (1.25, audit JR-L3).
+     *
+     * With a dedicated `form_action` the POST route resolves another profile than the page. The value is the
+     * visitor's own and only selects which profile `revision` their log rows record; it never changes consent.
+     *
+     * @param FormInterface<mixed> $form The submitted consent form
+     * @param Request $request The current request
+     */
+    private function rememberAnsweredProfile(FormInterface $form, Request $request): void
+    {
+        if (!$this->configResolver instanceof CookieConsentConfigResolver || !$form->has(CookieConsentType::PAGE_ROUTE_FIELD)) {
+            return;
+        }
+
+        $route = $form->get(CookieConsentType::PAGE_ROUTE_FIELD)->getData();
+
+        if (!is_string($route) || $route === '' || strlen($route) > 255 || preg_match('/^[A-Za-z0-9_.\-]+$/', $route) !== 1) {
+            return;
+        }
+
+        $resolved = $this->configResolver->resolve($request->getLocale(), $route);
+
+        if ($resolved instanceof ResolvedCookieConsentConfig) {
+            $request->attributes->set(CookieLogger::ANSWERED_CONFIG_ATTRIBUTE, $resolved);
         }
     }
 

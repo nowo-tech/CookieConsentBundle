@@ -4,12 +4,16 @@ declare(strict_types=1);
 
 namespace Nowo\CookieConsentBundle\Entity;
 
+use DateTimeImmutable;
+use DateTimeInterface;
+use DateTimeZone;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 use InvalidArgumentException;
 use Nowo\CookieConsentBundle\Config\PreferencesBubbleIconSanitizer;
+use Nowo\CookieConsentBundle\Doctrine\UtcDateTimeImmutableType;
 use Nowo\CookieConsentBundle\Repository\CookieConsentConfigRepository;
 
 use function in_array;
@@ -93,6 +97,14 @@ class CookieConsentConfig
 
     #[ORM\Column(options: ['default' => 0])]
     private int $revision = 0;
+
+    /**
+     * 1.25 (JH-L1): when an admin last confirmed that a change needs every visitor to consent again. Consents saved
+     * before this instant (the `Cookie_Consent` timestamp) count as no consent. Stored as UTC wall-clock time; null
+     * (every row at upgrade time) means "never", so existing consents stay valid.
+     */
+    #[ORM\Column(name: 'reconsent_required_at', type: UtcDateTimeImmutableType::NAME, nullable: true)]
+    private ?DateTimeImmutable $reconsentRequiredAt = null;
 
     #[ORM\Column(name: 'manage_script_tags', options: ['default' => false])]
     private bool $manageScriptTags = false;
@@ -320,6 +332,72 @@ class CookieConsentConfig
         $this->revision = $revision;
 
         return $this;
+    }
+
+    /**
+     * Returns when visitors were last required to consent again (UTC), or null when never.
+     *
+     * @return DateTimeImmutable|null The re-consent instant in UTC
+     */
+    public function getReconsentRequiredAt(): ?DateTimeImmutable
+    {
+        return $this->reconsentRequiredAt?->setTimezone(new DateTimeZone('UTC'));
+    }
+
+    /**
+     * Sets when visitors were last required to consent again (null clears it).
+     *
+     * @param DateTimeInterface|null $reconsentRequiredAt The re-consent instant (any zone; stored as UTC)
+     *
+     * @return self Fluent interface
+     */
+    public function setReconsentRequiredAt(?DateTimeInterface $reconsentRequiredAt): self
+    {
+        // Built in UTC (never via the default zone: a UTC time inside a local DST gap would shift), seconds only.
+        // @igor-ignore - Doctrine entity field; instance-scoped, not a shared service.
+        $this->reconsentRequiredAt = $reconsentRequiredAt instanceof DateTimeInterface
+            ? new DateTimeImmutable(
+                DateTimeImmutable::createFromInterface($reconsentRequiredAt)->setTimezone(new DateTimeZone('UTC'))->format('Y-m-d H:i:s'),
+                new DateTimeZone('UTC'),
+            )
+            : null;
+
+        return $this;
+    }
+
+    /**
+     * Records that the current change needs every visitor who consented before to consent again.
+     *
+     * @param DateTimeInterface $now The confirmation instant
+     *
+     * @return self Fluent interface
+     */
+    public function requireReconsent(DateTimeInterface $now): self
+    {
+        return $this->setReconsentRequiredAt($now);
+    }
+
+    /**
+     * Whether a consent saved at the given instant predates the last re-consent request of this profile.
+     *
+     * @param DateTimeInterface|null $consentedAt When the visitor saved consent (null: unknown or unreadable)
+     *
+     * @return bool True when the visitor must be asked again
+     */
+    public function isConsentOutdated(?DateTimeInterface $consentedAt): bool
+    {
+        $required = $this->getReconsentRequiredAt();
+
+        if (!$required instanceof DateTimeImmutable) {
+            return false;
+        }
+
+        if (!$consentedAt instanceof DateTimeInterface) {
+            return true;
+        }
+
+        // Second precision on both sides: a consent saved in the same second as the request still counts.
+        return $consentedAt->getTimestamp() < $required->getTimestamp();
     }
 
     /**

@@ -8,7 +8,11 @@ use DateInterval;
 use Nowo\CookieConsentBundle\Enum\CookieNameEnum;
 use Psr\Clock\ClockInterface;
 use Symfony\Component\HttpFoundation\Cookie;
+use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
+
+use function array_keys;
+use function str_starts_with;
 
 use const JSON_THROW_ON_ERROR;
 
@@ -57,6 +61,31 @@ class CookieHandler
         if ($granularCookies !== []) {
             $encoded = json_encode($this->normalizeGranularCookies($granularCookies), JSON_THROW_ON_ERROR);
             $this->saveCookie(CookieNameEnum::COOKIE_CONSENT_GRANULAR_NAME, $encoded, $response);
+        }
+    }
+
+    /**
+     * Expires the consent cookies the request carries (1.25, JH-L1: an outdated consent).
+     *
+     * Removes `Cookie_Consent`, `Cookie_Consent_Granular` and every `Cookie_Category_*` cookie, so scripts that read
+     * the category cookies themselves see no consent either. `Cookie_Consent_Key` is kept: it links the visitor's
+     * next answer to the same consent log rows.
+     *
+     * @param Request $request The request whose cookies are expired
+     * @param Response $response The response that receives the expired cookies
+     */
+    public function clear(Request $request, Response $response): void
+    {
+        foreach (array_keys($request->cookies->all()) as $name) {
+            $name = (string) $name;
+
+            if ($name !== CookieNameEnum::COOKIE_CONSENT_NAME
+                && $name !== CookieNameEnum::COOKIE_CONSENT_GRANULAR_NAME
+                && !str_starts_with($name, CookieNameEnum::COOKIE_CATEGORY_NAME_PREFIX)) {
+                continue;
+            }
+
+            $response->headers->clearCookie($name, '/', null, true, $this->httpOnly, Cookie::SAMESITE_LAX);
         }
     }
 

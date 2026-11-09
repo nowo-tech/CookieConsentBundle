@@ -13,7 +13,7 @@ import { injectCookieConsentStyles } from './inject-styles';
 import { prepareCsrfForRequest } from './csrf';
 import { applyPreferencesBubbleAccents } from './preferences-bubble';
 import { serializeForm } from './form-serializer';
-import { activateIframesForConsent, readAllowedCategoriesFromModal } from './iframe-manager';
+import { activateIframesForConsent, readAllowedCategoriesFromModal, readAnsweredCategoriesFromModal } from './iframe-manager';
 import { createBundleLogger, setBundleLogger } from './logger';
 import { bindCategoryToggles } from './category-toggles';
 import { bindGranularCookieToggles } from './granular-cookie-toggles';
@@ -83,8 +83,13 @@ export function initCookieConsent(): void {
   bindGranularCookieToggles(modalElement);
   bindIntroToggle(modalElement);
 
+  // 1.25 (audit JR-M1): at page load only a valid saved consent activates optional placeholders. Without one (new
+  // visitor, or a consent outdated by a re-consent request) pre-ticked boxes are a UI default, not consent: only
+  // `required` is activated until the visitor answers (the post-submit path below activates the answer).
   if (modalElement.dataset.nowoManageIframePlaceholders === 'true') {
-    activateIframesForConsent(readAllowedCategoriesFromModal(modalElement));
+    activateIframesForConsent(
+      modalElement.dataset.nowoConsentSaved === 'true' ? readAllowedCategoriesFromModal(modalElement) : ['required'],
+    );
   }
 
   const hasBootstrap = typeof window.bootstrap !== 'undefined' && window.bootstrap.Modal !== undefined;
@@ -191,7 +196,7 @@ export function initCookieConsent(): void {
         if (xhr.status >= 200 && xhr.status < 300) {
           log.debug('Consent saved successfully');
           if (modalElement.dataset.nowoManageIframePlaceholders === 'true') {
-            activateIframesForConsent(readAllowedCategoriesFromModal(modalElement));
+            activateIframesForConsent(readAnsweredCategoriesFromModal(modalElement, button.getAttribute('name') ?? ''));
           }
           document.dispatchEvent(
             new CustomEvent(SUCCESS_EVENT, {

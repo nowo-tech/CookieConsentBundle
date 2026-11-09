@@ -10,6 +10,7 @@ use Doctrine\ORM\EntityManager;
 use Doctrine\ORM\ORMSetup;
 use Doctrine\ORM\Tools\SchemaTool;
 use Doctrine\Persistence\ManagerRegistry;
+use Nowo\CookieConsentBundle\Doctrine\UtcDateTimeImmutableType;
 use Nowo\CookieConsentBundle\Entity\CookieConsentConfig;
 use Nowo\CookieConsentBundle\Entity\CookieConsentConfigTranslation;
 use Nowo\CookieConsentBundle\Entity\CookieDefinition;
@@ -37,6 +38,8 @@ final class DoctrineRepositoryTest extends TestCase
 
     private function createEntityManager(): EntityManager
     {
+        UtcDateTimeImmutableType::register();
+
         $config = ORMSetup::createAttributeMetadataConfiguration(
             paths: [dirname(__DIR__, 2) . '/src/Entity'],
             isDevMode: true,

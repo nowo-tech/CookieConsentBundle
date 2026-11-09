@@ -77,7 +77,7 @@ demo.config.settings.fields.priority_help: 'Si varios perfiles coinciden con la 
 demo.config.settings.fields.default_profile_help: 'Perfil fallback cuando ningún patrón coincide. Solo uno debería marcarse como por defecto.'
 demo.config.settings.fields.auto_show: 'Mostrar modal automáticamente'
 demo.config.settings.fields.auto_show_help: 'Abre el modal al cargar la página si el visitante aún no ha guardado preferencias.'
-demo.config.settings.fields.revision_help: 'Etiqueta de versión de este perfil, impresa en el modal como data-nowo-revision. Cambiarla no vuelve a pedir el consentimiento: los consentimientos guardados se mantienen.'
+demo.config.settings.fields.revision_help: 'Etiqueta de versión de este perfil, impresa en el modal como data-nowo-revision. Al cambiarla debe indicar si los visitantes tienen que volver a consentir: solo un cambio marcado como que requiere nuevo consentimiento vuelve a preguntarles.'
 demo.config.settings.fields.manage_script_tags_help: 'Bloquea o activa etiquetas <script> según las categorías permitidas (comportamiento CookieConsent v3).'
 demo.config.settings.fields.auto_clear_cookies_help: 'Elimina cookies no esenciales cuando el usuario revoca el consentimiento de una categoría.'
 demo.config.settings.fields.hide_from_bots_help: 'No muestra el modal a rastreadores y bots detectados.'

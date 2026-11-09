@@ -84,7 +84,7 @@ demo.config.settings.fields.priority_help: 'If several profiles match the curren
 demo.config.settings.fields.default_profile_help: 'Fallback profile used when no route pattern matches. Only one profile should be marked as default.'
 demo.config.settings.fields.auto_show: 'Auto show modal'
 demo.config.settings.fields.auto_show_help: 'Opens the consent modal on page load when the visitor has not saved preferences yet.'
-demo.config.settings.fields.revision_help: 'Version label of this profile, printed on the modal as data-nowo-revision. Changing it does not ask visitors again: saved consents are kept.'
+demo.config.settings.fields.revision_help: 'Version label of this profile, printed on the modal as data-nowo-revision. When you change it, you must say whether visitors have to consent again: only a change marked as needing new consent asks them again.'
 demo.config.settings.fields.manage_script_tags_help: 'Blocks or activates <script> tags based on the selected cookie categories (CookieConsent v3 behaviour).'
 demo.config.settings.fields.auto_clear_cookies_help: 'Removes non-essential cookies when the user revokes consent for a category.'
 demo.config.settings.fields.hide_from_bots_help: 'Skips rendering the modal for detected crawlers and bots.'

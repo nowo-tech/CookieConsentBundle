@@ -6,6 +6,7 @@ namespace Nowo\CookieConsentBundle\Cookie;
 
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\Persistence\ManagerRegistry;
+use Nowo\CookieConsentBundle\Config\ResolvedCookieConsentConfig;
 use Nowo\CookieConsentBundle\Entity\CookieConsentLog;
 use Psr\Clock\ClockInterface;
 use Psr\Log\LoggerInterface;
@@ -33,6 +34,9 @@ use const FILTER_VALIDATE_IP;
  */
 class CookieLogger
 {
+    /** Request attribute: the profile of the page the visitor answered on (1.25, audit JR-L3). */
+    public const ANSWERED_CONFIG_ATTRIBUTE = 'nowo_cookie_consent_answered_config';
+
     /** @var list<CookieConsentLog> Entities persisted by the current {@see self::log()} call */
     private array $pendingLogs = [];
 
@@ -109,11 +113,35 @@ class CookieLogger
             ->setCookieConsentKey($key)
             ->setCookieName($category)
             ->setCookieValue($value)
-            ->setTimestamp($this->clock->now());
+            ->setTimestamp($this->clock->now())
+            ->setConsentRevision($this->resolveConsentRevision());
 
         $this->getEntityManager()->persist($cookieConsentLog);
         // @igor-ignore - Not shared worker service state.
         $this->pendingLogs[] = $cookieConsentLog;
+    }
+
+    /**
+     * Returns the `revision` of the consent profile the visitor answered (1.25, JH-L1).
+     *
+     * Prefers the profile of the page the form was shown on ({@see self::ANSWERED_CONFIG_ATTRIBUTE}, set from the
+     * form's `page_route`, audit JR-L3), then the profile resolved for the request that saved the consent.
+     *
+     * @return int|null The profile revision, or null without a database profile
+     */
+    private function resolveConsentRevision(): ?int
+    {
+        foreach ([self::ANSWERED_CONFIG_ATTRIBUTE, 'nowo_cookie_consent_config'] as $attribute) {
+            foreach ([$this->requestStack->getMainRequest(), $this->requestStack->getCurrentRequest()] as $request) {
+                $resolved = $request?->attributes->get($attribute);
+
+                if ($resolved instanceof ResolvedCookieConsentConfig) {
+                    return $resolved->getConfig()->getRevision();
+                }
+            }
+        }
+
+        return null;
     }
 
     /**

@@ -63,6 +63,7 @@ class CookieConsentTwigExtension extends AbstractExtension
         return [
             new TwigFunction('nowo_cookie_consent_is_saved', $this->isCookieConsentSavedByUser(...)),
             new TwigFunction('nowo_cookie_consent_is_category_allowed', $this->isCategoryAllowedByUser(...)),
+            new TwigFunction('nowo_cookie_consent_is_outdated', $this->isConsentOutdated(...)),
             new TwigFunction('nowo_cookie_consent_is_open_by_default', $this->isCookieConsentOpenByDefault(...)),
             new TwigFunction('nowo_cookie_consent_enabled_locales', $this->getEnabledLocales(...)),
             new TwigFunction('nowo_cookie_consent_locale', $this->getResolvedLocale(...)),
@@ -164,6 +165,7 @@ class CookieConsentTwigExtension extends AbstractExtension
         return [
             'server' => [
                 'consent_saved'        => $consentSaved,
+                'consent_outdated'     => $this->cookieChecker->isConsentOutdated(),
                 'will_embed_modal'     => !$consentSaved,
                 'current_route'        => $route,
                 'locale'               => $this->getResolvedLocale(),
@@ -300,6 +302,18 @@ class CookieConsentTwigExtension extends AbstractExtension
     public function isCookieConsentSavedByUser(): bool
     {
         return $this->cookieChecker->isCookieConsentSavedByUser();
+    }
+
+    /**
+     * Returns whether the visitor's saved consent predates the active profile's last re-consent request (1.25).
+     *
+     * An outdated consent counts as not saved: the banner opens again and only necessary cookies apply.
+     *
+     * @return bool True when the visitor must be asked again
+     */
+    public function isConsentOutdated(): bool
+    {
+        return $this->cookieChecker->isConsentOutdated();
     }
 
     /**
