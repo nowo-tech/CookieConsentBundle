@@ -129,6 +129,10 @@ From **1.22.0** (MUX-151), no configuration change:
   primary instead of the neutral dark grey. To keep the neutral button, set `--nowo-cc-btn-primary-bg`,
   `--nowo-cc-btn-primary-color`, `--nowo-cc-btn-primary-hover-bg` and `--nowo-cc-btn-primary-hover-color` on
   `.nowo-cookie-consent`.
+- **Equal-weight buttons (`consentModalEqualWeightButtons` / `preferencesModalEqualWeightButtons`):** reject is now
+  filled exactly like accept (same primary colour, weight, border and hover; owner decision JD-L3). A host that styled
+  `.nowo-cookie-consent__btn--secondary[name="use_only_functional_cookies"]` differently should drop that override: the
+  two choices must keep the same prominence. Without equal-weight buttons nothing changes.
 - **Phones:** a long intro is clamped to three lines with a "Show more" toggle (`--nowo-cc-intro-lines-phone` changes
   the count). An overridden `cookie_consent.html.twig` / `cookie_consent.tailwind.html.twig` keeps its full intro until
   it adds `id="nowoCookieConsentIntro" … data-nowo-intro` on the intro and

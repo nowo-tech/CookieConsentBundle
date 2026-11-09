@@ -107,9 +107,12 @@ Target: 1.23.0 (MUX-151, mobile UX audit 2026-11-09). See [UPGRADING](UPGRADING.
 - The primary button of the default themes (`light`, `dark`, dark mode, and the host `data-theme` light / dark rules)
   reads the UiKit / brand tokens: `--nowo-ui-primary`, `--nowo-ui-primary-contrast`, `--nowo-ui-primary-hover`, with
   the former neutral colours as fallbacks (hover without UiKit: the primary colour mixed with 20% black instead of
-  plain black). The named themes `dark-turquoise`, `light-funky` and `elegant-black` keep their own colours. Consent
-  semantics are unchanged: same buttons, same order, same equal-weight behaviour; the reject button is never made
-  smaller or less visible than accept.
+  plain black). The named themes `dark-turquoise`, `light-funky` and `elegant-black` keep their own colours.
+- Equal prominence (owner decision JD-L3, "both filled the same"): with equal-weight buttons, reject
+  (`use_only_functional_cookies`) is drawn exactly like accept (`use_all_cookies`): the same filled primary tokens of
+  the active theme (brand `--nowo-ui-primary` in the default themes, the theme colour in the named themes), the same
+  weight, border, shadow, contrast and hover. Customize / Save keep the secondary style. Without equal-weight buttons
+  the 1.22 styles stay. Same buttons, names and order; nothing recorded changes.
 
 ## [1.22.0] - 2026-11-08
 

@@ -1459,3 +1459,37 @@ html[data-theme='dark'] .nowo-cookie-consent.nowo-cookie-consent--dark-mode {
     grid-column: 1 / -1;
   }
 }
+
+/*
+ * Equal prominence (1.23, owner decision JD-L3 "Both filled the same"). With equal-weight buttons the reject button
+ * (`use_only_functional_cookies`) is drawn exactly like accept (`use_all_cookies`): the same filled primary tokens of
+ * the active theme (the UiKit / brand --nowo-ui-primary in the default themes, the theme's own colour in the named
+ * themes), the same weight, border, shadow and hover. Customize / Save keep their own style. Without equal-weight
+ * nothing changes.
+ */
+.nowo-cookie-consent.nowo-cookie-consent--equal-weight-buttons .nowo-cookie-consent__btn--secondary[name='use_only_functional_cookies'],
+.nowo-cookie-consent.nowo-cookie-consent--equal-weight-buttons .nowo-cookie-consent__btn--secondary.btn[name='use_only_functional_cookies'] {
+  --bs-btn-bg: var(--nowo-cc-btn-primary-bg);
+  --bs-btn-border-color: var(--nowo-cc-btn-primary-bg);
+  --bs-btn-color: var(--nowo-cc-btn-primary-color);
+  --bs-btn-hover-bg: var(--nowo-cc-btn-primary-hover-bg);
+  --bs-btn-hover-border-color: var(--nowo-cc-btn-primary-hover-bg);
+  --bs-btn-hover-color: var(--nowo-cc-btn-primary-hover-color);
+  background: var(--nowo-cc-btn-primary-bg);
+  border-color: var(--nowo-cc-btn-primary-bg);
+  box-shadow: 0 1px 2px rgb(15 28 24 / 8%);
+  color: var(--nowo-cc-btn-primary-color);
+  font-weight: 600;
+}
+
+.nowo-cookie-consent.nowo-cookie-consent--equal-weight-buttons .nowo-cookie-consent__btn--secondary[name='use_only_functional_cookies']:hover,
+.nowo-cookie-consent.nowo-cookie-consent--equal-weight-buttons .nowo-cookie-consent__btn--secondary[name='use_only_functional_cookies']:focus-visible,
+.nowo-cookie-consent.nowo-cookie-consent--equal-weight-buttons .nowo-cookie-consent__btn--secondary.btn[name='use_only_functional_cookies']:hover,
+.nowo-cookie-consent.nowo-cookie-consent--equal-weight-buttons .nowo-cookie-consent__btn--secondary.btn[name='use_only_functional_cookies']:focus-visible {
+  background: var(--nowo-cc-btn-primary-hover-bg);
+  border-color: var(--nowo-cc-btn-primary-hover-bg);
+  box-shadow: 0 2px 8px rgb(15 28 24 / 12%);
+  color: var(--nowo-cc-btn-primary-hover-color);
+  outline: 2px solid var(--nowo-cc-btn-primary-bg);
+  outline-offset: 2px;
+}

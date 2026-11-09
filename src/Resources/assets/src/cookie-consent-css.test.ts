@@ -117,7 +117,8 @@ describe('cookie-consent.css custom properties', () => {
 });
 
 describe('cookie-consent.css compact first layer (1.23, MUX-151)', () => {
-  const phone = css.slice(css.indexOf('@media (max-width: 639.98px) {'));
+  const phoneStart = css.indexOf('@media (max-width: 639.98px) {');
+  const phone = css.slice(phoneStart, css.indexOf(' * Equal prominence (1.23', phoneStart));
 
   it('inherits the host font (token, then UiKit, then inherit)', () => {
     expect(ruleBody('.nowo-cookie-consent {')).toContain(
@@ -153,5 +154,17 @@ describe('cookie-consent.css compact first layer (1.23, MUX-151)', () => {
     expect(body).toContain('color: var(--nowo-cc-primary);');
     expect(body).not.toContain('btn-primary');
     expect(body).not.toContain('--nowo-ui-');
+  });
+});
+
+describe('cookie-consent.css equal prominence (1.23, JD-L3)', () => {
+  it('fills reject with the primary tokens only under equal-weight buttons, outside the phone block', () => {
+    const rule = ruleBody(
+      ".nowo-cookie-consent.nowo-cookie-consent--equal-weight-buttons .nowo-cookie-consent__btn--secondary.btn[name='use_only_functional_cookies'] {",
+    );
+    expect(rule).toContain('background: var(--nowo-cc-btn-primary-bg);');
+    expect(rule).toContain('color: var(--nowo-cc-btn-primary-color);');
+    expect(rule).toContain('font-weight: 600;');
+    expect(css.indexOf('Equal prominence (1.23')).toBeGreaterThan(css.indexOf('@media (max-width: 639.98px) {'));
   });
 });

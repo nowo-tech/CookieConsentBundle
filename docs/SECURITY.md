@@ -6,6 +6,7 @@
 - [Attack surface](#attack-surface)
 - [Threat model](#threat-model)
 - [Mitigations](#mitigations)
+- [Consent prominence (no deceptive design)](#consent-prominence-no-deceptive-design)
 - [Secrets and cryptography](#secrets-and-cryptography)
 - [Logging](#logging)
 - [Dependencies and updates](#dependencies-and-updates)
@@ -71,6 +72,21 @@ Integrators should:
 - Keep `csrf_protection: true` in production. Hosts that use Symfony SameOrigin CSRF (`framework.csrf_protection.stateless_token_ids` including the form token id, typically `submit`) rely on the bundle JS double-submit path for XHR consent posts.
 - Serve the site over HTTPS so `Secure` cookies are effective.
 - Review DB-backed modal copy before publishing (treat admins as trusted for HTML in descriptions if `|raw` is used in custom overrides).
+
+## Consent prominence (no deceptive design)
+
+Steering visitors towards *accept* through button size, colour or contrast is treated as a deceptive design pattern by
+the EDPB cookie banner taskforce (2023) and the CNIL guidance. The bundle's rules:
+
+- **Equal-weight buttons** (profile `consentModalEqualWeightButtons` / `preferencesModalEqualWeightButtons`): reject
+  (`use_only_functional_cookies`) and accept (`use_all_cookies`) are drawn identically since 1.23 (owner decision
+  JD-L3, "both filled the same"): the same filled primary tokens of the active theme, the same size, weight, border,
+  shadow, contrast and hover, in the Bootstrap and the Tailwind template and in every colour theme. On phones both
+  share one row at the same size. Vitest `equal-prominence.test.ts` compares their computed styles.
+- Customize / Save keep the secondary style; they do not record a choice for every category.
+- Nothing is pre-checked; the "Show more" intro toggle (1.23) is a plain `type="button"` and records nothing.
+- Hosts that need equal prominence (recommended for EU traffic) enable equal-weight buttons and must not restyle one
+  choice alone (`--nowo-cc-btn-primary-*` apply to both).
 
 ## Secrets and cryptography
 
