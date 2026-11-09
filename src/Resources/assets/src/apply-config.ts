@@ -47,6 +47,8 @@ export interface CookieConsentGuiModalOptions {
 export interface CookieConsentConfigData {
   autoShow?: boolean;
   revision?: number;
+  /** 1.25 (JH-L1): UTC ISO time of the profile's last re-consent request; consents saved before it are outdated. */
+  reconsentRequiredAt?: string | null;
   disablePageInteraction?: boolean;
   colorTheme?: string;
   darkModeEnabled?: boolean;
@@ -197,6 +199,10 @@ export function applyRemoteConfig(
 
   if (typeof data.revision === 'number') {
     modalElement.dataset.nowoRevision = String(data.revision);
+  }
+
+  if (typeof data.reconsentRequiredAt === 'string' && data.reconsentRequiredAt !== '') {
+    modalElement.dataset.nowoReconsentRequiredAt = data.reconsentRequiredAt;
   }
 
   if (data.autoShow === false) {

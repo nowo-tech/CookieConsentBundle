@@ -1034,6 +1034,7 @@ use Symfony\Component\Config\Loader\ParamConfigurator as Param;
  *             provider?: scalar|Param|null, // Default: ""
  *             purpose?: scalar|Param|null, // Default: ""
  *         }>,
+ *         ...<string, mixed>
  *     }>,
  *     fetch_config_via_api?: bool|Param, // Expose GET /cookie-consent/config and let the frontend script load settings via fetch(). // Default: false
  *     http_only?: bool|Param, // Set HttpOnly flag on consent cookies. // Default: true

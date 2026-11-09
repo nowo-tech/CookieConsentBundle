@@ -33,6 +33,7 @@ describe('applyRemoteConfig', () => {
     applyRemoteConfig(modal, {
       autoShow: false,
       revision: 3,
+      reconsentRequiredAt: '2026-11-09T10:00:00Z',
       disablePageInteraction: true,
       guiOptions: {
         consentModal: {
@@ -79,6 +80,7 @@ describe('applyRemoteConfig', () => {
     expect(modal.dataset.nowoPositionY).toBe('top');
     expect(modal.dataset.nowoPositionX).toBe('right');
     expect(modal.dataset.nowoRevision).toBe('3');
+    expect(modal.dataset.nowoReconsentRequiredAt).toBe('2026-11-09T10:00:00Z');
     expect(modal.classList.contains('nowo-cookie-consent--layout-cloud')).toBe(true);
     expect(modal.classList.contains('nowo-cookie-consent--variant-inline')).toBe(true);
     expect(modal.classList.contains('nowo-cookie-consent--pos-y-top')).toBe(true);

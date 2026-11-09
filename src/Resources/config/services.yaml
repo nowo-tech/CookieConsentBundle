@@ -22,6 +22,7 @@ services:
       - '../../Controller/'
       - '../../DependencyInjection/'
       - '../../Entity/'
+      - '../../Doctrine/'
       - '../../NowoCookieConsentBundle.php'
       - '../../EventSubscriber/CookieConsentAdminAccessSubscriber.php'
       - '../../Security/AllowAllCookieConsentAccessChecker.php'

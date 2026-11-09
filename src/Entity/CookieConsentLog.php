@@ -37,6 +37,13 @@ class CookieConsentLog
     private DateTimeImmutable $timestamp;
 
     /**
+     * 1.25 (JH-L1): the consent profile `revision` the visitor answered; null for rows written before 1.25 or when
+     * no database profile was active.
+     */
+    #[ORM\Column(name: 'consent_revision', type: Types::INTEGER, nullable: true)]
+    private ?int $consentRevision = null;
+
+    /**
      * Initializes the consent log timestamp.
      */
     public function __construct()
@@ -177,5 +184,30 @@ class CookieConsentLog
     public function getTimestamp(): DateTimeImmutable
     {
         return $this->timestamp;
+    }
+
+    /**
+     * Sets the consent profile revision the visitor answered.
+     *
+     * @param int|null $consentRevision The profile `revision`, or null when unknown
+     *
+     * @return self Fluent interface
+     */
+    public function setConsentRevision(?int $consentRevision): self
+    {
+        // @igor-ignore - Doctrine entity field; instance-scoped, not a shared service.
+        $this->consentRevision = $consentRevision;
+
+        return $this;
+    }
+
+    /**
+     * Returns the consent profile revision the visitor answered.
+     *
+     * @return int|null The profile `revision`, or null for rows before 1.25 or without a database profile
+     */
+    public function getConsentRevision(): ?int
+    {
+        return $this->consentRevision;
     }
 }

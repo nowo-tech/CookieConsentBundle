@@ -40,10 +40,10 @@ export default defineConfig({
       testIgnore: /screenshots\.spec\.ts/,
     },
     {
-      // Audit JD-M1: the equal-prominence check also runs in WebKit.
+      // Audit JD-M1: the equal-prominence check also runs in WebKit; so does the re-consent flow (JH-L1, 1.25).
       name: 'prominence-webkit',
       use: { ...devices['Desktop Safari'] },
-      testMatch: /equal-prominence\.spec\.ts/,
+      testMatch: /(equal-prominence|reconsent)\.spec\.ts/,
     },
     {
       name: 'screenshots',

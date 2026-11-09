@@ -26,6 +26,7 @@ Regenerate with `make -C demo/symfony8 demo-screenshots` (REQ-DEMO-013).
 - [Preferences bubble icon](#preferences-bubble-icon)
 - [AJAX submission](#ajax-submission)
 - [Consent logging](#consent-logging)
+- [Asking visitors again (re-consent)](#asking-visitors-again-re-consent)
 - [Theming the admin pages](#theming-the-admin-pages)
 - [Overriding templates (REQ-TWIG-001)](#overriding-templates-req-twig-001)
 - [Database profile copy (`nowo_cookie_consent_trans`)](#database-profile-copy-nowo_cookie_consent_trans)
@@ -157,6 +158,38 @@ Before each XHR POST it prepares Symfony CSRF the same way as the Flex `csrf-pro
 ## Consent logging
 
 When `use_logger: true`, each submission creates rows in `CookieConsentLog` with anonymized IP addresses (GDPR-friendly).
+Since 1.25 each row also records the profile `revision` the visitor answered (`consent_revision`), resolved from the
+page the form was shown on (hidden `page_route` field), also with a dedicated `form_action`. That route is what the
+browser reports, so it is visitor-controlled: a forged value only changes the `consent_revision` of that visitor's own
+log rows, never whether consent is valid.
+
+## Asking visitors again (re-consent)
+
+*Since 1.25 (owner decision JH-L1).* The profile `revision` is a free label. When you save a change to it in the
+profile settings (*Behavior*), the form asks **Ask visitors to consent again?** and refuses the save until you answer:
+
+- **No** for minor changes (typos, wording): the label changes, saved consents are kept.
+- **Yes** for material changes (new purposes, categories or providers): the profile stores the time of the request
+  (`reconsent_required_at`). Every visitor whose consent is older sees the banner again, and until they answer only
+  necessary cookies apply (the JS activates no optional script or iframe before they answer); their earlier optional
+  choices are not pre-ticked. Their consent cookies are expired on the
+  next private response, except `Cookie_Consent_Key`. You can also answer *Yes* without changing the label.
+
+Consents saved before you upgraded to 1.25 are kept until you answer *Yes* once. In templates and PHP, read consent
+through the helpers, which already treat an outdated consent as none:
+
+```twig
+{% if nowo_cookie_consent_is_outdated() %}
+    {# the visitor consented before the last re-consent request: the banner is open again #}
+{% endif %}
+```
+
+```php
+$checker->isConsentOutdated();       // true until the visitor answers again
+$checker->isCookieConsentSavedByUser(); // false while outdated
+```
+
+From your own code, `$config->requireReconsent(new \DateTimeImmutable())` followed by a flush does the same as *Yes*.
 
 ## Theming the admin pages
 

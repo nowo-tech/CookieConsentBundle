@@ -4,7 +4,10 @@ declare(strict_types=1);
 
 namespace Nowo\CookieConsentBundle\Cookie;
 
+use DateTimeImmutable;
+use Exception;
 use JsonException;
+use Nowo\CookieConsentBundle\Config\ResolvedCookieConsentConfig;
 use Nowo\CookieConsentBundle\Enum\CookieNameEnum;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\RequestStack;
@@ -12,6 +15,7 @@ use Symfony\Component\HttpFoundation\RequestStack;
 use function array_key_exists;
 use function is_array;
 use function is_string;
+use function trim;
 
 use const JSON_THROW_ON_ERROR;
 
@@ -40,11 +44,24 @@ class CookieChecker
     }
 
     /**
-     * Returns whether the user has saved cookie consent preferences.
+     * Returns whether the user has saved cookie consent preferences that are still valid.
      *
-     * @return bool True when the main consent cookie is present
+     * 1.25 (JH-L1): a consent saved before the active profile's last re-consent request counts as not saved, so the
+     * banner opens again and only necessary cookies apply until the visitor answers.
+     *
+     * @return bool True when the main consent cookie is present and not outdated
      */
     public function isCookieConsentSavedByUser(): bool
+    {
+        return $this->hasConsentCookie() && !$this->isConsentOutdated();
+    }
+
+    /**
+     * Returns whether the main consent cookie is present, outdated or not.
+     *
+     * @return bool True when the `Cookie_Consent` cookie is sent
+     */
+    public function hasConsentCookie(): bool
     {
         $request = $this->getRequest();
 
@@ -53,6 +70,69 @@ class CookieChecker
         }
 
         return $request->cookies->has(CookieNameEnum::COOKIE_CONSENT_NAME);
+    }
+
+    /**
+     * Returns whether the visitor's saved consent predates the active profile's last re-consent request.
+     *
+     * The comparison uses the `Cookie_Consent` value (the UTC time the consent was saved). Without a consent cookie,
+     * or when the active profile never asked for re-consent, the consent is not outdated. A consent cookie whose
+     * value cannot be read as a date is outdated once the profile asked for re-consent.
+     *
+     * @return bool True when the visitor must be asked again
+     */
+    public function isConsentOutdated(): bool
+    {
+        if (!$this->hasConsentCookie()) {
+            return false;
+        }
+
+        $resolved = $this->getResolvedConfig();
+
+        if (!$resolved instanceof ResolvedCookieConsentConfig) {
+            return false;
+        }
+
+        return $resolved->getConfig()->isConsentOutdated($this->getConsentSavedAt());
+    }
+
+    /**
+     * Returns when the visitor saved consent, read from the `Cookie_Consent` value.
+     *
+     * Accepts the 1.x ISO-8601 UTC value and older formats PHP can parse (e.g. RFC 2822 `date('r')`).
+     *
+     * @return DateTimeImmutable|null The consent time, or null without a readable consent cookie
+     */
+    public function getConsentSavedAt(): ?DateTimeImmutable
+    {
+        $raw = $this->getRequest()?->cookies->get(CookieNameEnum::COOKIE_CONSENT_NAME);
+
+        if (!is_string($raw) || trim($raw) === '') {
+            return null;
+        }
+
+        try {
+            return new DateTimeImmutable($raw);
+        } catch (Exception) {
+            return null;
+        }
+    }
+
+    private function getResolvedConfig(): ?ResolvedCookieConsentConfig
+    {
+        foreach ([$this->requestStack->getMainRequest(), $this->requestStack->getCurrentRequest()] as $request) {
+            if (!$request instanceof Request) {
+                continue;
+            }
+
+            $resolved = $request->attributes->get('nowo_cookie_consent_config');
+
+            if ($resolved instanceof ResolvedCookieConsentConfig) {
+                return $resolved;
+            }
+        }
+
+        return null;
     }
 
     /**
@@ -66,7 +146,7 @@ class CookieChecker
     {
         $request = $this->getRequest();
 
-        if (!$request instanceof Request) {
+        if (!$request instanceof Request || $this->isConsentOutdated()) {
             return false;
         }
 
@@ -105,7 +185,7 @@ class CookieChecker
     {
         $request = $this->getRequest();
 
-        if (!$request instanceof Request) {
+        if (!$request instanceof Request || $this->isConsentOutdated()) {
             return null;
         }
 

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { activateIframesForConsent, readAllowedCategoriesFromModal } from './iframe-manager';
+import { activateIframesForConsent, readAllowedCategoriesFromModal, readAnsweredCategoriesFromModal } from './iframe-manager';
 
 describe('readAllowedCategoriesFromModal', () => {
   it('returns an empty array when the consent form is missing', () => {
@@ -151,5 +151,31 @@ describe('activateIframesForConsent', () => {
     activateIframesForConsent(['analytics']);
 
     expect(document.querySelector('iframe')).toBeNull();
+  });
+});
+
+describe('readAnsweredCategoriesFromModal (JR-M1)', () => {
+  const modal = (): HTMLElement => {
+    document.body.innerHTML = `
+      <div id="modal"><form class="nowo-cookie-consent__form">
+        <input type="checkbox" name="cookie_consent[analytics]" checked>
+        <input type="checkbox" name="cookie_consent[marketing]">
+        <input type="checkbox" name="unparseable">
+      </form></div>`;
+
+    return document.getElementById('modal')!;
+  };
+
+  it('a reject allows only required, whatever is pre-ticked', () => {
+    expect(readAnsweredCategoriesFromModal(modal(), 'cookie_consent[use_only_functional_cookies]')).toEqual(['required']);
+    expect(readAnsweredCategoriesFromModal(modal(), 'use_only_functional_cookies')).toEqual(['required']);
+  });
+
+  it('accept all allows every category of the form', () => {
+    expect(readAnsweredCategoriesFromModal(modal(), 'cookie_consent[use_all_cookies]').sort()).toEqual(['analytics', 'marketing', 'required']);
+  });
+
+  it('save allows what is ticked', () => {
+    expect(readAnsweredCategoriesFromModal(modal(), 'cookie_consent[save]').sort()).toEqual(['analytics', 'required']);
   });
 });

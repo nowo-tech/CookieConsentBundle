@@ -9,6 +9,33 @@ function parseCategoryFromInputName(name: string): string | null {
   return match?.[1] ?? null;
 }
 
+/**
+ * Categories the visitor's answer allows (1.25, audit JR-M1): "accept all" allows every category of the form,
+ * "reject" (`use_only_functional_cookies`) only `required`, and Save what is ticked. The server applies the same rule
+ * (CookieConsentType PRE_SUBMIT); pre-ticked boxes must never count for a reject.
+ */
+export function readAnsweredCategoriesFromModal(modalElement: HTMLElement, buttonName: string): string[] {
+  if (/(^|\[)use_only_functional_cookies\]?$/.test(buttonName)) {
+    return ['required'];
+  }
+
+  if (/(^|\[)use_all_cookies\]?$/.test(buttonName)) {
+    const all = new Set<string>(['required']);
+    modalElement
+      .querySelectorAll<HTMLInputElement>('.nowo-cookie-consent__form input[type="checkbox"]')
+      .forEach((input) => {
+        const category = parseCategoryFromInputName(input.name);
+        if (category) {
+          all.add(category);
+        }
+      });
+
+    return [...all];
+  }
+
+  return readAllowedCategoriesFromModal(modalElement);
+}
+
 export function readAllowedCategoriesFromModal(modalElement: HTMLElement): string[] {
   const form = modalElement.querySelector<HTMLFormElement>('.nowo-cookie-consent__form');
 

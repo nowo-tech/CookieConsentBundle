@@ -8,6 +8,7 @@ use Doctrine\Bundle\DoctrineBundle\DependencyInjection\Compiler\DoctrineOrmMappi
 use Nowo\CookieConsentBundle\DependencyInjection\Compiler\CookieConsentSecurityPass;
 use Nowo\CookieConsentBundle\DependencyInjection\Compiler\TwigPathsPass;
 use Nowo\CookieConsentBundle\DependencyInjection\NowoCookieConsentExtension;
+use Nowo\CookieConsentBundle\Doctrine\UtcDateTimeImmutableType;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\Extension\ExtensionInterface;
 use Symfony\Component\HttpKernel\Bundle\Bundle;
@@ -34,6 +35,14 @@ class NowoCookieConsentBundle extends Bundle
                 [$entityDir],
             ));
         }
+    }
+
+    /**
+     * Registers the bundle's DBAL types (1.25: UTC re-consent time, audit JR-L2).
+     */
+    public function boot(): void
+    {
+        UtcDateTimeImmutableType::register();
     }
 
     /**
