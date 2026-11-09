@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { bindIntroToggle, CLAMP_CLASS, EXPANDED_CLASS, refreshIntroToggle } from './intro-more';
+import { bindStepNavigation, openBannerStep, openPreferencesStep } from './step-manager';
 
 function setup(scrollHeight: number, clientHeight: number): { modal: HTMLElement; intro: HTMLElement; toggle: HTMLButtonElement } {
   document.body.innerHTML = `
@@ -84,5 +85,78 @@ describe('intro "Show more" toggle (MUX-151)', () => {
     bindIntroToggle(modal);
     refreshIntroToggle(modal);
     expect(modal.classList.contains(CLAMP_CLASS)).toBe(false);
+  });
+
+  it('shows the toggle after the modal opened on the preferences step and the user goes back (JD-L1)', () => {
+    document.body.innerHTML = `
+      <div id="cookieconsent" class="nowo-cookie-consent--two-step" data-nowo-two-step="true">
+        <div data-nowo-step="banner" class="nowo-cookie-consent__step nowo-cookie-consent__step--active">
+          <p id="nowoCookieConsentIntro" data-nowo-intro>Long text</p>
+          <button type="button" data-nowo-intro-more data-nowo-label-more="Show more" aria-expanded="false" hidden>Show more</button>
+        </div>
+        <div data-nowo-step="preferences" class="nowo-cookie-consent__step">
+          <button type="button" data-nowo-hide-preferences>x</button>
+        </div>
+      </div>
+    `;
+    const modal = document.getElementById('cookieconsent')!;
+    const intro = modal.querySelector<HTMLElement>('[data-nowo-intro]')!;
+    const toggle = modal.querySelector<HTMLButtonElement>('[data-nowo-intro-more]')!;
+    // Hidden banner step: nothing to measure.
+    let heights = { scroll: 0, client: 0 };
+    Object.defineProperty(intro, 'scrollHeight', { configurable: true, get: () => heights.scroll });
+    Object.defineProperty(intro, 'clientHeight', { configurable: true, get: () => heights.client });
+
+    bindStepNavigation(modal);
+    bindIntroToggle(modal);
+    openPreferencesStep(modal);
+    refreshIntroToggle(modal);
+    expect(toggle.hidden).toBe(true);
+
+    // Back to the banner (×): the intro is laid out and cut.
+    heights = { scroll: 130, client: 65 };
+    openBannerStep(modal);
+    expect(toggle.hidden).toBe(false);
+  });
+
+  it('re-measures when the intro box changes size and when the web fonts are ready (JD-L1)', async () => {
+    const { modal, intro, toggle } = setup(40, 40);
+    let observed: Element | null = null;
+    let notify: () => void = () => undefined;
+    let fontsReady: () => void = () => undefined;
+    const win = {
+      addEventListener: () => undefined,
+      ResizeObserver: class {
+        constructor(callback: () => void) {
+          notify = callback;
+        }
+        observe(target: Element): void {
+          observed = target;
+        }
+      },
+      document: { fonts: { ready: new Promise<void>((resolve) => { fontsReady = resolve; }) } },
+    } as unknown as Window & typeof globalThis;
+
+    bindIntroToggle(modal, win);
+    expect(observed).toBe(intro);
+
+    Object.defineProperty(intro, 'scrollHeight', { configurable: true, get: () => 200 });
+    notify();
+    expect(toggle.hidden).toBe(false);
+
+    Object.defineProperty(intro, 'scrollHeight', { configurable: true, get: () => 40 });
+    expect(toggle.hidden).toBe(false);
+    fontsReady();
+    await Promise.resolve();
+    await Promise.resolve();
+    expect(toggle.hidden).toBe(true);
+  });
+
+  it('works without ResizeObserver or document.fonts', () => {
+    const { modal, toggle } = setup(120, 60);
+    const win = { addEventListener: () => undefined, document: {} } as unknown as Window & typeof globalThis;
+    bindIntroToggle(modal, win);
+    refreshIntroToggle(modal);
+    expect(toggle.hidden).toBe(false);
   });
 });

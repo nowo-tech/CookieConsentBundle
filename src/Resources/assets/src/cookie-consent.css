@@ -1404,7 +1404,8 @@ html[data-theme='dark'] .nowo-cookie-consent.nowo-cookie-consent--dark-mode {
   appearance: none;
   background: transparent;
   border: 0;
-  color: var(--nowo-cc-link, var(--nowo-cc-btn-primary-bg));
+  /* The modal text colour (>= 4.5:1 on the surface in every theme), not the link or brand primary (audit JD-I12). */
+  color: var(--nowo-cc-primary);
   cursor: pointer;
   display: inline-flex;
   font: inherit;

@@ -90,7 +90,10 @@ Target: 1.23.0 (MUX-151, mobile UX audit 2026-11-09). See [UPGRADING](UPGRADING.
 
 - Compact first layer on phones (below 640px): the intro is clamped to `--nowo-cc-intro-lines-phone` lines (default
   `3`, a host token) with a "Show more" / "Show less" toggle (`_intro_more.html.twig`, `intro-more.ts`,
-  `aria-expanded` / `aria-controls`), shown only when the text is really cut. The clamp applies only when the modal
+  `aria-expanded` / `aria-controls`), shown only when the text is really cut. It is measured again when the banner
+  step becomes active (a modal opened on the preferences step, then ×), when the intro box changes size
+  (`ResizeObserver`) and once the web fonts are ready. The toggle uses the modal text colour (`--nowo-cc-primary`,
+  at least 4.5:1 in every theme). The clamp applies only when the modal
   template has the toggle (`nowo-cookie-consent--intro-clamp`, set by the script), so an overridden template is never
   cut without a way to read the rest. Tighter insets on phones; with equal-weight buttons the reject and accept
   buttons share one row at the same size and the third action (Customize / Save) takes the row above, so the actions

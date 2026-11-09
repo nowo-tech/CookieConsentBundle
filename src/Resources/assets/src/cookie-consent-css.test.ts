@@ -147,4 +147,11 @@ describe('cookie-consent.css compact first layer (1.23, MUX-151)', () => {
   it('gives the more toggle a 44px tap target', () => {
     expect(ruleBody('.nowo-cookie-consent .nowo-cookie-consent__intro-more {')).toContain('min-height: 2.75rem;');
   });
+
+  it('draws the more toggle in the modal text colour, never the brand primary (JD-I12)', () => {
+    const body = ruleBody('.nowo-cookie-consent .nowo-cookie-consent__intro-more {');
+    expect(body).toContain('color: var(--nowo-cc-primary);');
+    expect(body).not.toContain('btn-primary');
+    expect(body).not.toContain('--nowo-ui-');
+  });
 });

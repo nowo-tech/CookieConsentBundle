@@ -3,6 +3,10 @@
  * here, so a host template without the toggle is never clamped), the CSS cuts the intro to
  * `--nowo-cc-intro-lines-phone` lines below 640px. The "Show more" button is shown only when the text is really cut,
  * and toggles `nowo-cookie-consent__intro--expanded` plus `aria-expanded`. The consent buttons are never touched.
+ *
+ * Measured again when the modal opens, when the banner step becomes active (step-manager), when the remote config
+ * changes the text, on resize, whenever the intro box changes size (ResizeObserver: a hidden intro shown again, a
+ * container change) and once the web fonts are ready (the modal inherits the host font, which may swap in later).
  */
 export const INTRO_SELECTOR = '[data-nowo-intro]';
 export const TOGGLE_SELECTOR = '[data-nowo-intro-more]';
@@ -33,7 +37,7 @@ export function refreshIntroToggle(modal: HTMLElement): void {
 /**
  * Wires the toggle once and re-measures on resize. No-op without the intro or the toggle.
  */
-export function bindIntroToggle(modal: HTMLElement, win: Window = window): void {
+export function bindIntroToggle(modal: HTMLElement, win: Window & typeof globalThis = window): void {
   const found = parts(modal);
   if (!found) {
     return;
@@ -53,5 +57,13 @@ export function bindIntroToggle(modal: HTMLElement, win: Window = window): void 
     refreshIntroToggle(modal);
   });
 
-  win.addEventListener('resize', () => refreshIntroToggle(modal));
+  const refresh = (): void => refreshIntroToggle(modal);
+  win.addEventListener('resize', refresh);
+
+  if (typeof win.ResizeObserver === 'function') {
+    new win.ResizeObserver(refresh).observe(intro);
+  }
+
+  const fonts = (win.document as Document & { fonts?: { ready?: Promise<unknown> } }).fonts;
+  fonts?.ready?.then(refresh).catch(() => undefined);
 }
