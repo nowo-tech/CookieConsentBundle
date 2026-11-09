@@ -78,15 +78,21 @@ final class CookieInventoryNormalizer
                 ];
             }
 
-            $allowedByDefault = $entry['allowed_by_default'] ?? $entry['allowedByDefault'] ?? true;
+            $category = isset($entry['category']) ? (string) $entry['category'] : 'required';
+
+            // Opt-in by default (owner decision JD-L6): only required cookies start allowed when the key is absent.
+            $allowedByDefault = $entry['allowed_by_default'] ?? $entry['allowedByDefault'] ?? null;
             if (!is_bool($allowedByDefault)) {
-                $allowedByDefault = filter_var($allowedByDefault, FILTER_VALIDATE_BOOL, FILTER_NULL_ON_FAILURE) ?? true;
+                $allowedByDefault = $allowedByDefault === null
+                    ? null
+                    : filter_var($allowedByDefault, FILTER_VALIDATE_BOOL, FILTER_NULL_ON_FAILURE);
             }
+            $allowedByDefault ??= $category === 'required';
 
             $normalized[] = [
                 'name'               => $name,
                 'duration'           => isset($entry['duration']) ? (string) $entry['duration'] : '',
-                'category'           => isset($entry['category']) ? (string) $entry['category'] : 'required',
+                'category'           => $category,
                 'type'               => $type,
                 'sort_order'         => $sortOrder,
                 'allowed_by_default' => $allowedByDefault,

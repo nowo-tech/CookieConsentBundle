@@ -52,6 +52,26 @@ final class CookieInventoryProviderTest extends TestCase
         self::assertFalse($entries[0]['allowed_by_default']);
     }
 
+    public function testNormalizerDefaultsOptionalCookiesToNotAllowed(): void
+    {
+        // Owner decision JD-L6: an entry without the key is opt-in; required cookies stay allowed.
+        $entries = CookieInventoryNormalizer::normalize([
+            ['name' => '_ga', 'category' => 'analytics'],
+            ['name' => '_fbp', 'category' => 'marketing', 'allowed_by_default' => 'maybe'],
+            ['name' => 'PHPSESSID', 'category' => 'required'],
+            ['name' => 'lang', 'category' => 'functionality', 'allowed_by_default' => true],
+            ['name' => '_pref', 'category' => 'preferences', 'allowedByDefault' => '1'],
+        ]);
+
+        $allowed = array_column($entries, 'allowed_by_default', 'name');
+
+        self::assertFalse($allowed['_ga']);
+        self::assertFalse($allowed['_fbp']);
+        self::assertTrue($allowed['PHPSESSID']);
+        self::assertTrue($allowed['lang']);
+        self::assertTrue($allowed['_pref']);
+    }
+
     public function testNormalizerSkipsInvalidEntries(): void
     {
         $entries = CookieInventoryNormalizer::normalize([

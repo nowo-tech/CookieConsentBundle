@@ -82,6 +82,21 @@ final class CookieDefinitionTypeTest extends TypeTestCase
         self::assertSame('NowoCookieConsentBundle', $view->vars['translation_domain']);
     }
 
+    public function testNewDefinitionFormStartsWithAllowedByDefaultUnchecked(): void
+    {
+        $form = $this->factory->create(CookieDefinitionType::class, new CookieDefinition());
+
+        self::assertFalse($form->get('allowedByDefault')->getData());
+        self::assertFalse($form->createView()['allowedByDefault']->vars['checked']);
+
+        $form = $this->factory->create(CookieDefinitionType::class);
+        $form->submit(['name' => '_gid', 'duration' => 'Session', 'category' => 'analytics', 'type' => CookieDefinition::TYPE_FIRST_PARTY, 'sortOrder' => 0, 'translations' => []]);
+
+        /** @var CookieDefinition $data */
+        $data = $form->getData();
+        self::assertFalse($data->isAllowedByDefault());
+    }
+
     public function testSubmitsDefinitionData(): void
     {
         $form = $this->factory->create(CookieDefinitionType::class);
@@ -100,6 +115,7 @@ final class CookieDefinitionTypeTest extends TypeTestCase
         $data = $form->getData();
         self::assertSame('_gid', $data->getName());
         self::assertSame('analytics', $data->getCategory());
+        self::assertTrue($data->isAllowedByDefault(), 'explicit true is honoured');
     }
 
     public function testLocalesDefaultToTheLocaleResolverAndTheDefaultFallsBackToTheFirstEnabledLocale(): void

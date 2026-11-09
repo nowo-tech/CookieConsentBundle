@@ -49,8 +49,9 @@ class CookieDefinition
     #[ORM\Column(name: 'sort_order', options: ['default' => 0])]
     private int $sortOrder = 0;
 
-    #[ORM\Column(name: 'allowed_by_default', options: ['default' => true])]
-    private bool $allowedByDefault = true;
+    /** Opt-in by default (owner decision JD-L6, CJEU Planet49): optional cookies start unticked. */
+    #[ORM\Column(name: 'allowed_by_default', options: ['default' => false])]
+    private bool $allowedByDefault = false;
 
     #[ORM\ManyToOne(targetEntity: CookieConsentConfig::class, inversedBy: 'cookieDefinitions')]
     #[ORM\JoinColumn(nullable: false, onDelete: 'CASCADE')]

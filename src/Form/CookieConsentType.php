@@ -302,7 +302,7 @@ class CookieConsentType extends AbstractType
             return $this->cookieChecker->isCookieAllowedByUser($row['name'], $row['category']);
         }
 
-        return $row['allowed_by_default'] ?? true;
+        return $row['allowed_by_default'] ?? false;
     }
 
     /**
@@ -319,7 +319,7 @@ class CookieConsentType extends AbstractType
         }
 
         foreach ($inventory as $row) {
-            if ($row['category'] === $category && ($row['allowed_by_default'] ?? true)) {
+            if ($row['category'] === $category && ($row['allowed_by_default'] ?? false)) {
                 return true;
             }
         }
