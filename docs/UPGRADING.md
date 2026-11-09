@@ -121,6 +121,19 @@
 
 ## Unreleased
 
+From **1.22.0** (MUX-151), no configuration change:
+
+- **Font:** the modal now inherits the page font (or `--nowo-ui-font-family`). To keep the former system stack, set
+  `--nowo-cc-font-family` on `:root` (or on `.nowo-cookie-consent`).
+- **Primary button:** with UiKit (or any host that defines `--nowo-ui-primary`) the accept / save button takes the brand
+  primary instead of the neutral dark grey. To keep the neutral button, set `--nowo-cc-btn-primary-bg`,
+  `--nowo-cc-btn-primary-color`, `--nowo-cc-btn-primary-hover-bg` and `--nowo-cc-btn-primary-hover-color` on
+  `.nowo-cookie-consent`.
+- **Phones:** a long intro is clamped to three lines with a "Show more" toggle (`--nowo-cc-intro-lines-phone` changes
+  the count). An overridden `cookie_consent.html.twig` / `cookie_consent.tailwind.html.twig` keeps its full intro until
+  it adds `id="nowoCookieConsentIntro" … data-nowo-intro` on the intro and
+  `{{ include('@NowoCookieConsentBundle/_intro_more.html.twig') }}` after it.
+
 ## To 1.22.0
 
 From **1.21.1**:

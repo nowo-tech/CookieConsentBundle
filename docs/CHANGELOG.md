@@ -8,6 +8,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## Table of contents
 
 - [[Unreleased]](#unreleased)
+  - [Added](#added)
+  - [Changed](#changed)
 - [[1.22.0] - 2026-11-08](#1220---2026-11-08)
 - [[1.21.1] - 2026-11-07](#1211---2026-11-07)
 - [[1.21.0] - 2026-11-07](#1210---2026-11-07)
@@ -81,6 +83,30 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - [[1.0.0] - 2026-06-15](#100---2026-06-15)
 
 ## [Unreleased]
+
+Target: 1.23.0 (MUX-151, mobile UX audit 2026-11-09). See [UPGRADING](UPGRADING.md#unreleased).
+
+### Added
+
+- Compact first layer on phones (below 640px): the intro is clamped to `--nowo-cc-intro-lines-phone` lines (default
+  `3`, a host token) with a "Show more" / "Show less" toggle (`_intro_more.html.twig`, `intro-more.ts`,
+  `aria-expanded` / `aria-controls`), shown only when the text is really cut. The clamp applies only when the modal
+  template has the toggle (`nowo-cookie-consent--intro-clamp`, set by the script), so an overridden template is never
+  cut without a way to read the rest. Tighter insets on phones; with equal-weight buttons the reject and accept
+  buttons share one row at the same size and the third action (Customize / Save) takes the row above, so the actions
+  stay in view. Translations `nowo_cookie_consent.intro_more` / `intro_less` (9 locales).
+
+### Changed
+
+- The modal inherits the host font: `font-family: var(--nowo-cc-font-family, var(--nowo-ui-font-family, inherit))`.
+  `--nowo-cc-font-family` is no longer declared on the element (it was the system font stack), so a host value on
+  `:root` now applies.
+- The primary button of the default themes (`light`, `dark`, dark mode, and the host `data-theme` light / dark rules)
+  reads the UiKit / brand tokens: `--nowo-ui-primary`, `--nowo-ui-primary-contrast`, `--nowo-ui-primary-hover`, with
+  the former neutral colours as fallbacks (hover without UiKit: the primary colour mixed with 20% black instead of
+  plain black). The named themes `dark-turquoise`, `light-funky` and `elegant-black` keep their own colours. Consent
+  semantics are unchanged: same buttons, same order, same equal-weight behaviour; the reject button is never made
+  smaller or less visible than accept.
 
 ## [1.22.0] - 2026-11-08
 

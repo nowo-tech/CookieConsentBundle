@@ -304,6 +304,21 @@ declares them: each is read with today's value as the fallback, so leaving them 
 | `--nowo-cc-bubble-shadow` | `0 4px 16px rgba(0, 0, 0, 0.12)` | Bubble shadow |
 | `--nowo-cc-bubble-icon-filter` | `none` | Filter on the bubble SVG (the icon sanitizer drops SVG `<filter>`, so a drop shadow goes here) |
 | `--nowo-cc-bubble-display-while-open` | `inline-flex` (visible) | `none` hides the bubble while the modal is open |
+| `--nowo-cc-font-family` | `var(--nowo-ui-font-family, inherit)` | 1.23: font of the modal (the page font by default) |
+| `--nowo-cc-intro-lines-phone` | `3` | 1.23: lines of the first-layer intro shown on phones (below 640px) before "Show more" |
+
+**Brand primary (1.23, MUX-151).** In the default themes (`light`, `dark`, dark mode, host `data-theme`) the primary
+button tokens read UiKit's: `--nowo-cc-btn-primary-bg: var(--nowo-ui-primary, #30363c)`,
+`--nowo-cc-btn-primary-color: var(--nowo-ui-primary-contrast, #ffffff)`, `--nowo-cc-btn-primary-hover-bg:
+var(--nowo-ui-primary-hover, color-mix(in srgb, var(--nowo-ui-primary, #30363c) 80%, #000000))` (dark: `#c2d0e0` /
+`#161a1c` fallbacks). UiKit's appearance emitter maps the brand primary to `--nowo-ui-primary`, so the button follows
+the brand. Set the `--nowo-cc-btn-primary-*` tokens on `.nowo-cookie-consent` to pin other colours. The named themes
+keep their own palette.
+
+**Compact first layer on phones (1.23).** Below 640px the header, body and footer insets shrink, the intro is clamped
+with a "Show more" toggle (only when the text is cut; only in templates that include `_intro_more.html.twig`), and
+with equal-weight buttons reject and accept share one row at the same size. The body scrolls; header and actions stay
+in view. Accept and reject keep the same size, order and weight as on wider screens.
 
 The open state is class-driven (no inline `display`): `.show` on `#cookieconsent` and `nowo-cookie-consent-open` on
 `<html>` while the modal is shown (CSS fallback and Bootstrap modal alike). The kit stylesheet (injected or linked)

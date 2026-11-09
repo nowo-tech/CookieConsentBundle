@@ -25,6 +25,9 @@ const HOST_PROPERTIES = new Set([
   '--nowo-cc-bubble-offset-bottom',
   '--nowo-cc-bubble-offset-inline',
   '--nowo-cc-bubble-display-while-open',
+  // 1.23 (MUX-151)
+  '--nowo-cc-font-family',
+  '--nowo-cc-intro-lines-phone',
 ]);
 
 function declaredProperties(): Set<string> {
@@ -110,5 +113,38 @@ describe('cookie-consent.css custom properties', () => {
     }
 
     expect(css).not.toContain('var(--nowo-cc-toggle-on-knob-bg, #30363a)');
+  });
+});
+
+describe('cookie-consent.css compact first layer (1.23, MUX-151)', () => {
+  const phone = css.slice(css.indexOf('@media (max-width: 639.98px) {'));
+
+  it('inherits the host font (token, then UiKit, then inherit)', () => {
+    expect(ruleBody('.nowo-cookie-consent {')).toContain(
+      'font-family: var(--nowo-cc-font-family, var(--nowo-ui-font-family, inherit));',
+    );
+    expect(css).not.toContain("BlinkMacSystemFont");
+  });
+
+  it('clamps the intro on phones only when the toggle is wired, and never on wider screens', () => {
+    expect(phone).toContain(
+      '.nowo-cookie-consent.nowo-cookie-consent--intro-clamp .nowo-cookie-consent__intro[data-nowo-intro]:not(.nowo-cookie-consent__intro--expanded) {',
+    );
+    expect(phone).toContain('-webkit-line-clamp: var(--nowo-cc-intro-lines-phone, 3);');
+    const clampAt = css.indexOf('-webkit-line-clamp');
+    expect(css.lastIndexOf('@media (max-width: 639.98px) {', clampAt)).toBeGreaterThan(-1);
+    expect(ruleBody('.nowo-cookie-consent .nowo-cookie-consent__intro-more[hidden] {')).toContain('display: none;');
+  });
+
+  it('keeps reject and accept the same size on one row on phones (equal weight)', () => {
+    expect(phone).toContain('grid-template-columns: repeat(2, minmax(0, 1fr));');
+    expect(phone).toContain('.nowo-cookie-consent__btn-group > :first-child:nth-last-child(3) {');
+    expect(phone).toContain('.nowo-cookie-consent__btn-group > :only-child {');
+    // The button colours are not changed by the phone layout.
+    expect(phone).not.toContain('--nowo-cc-btn-');
+  });
+
+  it('gives the more toggle a 44px tap target', () => {
+    expect(ruleBody('.nowo-cookie-consent .nowo-cookie-consent__intro-more {')).toContain('min-height: 2.75rem;');
   });
 });

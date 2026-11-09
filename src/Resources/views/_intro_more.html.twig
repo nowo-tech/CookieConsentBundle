@@ -1,0 +1,14 @@
+{#-
+  MUX-151 (1.23): "Show more" toggle of the first-layer intro. On phones the intro is clamped to
+  --nowo-cc-intro-lines-phone lines (CSS); intro-more.ts unhides this button only when the text is actually cut and
+  toggles nowo-cookie-consent__intro--expanded + aria-expanded. Hidden without JavaScript and on wider screens, where
+  the full intro shows. It never touches the consent buttons.
+-#}
+<button type="button"
+        class="nowo-cookie-consent__intro-more"
+        data-nowo-intro-more
+        data-nowo-label-more="{{ 'nowo_cookie_consent.intro_more'|trans({}, 'NowoCookieConsentBundle') }}"
+        data-nowo-label-less="{{ 'nowo_cookie_consent.intro_less'|trans({}, 'NowoCookieConsentBundle') }}"
+        aria-controls="nowoCookieConsentIntro"
+        aria-expanded="false"
+        hidden>{{ 'nowo_cookie_consent.intro_more'|trans({}, 'NowoCookieConsentBundle') }}</button>
