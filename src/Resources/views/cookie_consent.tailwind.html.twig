@@ -53,7 +53,8 @@
                         </h2>
                     </div>
                     <div class="px-6 py-5">
-                        <p class="nowo-cookie-consent__intro text-sm">{{ nowo_cookie_consent_trans('nowo_cookie_consent.intro', display_config ?? null) }}</p>
+                        <p id="nowoCookieConsentIntro" class="nowo-cookie-consent__intro text-sm" data-nowo-intro>{{ nowo_cookie_consent_trans('nowo_cookie_consent.intro', display_config ?? null) }}</p>
+                        {{ include('@NowoCookieConsentBundle/_intro_more.html.twig') }}
                         <div class="nowo-cookie-consent__btn-group nowo-cookie-consent__btn-group--banner mt-5 flex flex-wrap gap-2">
                             <button type="button" class="nowo-cookie-consent__btn nowo-cookie-consent__btn--secondary" data-nowo-show-preferences>
                                 {{ show_preferences_label }}
@@ -100,7 +101,8 @@
                     </h2>
                 </div>
                 <div class="nowo-cookie-consent__scrollable px-6 py-5">
-                    <p class="nowo-cookie-consent__intro text-sm">{{ nowo_cookie_consent_trans('nowo_cookie_consent.intro', display_config ?? null) }}</p>
+                    <p id="nowoCookieConsentIntro" class="nowo-cookie-consent__intro text-sm" data-nowo-intro>{{ nowo_cookie_consent_trans('nowo_cookie_consent.intro', display_config ?? null) }}</p>
+                    {{ include('@NowoCookieConsentBundle/_intro_more.html.twig') }}
                     {% set privacy_route = nowo_cookie_consent_privacy_route(display_config ?? null) %}
                     {% if privacy_route %}
                         <a class="nowo-cookie-consent__read-more mt-2 inline-flex text-sm font-medium" href="{{ path(privacy_route) }}">

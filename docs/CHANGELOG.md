@@ -8,6 +8,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## Table of contents
 
 - [[Unreleased]](#unreleased)
+  - [Added](#added)
+  - [Changed](#changed)
+  - [Fixed](#fixed)
 - [[1.22.0] - 2026-11-08](#1220---2026-11-08)
 - [[1.21.1] - 2026-11-07](#1211---2026-11-07)
 - [[1.21.0] - 2026-11-07](#1210---2026-11-07)
@@ -81,6 +84,47 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - [[1.0.0] - 2026-06-15](#100---2026-06-15)
 
 ## [Unreleased]
+
+Target: 1.23.0 (MUX-151, mobile UX audit 2026-11-09). See [UPGRADING](UPGRADING.md#unreleased).
+
+### Added
+
+- Compact first layer on phones (below 640px): the intro is clamped to `--nowo-cc-intro-lines-phone` lines (default
+  `3`, a host token) with a "Show more" / "Show less" toggle (`_intro_more.html.twig`, `intro-more.ts`,
+  `aria-expanded` / `aria-controls`), shown only when the text is really cut. It is measured again when the banner
+  step becomes active (a modal opened on the preferences step, then ×), when the intro box changes size
+  (`ResizeObserver`) and once the web fonts are ready. The toggle uses the modal text colour (`--nowo-cc-primary`,
+  at least 4.5:1 in every theme). The clamp applies only when the modal
+  template has the toggle (`nowo-cookie-consent--intro-clamp`, set by the script), so an overridden template is never
+  cut without a way to read the rest. Tighter insets on phones; with equal-weight buttons the reject and accept
+  buttons share one row at the same size and the third action (Customize / Save) takes the row above, so the actions
+  stay in view (one-step modal and the Tailwind template; the Bootstrap two-step banner keeps the 1.22 stacked
+  full-width buttons, the same size for both, audit JD-L5). Translations `nowo_cookie_consent.intro_more` / `intro_less` (9 locales).
+
+### Changed
+
+- The modal inherits the host font: `font-family: var(--nowo-cc-font-family, var(--nowo-ui-font-family, inherit))`.
+  `--nowo-cc-font-family` is no longer declared on the element (it was the system font stack), so a host value on
+  `:root` now applies.
+- The primary button of the default themes (`light`, `dark`, dark mode, and the host `data-theme` light / dark rules)
+  reads the UiKit / brand tokens: `--nowo-ui-primary`, `--nowo-ui-primary-contrast`, `--nowo-ui-primary-hover`, with
+  the former neutral colours as fallbacks (hover without UiKit: the primary colour mixed with 20% black instead of
+  plain black). The named themes `dark-turquoise`, `light-funky` and `elegant-black` keep their own colours.
+- Equal prominence (owner decision JD-L3, "both filled the same"): with equal-weight buttons, reject
+  (`use_only_functional_cookies`) is drawn exactly like accept (`use_all_cookies`): the same filled primary tokens of
+  the active theme (brand `--nowo-ui-primary` in the default themes, the theme colour in the named themes), the same
+  weight, border, shadow, contrast and hover. Customize / Save keep the secondary style. Without equal-weight buttons
+  the 1.22 styles stay. Same buttons, names and order; nothing recorded changes.
+- Role classes on the consent buttons: `nowo-cookie-consent__btn--reject` (`use_only_functional_cookies`) and
+  `nowo-cookie-consent__btn--accept` (`use_all_cookies`), printed by `CookieConsentType` in both templates. The
+  equal-prominence CSS targets them, with `[name$='[use_only_functional_cookies]']` as a fallback for host templates
+  that print the buttons themselves (the form renders `name="cookie_consent[…]"`, audit JD-M1).
+
+### Fixed
+
+- Remote configuration (`fetch_config_via_api`) now applies the accept, reject and save labels: the selectors matched
+  the bare names `use_all_cookies` / `use_only_functional_cookies` / `save`, but the form renders
+  `cookie_consent[…]` (audit JD-I15). They now match the role classes, then the prefixed and the bare names.
 
 ## [1.22.0] - 2026-11-08
 

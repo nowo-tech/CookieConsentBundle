@@ -73,7 +73,8 @@ function splitArgs(inner: string): string[] {
 function parseColor(raw: string, tokens: Tokens, depth = 0): Rgba {
   expect(depth, `token cycle resolving ${raw}`).toBeLessThan(20);
   const value = raw.trim();
-  const varMatch = value.match(/^var\(\s*(--nowo-cc-[a-z0-9-]+)\s*(?:,\s*(.+))?\)$/);
+  // --nowo-cc-* tokens come from the theme blocks; --nowo-ui-* (UiKit / brand, 1.23) only when a test sets them.
+  const varMatch = value.match(/^var\(\s*(--nowo-(?:cc|ui)-[a-z0-9-]+)\s*(?:,\s*(.+))?\)$/);
   if (varMatch) {
     const resolved = tokens.get(varMatch[1]) ?? varMatch[2];
     expect(resolved, `undefined token ${varMatch[1]}`).toBeDefined();
@@ -176,5 +177,36 @@ describe('preferences step markup', () => {
       const twig = readFileSync(resolve(__dirname, '../../views', template), 'utf8');
       expect(twig).toContain("class: 'btn nowo-cookie-consent__btn nowo-cookie-consent__btn--save'");
     }
+  });
+});
+
+describe('UiKit / brand primary tokens (1.23, MUX-151)', () => {
+  const KIT_THEMES = ['light', 'dark', 'light + dark mode'];
+
+  it.each(KIT_THEMES)('theme %s: the primary button takes --nowo-ui-primary and its contrast colour', (theme) => {
+    const tokens = themeTokens(theme);
+    tokens.set('--nowo-ui-primary', '#1f6f54');
+    tokens.set('--nowo-ui-primary-contrast', '#ffffff');
+    const surface = over(parseColor('var(--nowo-cc-bg)', tokens), [255, 255, 255, 1]);
+    const footer = resolveOn(tokens, '--nowo-cc-footer-bg', surface);
+
+    const primaryBg = resolveOn(tokens, '--nowo-cc-btn-primary-bg', footer);
+    expect(primaryBg).toEqual([31, 111, 84, 1]);
+    expect(contrast(resolveOn(tokens, '--nowo-cc-btn-primary-color', primaryBg), primaryBg)).toBeGreaterThanOrEqual(4.5);
+    // Without --nowo-ui-primary-hover the hover darkens the brand colour.
+    const hoverBg = resolveOn(tokens, '--nowo-cc-btn-primary-hover-bg', footer);
+    expect(luminance(hoverBg)).toBeLessThan(luminance(primaryBg));
+    expect(contrast(resolveOn(tokens, '--nowo-cc-btn-primary-hover-color', hoverBg), hoverBg)).toBeGreaterThanOrEqual(4.5);
+  });
+
+  it('keeps the former neutral colours as fallbacks without UiKit', () => {
+    expect(resolveOn(themeTokens('light'), '--nowo-cc-btn-primary-bg', [255, 255, 255, 1])).toEqual([48, 54, 60, 1]);
+    expect(resolveOn(themeTokens('dark'), '--nowo-cc-btn-primary-bg', [0, 0, 0, 1])).toEqual([194, 208, 224, 1]);
+  });
+
+  it.each(['dark-turquoise', 'light-funky', 'elegant-black'])('named theme %s keeps its own primary', (theme) => {
+    const tokens = themeTokens(theme);
+    tokens.set('--nowo-ui-primary', '#1f6f54');
+    expect(resolveOn(tokens, '--nowo-cc-btn-primary-bg', [255, 255, 255, 1])).not.toEqual([31, 111, 84, 1]);
   });
 });

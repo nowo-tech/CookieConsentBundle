@@ -2,6 +2,7 @@
  * Two-step modal navigation between the consent banner and preferences panel.
  */
 import { applyVisualConfigForStep, type ModalVisualStep } from './apply-visual-config';
+import { refreshIntroToggle } from './intro-more';
 
 function getStepElements(modalElement: HTMLElement): {
   bannerStep: HTMLElement | null;
@@ -46,6 +47,10 @@ export function activateCookieConsentStep(modalElement: HTMLElement, step: Modal
 
   modalElement.classList.toggle('nowo-cookie-consent--preferences-view', !isBanner);
   applyVisualConfigForStep(modalElement, step);
+  // The banner intro was measured while hidden when the modal opened on the preferences step (audit JD-L1).
+  if (isBanner) {
+    refreshIntroToggle(modalElement);
+  }
 
   return true;
 }

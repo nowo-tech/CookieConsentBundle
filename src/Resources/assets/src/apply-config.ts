@@ -70,6 +70,17 @@ export interface CookieConsentApiResponse {
   data: CookieConsentConfigData;
 }
 
+/**
+ * Consent buttons (audit JD-I15): the form prints `name="cookie_consent[use_all_cookies]"`, so match the 1.23 role
+ * classes first, then the prefixed name (host templates that print the buttons themselves), then the bare name.
+ */
+export const ACCEPT_BUTTON_SELECTOR =
+  '.nowo-cookie-consent__btn--accept, .nowo-cookie-consent__btn[name$="[use_all_cookies]"], .nowo-cookie-consent__btn[name="use_all_cookies"]';
+export const REJECT_BUTTON_SELECTOR =
+  '.nowo-cookie-consent__btn--reject, .nowo-cookie-consent__btn[name$="[use_only_functional_cookies]"], .nowo-cookie-consent__btn[name="use_only_functional_cookies"]';
+export const SAVE_BUTTON_SELECTOR =
+  '.nowo-cookie-consent__btn[name$="[save]"], .nowo-cookie-consent__btn[name="save"]';
+
 export function applyRemoteConfig(
   modalElement: HTMLElement,
   data: CookieConsentConfigData,
@@ -97,17 +108,17 @@ export function applyRemoteConfig(
 
   if (consentModal?.acceptAllBtn) {
     modalElement
-      .querySelector<HTMLButtonElement>('.nowo-cookie-consent__btn[name="use_all_cookies"]')
+      .querySelector<HTMLButtonElement>(ACCEPT_BUTTON_SELECTOR)
       ?.replaceChildren(document.createTextNode(consentModal.acceptAllBtn));
   }
 
   if (consentModal?.acceptNecessaryBtn) {
     modalElement
-      .querySelector<HTMLButtonElement>('.nowo-cookie-consent__btn[name="use_only_functional_cookies"]')
+      .querySelector<HTMLButtonElement>(REJECT_BUTTON_SELECTOR)
       ?.replaceChildren(document.createTextNode(consentModal.acceptNecessaryBtn));
   }
 
-  const saveButton = modalElement.querySelector<HTMLButtonElement>('.nowo-cookie-consent__btn[name="save"]');
+  const saveButton = modalElement.querySelector<HTMLButtonElement>(SAVE_BUTTON_SELECTOR);
   const saveLabel = localeData?.preferencesModal?.savePreferencesBtn;
 
   if (saveButton && saveLabel) {

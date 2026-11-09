@@ -1,13 +1,17 @@
 .nowo-cookie-consent {
-  --nowo-cc-font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif,
-    'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol';
+  /*
+   * 1.23 (MUX-151): the font and the primary button follow the host. --nowo-cc-font-family is not declared here, so a
+   * host can set it on :root; without it the UiKit --nowo-ui-font-family applies, else the host font is inherited.
+   * The primary button reads the UiKit / brand --nowo-ui-primary(-contrast, -hover) tokens with the former neutral
+   * values as fallbacks. Named colour themes (dark-turquoise, light-funky, elegant-black) keep their own colours.
+   */
   --nowo-cc-bg: #ffffff;
   --nowo-cc-primary: #2c2f31;
   --nowo-cc-secondary: #5e6266;
-  --nowo-cc-btn-primary-bg: #30363c;
-  --nowo-cc-btn-primary-color: #ffffff;
-  --nowo-cc-btn-primary-hover-bg: #000000;
-  --nowo-cc-btn-primary-hover-color: #ffffff;
+  --nowo-cc-btn-primary-bg: var(--nowo-ui-primary, #30363c);
+  --nowo-cc-btn-primary-color: var(--nowo-ui-primary-contrast, #ffffff);
+  --nowo-cc-btn-primary-hover-bg: var(--nowo-ui-primary-hover, color-mix(in srgb, var(--nowo-ui-primary, #30363c) 80%, #000000));
+  --nowo-cc-btn-primary-hover-color: var(--nowo-ui-primary-contrast, #ffffff);
   --nowo-cc-btn-secondary-bg: color-mix(in srgb, #ffffff 70%, transparent);
   --nowo-cc-btn-secondary-color: #2c2f31;
   --nowo-cc-btn-secondary-border: #d5dee2;
@@ -45,7 +49,7 @@
   --nowo-cc-card-marketing-border: color-mix(in srgb, #a855f7 28%, var(--nowo-cc-category-block-border));
   background-color: transparent;
   color: var(--nowo-cc-primary);
-  font-family: var(--nowo-cc-font-family);
+  font-family: var(--nowo-cc-font-family, var(--nowo-ui-font-family, inherit));
   font-size: 16px;
   font-weight: 400;
   -webkit-font-smoothing: antialiased;
@@ -531,10 +535,10 @@ body.nowo-cookie-consent-page-blocked {
   --nowo-cc-bg: #ffffff;
   --nowo-cc-primary: #2c2f31;
   --nowo-cc-secondary: #5e6266;
-  --nowo-cc-btn-primary-bg: #30363c;
-  --nowo-cc-btn-primary-color: #ffffff;
-  --nowo-cc-btn-primary-hover-bg: #000000;
-  --nowo-cc-btn-primary-hover-color: #ffffff;
+  --nowo-cc-btn-primary-bg: var(--nowo-ui-primary, #30363c);
+  --nowo-cc-btn-primary-color: var(--nowo-ui-primary-contrast, #ffffff);
+  --nowo-cc-btn-primary-hover-bg: var(--nowo-ui-primary-hover, color-mix(in srgb, var(--nowo-ui-primary, #30363c) 80%, #000000));
+  --nowo-cc-btn-primary-hover-color: var(--nowo-ui-primary-contrast, #ffffff);
   --nowo-cc-btn-secondary-bg: color-mix(in srgb, #ffffff 70%, transparent);
   --nowo-cc-btn-secondary-color: #2c2f31;
   --nowo-cc-btn-secondary-border: #d5dee2;
@@ -574,10 +578,10 @@ body.nowo-cookie-consent-page-blocked {
   --nowo-cc-bg: #161a1c;
   --nowo-cc-primary: #ebf3f6;
   --nowo-cc-secondary: #aebbc5;
-  --nowo-cc-btn-primary-bg: #c2d0e0;
-  --nowo-cc-btn-primary-color: #161a1c;
-  --nowo-cc-btn-primary-hover-bg: #98a7b6;
-  --nowo-cc-btn-primary-hover-color: #000000;
+  --nowo-cc-btn-primary-bg: var(--nowo-ui-primary, #c2d0e0);
+  --nowo-cc-btn-primary-color: var(--nowo-ui-primary-contrast, #161a1c);
+  --nowo-cc-btn-primary-hover-bg: var(--nowo-ui-primary-hover, color-mix(in srgb, var(--nowo-ui-primary, #c2d0e0) 80%, #000000));
+  --nowo-cc-btn-primary-hover-color: var(--nowo-ui-primary-contrast, #000000);
   --nowo-cc-btn-secondary-bg: color-mix(in srgb, #161a1c 70%, transparent);
   --nowo-cc-btn-secondary-color: #ebf3f6;
   --nowo-cc-btn-secondary-border: color-mix(in srgb, #ebf3f6 18%, transparent);
@@ -618,10 +622,10 @@ html[data-theme='light'] .nowo-cookie-consent.nowo-cookie-consent--theme-light:n
   --nowo-cc-bg: #ffffff;
   --nowo-cc-primary: #2c2f31;
   --nowo-cc-secondary: #5e6266;
-  --nowo-cc-btn-primary-bg: #30363c;
-  --nowo-cc-btn-primary-color: #ffffff;
-  --nowo-cc-btn-primary-hover-bg: #000000;
-  --nowo-cc-btn-primary-hover-color: #ffffff;
+  --nowo-cc-btn-primary-bg: var(--nowo-ui-primary, #30363c);
+  --nowo-cc-btn-primary-color: var(--nowo-ui-primary-contrast, #ffffff);
+  --nowo-cc-btn-primary-hover-bg: var(--nowo-ui-primary-hover, color-mix(in srgb, var(--nowo-ui-primary, #30363c) 80%, #000000));
+  --nowo-cc-btn-primary-hover-color: var(--nowo-ui-primary-contrast, #ffffff);
   --nowo-cc-btn-secondary-bg: color-mix(in srgb, #ffffff 70%, transparent);
   --nowo-cc-btn-secondary-color: #2c2f31;
   --nowo-cc-btn-secondary-border: #d5dee2;
@@ -658,10 +662,10 @@ html[data-theme='dark'] .nowo-cookie-consent.nowo-cookie-consent--dark-mode {
   --nowo-cc-bg: #161a1c;
   --nowo-cc-primary: #ebf3f6;
   --nowo-cc-secondary: #aebbc5;
-  --nowo-cc-btn-primary-bg: #c2d0e0;
-  --nowo-cc-btn-primary-color: #161a1c;
-  --nowo-cc-btn-primary-hover-bg: #98a7b6;
-  --nowo-cc-btn-primary-hover-color: #000000;
+  --nowo-cc-btn-primary-bg: var(--nowo-ui-primary, #c2d0e0);
+  --nowo-cc-btn-primary-color: var(--nowo-ui-primary-contrast, #161a1c);
+  --nowo-cc-btn-primary-hover-bg: var(--nowo-ui-primary-hover, color-mix(in srgb, var(--nowo-ui-primary, #c2d0e0) 80%, #000000));
+  --nowo-cc-btn-primary-hover-color: var(--nowo-ui-primary-contrast, #000000);
   --nowo-cc-btn-secondary-bg: color-mix(in srgb, #161a1c 70%, transparent);
   --nowo-cc-btn-secondary-color: #ebf3f6;
   --nowo-cc-btn-secondary-border: color-mix(in srgb, #ebf3f6 18%, transparent);
@@ -1386,4 +1390,110 @@ html[data-theme='dark'] .nowo-cookie-consent.nowo-cookie-consent--dark-mode {
  */
 .nowo-cookie-consent-open .nowo-cookie-consent__preferences-bubble.nowo-cookie-consent__preferences-bubble {
   display: var(--nowo-cc-bubble-display-while-open, inline-flex);
+}
+
+/*
+ * Compact first layer on phones (1.23, MUX-151). Below 640px: tighter insets, the intro clamped to
+ * --nowo-cc-intro-lines-phone lines (default 3) with a "Show more" toggle (intro-more.ts adds
+ * nowo-cookie-consent--intro-clamp only when the template has the toggle, so a host template is never cut without a
+ * way to read the rest), and with equal-weight buttons the reject and accept buttons share one row at the same size
+ * while the third action (Customize / Save) takes the row above. The body scrolls; the actions stay in view.
+ */
+.nowo-cookie-consent .nowo-cookie-consent__intro-more {
+  align-items: center;
+  appearance: none;
+  background: transparent;
+  border: 0;
+  /* The modal text colour (>= 4.5:1 on the surface in every theme), not the link or brand primary (audit JD-I12). */
+  color: var(--nowo-cc-primary);
+  cursor: pointer;
+  display: inline-flex;
+  font: inherit;
+  font-size: 0.875rem;
+  font-weight: 600;
+  min-height: 2.75rem;
+  padding: 0;
+  text-decoration: underline;
+  text-underline-offset: 0.15em;
+}
+
+.nowo-cookie-consent .nowo-cookie-consent__intro-more[hidden] {
+  display: none;
+}
+
+.nowo-cookie-consent .nowo-cookie-consent__intro-more:focus-visible {
+  outline: 2px solid var(--nowo-cc-btn-primary-bg);
+  outline-offset: 2px;
+}
+
+@media (min-width: 640px) {
+  .nowo-cookie-consent .nowo-cookie-consent__intro-more {
+    display: none;
+  }
+}
+
+@media (max-width: 639.98px) {
+  .nowo-cookie-consent .modal-header,
+  .nowo-cookie-consent .modal-body,
+  .nowo-cookie-consent .modal-footer {
+    padding: 0.75rem 1rem;
+  }
+
+  .nowo-cookie-consent.nowo-cookie-consent--intro-clamp .nowo-cookie-consent__intro[data-nowo-intro]:not(.nowo-cookie-consent__intro--expanded) {
+    -webkit-box-orient: vertical;
+    display: -webkit-box;
+    -webkit-line-clamp: var(--nowo-cc-intro-lines-phone, 3);
+    line-clamp: var(--nowo-cc-intro-lines-phone, 3);
+    overflow: hidden;
+  }
+
+  .nowo-cookie-consent.nowo-cookie-consent--equal-weight-buttons .nowo-cookie-consent__btn-group {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .nowo-cookie-consent.nowo-cookie-consent--equal-weight-buttons .nowo-cookie-consent__btn-group > :first-child:nth-last-child(3) {
+    grid-column: 1 / -1;
+  }
+
+  .nowo-cookie-consent.nowo-cookie-consent--equal-weight-buttons .nowo-cookie-consent__btn-group > :only-child {
+    grid-column: 1 / -1;
+  }
+}
+
+/*
+ * Equal prominence (1.23, owner decision JD-L3 "Both filled the same"). With equal-weight buttons the reject button is
+ * drawn exactly like accept: the same filled primary tokens of the active theme (the UiKit / brand --nowo-ui-primary in
+ * the default themes, the theme's own colour in the named themes), the same weight, border, shadow and hover.
+ * Matched by the role class CookieConsentType prints (`nowo-cookie-consent__btn--reject`), and by the rendered name
+ * `cookie_consent[use_only_functional_cookies]` (`[name$=…]`) for host templates that print the buttons themselves.
+ * Customize / Save keep their own style. Without equal-weight nothing changes.
+ */
+.nowo-cookie-consent.nowo-cookie-consent--equal-weight-buttons .nowo-cookie-consent__btn--secondary.nowo-cookie-consent__btn--reject,
+.nowo-cookie-consent.nowo-cookie-consent--equal-weight-buttons .nowo-cookie-consent__btn--secondary[name$='[use_only_functional_cookies]'],
+.nowo-cookie-consent.nowo-cookie-consent--equal-weight-buttons .nowo-cookie-consent__btn--secondary[name='use_only_functional_cookies'] {
+  --bs-btn-bg: var(--nowo-cc-btn-primary-bg);
+  --bs-btn-border-color: var(--nowo-cc-btn-primary-bg);
+  --bs-btn-color: var(--nowo-cc-btn-primary-color);
+  --bs-btn-hover-bg: var(--nowo-cc-btn-primary-hover-bg);
+  --bs-btn-hover-border-color: var(--nowo-cc-btn-primary-hover-bg);
+  --bs-btn-hover-color: var(--nowo-cc-btn-primary-hover-color);
+  background: var(--nowo-cc-btn-primary-bg);
+  border-color: var(--nowo-cc-btn-primary-bg);
+  box-shadow: 0 1px 2px rgb(15 28 24 / 8%);
+  color: var(--nowo-cc-btn-primary-color);
+  font-weight: 600;
+}
+
+.nowo-cookie-consent.nowo-cookie-consent--equal-weight-buttons .nowo-cookie-consent__btn--secondary.nowo-cookie-consent__btn--reject:hover,
+.nowo-cookie-consent.nowo-cookie-consent--equal-weight-buttons .nowo-cookie-consent__btn--secondary.nowo-cookie-consent__btn--reject:focus-visible,
+.nowo-cookie-consent.nowo-cookie-consent--equal-weight-buttons .nowo-cookie-consent__btn--secondary[name$='[use_only_functional_cookies]']:hover,
+.nowo-cookie-consent.nowo-cookie-consent--equal-weight-buttons .nowo-cookie-consent__btn--secondary[name$='[use_only_functional_cookies]']:focus-visible,
+.nowo-cookie-consent.nowo-cookie-consent--equal-weight-buttons .nowo-cookie-consent__btn--secondary[name='use_only_functional_cookies']:hover,
+.nowo-cookie-consent.nowo-cookie-consent--equal-weight-buttons .nowo-cookie-consent__btn--secondary[name='use_only_functional_cookies']:focus-visible {
+  background: var(--nowo-cc-btn-primary-hover-bg);
+  border-color: var(--nowo-cc-btn-primary-hover-bg);
+  box-shadow: 0 2px 8px rgb(15 28 24 / 12%);
+  color: var(--nowo-cc-btn-primary-hover-color);
+  outline: 2px solid var(--nowo-cc-btn-primary-bg);
+  outline-offset: 2px;
 }

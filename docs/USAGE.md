@@ -233,6 +233,7 @@ Controllers and Twig use logical names such as `@NowoCookieConsentBundle/cookie_
 | `_category_cookie_table.html.twig` | Per-category cookie inventory table (granular mode) |
 | `_preference_sections.html.twig` | Preferences step category blocks |
 | `_preferences_intro.html.twig` | Intro text on the preferences step |
+| `_intro_more.html.twig` | 1.23: "Show more" toggle of the first-layer intro on phones (`aria-controls="nowoCookieConsentIntro"`) |
 | `_diagnostics_script.html.twig` | Optional diagnostics script partial |
 | `admin/_admin_area_nav.html.twig` | **Deprecated** — Settings / Cookie inventory area tabs for 1.x host templates (the pages use `page.header.tabs`) |
 | `admin/cookie_definition/index.html.twig` | Cookie inventory list (`page/list`; prefer `web_ui.templates.cookie_definition_index`) |

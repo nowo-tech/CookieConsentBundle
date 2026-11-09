@@ -17,6 +17,7 @@ import { activateIframesForConsent, readAllowedCategoriesFromModal } from './ifr
 import { createBundleLogger, setBundleLogger } from './logger';
 import { bindCategoryToggles } from './category-toggles';
 import { bindGranularCookieToggles } from './granular-cookie-toggles';
+import { bindIntroToggle, refreshIntroToggle } from './intro-more';
 import { bindStepNavigation, openPreferencesStep, shouldBlockPageInteraction } from './step-manager';
 
 declare const __COOKIE_CONSENT_BUILD_TIME__: string;
@@ -80,6 +81,7 @@ export function initCookieConsent(): void {
   bindStepNavigation(modalElement);
   bindCategoryToggles(modalElement);
   bindGranularCookieToggles(modalElement);
+  bindIntroToggle(modalElement);
 
   if (modalElement.dataset.nowoManageIframePlaceholders === 'true') {
     activateIframesForConsent(readAllowedCategoriesFromModal(modalElement));
@@ -118,6 +120,7 @@ export function initCookieConsent(): void {
       bootstrapModal.show();
       setPageInteractionBlocked(modalElement, blockInteraction);
       setOpenState(true);
+      refreshIntroToggle(modalElement);
       return;
     }
 
@@ -127,6 +130,7 @@ export function initCookieConsent(): void {
     modalElement.removeAttribute('aria-hidden');
     setPageInteractionBlocked(modalElement, blockInteraction);
     setOpenState(true);
+    refreshIntroToggle(modalElement);
   };
 
   const hideModal = (): void => {
@@ -146,6 +150,9 @@ export function initCookieConsent(): void {
       setOpenState(false);
     });
   };
+
+  // Bootstrap shows the modal after its transition: measure the intro clamp again once it is laid out.
+  modalElement.addEventListener('shown.bs.modal', () => refreshIntroToggle(modalElement));
 
   modalElement.addEventListener('hidden.bs.modal', () => {
     setPageInteractionBlocked(modalElement, false);
@@ -230,6 +237,7 @@ async function loadRemoteConfig(modalElement: HTMLElement): Promise<void> {
 
     if (data) {
       applyRemoteConfig(modalElement, data, locale);
+      refreshIntroToggle(modalElement);
       log.debug('Cookie consent config applied');
     }
   } catch (error) {
