@@ -159,7 +159,9 @@ Before each XHR POST it prepares Symfony CSRF the same way as the Flex `csrf-pro
 
 When `use_logger: true`, each submission creates rows in `CookieConsentLog` with anonymized IP addresses (GDPR-friendly).
 Since 1.25 each row also records the profile `revision` the visitor answered (`consent_revision`), resolved from the
-page the form was shown on (hidden `page_route` field), also with a dedicated `form_action`.
+page the form was shown on (hidden `page_route` field), also with a dedicated `form_action`. That route is what the
+browser reports, so it is visitor-controlled: a forged value only changes the `consent_revision` of that visitor's own
+log rows, never whether consent is valid.
 
 ## Asking visitors again (re-consent)
 

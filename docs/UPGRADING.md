@@ -136,7 +136,7 @@ composer update nowo-tech/cookie-consent-bundle
 **Add two nullable columns before you deploy** (the bundle ships no migrations; the mapped entities select them, so
 pages fail until they exist). Run `php bin/console doctrine:migrations:diff` and review it, or
 `doctrine:schema:update --force` where you use that. On MySQL 8.4 with DBAL 4 the migration is (add your
-`doctrine.table_prefix` to the table names; DBAL 3 also adds `COMMENT '(DC2Type:datetime_immutable)'`):
+`doctrine.table_prefix` to the table names; DBAL 3 also adds `COMMENT '(DC2Type:nowo_utc_datetime_immutable)'` to the first column):
 
 ```sql
 ALTER TABLE dashboard_cookie_config ADD reconsent_required_at DATETIME DEFAULT NULL;
@@ -184,6 +184,17 @@ What changes:
   hidden field `cookie_consent[page_route]`, so with a dedicated `form_action` the row still records the profile of
   the page the form was shown on. Hosts that render the consent form fields one by one must keep `form_end()` (or
   render `page_route`).
+- **Host overrides of the modal template.** If you copied the whole modal template before 1.25
+  (`templates/bundles/NowoCookieConsentBundle/cookie_consent.html.twig` or `cookie_consent.tailwind.html.twig`), add
+  this attribute to the `#cookieconsent` element:
+
+  ```twig
+  data-nowo-consent-saved="{{ nowo_cookie_consent_is_saved() ? 'true' : 'false' }}"
+  ```
+
+  Without it, and with iframe/script placeholder management on, the JS treats every visitor as unconsented at page
+  load: valid consents no longer activate optional scripts and embeds until the visitor answers again (it fails
+  closed, never open).
 - **Hosts and scripts that read consent themselves** should use the Twig helpers or `CookieChecker` (or the new
   `nowo_cookie_consent_is_outdated()` / `CookieChecker::isConsentOutdated()`), not the raw cookies: the raw cookies
   of an outdated consent are only expired on the first private response. The config API exposes
