@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## Table of contents
 
 - [[Unreleased]](#unreleased)
+- [[1.25.0] - 2026-11-09](#1250---2026-11-09)
   - [Added](#added)
   - [Changed](#changed)
   - [Fixed](#fixed)
@@ -242,6 +243,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - [Documentation](#documentation-28)
 
 ## [Unreleased]
+
+## [1.25.0] - 2026-11-09
 
 Target: 1.25.0 (owner decision JH-L1, 2026-11-09). See [UPGRADING](UPGRADING.md#to-1250).
 
