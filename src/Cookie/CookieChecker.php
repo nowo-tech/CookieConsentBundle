@@ -27,7 +27,7 @@ use const JSON_THROW_ON_ERROR;
  *
  * @final since 1.19, will be final in 2.0 (not an extension point; decorate or replace the service instead)
  */
-class CookieChecker
+class CookieChecker implements CookieCheckerInterface
 {
     /**
      * Creates a new cookie consent checker.

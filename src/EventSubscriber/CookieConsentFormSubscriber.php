@@ -4,15 +4,19 @@ declare(strict_types=1);
 
 namespace Nowo\CookieConsentBundle\EventSubscriber;
 
+use DateTimeImmutable;
 use Doctrine\DBAL\Exception as DBALException;
 use Doctrine\ORM\Exception\ORMException;
 use Nowo\CookieConsentBundle\Config\CookieConsentConfigResolver;
 use Nowo\CookieConsentBundle\Config\ResolvedCookieConsentConfig;
-use Nowo\CookieConsentBundle\Cookie\CookieHandler;
+use Nowo\CookieConsentBundle\Cookie\CookieHandlerInterface;
 use Nowo\CookieConsentBundle\Cookie\CookieLogger;
+use Nowo\CookieConsentBundle\Cookie\CookieLoggerInterface;
 use Nowo\CookieConsentBundle\Enum\CookieNameEnum;
+use Nowo\CookieConsentBundle\Event\ConsentSavedEvent;
 use Nowo\CookieConsentBundle\Form\CookieConsentType;
 use Nowo\CookieConsentBundle\Http\ColdStartRequestAttributes;
+use Psr\Clock\ClockInterface;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use Symfony\Component\Form\FormFactoryInterface;
@@ -21,6 +25,7 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Event\ResponseEvent;
 use Symfony\Component\HttpKernel\KernelEvents;
+use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
 
 use function bin2hex;
 use function in_array;
@@ -41,19 +46,23 @@ class CookieConsentFormSubscriber implements EventSubscriberInterface
      * Creates a new cookie consent form subscriber.
      *
      * @param FormFactoryInterface $formFactory Creates consent forms
-     * @param CookieLogger $cookieLogger Persists optional consent logs
-     * @param CookieHandler $cookieHandler Writes consent cookies
+     * @param CookieLoggerInterface $cookieLogger Persists optional consent logs
+     * @param CookieHandlerInterface $cookieHandler Writes consent cookies
      * @param bool $useLogger Whether consent logging is enabled
      * @param LoggerInterface|null $logger Optional debug logger
      * @param CookieConsentConfigResolver|null $configResolver Resolves the profile of the answered page (1.25)
+     * @param EventDispatcherInterface|null $eventDispatcher Dispatches {@see ConsentSavedEvent} (1.26)
+     * @param ClockInterface|null $clock Clock for the event time (1.26)
      */
     public function __construct(
         private readonly FormFactoryInterface $formFactory,
-        private readonly CookieLogger $cookieLogger,
-        private readonly CookieHandler $cookieHandler,
+        private readonly CookieLoggerInterface $cookieLogger,
+        private readonly CookieHandlerInterface $cookieHandler,
         private readonly bool $useLogger,
         private readonly ?LoggerInterface $logger = null,
         private readonly ?CookieConsentConfigResolver $configResolver = null,
+        private readonly ?EventDispatcherInterface $eventDispatcher = null,
+        private readonly ?ClockInterface $clock = null,
     ) {
     }
 
@@ -146,6 +155,37 @@ class CookieConsentFormSubscriber implements EventSubscriberInterface
         if ($this->useLogger) {
             $this->cookieLogger->log($categories, $cookieConsentKey);
         }
+
+        // After the log rows are flushed (1.26, DDD P2): a failing log throws above and no event is dispatched.
+        $this->eventDispatcher?->dispatch(new ConsentSavedEvent(
+            $cookieConsentKey,
+            $this->normalizeCategories($categories),
+            $granularCookies,
+            $this->useLogger,
+            $this->clock?->now() ?? new DateTimeImmutable(),
+        ));
+    }
+
+    /**
+     * Returns the category choices as booleans, without `required` and the granular `cookies` map.
+     *
+     * @param array<string, mixed> $categories
+     *
+     * @return array<string, bool>
+     */
+    private function normalizeCategories(array $categories): array
+    {
+        $normalized = [];
+
+        foreach ($categories as $category => $value) {
+            if ($category === 'required' || $category === 'cookies' || is_array($value)) {
+                continue;
+            }
+
+            $normalized[(string) $category] = $value === true || $value === 'true';
+        }
+
+        return $normalized;
     }
 
     /**

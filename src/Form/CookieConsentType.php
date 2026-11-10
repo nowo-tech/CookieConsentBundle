@@ -7,7 +7,7 @@ namespace Nowo\CookieConsentBundle\Form;
 use Nowo\CookieConsentBundle\Config\CookieConsentConfigResolver;
 use Nowo\CookieConsentBundle\Config\CookieInventoryProvider;
 use Nowo\CookieConsentBundle\Config\ResolvedCookieConsentConfig;
-use Nowo\CookieConsentBundle\Cookie\CookieChecker;
+use Nowo\CookieConsentBundle\Cookie\CookieCheckerInterface;
 use Nowo\CookieConsentBundle\Entity\CookieConsentConfig;
 use Nowo\FormKitBundle\Attribute\FormKitConfig;
 use Nowo\FormKitBundle\Form\FormOptionsTrait;
@@ -56,7 +56,7 @@ class CookieConsentType extends AbstractType
      * @param list<string> $cookieCategories
      */
     public function __construct(
-        private readonly CookieChecker $cookieChecker,
+        private readonly CookieCheckerInterface $cookieChecker,
         private readonly CookieConsentConfigResolver $configResolver,
         private readonly CookieInventoryProvider $inventoryProvider,
         private readonly RequestStack $requestStack,

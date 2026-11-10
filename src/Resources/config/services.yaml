@@ -28,6 +28,7 @@ services:
       - '../../Security/AllowAllCookieConsentAccessChecker.php'
       - '../../Security/ConfigurableCookieConsentAccessChecker.php'
       - '../../Clock/'
+      - '../../Event/'
       - '../../Locale/ConfiguredLocales.php'
 
   Nowo\CookieConsentBundle\Clock\SystemClock: ~
@@ -57,6 +58,18 @@ services:
   Nowo\CookieConsentBundle\EventSubscriber\CookieConsentFormSubscriber:
     arguments:
       $useLogger: '%nowo_cookie_consent.use_logger%'
+      $eventDispatcher: '@?event_dispatcher'
+      $clock: '@Psr\Clock\ClockInterface'
+
+  # Documented API (1.26, DDD P2): type-hint the interfaces; alias them to your own service to replace one.
+  Nowo\CookieConsentBundle\Cookie\CookieCheckerInterface:
+    alias: Nowo\CookieConsentBundle\Cookie\CookieChecker
+
+  Nowo\CookieConsentBundle\Cookie\CookieHandlerInterface:
+    alias: Nowo\CookieConsentBundle\Cookie\CookieHandler
+
+  Nowo\CookieConsentBundle\Cookie\CookieLoggerInterface:
+    alias: Nowo\CookieConsentBundle\Cookie\CookieLogger
 
   Nowo\CookieConsentBundle\Locale\LocaleResolver:
     arguments:
