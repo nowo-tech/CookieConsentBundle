@@ -4,10 +4,16 @@ declare(strict_types=1);
 
 namespace Nowo\CookieConsentBundle\DependencyInjection;
 
+use Doctrine\DBAL\Connection;
+use Doctrine\ORM\EntityManagerInterface;
 use Nowo\CookieConsentBundle\Admin\AdminChrome;
 use Nowo\CookieConsentBundle\Admin\AdminPageFactory;
 use Nowo\CookieConsentBundle\Config\CookieInventoryNormalizer;
+use Nowo\CookieConsentBundle\Controller\CookieConsentConfigSettingsAdminController;
+use Nowo\CookieConsentBundle\Controller\CookieDefinitionAdminController;
+use Nowo\CookieConsentBundle\Cookie\CookieLogger;
 use Nowo\CookieConsentBundle\EventSubscriber\CookieConsentConfigTranslationSubscriber;
+use Nowo\CookieConsentBundle\EventSubscriber\CookieConsentSchemaReadySubscriber;
 use Nowo\CookieConsentBundle\Locale\ConfiguredLocales;
 use Nowo\CookieConsentBundle\Locale\LocaleResolver;
 use Nowo\CookieConsentBundle\Security\AllowAllCookieConsentAccessChecker;
@@ -27,6 +33,7 @@ use Symfony\Component\Translation\Loader\ArrayLoader;
 use function array_key_exists;
 use function is_array;
 use function is_string;
+use function sprintf;
 
 /**
  * Loads bundle configuration and registers services in the container.
@@ -35,6 +42,9 @@ use function is_string;
  */
 class NowoCookieConsentExtension extends Extension implements PrependExtensionInterface
 {
+    /** Container parameter holding `doctrine.entity_manager` (null: the default entity manager). */
+    public const ENTITY_MANAGER_PARAMETER = 'nowo_cookie_consent.doctrine.entity_manager';
+
     /**
      * Processes configuration and loads service definitions.
      *
@@ -53,6 +63,9 @@ class NowoCookieConsentExtension extends Extension implements PrependExtensionIn
 
         $container->setParameter('nowo_cookie_consent.doctrine.connection', $config['doctrine']['connection'] ?? 'default');
         $container->setParameter('nowo_cookie_consent.doctrine.table_prefix', $tablePrefix);
+        $entityManagerName = $config['doctrine']['entity_manager'] ?? null;
+        $entityManagerName = is_string($entityManagerName) && trim($entityManagerName) !== '' ? trim($entityManagerName) : null;
+        $container->setParameter(self::ENTITY_MANAGER_PARAMETER, $entityManagerName);
         $container->setParameter('nowo_cookie_consent.table_prefix', $tablePrefix);
         $container->setParameter('nowo_cookie_consent.categories', $config['categories']);
         $container->setParameter('nowo_cookie_consent.use_logger', $config['use_logger']);
@@ -139,6 +152,7 @@ class NowoCookieConsentExtension extends Extension implements PrependExtensionIn
         }
 
         $this->registerAccessChecker($container, $security);
+        $this->wireEntityManager($container, $entityManagerName);
 
         if ($tablePrefix !== '') {
             $container->setDefinition(
@@ -154,6 +168,42 @@ class NowoCookieConsentExtension extends Extension implements PrependExtensionIn
         } else {
             $container->register('nowo_cookie_consent.translation.loader.array', ArrayLoader::class)
                 ->addTag('translation.loader', ['alias' => 'array']);
+        }
+    }
+
+    /**
+     * Points the services that use the bundle's entity manager (or its connection) at `doctrine.entity_manager`.
+     *
+     * Repositories resolve their manager by entity class already; this covers the injected ones.
+     */
+    private function wireEntityManager(ContainerBuilder $container, ?string $entityManagerName): void
+    {
+        if ($entityManagerName === null) {
+            return;
+        }
+
+        $entityManager = new Reference(sprintf('doctrine.orm.%s_entity_manager', $entityManagerName));
+
+        if ($container->hasDefinition(CookieLogger::class)) {
+            $container->getDefinition(CookieLogger::class)->setArgument('$entityManager', $entityManager);
+        }
+
+        if ($container->hasDefinition(CookieConsentSchemaReadySubscriber::class)) {
+            $container->getDefinition(CookieConsentSchemaReadySubscriber::class)->setArgument(
+                '$connection',
+                (new Definition(Connection::class))->setFactory([$entityManager, 'getConnection']),
+            );
+        }
+
+        foreach ([CookieConsentConfigSettingsAdminController::class, CookieDefinitionAdminController::class] as $controller) {
+            if (!$container->hasDefinition($controller)) {
+                continue;
+            }
+
+            $definition = $container->getDefinition($controller);
+            $definition->setBindings($definition->getBindings() + [
+                EntityManagerInterface::class . ' $entityManager' => $entityManager,
+            ]);
         }
     }
 

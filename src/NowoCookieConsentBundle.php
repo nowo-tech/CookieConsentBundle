@@ -19,7 +19,7 @@ use Symfony\Component\HttpKernel\Bundle\Bundle;
 class NowoCookieConsentBundle extends Bundle
 {
     /**
-     * Registers compiler passes for Twig paths and Doctrine entity mappings.
+     * Registers compiler passes for Twig paths and Doctrine entity mappings (on `doctrine.entity_manager`, else the default manager).
      *
      * @param ContainerBuilder $container The service container builder
      */
@@ -33,6 +33,7 @@ class NowoCookieConsentBundle extends Bundle
             $container->addCompilerPass(DoctrineOrmMappingsPass::createAttributeMappingDriver(
                 ['Nowo\\CookieConsentBundle\\Entity'],
                 [$entityDir],
+                [NowoCookieConsentExtension::ENTITY_MANAGER_PARAMETER],
             ));
         }
     }

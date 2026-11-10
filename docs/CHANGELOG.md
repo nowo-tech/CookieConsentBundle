@@ -247,6 +247,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+Target 1.27.0.
+
+### Added
+
+- `doctrine.entity_manager` (default null = the default entity manager): name of the Doctrine entity manager the bundle entities are mapped on. The consent logger, the schema probe and the admin controllers use that manager (repositories already resolve it by entity class). It replaces the ignored `doctrine.connection`.
+
+### Fixed
+
+- A consent POST no longer flushes (nor resets) the host's entity manager. `CookieLogger` used to `persist()` + `flush()` the default entity manager, committing any pending, unrelated host changes at that moment, and to reset that manager when it was closed. The consent rows are now written with DBAL `INSERT`s in one transaction on the connection of the manager that maps `CookieConsentLog` (resolved by class); no entity manager is flushed, cleared or reset, and no log entity is left managed. Inside an open host transaction the inserts join it. Affected: every release up to 1.26.0 (the flush is in `CookieLogger::log()` since the logger exists; the closed-manager reset since 1.15).
+- Worker mode without kernel reset (`FRANKENPHP_RESET_KERNEL=false`): covered by a 2,200-request test on one logger instance with two visitors (flat memory, no managed entities, no cross-visitor data).
+
 ## [1.26.0] - 2026-11-10
 
 Target: 1.26.0 (DDD P2). See [UPGRADING](UPGRADING.md#to-1260).

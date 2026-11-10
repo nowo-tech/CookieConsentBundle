@@ -45,6 +45,7 @@ Extension alias: `nowo_cookie_consent`
 nowo_cookie_consent:
     doctrine:
         table_prefix: ''
+        # entity_manager: cookie_consent   # optional dedicated entity manager (default: the default one)
 
     # Deprecated: use doctrine.table_prefix instead
     # table_prefix: ''
@@ -138,7 +139,8 @@ Every key accepted under `nowo_cookie_consent` (run `php bin/console config:dump
 | Key | Default | Description |
 |-----|---------|-------------|
 | `doctrine.table_prefix` | `''` | Prefix for every bundle table (see [Table prefix](#table-prefix)) |
-| `doctrine.connection` | `default` | **Deprecated since 1.15, ignored.** The entities are always mapped on the default entity manager / connection; the option will be removed in 2.0 |
+| `doctrine.entity_manager` | `null` | Since 1.27. Name of the entity manager the bundle entities are mapped on; null = the default one. The logger, schema probe and admin controllers use it. Consents are written with DBAL inserts (no flush of any entity manager) |
+| `doctrine.connection` | `default` | **Deprecated since 1.15, ignored.** Use `doctrine.entity_manager`; the option will be removed in 2.0 |
 | `table_prefix` | `''` | **Deprecated since 1.3.** Use `doctrine.table_prefix` |
 | `use_logger` | `true` | Persist consent choices to `CookieConsentLog` |
 | `use_database_config` | `false` | Load modal copy and display settings from `CookieConsentConfig` profiles (see [Database configuration](#database-configuration)) |

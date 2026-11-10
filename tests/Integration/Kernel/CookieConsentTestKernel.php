@@ -51,6 +51,7 @@ final class CookieConsentTestKernel extends Kernel
      * @param array<string, mixed> $frameworkConfig extra framework configuration (e.g. enabled_locales)
      * @param bool $importBundleRoutes whether the host imports the bundle routing.yaml (the Symfony default
      *                                 `routing.controllers` resource is always imported, like a Flex host)
+     * @param array<string, mixed>|null $doctrineConfig doctrine configuration replacing the single in-memory SQLite one
      */
     public function __construct(
         private readonly bool $withSecurity,
@@ -58,8 +59,9 @@ final class CookieConsentTestKernel extends Kernel
         private readonly array $hostParameters = [],
         private readonly array $frameworkConfig = [],
         private readonly bool $importBundleRoutes = true,
+        private readonly ?array $doctrineConfig = null,
     ) {
-        $this->cacheKey = hash('xxh128', serialize([$withSecurity, $bundleConfig, $hostParameters, $frameworkConfig, $importBundleRoutes]));
+        $this->cacheKey = hash('xxh128', serialize([$withSecurity, $bundleConfig, $hostParameters, $frameworkConfig, $importBundleRoutes, $doctrineConfig]));
         parent::__construct('test', false);
     }
 
@@ -120,10 +122,9 @@ final class CookieConsentTestKernel extends Kernel
             'session'              => ['storage_factory_id' => 'session.storage.factory.mock_file'],
         ]);
         $container->loadFromExtension('twig', []);
-        $container->loadFromExtension('doctrine', [
-            'dbal' => ['url' => 'sqlite:///:memory:'],
-            'orm'  => $this->ormConfig(),
-        ]);
+        $doctrine        = $this->doctrineConfig ?? ['dbal' => ['url' => 'sqlite:///:memory:'], 'orm' => []];
+        $doctrine['orm'] = (array) ($doctrine['orm'] ?? []) + $this->ormConfig();
+        $container->loadFromExtension('doctrine', $doctrine);
         if ($this->withSecurity) {
             $container->loadFromExtension('security', [
                 'providers' => ['in_memory' => ['memory' => null]],
