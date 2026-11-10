@@ -249,14 +249,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 Target 1.27.0.
 
+### Security
+
+- **Validation bypass through the consent form (affected `>= 1.0.0, < 1.27.0`).** `CookieLogger::log()` ran `persist()` + `flush()` on the application's default entity manager for every consent submission. The consent form is handled at `kernel.response` on every main request (any URL, error responses included), so adding the consent fields to a host form POST committed whatever the host had left pending, e.g. the values of an entity edit form that had failed validation and that the host deliberately did not flush. Consent rows are now written with DBAL `INSERT`s in one transaction on the connection of the bundle's entity manager; no entity manager is flushed, cleared or reset (the closed-manager reset, since 1.15, is gone too), and no log entity is left managed. Inside an open host transaction the inserts join it. **Workaround** for older versions: `use_logger: false` (or, since 1.26, alias `CookieLoggerInterface` to a logger that does not flush the application entity manager).
+
 ### Added
 
-- `doctrine.entity_manager` (default null = the default entity manager): name of the Doctrine entity manager the bundle entities are mapped on. The consent logger, the schema probe and the admin controllers use that manager (repositories already resolve it by entity class). It replaces the ignored `doctrine.connection`.
+- `doctrine.entity_manager` (default null = the default entity manager): name of the Doctrine entity manager the bundle entities are mapped on. It replaces the ignored `doctrine.connection`.
+  - The bundle mapping is registered on that manager only: a compiler pass removes it from every other manager, including a default manager with `auto_mapping: true` (the Flex default), and the container build fails with a clear message when the named manager does not exist or does not map the entities.
+  - The logger and the four repositories resolve the bundle entities to that manager explicitly (a `ManagerRegistry` decorator, `nowo_cookie_consent.manager_registry`), the schema probe uses its connection and the admin controllers receive it; nothing relies on `getManagerForClass()` of the host registry.
 
 ### Fixed
 
-- A consent POST no longer flushes (nor resets) the host's entity manager. `CookieLogger` used to `persist()` + `flush()` the default entity manager, committing any pending, unrelated host changes at that moment, and to reset that manager when it was closed. The consent rows are now written with DBAL `INSERT`s in one transaction on the connection of the manager that maps `CookieConsentLog` (resolved by class); no entity manager is flushed, cleared or reset, and no log entity is left managed. Inside an open host transaction the inserts join it. Affected: every release up to 1.26.0 (the flush is in `CookieLogger::log()` since the logger exists; the closed-manager reset since 1.15).
-- Worker mode without kernel reset (`FRANKENPHP_RESET_KERNEL=false`): covered by a 2,200-request test on one logger instance with two visitors (flat memory, no managed entities, no cross-visitor data).
+- `doctrine.connection` deprecation message now points to `doctrine.entity_manager` (it said the bundle always uses the default entity manager).
+- Worker mode without kernel reset (`FRANKENPHP_RESET_KERNEL=false`): covered by a 2,200-request test on one logger instance with two visitors (flat memory, no managed entities, no cross-visitor data). The registry decorator is stateless.
 
 ## [1.26.0] - 2026-11-10
 

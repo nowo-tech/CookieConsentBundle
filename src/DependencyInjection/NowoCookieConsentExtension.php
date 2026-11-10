@@ -12,10 +12,15 @@ use Nowo\CookieConsentBundle\Config\CookieInventoryNormalizer;
 use Nowo\CookieConsentBundle\Controller\CookieConsentConfigSettingsAdminController;
 use Nowo\CookieConsentBundle\Controller\CookieDefinitionAdminController;
 use Nowo\CookieConsentBundle\Cookie\CookieLogger;
+use Nowo\CookieConsentBundle\Doctrine\CookieConsentManagerRegistry;
 use Nowo\CookieConsentBundle\EventSubscriber\CookieConsentConfigTranslationSubscriber;
 use Nowo\CookieConsentBundle\EventSubscriber\CookieConsentSchemaReadySubscriber;
 use Nowo\CookieConsentBundle\Locale\ConfiguredLocales;
 use Nowo\CookieConsentBundle\Locale\LocaleResolver;
+use Nowo\CookieConsentBundle\Repository\CookieConsentConfigRepository;
+use Nowo\CookieConsentBundle\Repository\CookieConsentConfigTranslationRepository;
+use Nowo\CookieConsentBundle\Repository\CookieDefinitionRepository;
+use Nowo\CookieConsentBundle\Repository\CookieDefinitionTranslationRepository;
 use Nowo\CookieConsentBundle\Security\AllowAllCookieConsentAccessChecker;
 use Nowo\CookieConsentBundle\Security\ConfigurableCookieConsentAccessChecker;
 use Nowo\CookieConsentBundle\Security\CookieConsentAccessCheckerInterface;
@@ -44,6 +49,9 @@ class NowoCookieConsentExtension extends Extension implements PrependExtensionIn
 {
     /** Container parameter holding `doctrine.entity_manager` (null: the default entity manager). */
     public const ENTITY_MANAGER_PARAMETER = 'nowo_cookie_consent.doctrine.entity_manager';
+
+    /** Registry decorator wired into the bundle's repositories and logger when `doctrine.entity_manager` is set. */
+    public const MANAGER_REGISTRY_SERVICE = 'nowo_cookie_consent.manager_registry';
 
     /**
      * Processes configuration and loads service definitions.
@@ -184,8 +192,26 @@ class NowoCookieConsentExtension extends Extension implements PrependExtensionIn
 
         $entityManager = new Reference(sprintf('doctrine.orm.%s_entity_manager', $entityManagerName));
 
+        // Repositories and the logger resolve the bundle entities to that manager explicitly (KX-C-M1).
+        $registry = new Reference(self::MANAGER_REGISTRY_SERVICE);
+        $container->register(self::MANAGER_REGISTRY_SERVICE, CookieConsentManagerRegistry::class)
+            ->setArguments([new Reference('doctrine'), $entityManagerName]);
+
+        foreach ([
+            CookieConsentConfigRepository::class,
+            CookieConsentConfigTranslationRepository::class,
+            CookieDefinitionRepository::class,
+            CookieDefinitionTranslationRepository::class,
+        ] as $repository) {
+            if ($container->hasDefinition($repository)) {
+                $container->getDefinition($repository)->setArgument('$registry', $registry);
+            }
+        }
+
         if ($container->hasDefinition(CookieLogger::class)) {
-            $container->getDefinition(CookieLogger::class)->setArgument('$entityManager', $entityManager);
+            $container->getDefinition(CookieLogger::class)
+                ->setArgument('$entityManager', $entityManager)
+                ->setArgument('$managerRegistry', $registry);
         }
 
         if ($container->hasDefinition(CookieConsentSchemaReadySubscriber::class)) {

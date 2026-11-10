@@ -17,9 +17,11 @@ use Nowo\CookieConsentBundle\Cookie\CookieLoggerInterface;
 use Nowo\CookieConsentBundle\DependencyInjection\Configuration;
 use Nowo\CookieConsentBundle\DependencyInjection\NowoCookieConsentExtension;
 use Nowo\CookieConsentBundle\DependencyInjection\TablePrefixListener;
+use Nowo\CookieConsentBundle\Doctrine\CookieConsentManagerRegistry;
 use Nowo\CookieConsentBundle\Event\ConsentSavedEvent;
 use Nowo\CookieConsentBundle\EventSubscriber\CookieConsentConfigTranslationSubscriber;
 use Nowo\CookieConsentBundle\EventSubscriber\CookieConsentSchemaReadySubscriber;
+use Nowo\CookieConsentBundle\Repository\CookieConsentConfigRepository;
 use Nowo\CookieConsentBundle\Security\AllowAllCookieConsentAccessChecker;
 use Nowo\CookieConsentBundle\Security\ConfigurableCookieConsentAccessChecker;
 use Nowo\CookieConsentBundle\Security\CookieConsentAccessCheckerInterface;
@@ -81,6 +83,12 @@ final class NowoCookieConsentExtensionTest extends TestCase
         (new NowoCookieConsentExtension())->load([['doctrine' => ['entity_manager' => ' cookie_consent ']]], $container);
 
         self::assertSame('cookie_consent', $container->getParameter(NowoCookieConsentExtension::ENTITY_MANAGER_PARAMETER));
+
+        $registry = $container->getDefinition(NowoCookieConsentExtension::MANAGER_REGISTRY_SERVICE);
+        self::assertSame(CookieConsentManagerRegistry::class, $registry->getClass());
+        self::assertSame('cookie_consent', $registry->getArgument(1));
+        self::assertSame(NowoCookieConsentExtension::MANAGER_REGISTRY_SERVICE, (string) $container->getDefinition(CookieLogger::class)->getArgument('$managerRegistry'));
+        self::assertSame(NowoCookieConsentExtension::MANAGER_REGISTRY_SERVICE, (string) $container->getDefinition(CookieConsentConfigRepository::class)->getArgument('$registry'));
 
         $logger = $container->getDefinition(CookieLogger::class)->getArgument('$entityManager');
         self::assertInstanceOf(Reference::class, $logger);

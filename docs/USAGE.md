@@ -283,8 +283,9 @@ The listener runs during `kernel.response`; keep it short or hand the work to Me
 ### Persistence
 
 - The bundle tables (`dashboard_cookie_*`, prefixed by `doctrine.table_prefix`) live on the **default** entity
-  manager unless `doctrine.entity_manager` names another one (1.27). Include them in your migrations like any
-  third-party schema.
+  manager unless `doctrine.entity_manager` names another one (1.27). In that case they are mapped on that manager
+  only, even when your default manager uses `auto_mapping`, and every bundle service (logger, repositories, schema
+  probe, admin) uses it. Include them in your migrations like any third-party schema.
 - Saving a consent never flushes or resets an entity manager (1.27): the rows are written with DBAL inserts in one
   transaction on that manager's connection, so your unit of work is left untouched.
 
