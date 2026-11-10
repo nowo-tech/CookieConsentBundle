@@ -5,10 +5,12 @@ declare(strict_types=1);
 namespace Nowo\CookieConsentBundle;
 
 use Doctrine\Bundle\DoctrineBundle\DependencyInjection\Compiler\DoctrineOrmMappingsPass;
+use Nowo\CookieConsentBundle\DependencyInjection\Compiler\CookieConsentEntityManagerPass;
 use Nowo\CookieConsentBundle\DependencyInjection\Compiler\CookieConsentSecurityPass;
 use Nowo\CookieConsentBundle\DependencyInjection\Compiler\TwigPathsPass;
 use Nowo\CookieConsentBundle\DependencyInjection\NowoCookieConsentExtension;
 use Nowo\CookieConsentBundle\Doctrine\UtcDateTimeImmutableType;
+use Symfony\Component\DependencyInjection\Compiler\PassConfig;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\Extension\ExtensionInterface;
 use Symfony\Component\HttpKernel\Bundle\Bundle;
@@ -19,7 +21,7 @@ use Symfony\Component\HttpKernel\Bundle\Bundle;
 class NowoCookieConsentBundle extends Bundle
 {
     /**
-     * Registers compiler passes for Twig paths and Doctrine entity mappings.
+     * Registers compiler passes for Twig paths and Doctrine entity mappings (on `doctrine.entity_manager`, else the default manager).
      *
      * @param ContainerBuilder $container The service container builder
      */
@@ -33,8 +35,12 @@ class NowoCookieConsentBundle extends Bundle
             $container->addCompilerPass(DoctrineOrmMappingsPass::createAttributeMappingDriver(
                 ['Nowo\\CookieConsentBundle\\Entity'],
                 [$entityDir],
+                [NowoCookieConsentExtension::ENTITY_MANAGER_PARAMETER],
             ));
         }
+
+        // After the mapping passes above (and DoctrineBundle's auto_mapping): keep the entities on one manager.
+        $container->addCompilerPass(new CookieConsentEntityManagerPass(), PassConfig::TYPE_BEFORE_OPTIMIZATION, -10);
     }
 
     /**

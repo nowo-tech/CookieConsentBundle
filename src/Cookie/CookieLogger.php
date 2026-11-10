@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Nowo\CookieConsentBundle\Cookie;
 
+use Doctrine\DBAL\Connection;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\Persistence\ManagerRegistry;
 use Nowo\CookieConsentBundle\Config\ResolvedCookieConsentConfig;
@@ -13,9 +14,7 @@ use Psr\Log\LoggerInterface;
 use RuntimeException;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\RequestStack;
-use Throwable;
 
-use function array_keys;
 use function filter_var;
 use function inet_ntop;
 use function inet_pton;
@@ -28,7 +27,8 @@ use const FILTER_VALIDATE_IP;
  * Persists anonymized cookie consent choices to the database.
  *
  * The request and the entity manager are resolved on every {@see self::log()} call: the
- * service is shared and may outlive a single request (FrankenPHP worker mode).
+ * service is shared and may outlive a single request (FrankenPHP worker mode). Rows are written with DBAL
+ * (no entity manager is flushed or reset), so pending host changes are never committed by a consent.
  *
  * @final since 1.19, will be final in 2.0 (not an extension point; decorate or replace the service instead)
  */
@@ -37,7 +37,7 @@ class CookieLogger implements CookieLoggerInterface
     /** Request attribute: the profile of the page the visitor answered on (1.25, audit JR-L3). */
     public const ANSWERED_CONFIG_ATTRIBUTE = 'nowo_cookie_consent_answered_config';
 
-    /** @var list<CookieConsentLog> Entities persisted by the current {@see self::log()} call */
+    /** @var list<CookieConsentLog> Rows queued by the current {@see self::log()} call */
     private array $pendingLogs = [];
 
     /**
@@ -47,7 +47,7 @@ class CookieLogger implements CookieLoggerInterface
      * @param RequestStack $requestStack The HTTP request stack
      * @param ClockInterface $clock Clock used for consent timestamps
      * @param LoggerInterface|null $logger Optional PSR logger (never receives raw IP)
-     * @param ManagerRegistry|null $managerRegistry Used to obtain (and reset when closed) the manager of {@see CookieConsentLog}
+     * @param ManagerRegistry|null $managerRegistry Used to obtain the manager of {@see CookieConsentLog} by class
      */
     public function __construct(
         private readonly EntityManagerInterface $entityManager,
@@ -60,6 +60,10 @@ class CookieLogger implements CookieLoggerInterface
 
     /**
      * Logs consent category choices for the current request.
+     *
+     * The rows are written with DBAL INSERTs in one transaction on the connection of the entity manager that maps
+     * {@see CookieConsentLog} (`doctrine.entity_manager`, else the default one). No entity manager is flushed, so
+     * pending changes of the host's unit of work are never committed by a consent POST, and none is reset.
      *
      * @param array<string, bool|string> $categories The submitted category values
      * @param string $key The anonymous consent key
@@ -74,7 +78,6 @@ class CookieLogger implements CookieLoggerInterface
 
         $ip               = $this->anonymizeIp($request->getClientIp());
         $loggedCategories = [];
-        $entityManager    = $this->getEntityManager();
 
         try {
             foreach ($categories as $category => $value) {
@@ -87,15 +90,7 @@ class CookieLogger implements CookieLoggerInterface
                 $this->persistCookieConsentLog((string) $category, $boolValue, $ip, $key);
             }
 
-            $entityManager->flush();
-
-            foreach ($this->pendingLogs as $cookieConsentLog) {
-                $entityManager->detach($cookieConsentLog);
-            }
-        } catch (Throwable $exception) {
-            $this->getEntityManager();
-
-            throw $exception;
+            $this->insertPendingLogs($this->getEntityManager());
         } finally {
             $this->pendingLogs = [];
         }
@@ -106,6 +101,9 @@ class CookieLogger implements CookieLoggerInterface
         ]);
     }
 
+    /**
+     * Builds the log row of one category and queues it for {@see self::log()} (it is not persisted on any entity manager).
+     */
     protected function persistCookieConsentLog(string $category, bool $value, string $ip, string $key): void
     {
         $cookieConsentLog = (new CookieConsentLog())
@@ -116,9 +114,56 @@ class CookieLogger implements CookieLoggerInterface
             ->setTimestamp($this->clock->now())
             ->setConsentRevision($this->resolveConsentRevision());
 
-        $this->getEntityManager()->persist($cookieConsentLog);
         // @igor-ignore - Not shared worker service state.
         $this->pendingLogs[] = $cookieConsentLog;
+    }
+
+    /**
+     * Inserts the queued rows in one transaction, bypassing the unit of work (joins an open host transaction).
+     */
+    private function insertPendingLogs(EntityManagerInterface $entityManager): void
+    {
+        if ($this->pendingLogs === []) {
+            return;
+        }
+
+        $connection    = $entityManager->getConnection();
+        $platform      = $connection->getDatabasePlatform();
+        $quoteStrategy = $entityManager->getConfiguration()->getQuoteStrategy();
+        $metadata      = $entityManager->getClassMetadata(CookieConsentLog::class);
+        $table         = $quoteStrategy->getTableName($metadata, $platform);
+        $rows          = [];
+
+        foreach ($this->pendingLogs as $cookieConsentLog) {
+            $data  = [];
+            $types = [];
+
+            foreach ($metadata->getFieldNames() as $field) {
+                if ($metadata->isIdentifier($field)) {
+                    continue;
+                }
+
+                $column         = $quoteStrategy->getColumnName($field, $metadata, $platform);
+                $data[$column]  = $metadata->getFieldValue($cookieConsentLog, $field);
+                $types[$column] = (string) $metadata->getTypeOfField($field);
+            }
+
+            // Sequence-style generators (pre-insert) need the id in the INSERT; identity columns fill it themselves.
+            if (!$metadata->idGenerator->isPostInsertGenerator()) {
+                $idField          = $metadata->getSingleIdentifierFieldName();
+                $idColumn         = $quoteStrategy->getColumnName($idField, $metadata, $platform);
+                $data[$idColumn]  = $metadata->idGenerator->generateId($entityManager, $cookieConsentLog);
+                $types[$idColumn] = (string) $metadata->getTypeOfField($idField);
+            }
+
+            $rows[] = [$data, $types];
+        }
+
+        $connection->transactional(static function (Connection $connection) use ($table, $rows): void {
+            foreach ($rows as [$data, $types]) {
+                $connection->insert($table, $data, $types);
+            }
+        });
     }
 
     /**
@@ -145,33 +190,13 @@ class CookieLogger implements CookieLoggerInterface
     }
 
     /**
-     * Returns an open entity manager for {@see CookieConsentLog}, resetting it when a previous failure closed it.
+     * Returns the entity manager that maps {@see CookieConsentLog} (resolved by class), else the injected one.
+     *
+     * Only its connection and metadata are used, so a manager closed by the host is neither needed open nor reset.
      */
     private function getEntityManager(): EntityManagerInterface
     {
-        if (!$this->managerRegistry instanceof ManagerRegistry) {
-            return $this->entityManager;
-        }
-
-        $manager = $this->managerRegistry->getManagerForClass(CookieConsentLog::class);
-
-        if (!$manager instanceof EntityManagerInterface) {
-            return $this->entityManager;
-        }
-
-        if ($manager->isOpen()) {
-            return $manager;
-        }
-
-        foreach (array_keys($this->managerRegistry->getManagerNames()) as $name) {
-            if ($this->managerRegistry->getManager($name) === $manager) {
-                $this->managerRegistry->resetManager($name);
-
-                break;
-            }
-        }
-
-        $manager = $this->managerRegistry->getManagerForClass(CookieConsentLog::class);
+        $manager = $this->managerRegistry?->getManagerForClass(CookieConsentLog::class);
 
         return $manager instanceof EntityManagerInterface ? $manager : $this->entityManager;
     }

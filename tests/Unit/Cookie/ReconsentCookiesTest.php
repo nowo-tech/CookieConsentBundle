@@ -4,19 +4,17 @@ declare(strict_types=1);
 
 namespace Nowo\CookieConsentBundle\Tests\Unit\Cookie;
 
-use ArrayObject;
 use DateTimeImmutable;
-use Doctrine\ORM\EntityManagerInterface;
 use Nowo\CookieConsentBundle\Clock\SystemClock;
 use Nowo\CookieConsentBundle\Config\ResolvedCookieConsentConfig;
 use Nowo\CookieConsentBundle\Cookie\CookieChecker;
 use Nowo\CookieConsentBundle\Cookie\CookieHandler;
 use Nowo\CookieConsentBundle\Cookie\CookieLogger;
 use Nowo\CookieConsentBundle\Entity\CookieConsentConfig;
-use Nowo\CookieConsentBundle\Entity\CookieConsentLog;
 use Nowo\CookieConsentBundle\Enum\CookieNameEnum;
 use Nowo\CookieConsentBundle\EventSubscriber\CookieConsentFormSubscriber;
 use Nowo\CookieConsentBundle\EventSubscriber\CookieConsentOutdatedConsentSubscriber;
+use Nowo\CookieConsentBundle\Tests\Support\SqliteEntityManagerFactory;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\EventDispatcher\EventDispatcher;
@@ -158,26 +156,16 @@ final class ReconsentCookiesTest extends TestCase
         $stack   = new RequestStack();
         $stack->push($request);
 
-        /** @var ArrayObject<int, CookieConsentLog> $persisted */
-        $persisted = new ArrayObject();
-        $em        = $this->createMock(EntityManagerInterface::class);
-        $em->method('persist')->willReturnCallback(static function (CookieConsentLog $log) use ($persisted): void {
-            $persisted->append($log);
-        });
+        $em = SqliteEntityManagerFactory::create();
 
         (new CookieLogger($em, $stack, new SystemClock()))->log(['analytics' => true], 'key');
-        self::assertCount(1, $persisted);
-        $first = $persisted->offsetGet(0);
-        self::assertInstanceOf(CookieConsentLog::class, $first);
-        self::assertSame(5, $first->getConsentRevision());
 
         $plain = new RequestStack();
         $plain->push(Request::create('/'));
         (new CookieLogger($em, $plain, new SystemClock()))->log(['analytics' => true], 'key');
-        self::assertCount(2, $persisted);
-        $second = $persisted->offsetGet(1);
-        self::assertInstanceOf(CookieConsentLog::class, $second);
-        self::assertNull($second->getConsentRevision(), 'no database profile');
+
+        $revisions = $em->getConnection()->fetchFirstColumn('SELECT consent_revision FROM dashboard_cookie_log ORDER BY id');
+        self::assertSame([5, null], array_map(static fn (mixed $revision): ?int => $revision === null ? null : (int) $revision, $revisions), 'second: no database profile');
     }
 
     private function outdatedRequest(): Request
