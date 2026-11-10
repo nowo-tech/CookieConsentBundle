@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Nowo\CookieConsentBundle\EventSubscriber;
 
-use Nowo\CookieConsentBundle\Cookie\CookieChecker;
-use Nowo\CookieConsentBundle\Cookie\CookieHandler;
+use Nowo\CookieConsentBundle\Cookie\CookieCheckerInterface;
+use Nowo\CookieConsentBundle\Cookie\CookieHandlerInterface;
 use Nowo\CookieConsentBundle\Enum\CookieNameEnum;
 use Nowo\CookieConsentBundle\Http\ColdStartRequestAttributes;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
@@ -32,12 +32,12 @@ class CookieConsentOutdatedConsentSubscriber implements EventSubscriberInterface
     /**
      * Creates the subscriber.
      *
-     * @param CookieChecker $cookieChecker Detects outdated consents
-     * @param CookieHandler $cookieHandler Writes the expired cookies
+     * @param CookieCheckerInterface $cookieChecker Detects outdated consents
+     * @param CookieHandlerInterface $cookieHandler Writes the expired cookies
      */
     public function __construct(
-        private readonly CookieChecker $cookieChecker,
-        private readonly CookieHandler $cookieHandler,
+        private readonly CookieCheckerInterface $cookieChecker,
+        private readonly CookieHandlerInterface $cookieHandler,
     ) {
     }
 

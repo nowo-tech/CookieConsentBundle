@@ -28,6 +28,8 @@ Regenerate with `make -C demo/symfony8 demo-screenshots` (REQ-DEMO-013).
 - [Consent logging](#consent-logging)
 - [Using it from a DDD / hexagonal application](#using-it-from-a-ddd--hexagonal-application)
   - [Keeping your domain free of the bundle](#keeping-your-domain-free-of-the-bundle)
+  - [Ports (since 1.26)](#ports-since-126)
+  - [Reacting to a saved consent (since 1.26)](#reacting-to-a-saved-consent-since-126)
   - [Persistence](#persistence)
   - [Known limitations](#known-limitations)
 - [Asking visitors again (re-consent)](#asking-visitors-again-re-consent)
@@ -206,7 +208,7 @@ Twig functions, admin pages). It has its own Doctrine entities (`CookieConsentCo
 
 - Treat it as infrastructure/presentation. Your domain should not import `Nowo\CookieConsentBundle\*`.
 - To ask "may I use analytics for this visitor?", define a port in your domain and implement it with
-  `CookieChecker`, which only reads the request cookies (no database access):
+  `CookieCheckerInterface` (default `CookieChecker`), which only reads the request cookies (no database access):
 
 ```php
 // Domain
@@ -218,7 +220,7 @@ interface VisitorConsent
 // Infrastructure
 final class CookieConsentVisitorConsent implements VisitorConsent
 {
-    public function __construct(private readonly \Nowo\CookieConsentBundle\Cookie\CookieChecker $checker) {}
+    public function __construct(private readonly \Nowo\CookieConsentBundle\Cookie\CookieCheckerInterface $checker) {}
 
     public function allows(string $category): bool
     {
@@ -228,12 +230,55 @@ final class CookieConsentVisitorConsent implements VisitorConsent
 }
 ```
 
-- `CookieChecker::isCookieAllowedByUser($cookieName, $category)` and `getGranularPreferences()` cover
+- `CookieCheckerInterface::isCookieAllowedByUser($cookieName, $category)` and `getGranularPreferences()` cover
   per-cookie consent.
 - In templates use `nowo_cookie_consent_is_category_allowed('analytics')`.
 - To control who reaches the admin pages, implement `CookieConsentAccessCheckerInterface` and set
   `nowo_cookie_consent.security.access_checker` to your service id.
 - In the browser, listen to `nowo-cookie-consent-form-submit-successful` on `document` to react after a save.
+
+### Ports (since 1.26)
+
+The documented API is three interfaces, each aliased to the bundle's default service. Type-hint the interface; alias
+it to your own service to replace one part:
+
+| Interface | Default | Purpose |
+| --- | --- | --- |
+| `Nowo\CookieConsentBundle\Cookie\CookieCheckerInterface` | `CookieChecker` | Read the visitor's consent from the request cookies. |
+| `Nowo\CookieConsentBundle\Cookie\CookieHandlerInterface` | `CookieHandler` | Write / expire the consent cookies on the response. |
+| `Nowo\CookieConsentBundle\Cookie\CookieLoggerInterface` | `CookieLogger` | Store the proof of consent (`use_logger: true`). |
+
+```yaml
+# config/services.yaml: keep the proof of consent in your own audit store
+services:
+    Nowo\CookieConsentBundle\Cookie\CookieLoggerInterface: '@App\Infrastructure\Consent\AuditConsentLog'
+```
+
+A `CookieLoggerInterface` implementation must have stored the rows durably when `log()` returns, and throw when it
+could not: the bundle then dispatches no `ConsentSavedEvent`.
+
+### Reacting to a saved consent (since 1.26)
+
+`Nowo\CookieConsentBundle\Event\ConsentSavedEvent` (event name = class name) is dispatched once per saved consent,
+after the cookies are set on the response and, with `use_logger: true`, after the consent log rows are flushed. If the
+log fails, no event is dispatched. The payload holds only scalars: `consentKey` (the anonymous key of the visitor's log
+rows), `categories` (`array<string, bool>`, without `required`), `granularCookies` (`array<string, bool>`), `logged`
+and `occurredAt`. No IP address, no request, no entity.
+
+```php
+#[AsEventListener]
+final class ConsentSavedListener
+{
+    public function __construct(private readonly RecordVisitorConsent $record) {} // your application port
+
+    public function __invoke(ConsentSavedEvent $event): void
+    {
+        ($this->record)($event->consentKey, $event->isCategoryAllowed('analytics'), $event->occurredAt);
+    }
+}
+```
+
+The listener runs during `kernel.response`; keep it short or hand the work to Messenger.
 
 ### Persistence
 
@@ -242,12 +287,10 @@ final class CookieConsentVisitorConsent implements VisitorConsent
 
 ### Known limitations
 
-- No PHP event is dispatched when consent is saved. To react on the server, decorate
-  `Nowo\CookieConsentBundle\Cookie\CookieLogger` (with `use_logger: true`) for now.
-- `CookieChecker`, `CookieHandler` and `CookieLogger` are concrete classes (final in 2.0) with no interface. Wrap
-  them behind your own port, as shown above.
 - The entity mapping is registered even when `use_logger` and `use_database_config` are both `false`, and it always
   uses the default entity manager.
+- `ResolvedCookieConsentConfig::getConfig()` and `CookieInventoryProvider::listForLocale()` take/return the bundle's
+  own entities (no read-only DTO yet).
 
 ## Theming the admin pages
 

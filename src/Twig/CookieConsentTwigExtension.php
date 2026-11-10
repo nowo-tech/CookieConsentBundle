@@ -8,7 +8,7 @@ use Nowo\CookieConsentBundle\Config\CmpUxOptionsResolver;
 use Nowo\CookieConsentBundle\Config\CookieConsentRouteTargeting;
 use Nowo\CookieConsentBundle\Config\CookieInventoryProvider;
 use Nowo\CookieConsentBundle\Config\ResolvedCookieConsentConfig;
-use Nowo\CookieConsentBundle\Cookie\CookieChecker;
+use Nowo\CookieConsentBundle\Cookie\CookieCheckerInterface;
 use Nowo\CookieConsentBundle\Entity\CookieConsentConfig;
 use Nowo\CookieConsentBundle\Http\ColdStartRequestAttributes;
 use Nowo\CookieConsentBundle\Locale\LocaleResolver;
@@ -36,7 +36,7 @@ class CookieConsentTwigExtension extends AbstractExtension
      * @param list<string> $renderRoutes
      */
     public function __construct(
-        private readonly CookieChecker $cookieChecker,
+        private readonly CookieCheckerInterface $cookieChecker,
         private readonly LocaleResolver $localeResolver,
         private readonly RequestStack $requestStack,
         private readonly CookieConsentRouteTargeting $routeTargeting,

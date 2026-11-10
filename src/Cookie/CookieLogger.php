@@ -32,7 +32,7 @@ use const FILTER_VALIDATE_IP;
  *
  * @final since 1.19, will be final in 2.0 (not an extension point; decorate or replace the service instead)
  */
-class CookieLogger
+class CookieLogger implements CookieLoggerInterface
 {
     /** Request attribute: the profile of the page the visitor answered on (1.25, audit JR-L3). */
     public const ANSWERED_CONFIG_ATTRIBUTE = 'nowo_cookie_consent_answered_config';

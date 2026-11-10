@@ -5,9 +5,16 @@ declare(strict_types=1);
 namespace Nowo\CookieConsentBundle\Tests\Unit\DependencyInjection;
 
 use Nowo\CookieConsentBundle\Admin\AdminPageFactory;
+use Nowo\CookieConsentBundle\Cookie\CookieChecker;
+use Nowo\CookieConsentBundle\Cookie\CookieCheckerInterface;
+use Nowo\CookieConsentBundle\Cookie\CookieHandler;
+use Nowo\CookieConsentBundle\Cookie\CookieHandlerInterface;
+use Nowo\CookieConsentBundle\Cookie\CookieLogger;
+use Nowo\CookieConsentBundle\Cookie\CookieLoggerInterface;
 use Nowo\CookieConsentBundle\DependencyInjection\Configuration;
 use Nowo\CookieConsentBundle\DependencyInjection\NowoCookieConsentExtension;
 use Nowo\CookieConsentBundle\DependencyInjection\TablePrefixListener;
+use Nowo\CookieConsentBundle\Event\ConsentSavedEvent;
 use Nowo\CookieConsentBundle\EventSubscriber\CookieConsentConfigTranslationSubscriber;
 use Nowo\CookieConsentBundle\Security\AllowAllCookieConsentAccessChecker;
 use Nowo\CookieConsentBundle\Security\ConfigurableCookieConsentAccessChecker;
@@ -147,6 +154,17 @@ final class NowoCookieConsentExtensionTest extends TestCase
         $definition = $container->getDefinition('nowo_cookie_consent.access_checker.default');
         self::assertSame(ConfigurableCookieConsentAccessChecker::class, $definition->getClass());
         self::assertArrayHasKey('$authorizationChecker', $definition->getArguments());
+    }
+
+    public function testCookieInterfacesAliasTheDefaultServices(): void
+    {
+        $container = new ContainerBuilder();
+        (new NowoCookieConsentExtension())->load([[]], $container);
+
+        self::assertSame(CookieChecker::class, (string) $container->getAlias(CookieCheckerInterface::class));
+        self::assertSame(CookieHandler::class, (string) $container->getAlias(CookieHandlerInterface::class));
+        self::assertSame(CookieLogger::class, (string) $container->getAlias(CookieLoggerInterface::class));
+        self::assertFalse($container->hasDefinition(ConsentSavedEvent::class));
     }
 
     public function testGetAlias(): void

@@ -3,6 +3,7 @@
 ## Table of contents
 
 - [Unreleased](#unreleased)
+- [To 1.26.0](#to-1260)
 - [To 1.25.0](#to-1250)
 - [To 1.25.0](#to-1250-1)
 - [To 1.24.0](#to-1240)
@@ -125,6 +126,24 @@
 - [Getting help](#getting-help)
 
 ## Unreleased
+
+## To 1.26.0
+
+From **1.25.0** (target 1.26.0, DDD P2):
+
+```bash
+composer update nowo-tech/cookie-consent-bundle
+```
+
+Nothing to change: defaults behave as before.
+
+- New interfaces `CookieCheckerInterface`, `CookieHandlerInterface`, `CookieLoggerInterface`, aliased to the existing
+  services. Prefer them in your type hints. The constructors of `CookieConsentFormSubscriber`,
+  `CookieConsentOutdatedConsentSubscriber`, `CookieConsentType` and `CookieConsentTwigExtension` now take the
+  interfaces (the concrete classes still fit); a subclass that redeclares those parameters with the concrete type
+  keeps working.
+- New `ConsentSavedEvent` after each saved consent. `CookieConsentFormSubscriber` has two new optional constructor
+  arguments at the end (`$eventDispatcher`, `$clock`); a host that redefines the service without them gets no event.
 
 ## To 1.25.0
 
