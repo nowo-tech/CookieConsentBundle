@@ -4,6 +4,7 @@
 
 - [Unreleased](#unreleased)
 - [To 1.26.0](#to-1260)
+- [To 1.26.0](#to-1260-1)
 - [To 1.25.0](#to-1250)
 - [To 1.25.0](#to-1250-1)
 - [To 1.24.0](#to-1240)
@@ -126,6 +127,14 @@
 - [Getting help](#getting-help)
 
 ## Unreleased
+
+## To 1.26.0
+
+From **1.25.0**:
+
+```bash
+composer update nowo-tech/cookie-consent-bundle
+```
 
 ## To 1.26.0
 

@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## Table of contents
 
 - [[Unreleased]](#unreleased)
+- [[1.26.0] - 2026-11-10](#1260---2026-11-10)
   - [Added](#added)
   - [Documentation](#documentation)
 - [[1.25.0] - 2026-11-09](#1250---2026-11-09)
@@ -245,6 +246,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - [Documentation](#documentation-29)
 
 ## [Unreleased]
+
+## [1.26.0] - 2026-11-10
 
 Target: 1.26.0 (DDD P2). See [UPGRADING](UPGRADING.md#to-1260).
 
