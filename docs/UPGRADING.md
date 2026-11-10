@@ -3,7 +3,8 @@
 ## Table of contents
 
 - [Unreleased](#unreleased)
-- [To 1.26.0](#to-1260)
+- [To 1.27.0](#to-1270)
+  - [To 1.26.0](#to-1260)
 - [To 1.26.0](#to-1260-1)
 - [To 1.25.0](#to-1250)
 - [To 1.25.0](#to-1250-1)
