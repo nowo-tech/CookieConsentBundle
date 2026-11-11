@@ -52,6 +52,7 @@ final class CookieConsentTestKernel extends Kernel
      * @param bool $importBundleRoutes whether the host imports the bundle routing.yaml (the Symfony default
      *                                 `routing.controllers` resource is always imported, like a Flex host)
      * @param array<string, mixed>|null $doctrineConfig doctrine configuration replacing the single in-memory SQLite one
+     * @param string|null $routeNamePrefix `name_prefix` of the bundle routing.yaml import (audit LR-C-L1)
      */
     public function __construct(
         private readonly bool $withSecurity,
@@ -60,8 +61,9 @@ final class CookieConsentTestKernel extends Kernel
         private readonly array $frameworkConfig = [],
         private readonly bool $importBundleRoutes = true,
         private readonly ?array $doctrineConfig = null,
+        private readonly ?string $routeNamePrefix = null,
     ) {
-        $this->cacheKey = hash('xxh128', serialize([$withSecurity, $bundleConfig, $hostParameters, $frameworkConfig, $importBundleRoutes, $doctrineConfig]));
+        $this->cacheKey = hash('xxh128', serialize([$withSecurity, $bundleConfig, $hostParameters, $frameworkConfig, $importBundleRoutes, $doctrineConfig, $routeNamePrefix]));
         parent::__construct('test', false);
     }
 
@@ -158,7 +160,10 @@ final class CookieConsentTestKernel extends Kernel
     {
         $routes->import('routing.controllers');
         if ($this->importBundleRoutes) {
-            $routes->import(__DIR__ . '/../../../src/Resources/config/routing.yaml');
+            $import = $routes->import(__DIR__ . '/../../../src/Resources/config/routing.yaml');
+            if ($this->routeNamePrefix !== null) {
+                $import->namePrefix($this->routeNamePrefix);
+            }
         }
     }
 }

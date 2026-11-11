@@ -143,6 +143,9 @@ configuration or schema change.**
   `CookieInventoryProvider::viewsForLocale()` over the entity-typed `getConfig()` / `listForLocale()` in your code.
 - Admin routes with `web_ui.enabled: false` now answer 404 at `kernel.request`, before their controller is resolved
   (same status as before).
+- **Renamed admin routes are guarded.** If you import `routing.yaml` with a `name_prefix` or rename the admin routes,
+  the access checker now applies to them too (it is keyed on the controller class). Make sure your admin users pass
+  `security.access_roles` / your `security.access_checker`.
 - Code that constructs `CookieConsentConfigResolver`, `CookieInventoryProvider` or
   `CookieConsentRuntimeCacheResetSubscriber` itself keeps working: their repository arguments only became nullable.
 

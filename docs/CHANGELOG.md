@@ -268,6 +268,15 @@ registration and the entity-typed read side (rule 1).
 - Read-only views (rule 1): `Config\ConsentProfileView` from `ResolvedCookieConsentConfig::view()` (plus
   `getConfigId()`), and `Config\CookieDefinitionView` from `CookieInventoryProvider::viewsForLocale()`.
 
+#### Fixed
+
+- **Admin access check with renamed routes** (audit LR-C-L1, present since the admin pages were added):
+  `CookieConsentAdminAccessSubscriber` recognised admin requests by route **name** only, so a host that imported the
+  bundle `routing.yaml` with a `name_prefix` (or renamed the routes) let anonymous visitors reach the admin controllers
+  (it then failed with a 500 only because the shipped templates generate the unprefixed names). Admin requests are now
+  recognised by their controller class (`CookieDefinitionAdminController`, `CookieConsentConfigSettingsAdminController`
+  and subclasses), whatever the route name; the route-name match stays as well.
+
 #### Changed
 
 - The entity mapping is registered only when DoctrineBundle is registered (standard hosts: unchanged). Before, a host
