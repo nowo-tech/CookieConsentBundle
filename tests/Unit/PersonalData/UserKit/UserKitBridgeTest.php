@@ -4,10 +4,13 @@ declare(strict_types=1);
 
 namespace Nowo\CookieConsentBundle\Tests\Unit\PersonalData\UserKit;
 
+use DateTimeImmutable;
+use Nowo\CookieConsentBundle\PersonalData\CookieConsentIpWindow;
 use Nowo\CookieConsentBundle\PersonalData\CookieConsentPersonalDataSubject;
 use Nowo\CookieConsentBundle\PersonalData\IpWindowSubjectResolver;
 use Nowo\CookieConsentBundle\PersonalData\UserKit\CookieConsentLogsPersonalDataEraser;
 use Nowo\CookieConsentBundle\PersonalData\UserKit\CookieConsentsPersonalDataExportProvider;
+use Nowo\CookieConsentBundle\Tests\Support\PersonalData\FixedSubjectResolver;
 use Nowo\CookieConsentBundle\Tests\Support\PersonalData\SpyPersonalDataEraser;
 use Nowo\CookieConsentBundle\Tests\Support\PersonalData\SpyPersonalDataExporter;
 use Nowo\CookieConsentBundle\Tests\Support\PersonalData\SpySubjectResolver;
@@ -63,6 +66,28 @@ final class UserKitBridgeTest extends TestCase
 
         self::assertSame([[$user, 'alice'], [$user, 'alice'], [$user, 'alice'], [$user, 'other']], $resolver->calls);
         self::assertCount(3, $port->subjects, 'the two identical subjects of the last request are erased once');
+    }
+
+    public function testIpWindowsAreDroppedUnlessErasureByIpWindowIsOn(): void
+    {
+        $window   = CookieConsentIpWindow::of('203.0.113.42', new DateTimeImmutable('2026-03-10T00:00:00+00:00'), new DateTimeImmutable('2026-03-11T00:00:00+00:00'));
+        $resolver = new FixedSubjectResolver([CookieConsentPersonalDataSubject::of([$window]), CookieConsentPersonalDataSubject::of([$window], ['k-1'])]);
+        $user     = new InMemoryUser('alice', null);
+
+        $off = $this->eraser();
+        (new CookieConsentLogsPersonalDataEraser($off, $resolver))->erase(new ErasureRequest($user, originalIdentifier: 'alice'));
+        self::assertCount(1, $off->subjects, 'the window-only subject is dropped');
+        self::assertSame(['consent_keys' => ['k-1'], 'ip_windows' => []], $off->subjects[0]->toArray());
+
+        $on = $this->eraser();
+        (new CookieConsentLogsPersonalDataEraser($on, $resolver, eraseByIpWindow: true))->erase(new ErasureRequest($user, originalIdentifier: 'alice'));
+        self::assertCount(2, $on->subjects);
+        self::assertCount(1, $on->subjects[1]->ipWindows());
+
+        $exporter = $this->exporter();
+        (new CookieConsentsPersonalDataExportProvider($exporter, $resolver))->export($user);
+        self::assertSame([['k-1']], $exporter->keys, 'the export never uses IP windows');
+        self::assertSame([], $exporter->subjects[0]->ipWindows());
     }
 
     public function testExportMergesTheSubjects(): void

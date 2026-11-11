@@ -21,10 +21,12 @@ final class UserKitSubjects
 {
     /**
      * @param array<string, mixed> $context the UserKit request context
+     * @param bool $ipWindows keep the subjects' IP windows (erasure with `personal_data.ip_windows: erase`); false
+     *                        reduces every subject to its consent keys and drops the subjects without any
      *
      * @return list<CookieConsentPersonalDataSubject>
      */
-    public static function resolve(CookieConsentPersonalDataSubjectResolverInterface $resolver, object $user, ?string $identifier, array $context): array
+    public static function resolve(CookieConsentPersonalDataSubjectResolverInterface $resolver, object $user, ?string $identifier, array $context, bool $ipWindows): array
     {
         $identifiers = [$identifier];
         $previous    = $context['previous_email'] ?? null;
@@ -35,6 +37,13 @@ final class UserKitSubjects
         $subjects = [];
         foreach ($identifiers as $id) {
             foreach ($resolver->subjectsFor($user, $id) as $subject) {
+                if (!$ipWindows) {
+                    $subject = $subject->withoutIpWindows();
+                    if (!$subject instanceof CookieConsentPersonalDataSubject) {
+                        continue;
+                    }
+                }
+
                 $subjects[serialize($subject->toArray())] = $subject;
             }
         }

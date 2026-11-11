@@ -15,7 +15,8 @@ use Nowo\UserKitBundle\PersonalData\PersonalDataEraserInterface;
  *
  * Registered when UserKit is installed, the bundle entities are mapped and `personal_data.enabled` is true. Priority
  * {@see self::PRIORITY}: before HttpLog's eraser (100), which deletes the request rows the IP windows come from, and
- * before the host identity eraser. Without an IP window provider (or a custom subject resolver) it erases nothing.
+ * before the host identity eraser. IP windows are used only with `personal_data.ip_windows: erase` (off by default:
+ * only the consent keys a custom subject resolver returns are erased). Without them it erases nothing.
  */
 final readonly class CookieConsentLogsPersonalDataEraser implements PersonalDataEraserInterface
 {
@@ -26,6 +27,7 @@ final readonly class CookieConsentLogsPersonalDataEraser implements PersonalData
     public function __construct(
         private CookieConsentPersonalDataEraserInterface $eraser,
         private CookieConsentPersonalDataSubjectResolverInterface $resolver,
+        private bool $eraseByIpWindow = false,
     ) {
     }
 
@@ -41,7 +43,7 @@ final readonly class CookieConsentLogsPersonalDataEraser implements PersonalData
 
     public function erase(ErasureRequest $request): void
     {
-        foreach (UserKitSubjects::resolve($this->resolver, $request->user, $request->identifier(), $request->context) as $subject) {
+        foreach (UserKitSubjects::resolve($this->resolver, $request->user, $request->identifier(), $request->context, $this->eraseByIpWindow) as $subject) {
             $this->eraser->erase($subject);
         }
     }

@@ -238,8 +238,9 @@ nowo_cookie_consent:
 | Key | Default | Description |
 |-----|---------|-------------|
 | `personal_data.enabled` | `true` | Register the UserKit eraser `cookie_consent_logs` and export section `cookie_consents` when UserKit is installed and the bundle entities are mapped. The ports themselves always exist. Set `false` when your app already erases the consent log |
-| `personal_data.ip_window_margin` | `P1D` | ISO 8601 duration added before and after every window an IP window provider returns |
-| `personal_data.subject_resolver` | `null` | Service id implementing `CookieConsentPersonalDataSubjectResolverInterface`; default: the windows of the tagged `CookieConsentIpWindowProviderInterface` services. See [USAGE](USAGE.md#gdpr-erasure-and-export) |
+| `personal_data.ip_windows` | `off` | `off`: erase by consent key only (IP windows in a subject are ignored). `erase`: also delete the rows of the subject's IP windows (an anonymised IP matches every visitor of the same /24 or /48 in the window). IP windows are never exported |
+| `personal_data.ip_window_margin` | `PT0S` | ISO 8601 duration added before and after every window an IP window provider returns (only with `ip_windows: erase`) |
+| `personal_data.subject_resolver` | `null` | Service id implementing `CookieConsentPersonalDataSubjectResolverInterface`; default: the windows of the tagged `CookieConsentIpWindowProviderInterface` services (only with `ip_windows: erase`, else no subject). See [USAGE](USAGE.md#gdpr-erasure-and-export) |
 
 ## Dedicated entity manager
 

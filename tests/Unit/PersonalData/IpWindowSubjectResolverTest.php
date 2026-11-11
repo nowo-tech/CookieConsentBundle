@@ -18,6 +18,36 @@ final class IpWindowSubjectResolverTest extends TestCase
         self::assertSame([], (new IpWindowSubjectResolver())->subjectsFor(new stdClass(), 'alice'));
     }
 
+    public function testOffByDefaultCallsNoProvider(): void
+    {
+        $provider = new class implements CookieConsentIpWindowProviderInterface {
+            public int $calls = 0;
+
+            public function ipWindowsFor(object $user, ?string $originalIdentifier): iterable
+            {
+                ++$this->calls;
+
+                return [CookieConsentIpWindow::of('203.0.113.10', new DateTimeImmutable('2026-01-10T00:00:00+00:00'), new DateTimeImmutable('2026-01-11T00:00:00+00:00'))];
+            }
+        };
+
+        self::assertSame([], (new IpWindowSubjectResolver([$provider]))->subjectsFor(new stdClass(), 'alice'));
+        self::assertSame(0, $provider->calls);
+    }
+
+    public function testDefaultMarginIsZero(): void
+    {
+        $provider = new class implements CookieConsentIpWindowProviderInterface {
+            public function ipWindowsFor(object $user, ?string $originalIdentifier): iterable
+            {
+                return [CookieConsentIpWindow::of('203.0.113.10', new DateTimeImmutable('2026-01-10T00:00:00+00:00'), new DateTimeImmutable('2026-01-11T00:00:00+00:00'))];
+            }
+        };
+
+        $subjects = (new IpWindowSubjectResolver([$provider], enabled: true))->subjectsFor(new stdClass(), 'alice');
+        self::assertSame([['ip' => '203.0.113.xx', 'from' => '2026-01-10T00:00:00+00:00', 'to' => '2026-01-11T00:00:00+00:00']], $subjects[0]->toArray()['ip_windows']);
+    }
+
     public function testWidensEveryProviderWindowIntoOneSubject(): void
     {
         $user      = new stdClass();
@@ -39,7 +69,7 @@ final class IpWindowSubjectResolverTest extends TestCase
             }
         };
 
-        $subjects = (new IpWindowSubjectResolver([$providerA, $providerB], 'PT12H'))->subjectsFor($user, 'alice');
+        $subjects = (new IpWindowSubjectResolver([$providerA, $providerB], 'PT12H', enabled: true))->subjectsFor($user, 'alice');
 
         self::assertCount(1, $subjects);
         self::assertSame([

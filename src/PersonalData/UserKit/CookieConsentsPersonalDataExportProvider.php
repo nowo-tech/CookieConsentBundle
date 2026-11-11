@@ -13,8 +13,8 @@ use Symfony\Component\Security\Core\User\UserInterface;
 /**
  * UserKit export section `cookie_consents` (1.29): the user's consent decisions from
  * {@see CookieConsentPersonalDataExporterInterface} (`{"decisions": [...]}`), all resolved subjects merged so a row is
- * listed once. Registered like {@see CookieConsentLogsPersonalDataEraser}; without an IP window provider (or a custom
- * subject resolver) the section holds no decision.
+ * listed once. Registered like {@see CookieConsentLogsPersonalDataEraser}. Consent keys only: IP windows are never
+ * exported, so without a custom subject resolver that returns consent keys the section holds no decision.
  */
 final readonly class CookieConsentsPersonalDataExportProvider implements PersonalDataExportProviderInterface
 {
@@ -43,7 +43,7 @@ final readonly class CookieConsentsPersonalDataExportProvider implements Persona
     {
         $identifier = $user instanceof UserInterface ? $user->getUserIdentifier() : null;
         $merged     = null;
-        foreach (UserKitSubjects::resolve($this->resolver, $user, $identifier, []) as $subject) {
+        foreach (UserKitSubjects::resolve($this->resolver, $user, $identifier, [], false) as $subject) {
             $merged = $merged instanceof CookieConsentPersonalDataSubject ? $merged->merge($subject) : $subject;
         }
 

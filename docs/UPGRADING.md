@@ -129,11 +129,21 @@
 
 ## Unreleased
 
-Next minor (GDPR ports). **Nothing to change.** With UserKit installed (and the bundle entities mapped), the consent-log
-eraser `cookie_consent_logs` and the export section `cookie_consents` register automatically; they act only once you
-tag a `CookieConsentIpWindowProviderInterface` service (autoconfigured) or set `personal_data.subject_resolver`, because
-consent rows carry no user id. Set `personal_data.enabled: false` if your app already erases the consent log. Hosts
-without Doctrine keep their own consent store: the default ports are removed with the other Doctrine-only services.
+Next minor (GDPR ports). **Nothing to change in most apps.**
+
+- With UserKit installed (and the bundle entities mapped), the consent-log eraser `cookie_consent_logs` and the export
+  section `cookie_consents` register automatically. They act only once you set `personal_data.subject_resolver`
+  (consent rows carry no user id), or, for the erasure only, opt in to `personal_data.ip_windows: erase` and tag a
+  `CookieConsentIpWindowProviderInterface` service. IP windows are never used for the export. Set
+  `personal_data.enabled: false` if your app already erases the consent log or must keep it.
+- **Export section key clash.** If your app already registers a UserKit export provider with the section key
+  `cookie_consents`, UserKit's `PersonalDataExporter` throws a `LogicException` ("Duplicate personal data export
+  section") and the whole GDPR export fails. Remove your own provider in the same upgrade, or set
+  `personal_data.enabled: false`. (A duplicate eraser key is allowed: both run, the second finds nothing.)
+- **UserKit 1.12 or later.** `composer.json` now declares `conflict: nowo-tech/user-kit-bundle <1.12` (the bridge reads
+  `ErasureRequest::identifier()`): a host on UserKit 1.11 or older must update UserKit together with this bundle.
+- Hosts without Doctrine keep their own consent store: the default ports are removed with the other Doctrine-only
+  services.
 
 ## To 1.28.0
 

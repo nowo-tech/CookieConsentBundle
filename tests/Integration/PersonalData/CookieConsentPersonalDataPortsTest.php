@@ -18,6 +18,7 @@ use PHPUnit\Framework\TestCase;
 use Psr\Clock\ClockInterface;
 use Symfony\Component\EventDispatcher\EventDispatcher;
 
+use function count;
 use function gc_collect_cycles;
 use function memory_get_usage;
 
@@ -46,12 +47,13 @@ final class CookieConsentPersonalDataPortsTest extends TestCase
         $this->dispatcher->addListener(CookieConsentPersonalDataErasedEvent::class, function (CookieConsentPersonalDataErasedEvent $event) use ($connection): void {
             $this->events[] = ['event' => $event, 'inTransaction' => $connection->isTransactionActive(), 'remaining' => $this->db->ids()];
         });
+        // Erasure by IP window opted in (`personal_data.ip_windows: erase`); the default is covered separately.
         $this->eraser = new CookieConsentPersonalDataEraser($this->db, $this->dispatcher, new class implements ClockInterface {
             public function now(): DateTimeImmutable
             {
                 return new DateTimeImmutable('2026-11-11 12:00:00', new DateTimeZone('UTC'));
             }
-        });
+        }, eraseByIpWindow: true);
         $this->exporter = new CookieConsentPersonalDataExporter($this->db);
     }
 
@@ -81,6 +83,32 @@ final class CookieConsentPersonalDataPortsTest extends TestCase
         self::assertNotContains($edge, $this->db->ids());
     }
 
+    public function testByDefaultIpWindowsAreIgnoredAndOnlyConsentKeysAreErased(): void
+    {
+        $byKey    = $this->db->insert('key-a', '198.51.100.xx', 'analytics', true, $this->at('2026-01-01 10:00:00'));
+        $inWindow = $this->db->insert('key-x', '203.0.113.xx', 'marketing', false, $this->at('2026-03-10 08:00:00'));
+        $default  = new CookieConsentPersonalDataEraser($this->db, $this->dispatcher);
+        $window   = CookieConsentIpWindow::of('203.0.113.42', $this->at('2026-03-10 00:00:00'), $this->at('2026-03-11 00:00:00'));
+
+        self::assertSame(0, $default->erase(CookieConsentPersonalDataSubject::of([$window]))->total());
+        self::assertSame(0, $this->eventCount(), 'a subject reduced to nothing dispatches no event');
+        self::assertSame(1, $default->erase(CookieConsentPersonalDataSubject::of([$window], ['key-a']))->consentLogs);
+        self::assertSame([$inWindow], $this->db->ids());
+        self::assertNotContains($byKey, $this->db->ids());
+        self::assertSame(1, $this->eventCount());
+        self::assertSame([], $this->events[0]['event']->ipWindows, 'the event reports the subject actually used');
+    }
+
+    public function testTheExportIgnoresIpWindows(): void
+    {
+        $this->db->insert('key-x', '203.0.113.xx', 'marketing', false, $this->at('2026-03-10 08:00:00'));
+        $window = CookieConsentIpWindow::of('203.0.113.42', $this->at('2026-03-10 00:00:00'), $this->at('2026-03-11 00:00:00'));
+
+        self::assertSame(['decisions' => []], $this->exporter->export(CookieConsentPersonalDataSubject::of([$window])));
+        self::assertSame(['decisions' => []], $this->exporter->export(CookieConsentPersonalDataSubject::of([$window], ['key-other'])));
+        self::assertCount(1, $this->db->ids());
+    }
+
     public function testASecondRunErasesNothingAndDoesNotFail(): void
     {
         $this->db->insert('key-a', '198.51.100.xx', 'analytics', true, $this->at('2026-01-01 10:00:00'));
@@ -106,13 +134,13 @@ final class CookieConsentPersonalDataPortsTest extends TestCase
         self::assertCount(3, $this->db->ids());
     }
 
-    public function testExportsTheDecisionsOldestFirstWithoutIdentifiers(): void
+    public function testExportsTheKeyDecisionsOldestFirstWithoutIdentifiers(): void
     {
         $this->db->insert('key-a', '198.51.100.xx', 'marketing', false, $this->at('2026-02-01 10:00:00'), 3);
         $this->db->insert('key-a', '198.51.100.xx', 'analytics', true, $this->at('2026-01-01 10:00:00'));
+        // In the window but another key: never exported (IP windows are not used for the export).
         $this->db->insert('key-z', '203.0.113.xx', 'preferences', true, $this->at('2026-03-10 08:00:00'), 4);
         $this->db->insert('key-b', '198.51.100.xx', 'analytics', true, $this->at('2026-01-01 10:00:00'));
-        // Matches both the key and the window: listed once.
         $this->db->insert('key-a', '203.0.113.xx', 'analytics', false, $this->at('2026-03-10 09:00:00'));
 
         $export = $this->exporter->export(CookieConsentPersonalDataSubject::of(
@@ -123,7 +151,6 @@ final class CookieConsentPersonalDataPortsTest extends TestCase
         self::assertSame(['decisions' => [
             ['cookie_name' => 'analytics', 'allowed' => true, 'consent_revision' => null, 'recorded_at' => '2026-01-01T10:00:00+00:00'],
             ['cookie_name' => 'marketing', 'allowed' => false, 'consent_revision' => 3, 'recorded_at' => '2026-02-01T10:00:00+00:00'],
-            ['cookie_name' => 'preferences', 'allowed' => true, 'consent_revision' => 4, 'recorded_at' => '2026-03-10T08:00:00+00:00'],
             ['cookie_name' => 'analytics', 'allowed' => false, 'consent_revision' => null, 'recorded_at' => '2026-03-10T09:00:00+00:00'],
         ]], $export);
     }
@@ -191,6 +218,7 @@ final class CookieConsentPersonalDataPortsTest extends TestCase
     {
         $runs = ConsentLogDatabase::url() === null ? 1000 : 50;
         $a    = CookieConsentPersonalDataSubject::fromConsentKey('worker-a');
+        $bKey = CookieConsentPersonalDataSubject::fromConsentKey('worker-b');
         $b    = CookieConsentPersonalDataSubject::fromIpWindow('192.0.2.10', $this->at('2026-05-01 00:00:00'), $this->at('2026-05-02 00:00:00'));
         $base = 0;
 
@@ -201,7 +229,8 @@ final class CookieConsentPersonalDataPortsTest extends TestCase
             self::assertSame('a-cat', $this->exporter->export($a)['decisions'][0]['cookie_name'] ?? null);
             self::assertCount(1, $this->exporter->export($a)['decisions']);
             self::assertSame(1, $this->eraser->erase($a)->consentLogs);
-            self::assertSame(['decisions' => [['cookie_name' => 'b-cat', 'allowed' => false, 'consent_revision' => null, 'recorded_at' => '2026-05-01T12:00:00+00:00']]], $this->exporter->export($b));
+            self::assertSame(['decisions' => []], $this->exporter->export($b), 'IP windows are never exported');
+            self::assertSame(['decisions' => [['cookie_name' => 'b-cat', 'allowed' => false, 'consent_revision' => null, 'recorded_at' => '2026-05-01T12:00:00+00:00']]], $this->exporter->export($bKey));
             self::assertSame(1, $this->eraser->erase($b)->consentLogs);
             self::assertSame([], $this->db->ids());
 
@@ -215,6 +244,11 @@ final class CookieConsentPersonalDataPortsTest extends TestCase
         $this->events = [];
         gc_collect_cycles();
         self::assertLessThan(1024 * 1024, memory_get_usage() - $base, 'memory stays flat');
+    }
+
+    private function eventCount(): int
+    {
+        return count($this->events);
     }
 
     private function at(string $time): DateTimeImmutable

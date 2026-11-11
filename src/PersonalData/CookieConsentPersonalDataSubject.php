@@ -94,6 +94,19 @@ final readonly class CookieConsentPersonalDataSubject
     }
 
     /**
+     * The same subject reduced to its consent keys, or null when it has none (IP windows are opt-in for erasure and
+     * never used for the export).
+     */
+    public function withoutIpWindows(): ?self
+    {
+        if ($this->consentKeys === []) {
+            return null;
+        }
+
+        return $this->ipWindows === [] ? $this : new self([], $this->consentKeys);
+    }
+
+    /**
      * @return list<CookieConsentIpWindow>
      */
     public function ipWindows(): array

@@ -31,7 +31,10 @@ final class PersonalDataExtensionTest extends TestCase
         self::assertSame(CookieConsentPersonalDataExporter::class, (string) $container->getAlias(CookieConsentPersonalDataExporterInterface::class));
         self::assertSame(IpWindowSubjectResolver::class, (string) $container->getAlias(CookieConsentPersonalDataSubjectResolverInterface::class));
         self::assertTrue($container->getParameter('nowo_cookie_consent.personal_data.enabled'));
-        self::assertSame('P1D', $container->getParameter('nowo_cookie_consent.personal_data.ip_window_margin'));
+        self::assertSame('PT0S', $container->getParameter('nowo_cookie_consent.personal_data.ip_window_margin'));
+        self::assertSame('off', $container->getParameter('nowo_cookie_consent.personal_data.ip_windows'));
+        self::assertFalse($container->getDefinition(CookieConsentPersonalDataEraser::class)->getArgument('$eraseByIpWindow'));
+        self::assertFalse($container->getDefinition(IpWindowSubjectResolver::class)->getArgument('$enabled'));
         self::assertSame(
             [NowoCookieConsentExtension::IP_WINDOW_PROVIDER_TAG => [[]]],
             $container->getAutoconfiguredInstanceof()[CookieConsentIpWindowProviderInterface::class]->getTags(),
@@ -43,6 +46,7 @@ final class PersonalDataExtensionTest extends TestCase
         $container = $this->load([], doctrine: true);
 
         self::assertSame([['priority' => 110]], $container->getDefinition(CookieConsentLogsPersonalDataEraser::class)->getTag('nowo_user_kit.personal_data.eraser'));
+        self::assertFalse($container->getDefinition(CookieConsentLogsPersonalDataEraser::class)->getArgument('$eraseByIpWindow'));
         self::assertSame([['priority' => -50]], $container->getDefinition(CookieConsentsPersonalDataExportProvider::class)->getTag('nowo_user_kit.personal_data.export_provider'));
     }
 
@@ -55,6 +59,22 @@ final class PersonalDataExtensionTest extends TestCase
 
         $withoutDoctrine = $this->load([]);
         self::assertFalse($withoutDoctrine->hasDefinition(CookieConsentLogsPersonalDataEraser::class));
+    }
+
+    public function testErasureByIpWindowIsOptIn(): void
+    {
+        $container = $this->load(['personal_data' => ['ip_windows' => 'erase']], doctrine: true);
+
+        self::assertSame('erase', $container->getParameter('nowo_cookie_consent.personal_data.ip_windows'));
+        self::assertTrue($container->getDefinition(CookieConsentPersonalDataEraser::class)->getArgument('$eraseByIpWindow'));
+        self::assertTrue($container->getDefinition(IpWindowSubjectResolver::class)->getArgument('$enabled'));
+        self::assertTrue($container->getDefinition(CookieConsentLogsPersonalDataEraser::class)->getArgument('$eraseByIpWindow'));
+    }
+
+    public function testRejectsAnUnknownIpWindowsMode(): void
+    {
+        $this->expectException(InvalidConfigurationException::class);
+        $this->load(['personal_data' => ['ip_windows' => 'export']]);
     }
 
     public function testCustomSubjectResolverAndMargin(): void

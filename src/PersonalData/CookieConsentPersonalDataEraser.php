@@ -16,6 +16,9 @@ use function array_column;
  * Default {@see CookieConsentPersonalDataEraserInterface} (1.29): DBAL deletes by primary key, at most
  * {@see self::BATCH_SIZE} rows per statement, on the connection of the entity manager that maps the consent log
  * (`doctrine.entity_manager`, else the default one). No entity manager is flushed or cleared.
+ *
+ * The subject's IP windows are used only with `$eraseByIpWindow` (`personal_data.ip_windows: erase`, off by default);
+ * otherwise they are ignored and a subject without consent keys erases nothing (no event).
  */
 final readonly class CookieConsentPersonalDataEraser implements CookieConsentPersonalDataEraserInterface
 {
@@ -26,11 +29,21 @@ final readonly class CookieConsentPersonalDataEraser implements CookieConsentPer
         private ManagerRegistry $managerRegistry,
         private ?EventDispatcherInterface $eventDispatcher = null,
         private ?ClockInterface $clock = null,
+        private bool $eraseByIpWindow = false,
     ) {
     }
 
     public function erase(CookieConsentPersonalDataSubject $subject): CookieConsentErasureResult
     {
+        // IP windows are opt-in (`personal_data.ip_windows: erase`): an anonymised IP is shared by every visitor of the
+        // same /24 (/48), so by default only the consent keys are used.
+        if (!$this->eraseByIpWindow) {
+            $subject = $subject->withoutIpWindows();
+            if (!$subject instanceof CookieConsentPersonalDataSubject) {
+                return new CookieConsentErasureResult();
+            }
+        }
+
         $rows = CookieConsentLogRows::forRegistry($this->managerRegistry);
         if (!$rows instanceof CookieConsentLogRows) {
             return new CookieConsentErasureResult();

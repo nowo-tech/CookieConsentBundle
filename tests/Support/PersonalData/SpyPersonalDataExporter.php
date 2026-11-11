@@ -15,9 +15,13 @@ final class SpyPersonalDataExporter implements CookieConsentPersonalDataExporter
     /** @var list<list<string>> */
     public array $keys = [];
 
+    /** @var list<CookieConsentPersonalDataSubject> */
+    public array $subjects = [];
+
     public function export(CookieConsentPersonalDataSubject $subject): array
     {
-        $this->keys[] = $subject->consentKeys();
+        $this->keys[]     = $subject->consentKeys();
+        $this->subjects[] = $subject;
 
         return ['decisions' => [['cookie_name' => 'analytics', 'allowed' => true, 'consent_revision' => null, 'recorded_at' => '2026-01-01T00:00:00+00:00']]];
     }

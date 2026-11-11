@@ -12,7 +12,8 @@ use function usort;
 
 /**
  * Default {@see CookieConsentPersonalDataExporterInterface} (1.29): reads the subject's consent log rows on the
- * connection of the entity manager that maps the consent log. Read-only.
+ * connection of the entity manager that maps the consent log. Read-only. Matches by consent key only: the subject's IP
+ * windows are ignored.
  */
 final readonly class CookieConsentPersonalDataExporter implements CookieConsentPersonalDataExporterInterface
 {
@@ -23,6 +24,13 @@ final readonly class CookieConsentPersonalDataExporter implements CookieConsentP
 
     public function export(CookieConsentPersonalDataSubject $subject): array
     {
+        // Export by consent key only: an IP window also matches other visitors behind the same anonymised IP, whose
+        // decisions must not be handed to the requester (art. 15(4)).
+        $subject = $subject->withoutIpWindows();
+        if (!$subject instanceof CookieConsentPersonalDataSubject) {
+            return ['decisions' => []];
+        }
+
         $rows = CookieConsentLogRows::forRegistry($this->managerRegistry);
         if (!$rows instanceof CookieConsentLogRows) {
             return ['decisions' => []];

@@ -21,6 +21,7 @@ use Nowo\CookieConsentBundle\PersonalData\CookieConsentIpWindowProviderInterface
 use Nowo\CookieConsentBundle\PersonalData\CookieConsentPersonalDataEraser;
 use Nowo\CookieConsentBundle\PersonalData\CookieConsentPersonalDataExporter;
 use Nowo\CookieConsentBundle\PersonalData\CookieConsentPersonalDataSubjectResolverInterface;
+use Nowo\CookieConsentBundle\PersonalData\IpWindowSubjectResolver;
 use Nowo\CookieConsentBundle\PersonalData\UserKit\CookieConsentLogsPersonalDataEraser;
 use Nowo\CookieConsentBundle\PersonalData\UserKit\CookieConsentsPersonalDataExportProvider;
 use Nowo\CookieConsentBundle\Repository\CookieConsentConfigRepository;
@@ -153,6 +154,7 @@ class NowoCookieConsentExtension extends Extension implements PrependExtensionIn
 
         $personalData = $config['personal_data'];
         $container->setParameter('nowo_cookie_consent.personal_data.enabled', $personalData['enabled']);
+        $container->setParameter('nowo_cookie_consent.personal_data.ip_windows', $personalData['ip_windows']);
         $container->setParameter('nowo_cookie_consent.personal_data.ip_window_margin', $personalData['ip_window_margin']);
 
         $loader = new YamlFileLoader($container, new FileLocator(__DIR__ . '/../Resources/config'));
@@ -207,12 +209,17 @@ class NowoCookieConsentExtension extends Extension implements PrependExtensionIn
      * GDPR ports (1.29): autoconfigured IP window providers, the optional custom subject resolver, and the UserKit
      * eraser / export provider when UserKit is installed, the bundle entities are mapped and `personal_data.enabled`.
      *
-     * @param array{enabled: bool, ip_window_margin: string, subject_resolver: ?string} $personalData
+     * @param array{enabled: bool, ip_windows: string, ip_window_margin: string, subject_resolver: ?string} $personalData
      */
     private function registerPersonalData(ContainerBuilder $container, array $personalData): void
     {
         $container->registerForAutoconfiguration(CookieConsentIpWindowProviderInterface::class)
             ->addTag(self::IP_WINDOW_PROVIDER_TAG);
+
+        // Erasure by IP window is opt-in (`ip_windows: erase`); the export never uses IP windows.
+        $eraseByIpWindow = $personalData['ip_windows'] === 'erase';
+        $container->getDefinition(CookieConsentPersonalDataEraser::class)->setArgument('$eraseByIpWindow', $eraseByIpWindow);
+        $container->getDefinition(IpWindowSubjectResolver::class)->setArgument('$enabled', $eraseByIpWindow);
 
         $resolver = $personalData['subject_resolver'];
         if (is_string($resolver) && trim($resolver) !== '') {
@@ -225,6 +232,7 @@ class NowoCookieConsentExtension extends Extension implements PrependExtensionIn
 
         $container->register(CookieConsentLogsPersonalDataEraser::class, CookieConsentLogsPersonalDataEraser::class)
             ->setAutowired(true)
+            ->setArgument('$eraseByIpWindow', $eraseByIpWindow)
             ->addTag('nowo_user_kit.personal_data.eraser', ['priority' => CookieConsentLogsPersonalDataEraser::PRIORITY]);
         $container->register(CookieConsentsPersonalDataExportProvider::class, CookieConsentsPersonalDataExportProvider::class)
             ->setAutowired(true)
