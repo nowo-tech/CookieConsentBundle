@@ -3,6 +3,7 @@
 ## Table of contents
 
 - [Unreleased](#unreleased)
+- [To 1.30.0](#to-1300)
   - [Framework-free consent cookie port (deprecations)](#framework-free-consent-cookie-port-deprecations)
 - [To 1.29.0](#to-1290)
 - [To 1.28.0](#to-1280)
@@ -130,6 +131,14 @@
 - [Getting help](#getting-help)
 
 ## Unreleased
+
+## To 1.30.0
+
+From **1.29.0**:
+
+```bash
+composer update nowo-tech/cookie-consent-bundle
+```
 
 Target **1.30.0**. No action is required: every 1.29 configuration and custom service keeps working, and the consent
 cookies are the same, byte for byte.
