@@ -257,12 +257,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 Boots without Doctrine on the YAML path; read-only profile views; admin guard by controller class. See [UPGRADING](https://github.com/nowo-tech/CookieConsentBundle/blob/v1.28.0/docs/UPGRADING.md#to-1280).
 
-### Target 1.28.0
-
 Architecture bar W2 (standard Symfony by default, strict DDD opt-in): rule 8 (no ORM just for configuration), mapping
 registration and the entity-typed read side (rule 1).
 
-#### Added
+### Added
 
 - **Hosts without Doctrine** (DoctrineBundle not registered) boot on the YAML path: configuration, copy and cookie
   inventory from the bundle configuration, consents logged into the host's `CookieLoggerInterface` (or nowhere with
@@ -273,7 +271,7 @@ registration and the entity-typed read side (rule 1).
 - Read-only views (rule 1): `Config\ConsentProfileView` from `ResolvedCookieConsentConfig::view()` (plus
   `getConfigId()`), and `Config\CookieDefinitionView` from `CookieInventoryProvider::viewsForLocale()`.
 
-#### Fixed
+### Fixed
 
 - **Admin access check with renamed routes** (audit LR-C-L1, present since the admin pages were added):
   `CookieConsentAdminAccessSubscriber` recognised admin requests by route **name** only, so a host that imported the
@@ -282,7 +280,7 @@ registration and the entity-typed read side (rule 1).
   recognised by their controller class (`CookieDefinitionAdminController`, `CookieConsentConfigSettingsAdminController`
   and subclasses), whatever the route name; the route-name match stays as well.
 
-#### Changed
+### Changed
 
 - The entity mapping is registered only when DoctrineBundle is registered (standard hosts: unchanged). Before, a host
   without it failed to compile with "Could not find the manager name parameter".
@@ -291,7 +289,7 @@ registration and the entity-typed read side (rule 1).
 - `CookieConsentConfigResolver`, `CookieInventoryProvider` and `CookieConsentRuntimeCacheResetSubscriber` accept
   null repositories (host without Doctrine).
 
-#### Tests
+### Tests
 
 - `tests/Integration/Ddd/HostWithoutDoctrineKernelTest.php`: no DoctrineBundle, YAML inventory rendered, consents in
   a host store; a kept-alive kernel serving 600 consent POSTs for two visitors through `http_kernel` without the

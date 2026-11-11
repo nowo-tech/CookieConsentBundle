@@ -6,7 +6,6 @@
 - [To 1.28.0](#to-1280)
 - [To 1.27.0](#to-1270)
 - [To 1.26.0](#to-1260)
-- [To 1.26.0](#to-1260-1)
 - [To 1.25.0](#to-1250)
 - [To 1.25.0](#to-1250-1)
 - [To 1.24.0](#to-1240)
@@ -160,14 +159,6 @@ composer update nowo-tech/cookie-consent-bundle
 - No change needed. Saving a consent no longer flushes your entity manager: pending changes of your own entities stay pending until your code flushes them (if you relied on the consent POST to flush them, flush explicitly). The log rows are written with DBAL; `CookieLogger::persistCookieConsentLog()` (protected) now only queues the entity, it no longer calls `persist()`.
 - Security: this release fixes a validation bypass (consent form submissions flushed your entity manager); see the CHANGELOG. If you cannot upgrade yet, set `use_logger: false`.
 - Optional: map the bundle entities on a dedicated entity manager with `doctrine.entity_manager: cookie_consent`. Define that manager under `doctrine.orm.entity_managers` (any connection). Your default manager may keep `auto_mapping: true`: the bundle removes its own mapping from every other manager, so its tables live only on the dedicated one (create or migrate them there, e.g. `doctrine:migrations:diff --em=cookie_consent`). The container build fails if the named manager does not exist. Remove `doctrine.connection` (ignored, removed in 2.0).
-
-## To 1.26.0
-
-From **1.25.0**:
-
-```bash
-composer update nowo-tech/cookie-consent-bundle
-```
 
 ## To 1.26.0
 
