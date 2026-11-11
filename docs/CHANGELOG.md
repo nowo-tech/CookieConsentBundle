@@ -271,15 +271,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   the interface to its own writer. The `Set-Cookie` headers are byte-identical to 1.29 (path, domain, `Secure`,
   `HttpOnly`, `SameSite=Lax`, expiry, raw flag, order).
 - Docs: "Standard host" and "DDD host" sections for the consent cookies in `docs/USAGE.md`, linked from the README.
+- The port the listeners call is chosen once at container build (`DependencyInjection\Compiler\ConsentCookieWriterPass`,
+  after decoration). The new port's default is a separate definition, `nowo_cookie_consent.cookie_writer`, so a host
+  decorator of `CookieHandler` / `CookieHandlerInterface`, a replaced class or a `CookieHandler` subclass keeps the
+  1.29 path (audit MR-C-M1 / M2).
 - Tests: old-vs-new `Set-Cookie` equivalence for save and clear, port selection (default, host writer, legacy host
-  handler, `CookieHandler` subclass), and a DDD-host kernel test (host writer only, no Doctrine, 400 requests for two
+  handler, `CookieHandler` subclass), a kernel test for every 1.29 customisation (decorator on the concrete id and on
+  the interface, replaced class, alias to a subclass) and the 1.30 ones (dual handler, host writer), and a DDD-host kernel test (host writer only, no Doctrine, 400 requests for two
   visitors through `http_kernel` without the services resetter, flat memory).
 
 ### Deprecated
 
 - `Cookie\CookieHandlerInterface` (`save(…, Response)` / `clear(Request, Response)`), `CookieHandler::save()`,
   `CookieHandler::clear()` and `CookieHandler::saveCookie()`: use `ConsentCookieWriterInterface`; removed in 2.0. A host
-  service that implements only the old interface keeps working and triggers an `E_USER_DEPRECATED` notice. See
+  service that implements only the old interface keeps working; one `E_USER_DEPRECATED` notice is reported at container
+  build (not per request). See
   [UPGRADING](UPGRADING.md#unreleased).
 
 ## [1.29.0] - 2026-11-11

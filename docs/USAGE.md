@@ -413,8 +413,8 @@ crosses the port.
 
 #### Standard host
 
-Nothing to configure. `ConsentCookieWriterInterface` and the deprecated `CookieHandlerInterface` are both aliased to
-`CookieHandler`, and the `Set-Cookie` headers are the same as in 1.29, byte for byte: path `/`, no domain, `Secure`,
+Nothing to configure. `ConsentCookieWriterInterface` is aliased to `nowo_cookie_consent.cookie_writer` and the
+deprecated `CookieHandlerInterface` to `CookieHandler` (two definitions of the same class), and the `Set-Cookie` headers are the same as in 1.29, byte for byte: path `/`, no domain, `Secure`,
 `SameSite=Lax`, `HttpOnly` from `nowo_cookie_consent.http_only`, one year expiry, not raw (covered by
 `tests/Unit/Http/ConsentCookieEquivalenceTest.php`).
 
@@ -457,10 +457,14 @@ services:
 `CookieCheckerInterface`. Keep the writer stateless: in a kept-alive FrankenPHP worker the same instance serves every
 visitor (`tests/Integration/Ddd/HostCookieWriterKernelTest.php`: 400 requests for two visitors, no services resetter).
 
-Which port the bundle calls: a service aliased to `ConsentCookieWriterInterface` first; otherwise the
-`CookieHandlerInterface` service when it also implements the new port; otherwise the deprecated
-`CookieHandlerInterface::save()` / `clear()` methods, with an `E_USER_DEPRECATED` notice. A subclass of `CookieHandler`
-keeps the deprecated path, so an overridden `saveCookie()` still runs. See [UPGRADING](UPGRADING.md#unreleased).
+Which port the bundle calls is decided once, when the container is built (`ConsentCookieWriterPass`, after decoration):
+a service aliased to `ConsentCookieWriterInterface` (or a decorator of `nowo_cookie_consent.cookie_writer`) first;
+otherwise the bundle writer when `CookieHandlerInterface` is still the bundle's `CookieHandler`; otherwise the
+`CookieHandlerInterface` service when its class also implements the new port; otherwise the deprecated
+`CookieHandlerInterface::save()` / `clear()` methods, as in 1.29. That last case covers a decorator of `CookieHandler`
+or of `CookieHandlerInterface` (`#[AsDecorator]`), a replaced class and a `CookieHandler` subclass (an overridden
+`saveCookie()` still runs); it reports one `E_USER_DEPRECATED` notice at container build, never per request. See
+[UPGRADING](UPGRADING.md#unreleased).
 
 ### Read-only views (1.28)
 

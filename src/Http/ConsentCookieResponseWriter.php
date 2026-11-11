@@ -7,22 +7,18 @@ namespace Nowo\CookieConsentBundle\Http;
 use Nowo\CookieConsentBundle\Cookie\ConsentCookieWriterInterface;
 use Nowo\CookieConsentBundle\Cookie\CookieHandler;
 use Nowo\CookieConsentBundle\Cookie\CookieHandlerInterface;
+use Nowo\CookieConsentBundle\DependencyInjection\Compiler\ConsentCookieWriterPass;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 
-use function sprintf;
-use function trigger_error;
-
-use const E_USER_DEPRECATED;
-
 /**
- * Picks the consent cookie port the bundle's `kernel.response` listeners call (1.30, REQ-ARCH-001 rule 3).
+ * Writes the consent cookies through the port the bundle chose (1.30, REQ-ARCH-001 rule 3).
  *
- * Order: a host service aliased to {@see ConsentCookieWriterInterface}; else the {@see CookieHandlerInterface}
- * service when it also implements the new port (the default {@see CookieHandler}); else the deprecated
- * `CookieHandlerInterface` methods, with a deprecation. A subclass of `CookieHandler` keeps the deprecated path, so an
- * overridden `saveCookie()` still runs. Built per call from the listener's own constructor arguments; holds no
- * request data.
+ * In the container, {@see ConsentCookieWriterPass} decides
+ * once at build: a writer is passed, or null for a host `CookieHandlerInterface` service that must keep the deprecated
+ * `save()` / `clear()` path (the deprecation is reported there, not per request). A listener built by hand with only
+ * the bundle's own `CookieHandler` uses it as the writer. Built per call from the listener's own constructor
+ * arguments; holds no request data.
  *
  * @internal
  */
@@ -50,7 +46,6 @@ final readonly class ConsentCookieResponseWriter
             return;
         }
 
-        $this->triggerDeprecation();
         $this->cookieHandler->save($categories, $key, $response, $granularCookies);
     }
 
@@ -70,35 +65,17 @@ final readonly class ConsentCookieResponseWriter
             return;
         }
 
-        $this->triggerDeprecation();
         // @igor-ignore - Writes expired cookies on this response; the deprecated handler port holds no state.
         $this->cookieHandler->clear($request, $response);
     }
 
     private function writer(): ?ConsentCookieWriterInterface
     {
-        if ($this->cookieWriter instanceof ConsentCookieWriterInterface && $this->cookieWriter::class !== CookieHandler::class) {
+        if ($this->cookieWriter instanceof ConsentCookieWriterInterface) {
             return $this->cookieWriter;
         }
 
-        if ($this->cookieHandler instanceof CookieHandler && $this->cookieHandler::class !== CookieHandler::class) {
-            return null;
-        }
-
-        if ($this->cookieHandler instanceof ConsentCookieWriterInterface) {
-            return $this->cookieHandler;
-        }
-
-        return null;
-    }
-
-    private function triggerDeprecation(): void
-    {
-        @trigger_error(sprintf(
-            'Since nowo-tech/cookie-consent-bundle 1.30: the consent cookies are written through the deprecated "%s" (service "%s"); implement "%s" instead (removed in 2.0).',
-            CookieHandlerInterface::class,
-            $this->cookieHandler::class,
-            ConsentCookieWriterInterface::class,
-        ), E_USER_DEPRECATED);
+        // Only the bundle's own class: a subclass may override saveCookie() (audit MR-C-M2).
+        return $this->cookieHandler::class === CookieHandler::class ? $this->cookieHandler : null;
     }
 }

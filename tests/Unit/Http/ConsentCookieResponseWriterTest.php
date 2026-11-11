@@ -9,6 +9,7 @@ use Nowo\CookieConsentBundle\Cookie\CookieHandler;
 use Nowo\CookieConsentBundle\Http\ConsentCookieResponseWriter;
 use Nowo\CookieConsentBundle\Tests\Support\HostPorts\HostConsentCookieWriter;
 use Nowo\CookieConsentBundle\Tests\Support\HostPorts\LegacyCookieHandler;
+use Nowo\CookieConsentBundle\Tests\Support\HostPorts\SubclassCookieHandler;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\HttpFoundation\Cookie;
 use Symfony\Component\HttpFoundation\Request;
@@ -69,39 +70,31 @@ final class ConsentCookieResponseWriterTest extends TestCase
         self::assertSame([], $this->deprecations);
     }
 
-    public function testLegacyHostHandlerKeepsWorkingWithADeprecation(): void
+    public function testLegacyHostHandlerWithoutAWriterKeepsTheDeprecatedPath(): void
     {
         $response = new Response();
-        $default  = new CookieHandler(true, new SystemClock());
 
-        $bridge = new ConsentCookieResponseWriter(new LegacyCookieHandler(), $default);
+        $bridge = new ConsentCookieResponseWriter(new LegacyCookieHandler());
         $bridge->save(['analytics' => true], 'visitor-1', $response);
         self::assertSame(['Legacy_Key'], $this->names($response));
 
         $bridge->clear(Request::create('/'), $response);
         self::assertTrue($response->headers->getCookies()[0]->isCleared());
 
-        self::assertCount(2, $this->deprecations);
-        self::assertStringContainsString(LegacyCookieHandler::class, $this->deprecations[0]);
-        self::assertStringContainsString('ConsentCookieWriterInterface', $this->deprecations[0]);
+        // The container reports the deprecation once, at build (ConsentCookieWriterPass), not per request.
+        self::assertSame([], $this->deprecations);
     }
 
     public function testSubclassOfTheDefaultHandlerKeepsItsOverride(): void
     {
-        // A 1.29 host subclass (CookieHandler is final only by PHPDoc until 2.0).
-        // @phpstan-ignore class.extendsFinalByPhpDoc
-        $handler = new class(true, new SystemClock()) extends CookieHandler {
-            protected function saveCookie(string $name, string $value, Response $response): void
-            {
-                $response->headers->setCookie(Cookie::create('Sub_' . $name, $value));
-            }
-        };
         $response = new Response();
 
-        (new ConsentCookieResponseWriter($handler, new CookieHandler(true, new SystemClock())))->save([], 'k', $response);
+        (new ConsentCookieResponseWriter(new SubclassCookieHandler(true, new SystemClock())))->save([], 'k', $response);
 
-        self::assertSame(['Sub_Cookie_Consent', 'Sub_Cookie_Consent_Key'], $this->names($response));
-        self::assertCount(1, $this->deprecations);
+        self::assertSame(
+            ['Cookie_Consent', 'Sub_Cookie_Consent', 'Cookie_Consent_Key', 'Sub_Cookie_Consent_Key'],
+            $this->names($response),
+        );
     }
 
     /**

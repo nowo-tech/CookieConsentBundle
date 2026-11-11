@@ -31,7 +31,8 @@ services:
       - '../../Cookie/ConsentCookie.php'
       - '../../Cookie/ConsentCookieJar.php'
       - '../../Cookie/ConsentRequestCookies.php'
-      - '../../Http/'
+      - '../../Http/ConsentCookieJarApplier.php'
+      - '../../Http/ConsentCookieResponseWriter.php'
       - '../../Event/'
       - '../../Locale/ConfiguredLocales.php'
       - '../../PersonalData/'
@@ -74,8 +75,16 @@ services:
     alias: Nowo\CookieConsentBundle\Cookie\CookieHandler
 
   # Framework-free twin of CookieHandlerInterface (1.30, REQ-ARCH-001 rule 3): alias it to your own writer.
+  # A separate definition, so decorating or replacing CookieHandler never lands on this port (audit MR-C-M1);
+  # ConsentCookieWriterPass picks the port the listeners call once, at container build.
+  nowo_cookie_consent.cookie_writer:
+    class: Nowo\CookieConsentBundle\Cookie\CookieHandler
+    arguments:
+      $httpOnly: '%nowo_cookie_consent.http_only%'
+      $clock: '@Psr\Clock\ClockInterface'
+
   Nowo\CookieConsentBundle\Cookie\ConsentCookieWriterInterface:
-    alias: Nowo\CookieConsentBundle\Cookie\CookieHandler
+    alias: nowo_cookie_consent.cookie_writer
 
   Nowo\CookieConsentBundle\Cookie\CookieLoggerInterface:
     alias: Nowo\CookieConsentBundle\Cookie\CookieLogger

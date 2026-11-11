@@ -145,7 +145,8 @@ ports. It is **deprecated in 1.30 and removed in 2.0**:
 | `CookieHandlerInterface::clear(Request $request, Response $response)` | `ConsentCookieWriterInterface::expiredConsentCookies(ConsentRequestCookies $requestCookies): ConsentCookieJar` |
 | `CookieHandler::save()` / `clear()` / `saveCookie()` | `CookieHandler::consentCookies()` / `expiredConsentCookies()`, then `Http\ConsentCookieJarApplier::apply($jar, $response)` |
 
-How to migrate a custom handler (a service aliased to `CookieHandlerInterface`, or a subclass of `CookieHandler`):
+How to migrate a custom handler (a service aliased to `CookieHandlerInterface`, a decorator of `CookieHandler` or
+`CookieHandlerInterface`, a replaced class, or a subclass of `CookieHandler`):
 
 1. Implement `Nowo\CookieConsentBundle\Cookie\ConsentCookieWriterInterface`. Return a `ConsentCookieJar` built with
    `ConsentCookie::persistent($name, $value, $expiresAt, $httpOnly)` and `ConsentCookie::expired($name, $httpOnly)`
@@ -153,10 +154,14 @@ How to migrate a custom handler (a service aliased to `CookieHandlerInterface`, 
    `SameSite=Lax`, as the bundle always did.
 2. Read the request cookie names from `ConsentRequestCookies` (`names()`, `has()`) instead of `$request->cookies`.
 3. Alias `Nowo\CookieConsentBundle\Cookie\ConsentCookieWriterInterface` to your service (you may keep the old alias
-   during the transition; the new port wins).
+   during the transition; the new port wins). To wrap the bundle's writer instead, decorate
+   `nowo_cookie_consent.cookie_writer` (the service behind the new port), not `CookieHandler`: since 1.30 the
+   recommendation to decorate `CookieHandler` applies only to the deprecated port.
 
-Until you migrate, the bundle keeps calling your `CookieHandlerInterface` service (or `CookieHandler` subclass) as in
-1.29 and triggers an `E_USER_DEPRECATED` notice. Code that calls `CookieHandler::save()` / `clear()` directly should
+Until you migrate, the bundle keeps calling your `CookieHandlerInterface` service (alias, decorator of `CookieHandler`
+or of the interface, replaced class, or `CookieHandler` subclass) exactly as in 1.29. The choice is made once when the
+container is built, which reports one `E_USER_DEPRECATED` notice (in the cache warm-up / container build log), not one
+per request. Code that calls `CookieHandler::save()` / `clear()` directly should
 call `consentCookies()` / `expiredConsentCookies()` and apply the jar with `Http\ConsentCookieJarApplier`. In 2.0 the
 old interface and methods are removed and the listeners take only `ConsentCookieWriterInterface`.
 
