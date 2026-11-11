@@ -98,7 +98,7 @@ final readonly class CookieConsentLogRows
             $params = [];
             $types  = [];
             foreach ($windows as $i => $window) {
-                $where[]            = sprintf('(%s = :ip%d AND %s >= :from%d AND %s <= :to%d)', $this->columns['ip'], $i, $this->columns['timestamp'], $i, $this->columns['timestamp'], $i);
+                $where[]             = sprintf('(%s = :ip%d AND %s >= :from%d AND %s <= :to%d)', $this->columns['ip'], $i, $this->columns['timestamp'], $i, $this->columns['timestamp'], $i);
                 $params['ip' . $i]   = $window->ip;
                 $params['from' . $i] = $window->from->sub($slack);
                 $params['to' . $i]   = $window->to->add($slack);
@@ -139,7 +139,17 @@ final readonly class CookieConsentLogRows
         $c   = $this->columns;
         $sql = $this->platform->modifyLimitQuery(sprintf(
             'SELECT %s AS id, %s AS ip, %s AS consent_key, %s AS cookie_name, %s AS cookie_value, %s AS recorded_at, %s AS consent_revision FROM %s WHERE %s > :after AND (%s) ORDER BY %s ASC',
-            $c['id'], $c['ip'], $c['key'], $c['name'], $c['value'], $c['timestamp'], $c['revision'], $this->table, $c['id'], $where, $c['id'],
+            $c['id'],
+            $c['ip'],
+            $c['key'],
+            $c['name'],
+            $c['value'],
+            $c['timestamp'],
+            $c['revision'],
+            $this->table,
+            $c['id'],
+            $where,
+            $c['id'],
         ), $batchSize);
         $dateType = Type::getType(Types::DATETIME_IMMUTABLE);
         $boolType = Type::getType(Types::BOOLEAN);

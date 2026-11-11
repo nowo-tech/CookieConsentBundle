@@ -15,7 +15,6 @@ use RuntimeException;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\RequestStack;
 
-
 /**
  * Persists anonymized cookie consent choices to the database.
  *

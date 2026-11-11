@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## Table of contents
 
 - [[Unreleased]](#unreleased)
+  - [Added](#added)
 - [[1.28.0] - 2026-11-11](#1280---2026-11-11)
   - [Target 1.28.0](#target-1280)
 - [[1.27.0] - 2026-11-10](#1270---2026-11-10)
@@ -252,6 +253,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - [Documentation](#documentation-29)
 
 ## [Unreleased]
+
+### Added
+
+- **GDPR erasure and export ports for the consent log** (`PersonalData\`, Beacon re-audit extraction #4):
+  `CookieConsentPersonalDataEraserInterface::erase()` / `CookieConsentPersonalDataExporterInterface::export()` with the
+  `CookieConsentPersonalDataSubject` value object (consent keys and / or anonymised client-IP time windows,
+  `CookieConsentIpWindow`), `CookieConsentErasureResult` (`consent_logs`) and `CookieConsentPersonalDataErasedEvent`
+  (dispatched after commit, only when the eraser ran its own transactions). DBAL deletes by primary key in batches of
+  500 on the consent log's connection; SQL only pre-filters, every row is re-checked byte for byte in PHP (a case or
+  accent variant of a key or IP is never erased or exported). Idempotent; joins the caller's transaction. The export
+  holds only `cookie_name`, `allowed`, `consent_revision` and `recorded_at` (no key, no IP).
+- **UserKit bridge** (UserKit installed, bundle entities mapped, `personal_data.enabled: true`): eraser
+  `cookie_consent_logs` (priority 110) and export section `cookie_consents`. The bundle stores no user id, so the
+  rows of a user come from a `CookieConsentIpWindowProviderInterface` (autoconfigured SPI: the IPs and times the user
+  was seen, widened by `personal_data.ip_window_margin`) or a custom `personal_data.subject_resolver`; without either
+  the bridge erases and exports nothing.
+- New configuration node `personal_data` (`enabled`, `ip_window_margin`, `subject_resolver`).
 
 ## [1.28.0] - 2026-11-11
 

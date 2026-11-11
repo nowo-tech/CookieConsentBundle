@@ -45,5 +45,4 @@ final readonly class CookieConsentLogsPersonalDataEraser implements PersonalData
             $this->eraser->erase($subject);
         }
     }
-
 }

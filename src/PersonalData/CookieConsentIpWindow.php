@@ -9,6 +9,7 @@ use DateTimeImmutable;
 use DateTimeInterface;
 use InvalidArgumentException;
 use Nowo\CookieConsentBundle\Cookie\ConsentIpAnonymizer;
+use Nowo\CookieConsentBundle\Cookie\CookieLogger;
 
 use function filter_var;
 use function preg_match;
@@ -26,7 +27,7 @@ use const FILTER_VALIDATE_IP;
  * seen on that IP, so only rows of that IP written between {@see self::$from} and {@see self::$to} (inclusive) match.
  *
  * The IP is kept in the form the bundle stores it: a raw IPv4 / IPv6 address is anonymised exactly as
- * {@see \Nowo\CookieConsentBundle\Cookie\CookieLogger} does before writing (`203.0.113.10` → `203.0.113.xx`,
+ * {@see CookieLogger} does before writing (`203.0.113.10` → `203.0.113.xx`,
  * IPv6 → its first 48 bits); an already anonymised IPv4 (`203.0.113.xx`) is kept as given. Nothing is trimmed or
  * case-folded. `unknown` (rows without a valid client IP) is rejected: it is shared by every such visitor.
  */
@@ -80,7 +81,8 @@ final readonly class CookieConsentIpWindow
      */
     public function widen(DateInterval $margin): self
     {
-        return new self($this->ip, $this->from->sub($margin), $this->to->add($margin));
+        // Immutable value object (DateTimeImmutable::add() / sub() return copies), not a shared service.
+        return new self($this->ip, $this->from->sub($margin), $this->to->add($margin)); // @igor-ignore
     }
 
     /**

@@ -109,6 +109,59 @@ jobs:
           fi
           echo "✅ Coverage generated"
 
+  database:
+    name: GDPR ports on ${{ matrix.db }}
+    runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - db: MySQL 8.4
+            url: mysql://root@127.0.0.1:3306/cookie_consent?serverVersion=8.4&charset=utf8mb4
+          - db: PostgreSQL 17
+            url: postgresql://postgres@127.0.0.1:5432/cookie_consent?serverVersion=17&charset=utf8
+
+    services:
+      mysql:
+        image: mysql:8.4
+        env:
+          MYSQL_ALLOW_EMPTY_PASSWORD: 'yes'
+          MYSQL_DATABASE: cookie_consent
+        ports: ['3306:3306']
+        options: >-
+          --health-cmd="mysqladmin ping -h 127.0.0.1"
+          --health-interval=5s --health-timeout=5s --health-retries=20
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_HOST_AUTH_METHOD: trust
+          POSTGRES_DB: cookie_consent
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd="pg_isready -U postgres"
+          --health-interval=5s --health-timeout=5s --health-retries=20
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v7
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          extensions: json, pdo_mysql, pdo_pgsql
+          coverage: none
+          tools: composer:v2
+
+      - name: Install dependencies
+        run: composer install --prefer-dist --no-progress --no-interaction
+
+      - name: Run the personal-data tests on ${{ matrix.db }}
+        env:
+          COOKIE_CONSENT_TEST_DATABASE_URL: ${{ matrix.url }}
+        run: vendor/bin/phpunit --no-coverage tests/Integration/PersonalData
+
   code-style:
     name: Code Style
     runs-on: ubuntu-latest

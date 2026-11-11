@@ -4,13 +4,15 @@ declare(strict_types=1);
 
 namespace Nowo\CookieConsentBundle\PersonalData;
 
+use Nowo\CookieConsentBundle\Event\ConsentSavedEvent;
+
 /**
  * SPI (1.29): turns a user into the consent-log subjects the UserKit bridge erases / exports.
  *
  * The default ({@see IpWindowSubjectResolver}) builds one subject from the tagged
  * {@see CookieConsentIpWindowProviderInterface} services. Set `personal_data.subject_resolver` to your own service, for
  * example when your app records each user's `Cookie_Consent_Key` (from
- * {@see \Nowo\CookieConsentBundle\Event\ConsentSavedEvent}) and can return
+ * {@see ConsentSavedEvent}) and can return
  * {@see CookieConsentPersonalDataSubject::fromConsentKey()} subjects. Keep no state.
  */
 interface CookieConsentPersonalDataSubjectResolverInterface

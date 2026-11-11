@@ -53,6 +53,7 @@ final class CookieConsentTestKernel extends Kernel
      *                                 `routing.controllers` resource is always imported, like a Flex host)
      * @param array<string, mixed>|null $doctrineConfig doctrine configuration replacing the single in-memory SQLite one
      * @param string|null $routeNamePrefix `name_prefix` of the bundle routing.yaml import (audit LR-C-L1)
+     * @param list<string> $publicIds services / aliases made public for the test (kept even when nothing uses them)
      */
     public function __construct(
         private readonly bool $withSecurity,
@@ -62,8 +63,9 @@ final class CookieConsentTestKernel extends Kernel
         private readonly bool $importBundleRoutes = true,
         private readonly ?array $doctrineConfig = null,
         private readonly ?string $routeNamePrefix = null,
+        private readonly array $publicIds = [],
     ) {
-        $this->cacheKey = hash('xxh128', serialize([$withSecurity, $bundleConfig, $hostParameters, $frameworkConfig, $importBundleRoutes, $doctrineConfig, $routeNamePrefix]));
+        $this->cacheKey = hash('xxh128', serialize([$withSecurity, $bundleConfig, $hostParameters, $frameworkConfig, $importBundleRoutes, $doctrineConfig, $routeNamePrefix, $publicIds]));
         parent::__construct('test', false);
     }
 
@@ -134,6 +136,9 @@ final class CookieConsentTestKernel extends Kernel
             ]);
         }
         $container->loadFromExtension('nowo_cookie_consent', $this->bundleConfig);
+        if ($this->publicIds !== []) {
+            $container->addCompilerPass(new PublicForTestsPass($this->publicIds));
+        }
     }
 
     /**

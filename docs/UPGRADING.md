@@ -129,6 +129,12 @@
 
 ## Unreleased
 
+Next minor (GDPR ports). **Nothing to change.** With UserKit installed (and the bundle entities mapped), the consent-log
+eraser `cookie_consent_logs` and the export section `cookie_consents` register automatically; they act only once you
+tag a `CookieConsentIpWindowProviderInterface` service (autoconfigured) or set `personal_data.subject_resolver`, because
+consent rows carry no user id. Set `personal_data.enabled: false` if your app already erases the consent log. Hosts
+without Doctrine keep their own consent store: the default ports are removed with the other Doctrine-only services.
+
 ## To 1.28.0
 
 From **1.27.0**: `composer update nowo-tech/cookie-consent-bundle`. **Standard hosts (DoctrineBundle registered): no

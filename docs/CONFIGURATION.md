@@ -9,6 +9,7 @@
   - [Locale](#locale)
   - [Appearance and behaviour of the modal](#appearance-and-behaviour-of-the-modal)
   - [Admin Web UI and security](#admin-web-ui-and-security)
+  - [GDPR personal data (`personal_data`)](#gdpr-personal-data-personal_data)
 - [Dedicated entity manager](#dedicated-entity-manager)
 - [Table prefix](#table-prefix)
 - [Locale detection](#locale-detection)
@@ -231,6 +232,14 @@ nowo_cookie_consent:
 | `security.access_checker` | `null` | Service id implementing `CookieConsentAccessCheckerInterface` |
 | `security.access_roles` | `[ROLE_ADMIN]` | Roles allowed in the admin (empty = deny) |
 | `security.allow_unauthenticated` | `false` | Demo/dev only |
+
+### GDPR personal data (`personal_data`)
+
+| Key | Default | Description |
+|-----|---------|-------------|
+| `personal_data.enabled` | `true` | Register the UserKit eraser `cookie_consent_logs` and export section `cookie_consents` when UserKit is installed and the bundle entities are mapped. The ports themselves always exist. Set `false` when your app already erases the consent log |
+| `personal_data.ip_window_margin` | `P1D` | ISO 8601 duration added before and after every window an IP window provider returns |
+| `personal_data.subject_resolver` | `null` | Service id implementing `CookieConsentPersonalDataSubjectResolverInterface`; default: the windows of the tagged `CookieConsentIpWindowProviderInterface` services. See [USAGE](USAGE.md#gdpr-erasure-and-export) |
 
 ## Dedicated entity manager
 

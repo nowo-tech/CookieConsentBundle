@@ -6,6 +6,7 @@ namespace Nowo\CookieConsentBundle\PersonalData;
 
 use DateTimeInterface;
 use InvalidArgumentException;
+use Nowo\CookieConsentBundle\Event\ConsentSavedEvent;
 
 use function array_keys;
 use function array_map;
@@ -18,7 +19,7 @@ use function strlen;
  * Whose consent log rows a GDPR erasure or export covers (1.29).
  *
  * The bundle stores no user id with a consent: a row is the person's when its `cookie_consent_key` (the
- * `Cookie_Consent_Key` cookie of the person's browser, also in {@see \Nowo\CookieConsentBundle\Event\ConsentSavedEvent})
+ * `Cookie_Consent_Key` cookie of the person's browser, also in {@see ConsentSavedEvent})
  * is one of {@see self::consentKeys()}, or when its anonymised IP and time fall into one of {@see self::ipWindows()}.
  * Keys are compared byte for byte; they are not trimmed or case-folded (the bundle writes them as received).
  */
