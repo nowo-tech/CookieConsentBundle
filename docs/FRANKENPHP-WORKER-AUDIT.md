@@ -44,7 +44,7 @@ A bundle that is safe under **B** is safe under **A** and under classic mode / P
 | Request / user / locale captured in services | ✅ | All services read `RequestStack` per call (W-01, W-02 resolved) |
 | Superglobals, `$_ENV`, `putenv`, `ini_set`, `setlocale`, timezone | ✅ | None used. `CookieHandler` calls `date('r')` (default timezone, not changed by the bundle) |
 | Doctrine / EntityManager | ✅ (bundle side) | `CookieLogger` gets the manager per call via `ManagerRegistry`, resets it when closed, detaches its log rows after flush; entity memos are request-scoped (W-05). Clearing the app's identity map remains the application's job under B |
-| Output, headers, `exit`, shutdown functions | ✅ | Cookies are set on the `Response` object (`CookieHandler::saveCookie()`), no `setcookie()` / `header()` |
+| Output, headers, `exit`, shutdown functions | ✅ | Cookies are set on the `Response` object (`ConsentCookieJarApplier::apply()`, or `CookieHandler::saveCookie()` on the deprecated path), no `setcookie()` / `header()` |
 | Resources (files, sockets, cURL) held open | ✅ | None |
 | Memory growth across requests | ✅ | No `Translator::addResource()` any more (W-03); caches keyed by user input live for one request only (W-04); API locales are normalized to `enabled_locales` (W-06) |
 | Blocking I/O and timeouts | ✅ | No outbound HTTP; only DB queries |
@@ -58,6 +58,7 @@ A bundle that is safe under **B** is safe under **A** and under classic mode / P
 | `Cookie\CookieChecker` | yes | none (`RequestStack` read per call) | ✅ | ✅ |
 | `Cookie\CookieLogger` | yes | `$pendingLogs`, cleared in `finally` per call; manager obtained per call | ✅ | ✅ |
 | `Cookie\CookieHandler` | yes | none (`readonly` flag + clock) | ✅ | ✅ |
+| `ConsentCookieWriterInterface` port (1.30) | yes (default `CookieHandler`) | none: returns a new immutable `ConsentCookieJar` per call; `Http\ConsentCookieJarApplier` (static) and `Http\ConsentCookieResponseWriter` (built per call in the listeners) write it on that response only. `tests/Integration/Ddd/HostCookieWriterKernelTest.php`: 400 requests, two visitors, `http_kernel` without the services resetter, memory margin 2 MiB | ✅ | ✅ |
 | `Config\CookieConsentConfigResolver` | yes | `$resolvedByLocaleAndRoute` cache; `ResetInterface` + reset per main request | ✅ | ✅ |
 | `Config\CookieInventoryProvider` | yes | 4 cache properties; `ResetInterface` + reset per main request | ✅ | ✅ |
 | `Repository\CookieConsentConfigRepository` | yes | cached config entities; `ResetInterface` + reset per main request | ✅ | ✅ |

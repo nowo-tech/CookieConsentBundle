@@ -4,9 +4,11 @@ declare(strict_types=1);
 
 namespace Nowo\CookieConsentBundle\Tests\Integration\Ddd;
 
+use Nowo\CookieConsentBundle\Cookie\ConsentCookieWriterInterface;
 use Nowo\CookieConsentBundle\Cookie\CookieLoggerInterface;
 use Nowo\CookieConsentBundle\NowoCookieConsentBundle;
 use Nowo\CookieConsentBundle\Tests\Support\Host\HostConsentStore;
+use Nowo\CookieConsentBundle\Tests\Support\HostPorts\HostConsentCookieWriter;
 use Nowo\FormKitBundle\NowoFormKitBundle;
 use Nowo\UiKitBundle\NowoUiKitBundle;
 use Symfony\Bundle\FrameworkBundle\FrameworkBundle;
@@ -26,7 +28,8 @@ use function sys_get_temp_dir;
 
 /**
  * A DDD host without Doctrine (DoctrineBundle not registered; doctrine/orm installed through the bundle's composer
- * requirements): YAML configuration and inventory, and the consent log aliased to the host's own store.
+ * requirements): YAML configuration and inventory, and the consent log aliased to the host's own store; optionally the
+ * consent cookies written by the host's framework-free {@see ConsentCookieWriterInterface} (1.30).
  */
 final class HostWithoutDoctrineKernel extends Kernel
 {
@@ -35,10 +38,12 @@ final class HostWithoutDoctrineKernel extends Kernel
     /**
      * @param array<string, mixed> $bundleConfig nowo_cookie_consent configuration
      * @param bool $hostLogger alias CookieLoggerInterface to {@see HostConsentStore}
+     * @param bool $hostCookieWriter alias ConsentCookieWriterInterface to {@see HostConsentCookieWriter}
      */
     public function __construct(
         private readonly array $bundleConfig,
         private readonly bool $hostLogger = true,
+        private readonly bool $hostCookieWriter = false,
     ) {
         parent::__construct('test', false);
     }
@@ -68,7 +73,7 @@ final class HostWithoutDoctrineKernel extends Kernel
 
     public function getCacheDir(): string
     {
-        return self::cacheRoot() . '/' . hash('xxh128', serialize([$this->bundleConfig, $this->hostLogger])) . '/cache';
+        return self::cacheRoot() . '/' . hash('xxh128', serialize([$this->bundleConfig, $this->hostLogger, $this->hostCookieWriter])) . '/cache';
     }
 
     public function getLogDir(): string
@@ -92,6 +97,10 @@ final class HostWithoutDoctrineKernel extends Kernel
         if ($this->hostLogger) {
             $container->register(HostConsentStore::class, HostConsentStore::class)->setPublic(true);
             $container->setAlias(CookieLoggerInterface::class, HostConsentStore::class)->setPublic(true);
+        }
+        if ($this->hostCookieWriter) {
+            $container->register(HostConsentCookieWriter::class, HostConsentCookieWriter::class)->setPublic(true);
+            $container->setAlias(ConsentCookieWriterInterface::class, HostConsentCookieWriter::class)->setPublic(true);
         }
     }
 
