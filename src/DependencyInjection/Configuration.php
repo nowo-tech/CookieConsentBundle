@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Nowo\CookieConsentBundle\DependencyInjection;
 
+use DateInterval;
+use Exception;
 use InvalidArgumentException;
 use Nowo\CookieConsentBundle\Admin\AdminChrome;
 use Nowo\CookieConsentBundle\Config\PreferencesBubbleIconSanitizer;
@@ -407,6 +409,29 @@ class Configuration implements ConfigurationInterface
                         ->end()
                     ->end()
                 ->end()
+                ->arrayNode('personal_data')
+                    ->info('GDPR erasure / export of the consent log (1.29). The ports always exist; this node drives the UserKit bridge.')
+                    ->addDefaultsIfNotSet()
+                    ->children()
+                        ->booleanNode('enabled')
+                            ->defaultTrue()
+                            ->info('Register the UserKit eraser (cookie_consent_logs) and export provider (cookie_consents) when UserKit is installed and the bundle entities are mapped. Set false when your app already erases the consent log.')
+                        ->end()
+                        ->scalarNode('ip_window_margin')
+                            ->defaultValue('P1D')
+                            ->cannotBeEmpty()
+                            ->info('ISO 8601 duration added before and after every IP window an ip_window_provider returns (default one day).')
+                            ->validate()
+                                ->ifTrue(static fn (mixed $v): bool => !is_string($v) || !self::isDuration($v))
+                                ->thenInvalid('personal_data.ip_window_margin must be an ISO 8601 duration such as "P1D" or "PT12H", got %s.')
+                            ->end()
+                        ->end()
+                        ->scalarNode('subject_resolver')
+                            ->defaultNull()
+                            ->info('Optional service id implementing CookieConsentPersonalDataSubjectResolverInterface (default: the IP windows of the tagged ip_window_provider services).')
+                        ->end()
+                    ->end()
+                ->end()
             ->end();
 
         return $treeBuilder;
@@ -428,6 +453,17 @@ class Configuration implements ConfigurationInterface
         }
 
         return $webUi;
+    }
+
+    private static function isDuration(string $value): bool
+    {
+        try {
+            new DateInterval($value);
+        } catch (Exception) {
+            return false;
+        }
+
+        return true;
     }
 
     private static function isLocaleList(mixed $v): bool
