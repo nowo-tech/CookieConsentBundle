@@ -31,6 +31,8 @@ Regenerate with `make -C demo/symfony8 demo-screenshots` (REQ-DEMO-013).
   - [Ports (since 1.26)](#ports-since-126)
   - [Reacting to a saved consent (since 1.26)](#reacting-to-a-saved-consent-since-126)
   - [Persistence](#persistence)
+  - [Standard host or DDD host without Doctrine (1.28)](#standard-host-or-ddd-host-without-doctrine-128)
+  - [Read-only views (1.28)](#read-only-views-128)
   - [Known limitations](#known-limitations)
 - [Asking visitors again (re-consent)](#asking-visitors-again-re-consent)
 - [Theming the admin pages](#theming-the-admin-pages)
@@ -289,13 +291,55 @@ The listener runs during `kernel.response`; keep it short or hand the work to Me
 - Saving a consent never flushes or resets an entity manager (1.27): the rows are written with DBAL inserts in one
   transaction on that manager's connection, so your unit of work is left untouched.
 
+### Standard host or DDD host without Doctrine (1.28)
+
+- **Standard path (default, nothing to configure).** DoctrineBundle registered: the bundle maps its entities (on the
+  default manager or `doctrine.entity_manager`), logs consents with DBAL (`use_logger: true`), and can read profiles
+  and the cookie inventory from its tables (`use_database_config`, admin pages).
+- **DDD path (opt-in).** No DoctrineBundle: the configuration, the modal copy and the cookie inventory come from the
+  bundle configuration (YAML, `%env()%`), and the proof of consent goes to your own store. The bundle registers no
+  entity mapping, no repository and no Doctrine listener; the admin routes answer 404.
+
+```yaml
+# config/packages/nowo_cookie_consent.yaml — config/bundles.php has no DoctrineBundle
+nowo_cookie_consent:
+    use_logger: true            # your CookieLoggerInterface below; false = no proof of consent is kept
+    use_database_config: false  # required without Doctrine
+    use_cookie_inventory: true
+    cookie_inventory:
+        - { name: _ga, category: analytics, duration: '2 years', translations: { en: { provider: Google, purpose: Statistics } } }
+
+# config/services.yaml
+services:
+    Nowo\CookieConsentBundle\Cookie\CookieLoggerInterface: '@App\Infrastructure\Consent\AuditConsentLog'
+```
+
+Without Doctrine the build fails with an explicit message for `use_database_config: true`, and for `use_logger: true`
+when `CookieLoggerInterface` is still the bundle's own logger. With `use_logger: false` and no alias, a
+`NullCookieLogger` is used. Your logger is a shared service: in a kept-alive FrankenPHP worker keep no visitor state in
+it (`tests/Integration/Ddd/HostWithoutDoctrineKernelTest.php` serves 600 requests for two visitors through
+`http_kernel` without the services resetter).
+
+### Read-only views (1.28)
+
+Host code that needs the resolved profile or the cookie table reads scalars, never the bundle entities:
+
+- `ResolvedCookieConsentConfig::view()` returns a `Config\ConsentProfileView` (`id`, `name`, `revision`,
+  `isDefault`, `priority`, `autoShow`, `routePatterns`, `locale`, `translationMessages`, `reconsentRequiredAt`);
+  `getConfigId()` gives the id alone.
+- `CookieInventoryProvider::viewsForLocale(?ResolvedCookieConsentConfig $resolved, string $locale)` returns
+  `list<Config\CookieDefinitionView>` (`name`, `provider`, `purpose`, `duration`, `category`, `type`,
+  `allowedByDefault`), from the profile's rows or the YAML inventory.
+
 ### Known limitations
 
-- The entity mapping is registered even when `use_logger` and `use_database_config` are both `false`.
+- With DoctrineBundle registered, the entity mapping is registered even when `use_logger` and `use_database_config`
+  are both `false` (BC: unmapping it would show the tables as a DROP in schema diffs); 2.0 maps them only when used.
 - The admin pages still flush the bundle's entity manager when you save a definition or a profile (use a dedicated
   `doctrine.entity_manager` to keep that away from your own unit of work).
-- `ResolvedCookieConsentConfig::getConfig()` and `CookieInventoryProvider::listForLocale()` take/return the bundle's
-  own entities (no read-only DTO yet).
+- `ResolvedCookieConsentConfig::getConfig()` / `getTranslation()` and `CookieInventoryProvider::listForLocale()` still
+  take or return the bundle entities (the bundle uses them internally); prefer the views above.
+- There is no port for the profile source itself: a host provides profiles through YAML or the bundle tables.
 
 ## Theming the admin pages
 

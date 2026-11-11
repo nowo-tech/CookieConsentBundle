@@ -26,6 +26,27 @@ final class ResolvedCookieConsentConfigTest extends TestCase
         self::assertSame([], $resolved->getTranslationMessages());
     }
 
+    public function testViewCarriesScalarsOnly(): void
+    {
+        $config = (new CookieConsentConfig())
+            ->setName('checkout')
+            ->setRevision(3)
+            ->setDefault(false)
+            ->setPriority(7)
+            ->setAutoShow(true)
+            ->setRoutePatterns(['app_checkout_*']);
+        $translation = (new CookieConsentConfigTranslation())->setLocale('es')->setConsentModalTitle('Título');
+
+        $view = (new ResolvedCookieConsentConfig($config, $translation))->view();
+
+        self::assertNull($view->id);
+        self::assertNull((new ResolvedCookieConsentConfig($config, null))->getConfigId());
+        self::assertSame(['checkout', 3, false, 7, true, ['app_checkout_*'], 'es'], [$view->name, $view->revision, $view->isDefault, $view->priority, $view->autoShow, $view->routePatterns, $view->locale]);
+        self::assertSame('Título', $view->translationMessages['nowo_cookie_consent.title']);
+        self::assertNull($view->reconsentRequiredAt);
+        self::assertNull((new ResolvedCookieConsentConfig($config, null))->view()->locale);
+    }
+
     public function testTranslationMessagesFromTranslationEntity(): void
     {
         $translation = (new CookieConsentConfigTranslation())

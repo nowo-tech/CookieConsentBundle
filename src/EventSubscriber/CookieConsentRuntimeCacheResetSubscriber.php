@@ -27,7 +27,7 @@ final class CookieConsentRuntimeCacheResetSubscriber implements EventSubscriberI
     public function __construct(
         private readonly CookieConsentConfigResolver $configResolver,
         private readonly CookieInventoryProvider $inventoryProvider,
-        private readonly CookieConsentConfigRepository $configRepository,
+        private readonly ?CookieConsentConfigRepository $configRepository = null,
     ) {
     }
 
@@ -52,6 +52,6 @@ final class CookieConsentRuntimeCacheResetSubscriber implements EventSubscriberI
 
         $this->configResolver->reset();
         $this->inventoryProvider->reset();
-        $this->configRepository->reset();
+        $this->configRepository?->reset();
     }
 }

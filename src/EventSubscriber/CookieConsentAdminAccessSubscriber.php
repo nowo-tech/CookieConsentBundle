@@ -7,6 +7,7 @@ namespace Nowo\CookieConsentBundle\EventSubscriber;
 use Nowo\CookieConsentBundle\Security\CookieConsentAccessCheckerInterface;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use Symfony\Component\HttpKernel\Event\ControllerEvent;
+use Symfony\Component\HttpKernel\Event\RequestEvent;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Symfony\Component\HttpKernel\KernelEvents;
 use Symfony\Component\Security\Core\Exception\AccessDeniedException;
@@ -32,13 +33,27 @@ final readonly class CookieConsentAdminAccessSubscriber implements EventSubscrib
     }
 
     /**
-     * Listens to the controller event to guard the admin routes.
+     * Listens to the controller event to guard the admin routes, and (1.28) to the request after routing to 404 them
+     * before their controller is resolved when the web UI is disabled (a host without Doctrine has no admin
+     * controllers at all).
      */
     public static function getSubscribedEvents(): array
     {
         return [
+            KernelEvents::REQUEST    => ['onKernelRequest', 0],
             KernelEvents::CONTROLLER => ['onKernelController', 0],
         ];
+    }
+
+    /**
+     * Answers 404 for an admin route when the web UI is disabled, before the controller is resolved (1.28).
+     */
+    public function onKernelRequest(RequestEvent $event): void
+    {
+        $route = $event->getRequest()->attributes->get('_route');
+        if (!$this->webUiEnabled && $route !== null && $this->isAdminRoute((string) $route)) {
+            throw new NotFoundHttpException('Cookie consent admin UI is disabled.');
+        }
     }
 
     /**

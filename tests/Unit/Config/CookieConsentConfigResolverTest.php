@@ -30,6 +30,12 @@ final class CookieConsentConfigResolverTest extends TestCase
         self::assertNull($resolver->resolve('en', 'home'));
     }
 
+    public function testHostWithoutDoctrineResolvesNothing(): void
+    {
+        // 1.28: no selector and no translation repository (DoctrineBundle not registered).
+        self::assertNull((new CookieConsentConfigResolver(null, null, true))->resolve('en', 'home'));
+    }
+
     public function testReturnsNullWhenNoConfigMatches(): void
     {
         $configRepository = $this->createMock(CookieConsentConfigRepository::class);

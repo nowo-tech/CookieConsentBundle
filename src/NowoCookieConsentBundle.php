@@ -7,6 +7,7 @@ namespace Nowo\CookieConsentBundle;
 use Doctrine\Bundle\DoctrineBundle\DependencyInjection\Compiler\DoctrineOrmMappingsPass;
 use Nowo\CookieConsentBundle\DependencyInjection\Compiler\CookieConsentEntityManagerPass;
 use Nowo\CookieConsentBundle\DependencyInjection\Compiler\CookieConsentSecurityPass;
+use Nowo\CookieConsentBundle\DependencyInjection\Compiler\CookieConsentWithoutDoctrinePass;
 use Nowo\CookieConsentBundle\DependencyInjection\Compiler\TwigPathsPass;
 use Nowo\CookieConsentBundle\DependencyInjection\NowoCookieConsentExtension;
 use Nowo\CookieConsentBundle\Doctrine\UtcDateTimeImmutableType;
@@ -28,6 +29,8 @@ class NowoCookieConsentBundle extends Bundle
     public function build(ContainerBuilder $container): void
     {
         $container->addCompilerPass(new TwigPathsPass());
+        // 1.28: before the security pass, which reads web_ui.enabled (rule 8, host without Doctrine).
+        $container->addCompilerPass(new CookieConsentWithoutDoctrinePass(), PassConfig::TYPE_BEFORE_OPTIMIZATION, 10);
         $container->addCompilerPass(new CookieConsentSecurityPass());
 
         $entityDir = __DIR__ . '/Entity';
@@ -36,6 +39,8 @@ class NowoCookieConsentBundle extends Bundle
                 ['Nowo\\CookieConsentBundle\\Entity'],
                 [$entityDir],
                 [NowoCookieConsentExtension::ENTITY_MANAGER_PARAMETER],
+                // 1.28: only with DoctrineBundle (a host without it boots on the YAML path).
+                NowoCookieConsentExtension::MAPPING_ENABLED_PARAMETER,
             ));
         }
 

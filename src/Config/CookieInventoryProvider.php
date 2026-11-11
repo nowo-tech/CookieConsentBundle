@@ -9,6 +9,8 @@ use Nowo\CookieConsentBundle\Entity\CookieDefinition;
 use Nowo\CookieConsentBundle\Repository\CookieDefinitionRepository;
 use Symfony\Contracts\Service\ResetInterface;
 
+use function array_map;
+
 /**
  * Builds cookie inventory tables for the consent modal and legal pages.
  *
@@ -60,12 +62,13 @@ final class CookieInventoryProvider implements ResetInterface
     /**
      * Creates a new cookie inventory provider.
      *
-     * @param CookieDefinitionRepository $definitionRepository Repository for database definitions
+     * @param CookieDefinitionRepository|null $definitionRepository Repository for database definitions (null: a host
+     *                                                              without Doctrine, 1.28; YAML inventory only)
      * @param bool $useCookieInventory Whether the inventory feature is enabled
      * @param list<array<string, mixed>> $yamlCookieInventory Static YAML inventory entries
      */
     public function __construct(
-        private readonly CookieDefinitionRepository $definitionRepository,
+        private readonly ?CookieDefinitionRepository $definitionRepository,
         private readonly bool $useCookieInventory,
         private readonly array $yamlCookieInventory,
     ) {
@@ -188,6 +191,17 @@ final class CookieInventoryProvider implements ResetInterface
     }
 
     /**
+     * The inventory of the resolved profile (or the YAML inventory without one) as read-only views (1.28, architecture
+     * bar rule 1): no entity crosses into host code.
+     *
+     * @return list<CookieDefinitionView>
+     */
+    public function viewsForLocale(?ResolvedCookieConsentConfig $resolved, string $locale): array
+    {
+        return array_map(CookieDefinitionView::fromRow(...), $this->listForLocale($resolved?->getConfig(), $locale));
+    }
+
+    /**
      * @return list<CookieDefinition>
      */
     private function loadDefinitions(CookieConsentConfig $config): array
@@ -195,7 +209,7 @@ final class CookieInventoryProvider implements ResetInterface
         $key = $this->configCacheKey($config);
 
         if (!isset($this->definitionsByConfigKey[$key])) {
-            $this->definitionsByConfigKey[$key]      = $this->definitionRepository->findByConfigOrdered($config);
+            $this->definitionsByConfigKey[$key]      = $this->definitionRepository?->findByConfigOrdered($config) ?? [];
             $this->hasDatabaseDefinitionsCache[$key] = $this->definitionsByConfigKey[$key] !== [];
         }
 
@@ -214,7 +228,7 @@ final class CookieInventoryProvider implements ResetInterface
             return $this->hasDatabaseDefinitionsCache[$key] = $this->definitionsByConfigKey[$key] !== [];
         }
 
-        return $this->hasDatabaseDefinitionsCache[$key] = $this->definitionRepository->existsByConfig($config);
+        return $this->hasDatabaseDefinitionsCache[$key] = $this->definitionRepository?->existsByConfig($config) ?? false;
     }
 
     /**
