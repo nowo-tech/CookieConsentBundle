@@ -17,6 +17,13 @@ use Nowo\CookieConsentBundle\EventSubscriber\CookieConsentConfigTranslationSubsc
 use Nowo\CookieConsentBundle\EventSubscriber\CookieConsentSchemaReadySubscriber;
 use Nowo\CookieConsentBundle\Locale\ConfiguredLocales;
 use Nowo\CookieConsentBundle\Locale\LocaleResolver;
+use Nowo\CookieConsentBundle\PersonalData\CookieConsentIpWindowProviderInterface;
+use Nowo\CookieConsentBundle\PersonalData\CookieConsentPersonalDataEraser;
+use Nowo\CookieConsentBundle\PersonalData\CookieConsentPersonalDataExporter;
+use Nowo\CookieConsentBundle\PersonalData\CookieConsentPersonalDataSubjectResolverInterface;
+use Nowo\CookieConsentBundle\PersonalData\IpWindowSubjectResolver;
+use Nowo\CookieConsentBundle\PersonalData\UserKit\CookieConsentLogsPersonalDataEraser;
+use Nowo\CookieConsentBundle\PersonalData\UserKit\CookieConsentsPersonalDataExportProvider;
 use Nowo\CookieConsentBundle\Repository\CookieConsentConfigRepository;
 use Nowo\CookieConsentBundle\Repository\CookieConsentConfigTranslationRepository;
 use Nowo\CookieConsentBundle\Repository\CookieDefinitionRepository;
@@ -26,6 +33,7 @@ use Nowo\CookieConsentBundle\Security\ConfigurableCookieConsentAccessChecker;
 use Nowo\CookieConsentBundle\Security\CookieConsentAccessCheckerInterface;
 use Nowo\CookieConsentBundle\Twig\CookieConsentAdminTwigExtension;
 use Nowo\UiKitBundle\Theme\ThemeSlots;
+use Nowo\UserKitBundle\PersonalData\PersonalDataEraserInterface as UserKitPersonalDataEraserInterface;
 use Symfony\Component\Config\FileLocator;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\Definition;
@@ -36,6 +44,7 @@ use Symfony\Component\DependencyInjection\Reference;
 use Symfony\Component\Translation\Loader\ArrayLoader;
 
 use function array_key_exists;
+use function interface_exists;
 use function is_array;
 use function is_string;
 use function sprintf;
@@ -52,6 +61,9 @@ class NowoCookieConsentExtension extends Extension implements PrependExtensionIn
 
     /** Defined when DoctrineBundle is registered (1.28): Symfony's mapping pass is skipped otherwise. */
     public const MAPPING_ENABLED_PARAMETER = 'nowo_cookie_consent.doctrine.mapping_enabled';
+
+    /** Tag of the {@see CookieConsentIpWindowProviderInterface} services (autoconfigured, 1.29). */
+    public const IP_WINDOW_PROVIDER_TAG = 'nowo_cookie_consent.personal_data.ip_window_provider';
 
     /** Registry decorator wired into the bundle's repositories and logger when `doctrine.entity_manager` is set. */
     public const MANAGER_REGISTRY_SERVICE = 'nowo_cookie_consent.manager_registry';
@@ -140,8 +152,15 @@ class NowoCookieConsentExtension extends Extension implements PrependExtensionIn
         $container->setParameter('nowo_cookie_consent.security.access_roles', $security['access_roles']);
         $container->setParameter('nowo_cookie_consent.security.allow_unauthenticated', $security['allow_unauthenticated']);
 
+        $personalData = $config['personal_data'];
+        $container->setParameter('nowo_cookie_consent.personal_data.enabled', $personalData['enabled']);
+        $container->setParameter('nowo_cookie_consent.personal_data.ip_windows', $personalData['ip_windows']);
+        $container->setParameter('nowo_cookie_consent.personal_data.ip_window_margin', $personalData['ip_window_margin']);
+
         $loader = new YamlFileLoader($container, new FileLocator(__DIR__ . '/../Resources/config'));
         $loader->load('services.yaml');
+
+        $this->registerPersonalData($container, $personalData);
 
         if ($container->hasDefinition(CookieConsentAdminTwigExtension::class)) {
             // Deprecated globals (1.x); the admin pages read the UiKit layout / theme instead.
@@ -187,6 +206,40 @@ class NowoCookieConsentExtension extends Extension implements PrependExtensionIn
     }
 
     /**
+     * GDPR ports (1.29): autoconfigured IP window providers, the optional custom subject resolver, and the UserKit
+     * eraser / export provider when UserKit is installed, the bundle entities are mapped and `personal_data.enabled`.
+     *
+     * @param array{enabled: bool, ip_windows: string, ip_window_margin: string, subject_resolver: ?string} $personalData
+     */
+    private function registerPersonalData(ContainerBuilder $container, array $personalData): void
+    {
+        $container->registerForAutoconfiguration(CookieConsentIpWindowProviderInterface::class)
+            ->addTag(self::IP_WINDOW_PROVIDER_TAG);
+
+        // Erasure by IP window is opt-in (`ip_windows: erase`); the export never uses IP windows.
+        $eraseByIpWindow = $personalData['ip_windows'] === 'erase';
+        $container->getDefinition(CookieConsentPersonalDataEraser::class)->setArgument('$eraseByIpWindow', $eraseByIpWindow);
+        $container->getDefinition(IpWindowSubjectResolver::class)->setArgument('$enabled', $eraseByIpWindow);
+
+        $resolver = $personalData['subject_resolver'];
+        if (is_string($resolver) && trim($resolver) !== '') {
+            $container->setAlias(CookieConsentPersonalDataSubjectResolverInterface::class, trim($resolver));
+        }
+
+        if (!$personalData['enabled'] || !$this->hasDoctrineBundle($container) || !interface_exists(UserKitPersonalDataEraserInterface::class)) {
+            return;
+        }
+
+        $container->register(CookieConsentLogsPersonalDataEraser::class, CookieConsentLogsPersonalDataEraser::class)
+            ->setAutowired(true)
+            ->setArgument('$eraseByIpWindow', $eraseByIpWindow)
+            ->addTag('nowo_user_kit.personal_data.eraser', ['priority' => CookieConsentLogsPersonalDataEraser::PRIORITY]);
+        $container->register(CookieConsentsPersonalDataExportProvider::class, CookieConsentsPersonalDataExportProvider::class)
+            ->setAutowired(true)
+            ->addTag('nowo_user_kit.personal_data.export_provider', ['priority' => CookieConsentsPersonalDataExportProvider::PRIORITY]);
+    }
+
+    /**
      * DoctrineBundle is registered (`kernel.bundles`; load() runs in a container holding only this extension).
      */
     private function hasDoctrineBundle(ContainerBuilder $container): bool
@@ -229,6 +282,12 @@ class NowoCookieConsentExtension extends Extension implements PrependExtensionIn
             $container->getDefinition(CookieLogger::class)
                 ->setArgument('$entityManager', $entityManager)
                 ->setArgument('$managerRegistry', $registry);
+        }
+
+        foreach ([CookieConsentPersonalDataEraser::class, CookieConsentPersonalDataExporter::class] as $port) {
+            if ($container->hasDefinition($port)) {
+                $container->getDefinition($port)->setArgument('$managerRegistry', $registry);
+            }
         }
 
         if ($container->hasDefinition(CookieConsentSchemaReadySubscriber::class)) {

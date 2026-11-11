@@ -17,6 +17,10 @@ use Nowo\CookieConsentBundle\EventListener\CookieConsentConfigRuntimeCacheListen
 use Nowo\CookieConsentBundle\EventSubscriber\CookieConsentConfigTranslationSubscriber;
 use Nowo\CookieConsentBundle\EventSubscriber\CookieConsentRuntimeCacheResetSubscriber;
 use Nowo\CookieConsentBundle\EventSubscriber\CookieConsentSchemaReadySubscriber;
+use Nowo\CookieConsentBundle\PersonalData\CookieConsentPersonalDataEraser;
+use Nowo\CookieConsentBundle\PersonalData\CookieConsentPersonalDataEraserInterface;
+use Nowo\CookieConsentBundle\PersonalData\CookieConsentPersonalDataExporter;
+use Nowo\CookieConsentBundle\PersonalData\CookieConsentPersonalDataExporterInterface;
 use Nowo\CookieConsentBundle\Repository\CookieConsentConfigRepository;
 use Nowo\CookieConsentBundle\Repository\CookieConsentConfigTranslationRepository;
 use Nowo\CookieConsentBundle\Repository\CookieDefinitionRepository;
@@ -50,6 +54,8 @@ final class CookieConsentWithoutDoctrinePass implements CompilerPassInterface
         CookieConsentConfigSettingsAdminController::class,
         CookieDefinitionAdminController::class,
         CookieLogger::class,
+        CookieConsentPersonalDataEraser::class,
+        CookieConsentPersonalDataExporter::class,
     ];
 
     /**
@@ -76,6 +82,12 @@ final class CookieConsentWithoutDoctrinePass implements CompilerPassInterface
 
         foreach (self::DOCTRINE_ONLY as $id) {
             $container->removeDefinition($id);
+        }
+        // 1.29: the GDPR ports read the bundle's log table, which this host does not have (it keeps its own log).
+        foreach ([CookieConsentPersonalDataEraserInterface::class => CookieConsentPersonalDataEraser::class, CookieConsentPersonalDataExporterInterface::class => CookieConsentPersonalDataExporter::class] as $alias => $default) {
+            if ($container->hasAlias($alias) && (string) $container->getAlias($alias) === $default) {
+                $container->removeAlias($alias);
+            }
         }
 
         $container->getDefinition(CookieConsentConfigResolver::class)

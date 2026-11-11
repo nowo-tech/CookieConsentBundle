@@ -26,6 +26,8 @@ Regenerate with `make -C demo/symfony8 demo-screenshots` (REQ-DEMO-013).
 - [Preferences bubble icon](#preferences-bubble-icon)
 - [AJAX submission](#ajax-submission)
 - [Consent logging](#consent-logging)
+- [GDPR erasure and export](#gdpr-erasure-and-export)
+  - [UserKit bridge](#userkit-bridge)
 - [Using it from a DDD / hexagonal application](#using-it-from-a-ddd--hexagonal-application)
   - [Keeping your domain free of the bundle](#keeping-your-domain-free-of-the-bundle)
   - [Ports (since 1.26)](#ports-since-126)
@@ -170,6 +172,82 @@ Since 1.25 each row also records the profile `revision` the visitor answered (`c
 page the form was shown on (hidden `page_route` field), also with a dedicated `form_action`. That route is what the
 browser reports, so it is visitor-controlled: a forged value only changes the `consent_revision` of that visitor's own
 log rows, never whether consent is valid.
+
+## GDPR erasure and export
+
+Since the next minor the bundle ships one port per direction for the consent log (`CookieConsentLog`, table
+`<prefix>dashboard_cookie_log`). Type-hint the interfaces; plain PHP, no Doctrine or HTTP type in their signatures.
+
+```php
+use Nowo\CookieConsentBundle\PersonalData\CookieConsentIpWindow;
+use Nowo\CookieConsentBundle\PersonalData\CookieConsentPersonalDataEraserInterface;
+use Nowo\CookieConsentBundle\PersonalData\CookieConsentPersonalDataExporterInterface;
+use Nowo\CookieConsentBundle\PersonalData\CookieConsentPersonalDataSubject;
+
+$subject = CookieConsentPersonalDataSubject::fromConsentKey($consentKey); // the visitor's Cookie_Consent_Key
+
+// Erasure by IP window only with `personal_data.ip_windows: erase` (ignored otherwise, never exported):
+$subject = CookieConsentPersonalDataSubject::of(
+    [CookieConsentIpWindow::of('203.0.113.42', $firstSeen, $lastSeen)], // raw or stored (anonymised) IP
+    [$consentKey],
+);
+
+$export = $exporter->export($subject); // {"decisions": [{cookie_name, allowed, consent_revision, recorded_at}, ...]}
+$result = $eraser->erase($subject);    // CookieConsentErasureResult: consentLogs, toArray(), total()
+```
+
+**Whose rows.** The bundle stores no user id with a consent. A row belongs to the subject when its
+`cookie_consent_key` is one of the subject's keys (`fromConsentKey()`; the key is also in `ConsentSavedEvent`). Keys
+are compared byte for byte (no trimming, no case folding); SQL only pre-filters, every row is re-checked in PHP, so
+`UserA` never matches `usera` whatever the column collation.
+
+**IP windows (opt-in, erasure only).** With `personal_data.ip_windows: erase`, the eraser also deletes the rows whose
+stored IP equals a window's IP with a time inside the window (`fromIpWindow()`; both bounds inclusive, widened by
+`ip_window_margin`, default `PT0S`). A raw IP is anonymised exactly like the logger does before comparing
+(`203.0.113.42` → `203.0.113.xx`, IPv6 → first 48 bits); `unknown` is rejected. The stored IP is shared by every
+visitor of the same /24 (/48) — a CGNAT, an office, a campus — so a window also deletes other people's proof of
+consent: keep it off unless you accept that, and keep the windows tight. With the default `off`, the windows of a
+subject are ignored (a subject with only windows erases nothing and dispatches no event). **The export never uses IP
+windows**, whatever the setting: it would hand other visitors' decisions to the requester (art. 15(4)).
+
+**Erasure.** DBAL `DELETE … WHERE id IN (…)` in batches of 500 on the connection of the entity manager that maps the
+consent log (`doctrine.entity_manager`). No entity manager is flushed or cleared. Idempotent: a second run returns 0.
+Without an active transaction each batch runs in its own transaction and `CookieConsentPersonalDataErasedEvent`
+(subject keys, IP windows, counts, time; scalars only) is dispatched after the last commit. Inside your own transaction
+the eraser joins it and the event is **not** dispatched (the bundle cannot know whether you commit): the returned
+result is the outcome.
+
+**Export.** By consent key only. Read-only, oldest first, each row once. Never the consent key or the IP.
+
+**Separate entity manager.** When the consent log lives on its own entity manager / connection
+(`doctrine.entity_manager`), the eraser commits on that connection on its own, even inside UserKit's run: if a later
+eraser fails and UserKit rolls back, the consent rows stay deleted (a partial erasure). Re-running the erasure is safe:
+it is idempotent.
+
+**Hosts without Doctrine.** The default ports are removed with the other Doctrine-only services (your own consent store
+holds the data); alias the interfaces to your own implementation if you want them.
+
+### UserKit bridge
+
+With `nowo-tech/user-kit-bundle` (>= 1.12) installed, the bundle entities mapped and `personal_data.enabled: true`
+(default), the bundle registers:
+
+| UserKit tag | Key | Priority |
+|---|---|---|
+| `nowo_user_kit.personal_data.eraser` | `cookie_consent_logs` | 110 (before HttpLog's 100 and the host identity eraser) |
+| `nowo_user_kit.personal_data.export_provider` | `cookie_consents` | -50 |
+
+The bridge needs to know which consent rows are the user's. Set `personal_data.subject_resolver` to a service
+implementing `CookieConsentPersonalDataSubjectResolverInterface`
+(`subjectsFor(object $user, ?string $originalIdentifier): list<CookieConsentPersonalDataSubject>`), e.g. returning the
+consent keys your app stored per user from `ConsentSavedEvent`. For the erasure only, and only with
+`personal_data.ip_windows: erase`, you can instead tag `CookieConsentIpWindowProviderInterface` services
+(`ipWindowsFor(object $user, ?string $originalIdentifier): iterable`, autoconfigured; each window widened by
+`ip_window_margin`). With `ip_windows: off` (default) the bridge does not use IP windows at all: providers are not
+called and the windows of any subject are dropped. The export section always uses consent keys only. The eraser asks
+the resolver for the original identifier (`ErasureRequest::identifier()`) and for `context['previous_email']` when it
+is a non-empty string, and erases once per distinct subject. **Without a resolver returning consent keys (or opted-in
+IP windows) the bridge erases and exports nothing.** Resolvers and providers must keep no state (worker mode).
 
 ## Asking visitors again (re-consent)
 

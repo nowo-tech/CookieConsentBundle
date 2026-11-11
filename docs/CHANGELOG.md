@@ -8,6 +8,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## Table of contents
 
 - [[Unreleased]](#unreleased)
+  - [Added](#added)
+  - [Behaviour change](#behaviour-change)
 - [[1.28.0] - 2026-11-11](#1280---2026-11-11)
   - [Target 1.28.0](#target-1280)
 - [[1.27.0] - 2026-11-10](#1270---2026-11-10)
@@ -252,6 +254,34 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - [Documentation](#documentation-29)
 
 ## [Unreleased]
+
+### Added
+
+- **GDPR erasure and export ports for the consent log** (`PersonalData\`, Beacon re-audit extraction #4):
+  `CookieConsentPersonalDataEraserInterface::erase()` / `CookieConsentPersonalDataExporterInterface::export()` with the
+  `CookieConsentPersonalDataSubject` value object (consent keys and / or anonymised client-IP time windows,
+  `CookieConsentIpWindow`), `CookieConsentErasureResult` (`consent_logs`) and `CookieConsentPersonalDataErasedEvent`
+  (dispatched after commit, only when the eraser ran its own transactions). DBAL deletes by primary key in batches of
+  500 on the consent log's connection; SQL only pre-filters, every row is re-checked byte for byte in PHP (a case or
+  accent variant of a key or IP is never erased or exported). Idempotent; joins the caller's transaction. The export
+  holds only `cookie_name`, `allowed`, `consent_revision` and `recorded_at` (no key, no IP).
+- **Matching by consent key; IP windows opt-in for erasure only.** An anonymised IP is shared by every visitor of the
+  same /24 (IPv4) or /48 (IPv6). Erasure by IP window is off by default (`personal_data.ip_windows: off`; `erase`
+  turns it on, with `personal_data.ip_window_margin` default `PT0S`); the export never uses IP windows, in the port or
+  in the bridge, so no other visitor's decisions are handed out.
+- **UserKit bridge** (UserKit installed, bundle entities mapped, `personal_data.enabled: true`): eraser
+  `cookie_consent_logs` (priority 110) and export section `cookie_consents`. The bundle stores no user id, so the
+  rows of a user come from a custom `personal_data.subject_resolver` (e.g. the consent keys your app recorded per user)
+  or, with `ip_windows: erase`, from `CookieConsentIpWindowProviderInterface` services (autoconfigured SPI); without
+  them the bridge erases and exports nothing.
+- New configuration node `personal_data` (`enabled`, `ip_windows`, `ip_window_margin`, `subject_resolver`).
+
+### Behaviour change
+
+- With `nowo-tech/user-kit-bundle` installed, a UserKit account erasure now also runs the `cookie_consent_logs`
+  eraser and the GDPR export gains a `cookie_consents` section. Out of the box both are empty (no resolver returns
+  consent keys and IP windows are off); once you configure a subject resolver, the erasure deletes those consent-log
+  rows, which are your proof of consent (art. 7(1)). If you must keep them, set `personal_data.enabled: false`.
 
 ## [1.28.0] - 2026-11-11
 

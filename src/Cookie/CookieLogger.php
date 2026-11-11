@@ -15,14 +15,6 @@ use RuntimeException;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\RequestStack;
 
-use function filter_var;
-use function inet_ntop;
-use function inet_pton;
-use function str_contains;
-use function strlen;
-
-use const FILTER_VALIDATE_IP;
-
 /**
  * Persists anonymized cookie consent choices to the database.
  *
@@ -207,17 +199,6 @@ class CookieLogger implements CookieLoggerInterface
      */
     protected function anonymizeIp(?string $ip): string
     {
-        if ($ip === null || filter_var($ip, FILTER_VALIDATE_IP) === false) {
-            return 'unknown';
-        }
-
-        if (!str_contains($ip, '.')) {
-            return (string) inet_ntop(substr((string) inet_pton($ip), 0, 6) . str_repeat("\0", 10));
-        }
-
-        // IPv4 or IPv4-mapped IPv6 (e.g. ::ffff:192.0.2.1): mask the last octet.
-        $lastDot = (int) strrpos($ip, '.') + 1;
-
-        return substr($ip, 0, $lastDot) . str_repeat('x', strlen($ip) - $lastDot);
+        return ConsentIpAnonymizer::anonymize($ip);
     }
 }

@@ -30,6 +30,7 @@ services:
       - '../../Clock/'
       - '../../Event/'
       - '../../Locale/ConfiguredLocales.php'
+      - '../../PersonalData/'
 
   Nowo\CookieConsentBundle\Clock\SystemClock: ~
 
@@ -70,6 +71,31 @@ services:
 
   Nowo\CookieConsentBundle\Cookie\CookieLoggerInterface:
     alias: Nowo\CookieConsentBundle\Cookie\CookieLogger
+
+  # GDPR erasure / export ports of the consent log (1.29): documented API, type-hint the interfaces.
+  Nowo\CookieConsentBundle\PersonalData\CookieConsentPersonalDataEraser:
+    arguments:
+      $managerRegistry: '@doctrine'
+      $eventDispatcher: '@?event_dispatcher'
+      $clock: '@Psr\Clock\ClockInterface'
+
+  Nowo\CookieConsentBundle\PersonalData\CookieConsentPersonalDataExporter:
+    arguments:
+      $managerRegistry: '@doctrine'
+
+  Nowo\CookieConsentBundle\PersonalData\CookieConsentPersonalDataEraserInterface:
+    alias: Nowo\CookieConsentBundle\PersonalData\CookieConsentPersonalDataEraser
+
+  Nowo\CookieConsentBundle\PersonalData\CookieConsentPersonalDataExporterInterface:
+    alias: Nowo\CookieConsentBundle\PersonalData\CookieConsentPersonalDataExporter
+
+  Nowo\CookieConsentBundle\PersonalData\IpWindowSubjectResolver:
+    arguments:
+      $providers: !tagged_iterator nowo_cookie_consent.personal_data.ip_window_provider
+      $margin: '%nowo_cookie_consent.personal_data.ip_window_margin%'
+
+  Nowo\CookieConsentBundle\PersonalData\CookieConsentPersonalDataSubjectResolverInterface:
+    alias: Nowo\CookieConsentBundle\PersonalData\IpWindowSubjectResolver
 
   Nowo\CookieConsentBundle\Locale\LocaleResolver:
     arguments:
