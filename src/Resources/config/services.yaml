@@ -28,6 +28,10 @@ services:
       - '../../Security/AllowAllCookieConsentAccessChecker.php'
       - '../../Security/ConfigurableCookieConsentAccessChecker.php'
       - '../../Clock/'
+      - '../../Cookie/ConsentCookie.php'
+      - '../../Cookie/ConsentCookieJar.php'
+      - '../../Cookie/ConsentRequestCookies.php'
+      - '../../Http/'
       - '../../Event/'
       - '../../Locale/ConfiguredLocales.php'
       - '../../PersonalData/'
@@ -67,6 +71,10 @@ services:
     alias: Nowo\CookieConsentBundle\Cookie\CookieChecker
 
   Nowo\CookieConsentBundle\Cookie\CookieHandlerInterface:
+    alias: Nowo\CookieConsentBundle\Cookie\CookieHandler
+
+  # Framework-free twin of CookieHandlerInterface (1.30, REQ-ARCH-001 rule 3): alias it to your own writer.
+  Nowo\CookieConsentBundle\Cookie\ConsentCookieWriterInterface:
     alias: Nowo\CookieConsentBundle\Cookie\CookieHandler
 
   Nowo\CookieConsentBundle\Cookie\CookieLoggerInterface:

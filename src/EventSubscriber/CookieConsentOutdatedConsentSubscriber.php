@@ -4,10 +4,12 @@ declare(strict_types=1);
 
 namespace Nowo\CookieConsentBundle\EventSubscriber;
 
+use Nowo\CookieConsentBundle\Cookie\ConsentCookieWriterInterface;
 use Nowo\CookieConsentBundle\Cookie\CookieCheckerInterface;
 use Nowo\CookieConsentBundle\Cookie\CookieHandlerInterface;
 use Nowo\CookieConsentBundle\Enum\CookieNameEnum;
 use Nowo\CookieConsentBundle\Http\ColdStartRequestAttributes;
+use Nowo\CookieConsentBundle\Http\ConsentCookieResponseWriter;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Event\ResponseEvent;
@@ -33,11 +35,14 @@ class CookieConsentOutdatedConsentSubscriber implements EventSubscriberInterface
      * Creates the subscriber.
      *
      * @param CookieCheckerInterface $cookieChecker Detects outdated consents
-     * @param CookieHandlerInterface $cookieHandler Writes the expired cookies
+     * @param CookieHandlerInterface $cookieHandler Writes the expired cookies (deprecated port, used only when it is a
+     *                                              host service that does not implement the new one)
+     * @param ConsentCookieWriterInterface|null $cookieWriter Framework-free consent cookie port (1.30)
      */
     public function __construct(
         private readonly CookieCheckerInterface $cookieChecker,
         private readonly CookieHandlerInterface $cookieHandler,
+        private readonly ?ConsentCookieWriterInterface $cookieWriter = null,
     ) {
     }
 
@@ -74,8 +79,8 @@ class CookieConsentOutdatedConsentSubscriber implements EventSubscriberInterface
             return;
         }
 
-        // @igor-ignore - Writes expired cookies on this response; CookieHandler holds no state.
-        $this->cookieHandler->clear($request, $response);
+        // @igor-ignore - Writes expired cookies on this response; the cookie ports hold no state.
+        (new ConsentCookieResponseWriter($this->cookieHandler, $this->cookieWriter))->clear($request, $response);
     }
 
     private function isSharedCacheable(Response $response): bool

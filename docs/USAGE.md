@@ -34,6 +34,9 @@ Regenerate with `make -C demo/symfony8 demo-screenshots` (REQ-DEMO-013).
   - [Reacting to a saved consent (since 1.26)](#reacting-to-a-saved-consent-since-126)
   - [Persistence](#persistence)
   - [Standard host or DDD host without Doctrine (1.28)](#standard-host-or-ddd-host-without-doctrine-128)
+  - [Consent cookies: standard host and DDD host (1.30)](#consent-cookies-standard-host-and-ddd-host-130)
+    - [Standard host](#standard-host)
+    - [DDD host](#ddd-host)
   - [Read-only views (1.28)](#read-only-views-128)
   - [Known limitations](#known-limitations)
 - [Asking visitors again (re-consent)](#asking-visitors-again-re-consent)
@@ -325,7 +328,8 @@ it to your own service to replace one part:
 | Interface | Default | Purpose |
 | --- | --- | --- |
 | `Nowo\CookieConsentBundle\Cookie\CookieCheckerInterface` | `CookieChecker` | Read the visitor's consent from the request cookies. |
-| `Nowo\CookieConsentBundle\Cookie\CookieHandlerInterface` | `CookieHandler` | Write / expire the consent cookies on the response. |
+| `Nowo\CookieConsentBundle\Cookie\ConsentCookieWriterInterface` (1.30) | `CookieHandler` | Decide which consent cookies to write / expire; returns a `ConsentCookieJar` (no `Request` / `Response`). |
+| `Nowo\CookieConsentBundle\Cookie\CookieHandlerInterface` (deprecated 1.30, removed in 2.0) | `CookieHandler` | Write / expire the consent cookies on the response. |
 | `Nowo\CookieConsentBundle\Cookie\CookieLoggerInterface` | `CookieLogger` | Store the proof of consent (`use_logger: true`). |
 
 ```yaml
@@ -397,6 +401,66 @@ when `CookieLoggerInterface` is still the bundle's own logger. With `use_logger:
 `NullCookieLogger` is used. Your logger is a shared service: in a kept-alive FrankenPHP worker keep no visitor state in
 it (`tests/Integration/Ddd/HostWithoutDoctrineKernelTest.php` serves 600 requests for two visitors through
 `http_kernel` without the services resetter).
+
+### Consent cookies: standard host and DDD host (1.30)
+
+The bundle writes the consent cookies (`Cookie_Consent`, `Cookie_Consent_Key`, `Cookie_Category_*`,
+`Cookie_Consent_Granular`) in its own `kernel.response` listeners. Which cookies to write or expire is decided by a
+framework-free port, `ConsentCookieWriterInterface`: it takes scalars and a `ConsentRequestCookies` value object (the
+cookie names of the request) and returns a `ConsentCookieJar` of `ConsentCookie` value objects. The bundle then writes
+the jar on the response (`Http\ConsentCookieJarApplier`). No `Request`, `Response` or other Symfony component type
+crosses the port.
+
+#### Standard host
+
+Nothing to configure. `ConsentCookieWriterInterface` and the deprecated `CookieHandlerInterface` are both aliased to
+`CookieHandler`, and the `Set-Cookie` headers are the same as in 1.29, byte for byte: path `/`, no domain, `Secure`,
+`SameSite=Lax`, `HttpOnly` from `nowo_cookie_consent.http_only`, one year expiry, not raw (covered by
+`tests/Unit/Http/ConsentCookieEquivalenceTest.php`).
+
+#### DDD host
+
+Alias the port to your own writer; it never sees an HTTP object, and the bundle applies the jar for you:
+
+```php
+use Nowo\CookieConsentBundle\Cookie\ConsentCookie;
+use Nowo\CookieConsentBundle\Cookie\ConsentCookieJar;
+use Nowo\CookieConsentBundle\Cookie\ConsentCookieWriterInterface;
+use Nowo\CookieConsentBundle\Cookie\ConsentRequestCookies;
+
+final class ConsentCookies implements ConsentCookieWriterInterface
+{
+    public function __construct(private readonly \Psr\Clock\ClockInterface $clock) {}
+
+    public function consentCookies(array $categories, string $key, array $granularCookies = []): ConsentCookieJar
+    {
+        return (new ConsentCookieJar())
+            ->with(ConsentCookie::persistent('Cookie_Consent_Key', $key, $this->clock->now()->add(new \DateInterval('P1Y')), true));
+    }
+
+    public function expiredConsentCookies(ConsentRequestCookies $requestCookies): ConsentCookieJar
+    {
+        return $requestCookies->has('Cookie_Consent')
+            ? (new ConsentCookieJar())->with(ConsentCookie::expired('Cookie_Consent', true))
+            : new ConsentCookieJar();
+    }
+}
+```
+
+```yaml
+# config/services.yaml
+services:
+    Nowo\CookieConsentBundle\Cookie\ConsentCookieWriterInterface: '@App\Infrastructure\Consent\ConsentCookies'
+```
+
+`CookieChecker` still reads the bundle's cookie names, so a writer that renames them also needs its own
+`CookieCheckerInterface`. Keep the writer stateless: in a kept-alive FrankenPHP worker the same instance serves every
+visitor (`tests/Integration/Ddd/HostCookieWriterKernelTest.php`: 400 requests for two visitors, no services resetter).
+
+Which port the bundle calls: a service aliased to `ConsentCookieWriterInterface` first; otherwise the
+`CookieHandlerInterface` service when it also implements the new port; otherwise the deprecated
+`CookieHandlerInterface::save()` / `clear()` methods, with an `E_USER_DEPRECATED` notice. A subclass of `CookieHandler`
+keeps the deprecated path, so an overridden `saveCookie()` still runs. See [UPGRADING](UPGRADING.md#unreleased).
 
 ### Read-only views (1.28)
 
