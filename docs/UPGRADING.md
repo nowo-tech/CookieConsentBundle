@@ -3,6 +3,7 @@
 ## Table of contents
 
 - [Unreleased](#unreleased)
+- [To 1.29.0](#to-1290)
 - [To 1.28.0](#to-1280)
 - [To 1.27.0](#to-1270)
 - [To 1.26.0](#to-1260)
@@ -128,6 +129,14 @@
 - [Getting help](#getting-help)
 
 ## Unreleased
+
+## To 1.29.0
+
+From **1.28.0**:
+
+```bash
+composer update nowo-tech/cookie-consent-bundle
+```
 
 Next minor (GDPR ports). **Nothing to change in most apps.**
 
