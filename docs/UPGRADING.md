@@ -3,7 +3,7 @@
 ## Table of contents
 
 - [Unreleased](#unreleased)
-  - [To 1.28.0](#to-1280)
+- [To 1.28.0](#to-1280)
 - [To 1.27.0](#to-1270)
 - [To 1.26.0](#to-1260)
 - [To 1.26.0](#to-1260-1)
@@ -130,7 +130,7 @@
 
 ## Unreleased
 
-### To 1.28.0
+## To 1.28.0
 
 From **1.27.0**: `composer update nowo-tech/cookie-consent-bundle`. **Standard hosts (DoctrineBundle registered): no
 configuration or schema change.**
