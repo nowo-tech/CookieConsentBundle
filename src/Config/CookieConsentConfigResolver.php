@@ -24,13 +24,14 @@ final class CookieConsentConfigResolver implements ResetInterface
     /**
      * Creates a new configuration resolver.
      *
-     * @param CookieConsentConfigSelector $configSelector Selects the active profile
-     * @param CookieConsentConfigTranslationRepository $translationRepository Loads locale copy
+     * @param CookieConsentConfigSelector|null $configSelector Selects the active profile (null: a host without
+     *                                                         Doctrine, 1.28; nothing is resolved)
+     * @param CookieConsentConfigTranslationRepository|null $translationRepository Loads locale copy (null: idem)
      * @param bool $useDatabaseConfig Whether database-backed config is enabled
      */
     public function __construct(
-        private readonly CookieConsentConfigSelector $configSelector,
-        private readonly CookieConsentConfigTranslationRepository $translationRepository,
+        private readonly ?CookieConsentConfigSelector $configSelector,
+        private readonly ?CookieConsentConfigTranslationRepository $translationRepository,
         private readonly bool $useDatabaseConfig,
     ) {
     }
@@ -63,7 +64,7 @@ final class CookieConsentConfigResolver implements ResetInterface
      */
     public function resolve(string $locale, ?string $route = null): ?ResolvedCookieConsentConfig
     {
-        if (!$this->useDatabaseConfig) {
+        if (!$this->useDatabaseConfig || !$this->configSelector instanceof CookieConsentConfigSelector) {
             return null;
         }
 
@@ -79,7 +80,7 @@ final class CookieConsentConfigResolver implements ResetInterface
             return $this->resolvedByLocaleAndRoute[$cacheKey] = null;
         }
 
-        $translation = $this->translationRepository->findOneForConfigAndLocale($config, $locale);
+        $translation = $this->translationRepository?->findOneForConfigAndLocale($config, $locale);
 
         return $this->resolvedByLocaleAndRoute[$cacheKey] = new ResolvedCookieConsentConfig($config, $translation);
     }

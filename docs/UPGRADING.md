@@ -3,6 +3,7 @@
 ## Table of contents
 
 - [Unreleased](#unreleased)
+  - [To 1.28.0](#to-1280)
 - [To 1.27.0](#to-1270)
 - [To 1.26.0](#to-1260)
 - [To 1.26.0](#to-1260-1)
@@ -128,6 +129,25 @@
 - [Getting help](#getting-help)
 
 ## Unreleased
+
+### To 1.28.0
+
+From **1.27.0**: `composer update nowo-tech/cookie-consent-bundle`. **Standard hosts (DoctrineBundle registered): no
+configuration or schema change.**
+
+- **Hosts without Doctrine (opt-in, DDD).** Leave DoctrineBundle out of `config/bundles.php`, keep
+  `use_database_config: false`, and either alias `CookieLoggerInterface` to your own consent store or set
+  `use_logger: false`. See USAGE, "Standard host or DDD host without Doctrine". Before 1.28 such a host failed to
+  compile ("Could not find the manager name parameter").
+- **Read-only views.** Prefer `ResolvedCookieConsentConfig::view()` / `getConfigId()` and
+  `CookieInventoryProvider::viewsForLocale()` over the entity-typed `getConfig()` / `listForLocale()` in your code.
+- Admin routes with `web_ui.enabled: false` now answer 404 at `kernel.request`, before their controller is resolved
+  (same status as before).
+- **Renamed admin routes are guarded.** If you import `routing.yaml` with a `name_prefix` or rename the admin routes,
+  the access checker now applies to them too (it is keyed on the controller class). Make sure your admin users pass
+  `security.access_roles` / your `security.access_checker`.
+- Code that constructs `CookieConsentConfigResolver`, `CookieInventoryProvider` or
+  `CookieConsentRuntimeCacheResetSubscriber` itself keeps working: their repository arguments only became nullable.
 
 ## To 1.27.0
 

@@ -50,6 +50,9 @@ class NowoCookieConsentExtension extends Extension implements PrependExtensionIn
     /** Container parameter holding `doctrine.entity_manager` (null: the default entity manager). */
     public const ENTITY_MANAGER_PARAMETER = 'nowo_cookie_consent.doctrine.entity_manager';
 
+    /** Defined when DoctrineBundle is registered (1.28): Symfony's mapping pass is skipped otherwise. */
+    public const MAPPING_ENABLED_PARAMETER = 'nowo_cookie_consent.doctrine.mapping_enabled';
+
     /** Registry decorator wired into the bundle's repositories and logger when `doctrine.entity_manager` is set. */
     public const MANAGER_REGISTRY_SERVICE = 'nowo_cookie_consent.manager_registry';
 
@@ -74,6 +77,10 @@ class NowoCookieConsentExtension extends Extension implements PrependExtensionIn
         $entityManagerName = $config['doctrine']['entity_manager'] ?? null;
         $entityManagerName = is_string($entityManagerName) && trim($entityManagerName) !== '' ? trim($entityManagerName) : null;
         $container->setParameter(self::ENTITY_MANAGER_PARAMETER, $entityManagerName);
+        if ($this->hasDoctrineBundle($container)) {
+            // 1.28: the entities are mapped only when DoctrineBundle is registered (standard hosts: as before).
+            $container->setParameter(self::MAPPING_ENABLED_PARAMETER, true);
+        }
         $container->setParameter('nowo_cookie_consent.table_prefix', $tablePrefix);
         $container->setParameter('nowo_cookie_consent.categories', $config['categories']);
         $container->setParameter('nowo_cookie_consent.use_logger', $config['use_logger']);
@@ -177,6 +184,16 @@ class NowoCookieConsentExtension extends Extension implements PrependExtensionIn
             $container->register('nowo_cookie_consent.translation.loader.array', ArrayLoader::class)
                 ->addTag('translation.loader', ['alias' => 'array']);
         }
+    }
+
+    /**
+     * DoctrineBundle is registered (`kernel.bundles`; load() runs in a container holding only this extension).
+     */
+    private function hasDoctrineBundle(ContainerBuilder $container): bool
+    {
+        $bundles = $container->hasParameter('kernel.bundles') ? $container->getParameter('kernel.bundles') : [];
+
+        return (is_array($bundles) && isset($bundles['DoctrineBundle'])) || $container->hasExtension('doctrine');
     }
 
     /**

@@ -6,6 +6,7 @@ namespace Nowo\CookieConsentBundle\Tests\Unit\Config;
 
 use Nowo\CookieConsentBundle\Config\CookieInventoryNormalizer;
 use Nowo\CookieConsentBundle\Config\CookieInventoryProvider;
+use Nowo\CookieConsentBundle\Config\ResolvedCookieConsentConfig;
 use Nowo\CookieConsentBundle\Entity\CookieConsentConfig;
 use Nowo\CookieConsentBundle\Entity\CookieDefinition;
 use Nowo\CookieConsentBundle\Entity\CookieDefinitionTranslation;
@@ -128,6 +129,29 @@ final class CookieInventoryProviderTest extends TestCase
         self::assertSame('_ga', $inventory[0]['name']);
         self::assertSame('Google', $inventory[0]['provider']);
         self::assertSame('analytics', $inventory[0]['category']);
+    }
+
+    public function testViewsAndAHostWithoutDoctrine(): void
+    {
+        $yaml = [[
+            'name'         => '_ga',
+            'duration'     => '2 years',
+            'category'     => 'analytics',
+            'type'         => CookieDefinition::TYPE_THIRD_PARTY,
+            'sort_order'   => 0,
+            'translations' => ['en' => ['provider' => 'Google', 'purpose' => 'Analytics']],
+        ]];
+        // 1.28: no repository (host without Doctrine); a profile entity still falls back to YAML.
+        $provider = new CookieInventoryProvider(null, true, $yaml);
+
+        $views = $provider->viewsForLocale(new ResolvedCookieConsentConfig(new CookieConsentConfig(), null), 'en');
+
+        self::assertCount(1, $views);
+        self::assertSame(['_ga', 'Google', 'Analytics', '2 years', 'analytics'], [$views[0]->name, $views[0]->provider, $views[0]->purpose, $views[0]->duration, $views[0]->category]);
+        self::assertSame(CookieDefinition::TYPE_THIRD_PARTY, $views[0]->type);
+        self::assertFalse($views[0]->allowedByDefault);
+        self::assertSame('_ga', $provider->viewsForLocale(null, 'en')[0]->name);
+        self::assertTrue($provider->hasDefinitions(new CookieConsentConfig()), 'no database rows: the YAML inventory');
     }
 
     public function testPrefersDatabaseDefinitionsOverYaml(): void

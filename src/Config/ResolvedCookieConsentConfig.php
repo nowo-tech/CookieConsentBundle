@@ -45,6 +45,34 @@ final class ResolvedCookieConsentConfig
     }
 
     /**
+     * The id of the resolved profile (1.28): reference it instead of keeping the entity.
+     */
+    public function getConfigId(): ?int
+    {
+        return $this->config->getId();
+    }
+
+    /**
+     * Read-only view of the profile and its copy for this locale (1.28, architecture bar rule 1): use it in host code
+     * instead of {@see self::getConfig()} / {@see self::getTranslation()}, which return bundle entities.
+     */
+    public function view(): ConsentProfileView
+    {
+        return new ConsentProfileView(
+            $this->config->getId(),
+            $this->config->getName(),
+            $this->config->getRevision(),
+            $this->config->isDefault(),
+            $this->config->getPriority(),
+            $this->config->isAutoShow(),
+            $this->config->getRoutePatterns(),
+            $this->translation?->getLocale(),
+            $this->getTranslationMessages(),
+            $this->config->getReconsentRequiredAt(),
+        );
+    }
+
+    /**
      * Returns whether the consent modal should auto-show for this configuration.
      *
      * @return bool True when auto-show is enabled
