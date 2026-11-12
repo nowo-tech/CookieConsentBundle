@@ -6,6 +6,7 @@ namespace Nowo\CookieConsentBundle\Tests\Integration\Kernel;
 
 use Doctrine\Bundle\DoctrineBundle\DependencyInjection\Configuration as DoctrineConfiguration;
 use Doctrine\Bundle\DoctrineBundle\DoctrineBundle;
+use Doctrine\ORM\Mapping\Driver\AttributeDriver;
 use Nowo\CookieConsentBundle\NowoCookieConsentBundle;
 use Nowo\FormKitBundle\NowoFormKitBundle;
 use Nowo\UiKitBundle\NowoUiKitBundle;
@@ -16,7 +17,9 @@ use Symfony\Bundle\TwigBundle\TwigBundle;
 use Symfony\Component\Config\Definition\ArrayNode;
 use Symfony\Component\Config\Definition\BaseNode;
 use Symfony\Component\Config\Loader\LoaderInterface;
+use Symfony\Component\DependencyInjection\Compiler\CompilerPassInterface;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
+use Symfony\Component\DependencyInjection\Definition;
 use Symfony\Component\HttpKernel\Bundle\BundleInterface;
 use Symfony\Component\HttpKernel\Kernel;
 use Symfony\Component\Routing\Loader\Configurator\RoutingConfigurator;
@@ -54,6 +57,8 @@ final class CookieConsentTestKernel extends Kernel
      * @param array<string, mixed>|null $doctrineConfig doctrine configuration replacing the single in-memory SQLite one
      * @param string|null $routeNamePrefix `name_prefix` of the bundle routing.yaml import (audit LR-C-L1)
      * @param list<string> $publicIds services / aliases made public for the test (kept even when nothing uses them)
+     * @param bool $hostDefaultDriver the host gives its default manager's chain a catch-all default driver (what
+     *                                DoctrineBundle 3.4 `auto_discover_entities` does)
      */
     public function __construct(
         private readonly bool $withSecurity,
@@ -64,8 +69,9 @@ final class CookieConsentTestKernel extends Kernel
         private readonly ?array $doctrineConfig = null,
         private readonly ?string $routeNamePrefix = null,
         private readonly array $publicIds = [],
+        private readonly bool $hostDefaultDriver = false,
     ) {
-        $this->cacheKey = hash('xxh128', serialize([$withSecurity, $bundleConfig, $hostParameters, $frameworkConfig, $importBundleRoutes, $doctrineConfig, $routeNamePrefix, $publicIds]));
+        $this->cacheKey = hash('xxh128', serialize([$withSecurity, $bundleConfig, $hostParameters, $frameworkConfig, $importBundleRoutes, $doctrineConfig, $routeNamePrefix, $publicIds, $hostDefaultDriver]));
         parent::__construct('test', false);
     }
 
@@ -138,6 +144,16 @@ final class CookieConsentTestKernel extends Kernel
         $container->loadFromExtension('nowo_cookie_consent', $this->bundleConfig);
         if ($this->publicIds !== []) {
             $container->addCompilerPass(new PublicForTestsPass($this->publicIds));
+        }
+        if ($this->hostDefaultDriver) {
+            $container->addCompilerPass(new class implements CompilerPassInterface {
+                public function process(ContainerBuilder $container): void
+                {
+                    // An attribute driver answers "not transient" for any class carrying #[ORM\Entity], whatever its paths.
+                    $container->getDefinition('doctrine.orm.default_metadata_driver')
+                        ->addMethodCall('setDefaultDriver', [new Definition(AttributeDriver::class, [[__DIR__ . '/HostEntity'], true])]);
+                }
+            });
         }
     }
 
