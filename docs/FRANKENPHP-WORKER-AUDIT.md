@@ -3,8 +3,8 @@
 | Field | Value |
 |-------|-------|
 | Package | `nowo-tech/cookie-consent-bundle` (`symfony-bundle`) |
-| Audited revision | `v1.10.0` |
-| Audit date | 2026-09-24 |
+| Audited revision | `v1.30.0` (first audit `v1.10.0`; the 1.28-1.30 ports and the kept-alive tests are covered in the last section) |
+| Audit date | 2026-09-24, refreshed 2026-11-12 |
 | Method | Manual review of every PHP file under `src/` (services, controllers, subscribers, Doctrine listener, Twig extensions, renderer, form types, repositories, DI extension, compiler passes, `Resources/config/services.yaml`). Symfony `Translator` / `LocaleSwitcher` internals checked in `vendor/` where the bundle depends on them |
 | **Verdict** | ✅ **Viable under scenario B** (`reset_kernel false`) — request data is read per call, bundle memos are cleared at the start of every main request by a bundle-owned subscriber, database texts no longer mutate the shared translator. Clearing the application's EntityManager identity map between requests remains the application's responsibility |
 | Original verdict | ❌ Not viable (as of `v1.9.7` / `e36c6b8`) — `CookieChecker` and `CookieLogger` captured the main `Request` in their constructor |
@@ -149,3 +149,22 @@ Info notes:
 ## Re-audit triggers
 
 Re-run this audit when a change: touches `CookieChecker`, `CookieLogger` or any constructor that receives `RequestStack`; adds a property or cache to a service; adds or changes a `ResetInterface::reset()`; changes how database translations reach the translator; adds API parameters used as cache keys; or adds a new Doctrine listener.
+
+## Kept-alive kernel, reset false (1.30.0)
+
+**The bundle is safe with kernel reset false** (`FRANKENPHP_RESET_KERNEL=false`, `services_resetter` never called).
+The memoizing services (`CookieConsentConfigResolver`, `CookieInventoryProvider`, `CookieConsentConfigRepository`,
+`CookieConsentSchemaReadySubscriber`) are emptied or bounded by the bundle itself (`CookieConsentRuntimeCacheResetSubscriber`
+at `kernel.request` 4096 on main requests, the schema-ready memo by its TTL), so nothing depends on `kernel.reset`. The
+1.28-1.30 ports (`CookieLoggerInterface`, `ConsentCookieWriterInterface`, `NullCookieLogger`) hold no request data: the
+writer returns a new immutable `ConsentCookieJar` per call.
+
+| Test | What it proves |
+| --- | --- |
+| `tests/Integration/Kernel/WorkerKeptAliveDoctrineKernelTest.php` (`testAKeptAliveDoctrineKernelKeepsTwoVisitorsApartWithFlatMemory`) | Doctrine host (DoctrineBundle, SQLite, the bundle's `CookieLogger`): ONE kernel, 1,200 consent submissions through `http_kernel` handle() + terminate() alternating two visitors (different choices, keys and IPs), no resetter: every logged row carries its own visitor's key, choice and anonymised IP, the shared EntityManager's unit of work stays empty, memory growth < 4 MiB after warm-up |
+| `tests/Integration/Ddd/HostWithoutDoctrineKernelTest.php` (`testKeptAliveKernelKeepsTwoVisitorsApart`) | host without Doctrine: 600 submissions, two visitors, the host's own logger store, flat memory |
+| Earlier regression tests (1.10) | consecutive requests on the same instances without `reset()` |
+
+Rule 7: the bundle never clears the host's default EntityManager. `CookieLogger` inserts its rows with DBAL, resolves the
+manager through `ManagerRegistry` per call, and keeps no log row in the identity map; clearing the
+application's own identity map stays the host's job.
