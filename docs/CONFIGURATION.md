@@ -141,7 +141,7 @@ Every key accepted under `nowo_cookie_consent` (run `php bin/console config:dump
 | Key | Default | Description |
 |-----|---------|-------------|
 | `doctrine.table_prefix` | `''` | Prefix for every bundle table (see [Table prefix](#table-prefix)) |
-| `doctrine.entity_manager` | `null` | Since 1.27. Name of the entity manager the bundle entities are mapped on; null = the default one. The mapping is registered on that manager **only** (removed from the others, even a default manager with `auto_mapping: true`); the logger, repositories, schema probe and admin controllers all use it. The build fails if the manager does not exist. Consents are written with DBAL inserts (no flush of any entity manager) |
+| `doctrine.entity_manager` | `null` | Since 1.27. Name of the entity manager the bundle entities are mapped on; null = the default one. The mapping is registered on that manager **only** (removed from the others, even a default manager with `auto_mapping: true` or a default metadata driver such as DoctrineBundle 3.4 `auto_discover_entities`; fixed in Unreleased); the logger, repositories, schema probe and admin controllers all use it. The build fails if the manager does not exist. Consents are written with DBAL inserts (no flush of any entity manager) |
 | `doctrine.connection` | `default` | **Deprecated since 1.15, ignored.** Use `doctrine.entity_manager`; the option will be removed in 2.0 |
 | `table_prefix` | `''` | **Deprecated since 1.3.** Use `doctrine.table_prefix` |
 | `use_logger` | `true` | Persist consent choices to `CookieConsentLog` |
