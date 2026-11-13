@@ -1,15 +1,14 @@
 {% import 'demo/_routes.html.twig' as demo_route %}
-{% form_theme form with ['bootstrap_5_layout.html.twig'] %}
 {{ form_start(form) }}
-    <p class="text-muted small mb-4">{{ 'demo.config.form.lead'|trans }}</p>
+    <p class="nowo-ui-muted">{{ 'demo.config.form.lead'|trans }}</p>
     {% for child in form %}
         {% if not child.rendered %}
             {{ form_row(child) }}
         {% endif %}
     {% endfor %}
 
-    <div class="d-flex gap-2">
-        <button type="submit" class="btn btn-primary">{{ submit_label|default('Save') }}</button>
-        <a href="{{ demo_route.path('demo_cookie_consent_config_index') }}" class="btn btn-outline-secondary">{{ 'demo.config.form.cancel'|trans }}</a>
+    <div class="nowo-ui-form__actions">
+        <button type="submit" class="nowo-ui-btn nowo-ui-btn--primary">{{ submit_label|default('Save') }}</button>
+        <a href="{{ demo_route.path('demo_cookie_consent_config_index') }}" class="nowo-ui-btn nowo-ui-btn--outline">{{ 'demo.config.form.cancel'|trans }}</a>
     </div>
 {{ form_end(form) }}

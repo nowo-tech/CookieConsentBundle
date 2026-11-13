@@ -1,59 +1,47 @@
 {% extends 'base.html.twig' %}
 {% import 'demo/_routes.html.twig' as demo_route %}
-{% form_theme form with ['bootstrap_5_layout.html.twig'] %}
 
 {% block title %}{{ isNew ? 'demo.cookies.new_title'|trans : 'demo.cookies.edit_title'|trans({'%name%': definition.name}) }}{% endblock %}
 
+{% block nowo_ui_page_header %}
+    {{ include(nowo_ui_partial('page_header'), {
+        title: isNew ? 'demo.cookies.new_title'|trans : 'demo.cookies.edit_title'|trans({'%name%': definition.name}),
+        intro: 'demo.cookies.form_lead'|trans({'%profile%': config.displayName}),
+    }) }}
+{% endblock %}
+
 {% block body %}
-    {% include 'demo/_nav.html.twig' %}
+    <div class="nowo-ui-card">
+        <div class="nowo-ui-card__body">
+            {{ form_start(form) }}
+                {# Name/duration and category/type/sortOrder keep their order; the loop renders the remaining fields; translations use the locale tabs below. #}
+                {% for child in form %}
+                    {% if not child.rendered and child.vars.name != 'translations' %}
+                        {{ form_row(child) }}
+                    {% endif %}
+                {% endfor %}
 
-    <main class="container pb-5">
-        <div class="mb-4">
-            <h1 class="h3 mb-1">{{ isNew ? 'demo.cookies.new_title'|trans : 'demo.cookies.edit_title'|trans({'%name%': definition.name}) }}</h1>
-            <p class="text-muted mb-0">{{ 'demo.cookies.form_lead'|trans({'%profile%': config.displayName}) }}</p>
+                <h2 class="nowo-ui-card__title">{{ 'demo.cookies.fields.translations'|trans }}</h2>
+                <p class="nowo-ui-muted">{{ 'demo.cookies.translations_lead'|trans }}</p>
+                {# Bundle 1.18: one fixed tab per enabled locale (FormKit locale_tabs, entries mode; UiKit renderer). #}
+                {{ include('@NowoFormKitBundle/form/_locale_tabs.html.twig', {
+                    field: form.translations,
+                    mode: 'entries',
+                    locales: form.vars.enabled_locales,
+                    default_locale: form.vars.default_locale,
+                    tabs_id: 'nowo-cc-definition-translations',
+                    testid: 'nowo-cc-definition-translations',
+                    legend: false,
+                }, with_context: false) }}
+                {{ form_errors(form.translations) }}
+
+                <div class="nowo-ui-form__actions">
+                    <button type="submit" class="nowo-ui-btn nowo-ui-btn--primary">{{ 'demo.cookies.save'|trans }}</button>
+                    <a class="nowo-ui-btn nowo-ui-btn--outline" href="{{ demo_route.path('demo_cookie_consent_cookies_index', { configId: config.id }) }}">{{ 'demo.config.form.cancel'|trans }}</a>
+                </div>
+            {{ form_end(form) }}
         </div>
-
-        <div class="card shadow-sm">
-            <div class="card-body">
-                {{ form_start(form) }}
-                    <div class="row">
-                        <div class="col-md-6">{{ form_row(form.name) }}</div>
-                        <div class="col-md-6">{{ form_row(form.duration) }}</div>
-                    </div>
-                    <div class="row">
-                        <div class="col-md-4">{{ form_row(form.category) }}</div>
-                        <div class="col-md-4">{{ form_row(form.type) }}</div>
-                        <div class="col-md-4">{{ form_row(form.sortOrder) }}</div>
-                    </div>
-                    {# Name/duration and category/type/sortOrder keep their grid (custom layout, rendered above); the loop renders the remaining fields; translations use the locale tabs below. #}
-                    {% for child in form %}
-                        {% if not child.rendered and child.vars.name != 'translations' %}
-                            {{ form_row(child) }}
-                        {% endif %}
-                    {% endfor %}
-
-                    <h2 class="h6 text-uppercase text-muted mt-4 mb-2">{{ 'demo.cookies.fields.translations'|trans }}</h2>
-                    <p class="small text-muted">{{ 'demo.cookies.translations_lead'|trans }}</p>
-                    {# Bundle 1.18: one fixed tab per enabled locale (FormKit locale_tabs, entries mode; UiKit renderer). #}
-                    {{ include('@NowoFormKitBundle/form/_locale_tabs.html.twig', {
-                        field: form.translations,
-                        mode: 'entries',
-                        locales: form.vars.enabled_locales,
-                        default_locale: form.vars.default_locale,
-                        tabs_id: 'nowo-cc-definition-translations',
-                        testid: 'nowo-cc-definition-translations',
-                        legend: false,
-                    }, with_context: false) }}
-                    {{ form_errors(form.translations) }}
-
-                    <div class="d-flex gap-2 mt-3">
-                        <button type="submit" class="btn btn-primary">{{ 'demo.cookies.save'|trans }}</button>
-                        <a class="btn btn-outline-secondary" href="{{ demo_route.path('demo_cookie_consent_cookies_index', { configId: config.id }) }}">{{ 'demo.config.form.cancel'|trans }}</a>
-                    </div>
-                {{ form_end(form) }}
-            </div>
-        </div>
-    </main>
+    </div>
 {% endblock %}
 
 {% block javascripts %}

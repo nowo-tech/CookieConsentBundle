@@ -264,6 +264,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- Demo uses the UiKit base style and FormKit forms (REQ-DEMO-014/015). The `symfony8` demo only: the `symfony8-tailwind` demo keeps its Tailwind host on purpose (it shows the `ui_theme: tailwind` widget). The consent widget, its diagnostics script and the bundle admin pages are unchanged; the Bootstrap CDN, the host-theme tokens and the admin layout bridge are gone.
+
 ## [1.30.1] - 2026-11-13
 
 ### Fixed

@@ -3,46 +3,30 @@
 
 {% block title %}{{ 'demo.home.title'|trans }}{% endblock %}
 
+{% block nowo_ui_page_header %}
+    {{ include(nowo_ui_partial('page_header'), {
+        title: 'demo.home.title'|trans,
+        intro: 'demo.home.lead'|trans({
+            '%table%': 'demo_nowo_cookie_consent_log',
+            '%prefix%': 'table_prefix',
+        }),
+    }) }}
+{% endblock %}
+
 {% block body %}
-    {% include 'demo/_nav.html.twig' %}
+    <section class="nowo-ui-card">
+        <div class="nowo-ui-card__body">
+            {% include 'demo/_home_content.html.twig' %}
 
-    <main class="container py-5">
-        <div class="row justify-content-center">
-            <div class="col-lg-9">
-                <div class="card shadow-sm">
-                    <div class="card-body p-4">
-                        <h1 class="h3 mb-3">{{ 'demo.home.title'|trans }}</h1>
-                        <p class="text-muted mb-4">
-                            {{ 'demo.home.lead'|trans({
-                                '%table%': 'demo_nowo_cookie_consent_log',
-                                '%prefix%': 'table_prefix',
-                            }) }}
-                        </p>
-
-                        {% include 'demo/_home_content.html.twig' %}
-
-                        {% for label, messages in app.flashes %}
-                            {% for message in messages %}
-                                <div class="alert alert-{{ label == 'success' ? 'success' : label }} mt-4 mb-0" role="alert">
-                                    {{ message }}
-                                </div>
-                            {% endfor %}
-                        {% endfor %}
-
-                        {{ form_start(reset_form, {attr: {class: 'd-flex flex-wrap gap-2 align-items-center mt-4'}}) }}
-                            {% for child in reset_form %}
-                                {% if not child.rendered %}
-                                    {{ form_row(child) }}
-                                {% endif %}
-                            {% endfor %}
-                            <button type="submit" class="btn btn-outline-danger">
-                                {{ 'demo.home.reset'|trans }}
-                            </button>
-                            <span class="small text-muted">{{ 'demo.home.reset_help'|trans }}</span>
-                        {{ form_end(reset_form) }}
-                    </div>
-                </div>
-            </div>
+            {{ form_start(reset_form) }}
+                {% for child in reset_form %}
+                    {% if not child.rendered %}
+                        {{ form_row(child) }}
+                    {% endif %}
+                {% endfor %}
+                <button type="submit" class="nowo-ui-btn nowo-ui-btn--danger">{{ 'demo.home.reset'|trans }}</button>
+                <span class="nowo-ui-muted">{{ 'demo.home.reset_help'|trans }}</span>
+            {{ form_end(reset_form) }}
         </div>
-    </main>
+    </section>
 {% endblock %}
