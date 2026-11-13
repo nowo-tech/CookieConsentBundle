@@ -3,6 +3,7 @@
 ## Table of contents
 
 - [Unreleased](#unreleased)
+- [To 1.30.2](#to-1302)
 - [To 1.30.1](#to-1301)
 - [To 1.30.0](#to-1300)
   - [Framework-free consent cookie port (deprecations)](#framework-free-consent-cookie-port-deprecations)
@@ -132,6 +133,14 @@
 - [Getting help](#getting-help)
 
 ## Unreleased
+
+## To 1.30.2
+
+From **1.30.1**:
+
+```bash
+composer update nowo-tech/cookie-consent-bundle
+```
 
 Target **1.30.2** (patch), from **1.30.1**.
 
