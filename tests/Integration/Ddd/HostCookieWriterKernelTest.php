@@ -16,6 +16,7 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\HttpKernel;
 
 use function gc_collect_cycles;
+use function md5;
 use function memory_get_usage;
 use function restore_error_handler;
 use function set_error_handler;
@@ -82,7 +83,7 @@ final class HostCookieWriterKernelTest extends TestCase
 
             $cookies = $this->byName($response);
             self::assertSame(['Host_Consent_Key', 'Host_Analytics'], array_keys($cookies), 'only the host cookies');
-            self::assertSame('key-' . $visitor, $cookies['Host_Consent_Key']->getValue());
+            self::assertSame(md5('key-' . $visitor), $cookies['Host_Consent_Key']->getValue());
             self::assertSame($visitor === 'alice' ? 'yes' : 'no', $cookies['Host_Analytics']->getValue());
 
             if ($i === 99) {
@@ -98,7 +99,7 @@ final class HostCookieWriterKernelTest extends TestCase
 
     private function answer(string $visitor, string $choice): Request
     {
-        return Request::create('/cookie_consent', 'POST', ['cookie_consent' => [$choice => '']], ['Cookie_Consent_Key' => 'key-' . $visitor]);
+        return Request::create('/cookie_consent', 'POST', ['cookie_consent' => [$choice => '']], ['Cookie_Consent_Key' => md5('key-' . $visitor)]);
     }
 
     private function boot(bool $hostCookieWriter): ContainerInterface

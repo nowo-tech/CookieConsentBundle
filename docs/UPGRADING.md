@@ -133,6 +133,58 @@
 
 ## Unreleased
 
+Target **1.30.2** (patch), from **1.30.1**.
+
+```bash
+composer update nowo-tech/cookie-consent-bundle
+```
+
+**What changes (REQ-SEC-006, look-alike ids)**
+
+- A `Cookie_Consent_Key` cookie that is not 32 lower-case hexadecimal characters (or the 1.0.0 `uniqid('', true)`
+  form) is replaced by a new key on the next consent. Keys the bundle wrote are kept.
+- `CookieConsentPersonalDataSubject::fromConsentKey()` / `of()` throw `InvalidArgumentException` for keys with
+  whitespace at either end, control or format characters or invalid UTF-8. If you build subjects from stored values,
+  catch it or erase those rows by IP window.
+- New schemas get a binary NO PAD collation on `cookie_consent_key` and `ip_address`. Configure the full server
+  version (`server_version: '8.4.3'`, not `'8.0'`), or the listener falls back to the PAD SPACE `utf8mb4_bin` and
+  logs a warning.
+
+**Existing tables (MySQL / MariaDB).** Recommended. The export and erasure already re-check every row, so no other
+visitor's rows were returned or erased; the collation makes the SQL pre-filter exact too. Add your
+`doctrine.table_prefix` to the table name.
+
+1. Detection, before the `ALTER`. Keys and IPs that collide under the current collation but differ in bytes:
+
+   ```sql
+   SELECT cookie_consent_key, COUNT(DISTINCT HEX(cookie_consent_key)) AS variants, COUNT(*) AS row_count
+   FROM dashboard_cookie_log GROUP BY cookie_consent_key HAVING COUNT(DISTINCT HEX(cookie_consent_key)) > 1;
+
+   SELECT ip_address, COUNT(DISTINCT HEX(ip_address)) AS variants
+   FROM dashboard_cookie_log GROUP BY ip_address HAVING COUNT(DISTINCT HEX(ip_address)) > 1;
+   ```
+
+   Keys in a format the bundle never wrote (sent by a modified cookie):
+
+   ```sql
+   SELECT id, HEX(cookie_consent_key) FROM dashboard_cookie_log
+   WHERE cookie_consent_key COLLATE utf8mb4_bin NOT REGEXP '^([0-9a-f]{32}|[0-9a-f]{13}[0-9][.][0-9]{8})\\z';
+   ```
+
+   Do not use `TRIM`, `DISTINCT`, `LOWER` alone or `COLLATE …_ai_ci` to compare keys: they fold too.
+
+2. The `ALTER`:
+
+   ```sql
+   -- MySQL 8.0.17+
+   ALTER TABLE dashboard_cookie_log
+     MODIFY cookie_consent_key VARCHAR(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_bin NOT NULL,
+     MODIFY ip_address VARCHAR(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_bin NOT NULL;
+   -- MariaDB: COLLATE utf8mb4_nopad_bin; MySQL 5.7: COLLATE utf8mb4_bin
+   ```
+
+   `doctrine:migrations:diff` generates the same `ALTER` once the bundle is updated.
+
 ## To 1.30.1
 
 From **1.30.0**:

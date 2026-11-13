@@ -14,6 +14,7 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\HttpKernel;
 
 use function gc_collect_cycles;
+use function md5;
 use function memory_get_usage;
 
 /**
@@ -60,7 +61,7 @@ final class WorkerKeptAliveDoctrineKernelTest extends TestCase
                 '/cookie_consent',
                 'POST',
                 ['cookie_consent' => [$alice ? 'use_all_cookies' : 'use_only_functional_cookies' => '']],
-                ['Cookie_Consent_Key' => $alice ? 'key-alice' : 'key-bob'],
+                ['Cookie_Consent_Key' => $alice ? md5('key-alice') : md5('key-bob')],
                 [],
                 ['REMOTE_ADDR' => $alice ? '198.51.100.10' : '203.0.113.20'],
             );
@@ -82,11 +83,11 @@ final class WorkerKeptAliveDoctrineKernelTest extends TestCase
         $rows       = $connection->fetchAllAssociative('SELECT cookie_consent_key, ip_address, cookie_name, cookie_value FROM ' . $table);
         self::assertCount(self::REQUESTS * 2, $rows, 'every submission logged its two categories');
         foreach ($rows as $row) {
-            if ($row['cookie_consent_key'] === 'key-alice') {
+            if ($row['cookie_consent_key'] === md5('key-alice')) {
                 self::assertSame(1, (int) $row['cookie_value'], 'alice accepted everything');
                 self::assertStringStartsWith('198.51.100.', (string) $row['ip_address']);
             } else {
-                self::assertSame('key-bob', $row['cookie_consent_key']);
+                self::assertSame(md5('key-bob'), $row['cookie_consent_key']);
                 self::assertSame(0, (int) $row['cookie_value'], 'bob accepted functional cookies only');
                 self::assertStringStartsWith('203.0.113.', (string) $row['ip_address']);
             }
