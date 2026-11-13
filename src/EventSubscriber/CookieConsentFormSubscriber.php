@@ -10,6 +10,7 @@ use Doctrine\ORM\Exception\ORMException;
 use Nowo\CookieConsentBundle\Config\CookieConsentConfigResolver;
 use Nowo\CookieConsentBundle\Config\ResolvedCookieConsentConfig;
 use Nowo\CookieConsentBundle\Cookie\ConsentCookieWriterInterface;
+use Nowo\CookieConsentBundle\Cookie\ConsentKey;
 use Nowo\CookieConsentBundle\Cookie\CookieHandlerInterface;
 use Nowo\CookieConsentBundle\Cookie\CookieLogger;
 use Nowo\CookieConsentBundle\Cookie\CookieLoggerInterface;
@@ -29,12 +30,10 @@ use Symfony\Component\HttpKernel\Event\ResponseEvent;
 use Symfony\Component\HttpKernel\KernelEvents;
 use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
 
-use function bin2hex;
 use function in_array;
 use function is_array;
 use function is_string;
 use function preg_match;
-use function random_bytes;
 use function strlen;
 
 /**
@@ -222,8 +221,9 @@ class CookieConsentFormSubscriber implements EventSubscriberInterface
 
     protected function getCookieConsentKey(Request $request): string
     {
-        // The key identifies the visitor's consent log rows (proof of consent): unguessable, not time-based.
-        return $request->cookies->get(CookieNameEnum::COOKIE_CONSENT_KEY_NAME) ?? bin2hex(random_bytes(16));
+        // The key identifies the visitor's consent log rows (proof of consent): unguessable, not time-based. A cookie
+        // that is not a key the bundle writes is refused and replaced (REQ-SEC-006: no look-alike keys in the log).
+        return ConsentKey::fromCookie($request->cookies->get(CookieNameEnum::COOKIE_CONSENT_KEY_NAME));
     }
 
     /**

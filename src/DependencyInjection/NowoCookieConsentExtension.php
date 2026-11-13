@@ -12,6 +12,7 @@ use Nowo\CookieConsentBundle\Config\CookieInventoryNormalizer;
 use Nowo\CookieConsentBundle\Controller\CookieConsentConfigSettingsAdminController;
 use Nowo\CookieConsentBundle\Controller\CookieDefinitionAdminController;
 use Nowo\CookieConsentBundle\Cookie\CookieLogger;
+use Nowo\CookieConsentBundle\Doctrine\ConsentLogCollationListener;
 use Nowo\CookieConsentBundle\Doctrine\CookieConsentManagerRegistry;
 use Nowo\CookieConsentBundle\EventSubscriber\CookieConsentConfigTranslationSubscriber;
 use Nowo\CookieConsentBundle\EventSubscriber\CookieConsentSchemaReadySubscriber;
@@ -288,6 +289,10 @@ class NowoCookieConsentExtension extends Extension implements PrependExtensionIn
             if ($container->hasDefinition($port)) {
                 $container->getDefinition($port)->setArgument('$managerRegistry', $registry);
             }
+        }
+
+        if ($container->hasDefinition(ConsentLogCollationListener::class)) {
+            $container->getDefinition(ConsentLogCollationListener::class)->setArgument('$doctrine', $registry);
         }
 
         if ($container->hasDefinition(CookieConsentSchemaReadySubscriber::class)) {

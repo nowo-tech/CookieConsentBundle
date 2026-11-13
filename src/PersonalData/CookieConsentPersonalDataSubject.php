@@ -11,8 +11,8 @@ use Nowo\CookieConsentBundle\Event\ConsentSavedEvent;
 use function array_keys;
 use function array_map;
 use function array_values;
+use function preg_match;
 use function sprintf;
-use function str_contains;
 use function strlen;
 
 /**
@@ -21,12 +21,17 @@ use function strlen;
  * The bundle stores no user id with a consent: a row is the person's when its `cookie_consent_key` (the
  * `Cookie_Consent_Key` cookie of the person's browser, also in {@see ConsentSavedEvent})
  * is one of {@see self::consentKeys()}, or when its anonymised IP and time fall into one of {@see self::ipWindows()}.
- * Keys are compared byte for byte; they are not trimmed or case-folded (the bundle writes them as received).
+ * Keys are compared byte for byte; they are not trimmed or case-folded. Since 1.30.2 (REQ-SEC-006) a key with leading
+ * or trailing whitespace (NBSP included), a control or format character (newline, zero-width space, BOM, bidi mark)
+ * or invalid UTF-8 is refused: the bundle never writes one, and on a folding collation it would look like another key.
  */
 final readonly class CookieConsentPersonalDataSubject
 {
     /** Length of the `cookie_consent_key` column. */
     public const MAX_KEY_LENGTH = 255;
+
+    /** Usable key (1.30.2): valid UTF-8, no edge whitespace, no control (Cc), format (Cf) or line / paragraph separator. */
+    private const USABLE_KEY = '/\A(?![\s\p{Z}])[^\p{Cc}\p{Cf}\p{Zl}\p{Zp}]*(?<![\s\p{Z}])\z/u';
 
     /**
      * @param list<CookieConsentIpWindow> $ipWindows
@@ -51,7 +56,8 @@ final readonly class CookieConsentPersonalDataSubject
     /**
      * A subject known by the consent key of one of their browsers (`Cookie_Consent_Key`).
      *
-     * @throws InvalidArgumentException when the key is empty, longer than the column or holds a NUL byte
+     * @throws InvalidArgumentException when the key is empty, longer than the column, has whitespace at an edge, holds a
+     *                                  control or format character or is not valid UTF-8
      */
     public static function fromConsentKey(string $consentKey): self
     {
@@ -157,8 +163,8 @@ final readonly class CookieConsentPersonalDataSubject
 
     private static function assertKey(string $key): string
     {
-        if ($key === '' || str_contains($key, "\0") || strlen($key) > self::MAX_KEY_LENGTH) {
-            throw new InvalidArgumentException(sprintf('A consent key must be a non-empty string of at most %d bytes without NUL bytes.', self::MAX_KEY_LENGTH));
+        if ($key === '' || strlen($key) > self::MAX_KEY_LENGTH || preg_match(self::USABLE_KEY, $key) !== 1) {
+            throw new InvalidArgumentException(sprintf('A consent key must be a non-empty UTF-8 string of at most %d bytes, without whitespace at either end and without control or format characters.', self::MAX_KEY_LENGTH));
         }
 
         return $key;

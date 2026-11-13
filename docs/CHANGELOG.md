@@ -264,6 +264,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+Next patch: 1.30.2. REQ-SEC-006 (look-alike ids) for the consent key and the consent log. See
+[UPGRADING](UPGRADING.md#unreleased).
+
+### Security
+
+- **The `Cookie_Consent_Key` cookie has a strict format.** The consent form took the key cookie as sent and wrote it
+  to `cookie_consent_key`. A browser could therefore send a look-alike of another visitor's key (other letter case,
+  trailing space, zero-width space ...), which a folding MySQL / MariaDB collation pre-selects together with that
+  visitor's rows. Now only the formats the bundle writes are kept: 32 lower-case hexadecimal characters, or the 1.0.0
+  `uniqid('', true)` form. Any other cookie is replaced by a new random key (new `Cookie\ConsentKey`).
+- **`CookieConsentPersonalDataSubject` refuses unusable keys**: whitespace at either end (NBSP included), control or
+  format characters (newline, zero-width space, BOM, bidi marks) and invalid UTF-8, besides empty, NUL and over-long
+  keys. They are never trimmed. Rows stored under such a key by earlier versions are still erased by IP window.
+- **Binary NO PAD collation on `cookie_consent_key` and `ip_address`** (new `ConsentLogCollationListener`, applied to
+  generated schemas on MySQL / MariaDB): `utf8mb4_nopad_bin` on MariaDB, `utf8mb4_0900_bin` on MySQL 8.0.17+,
+  `utf8mb4_bin` on older MySQL. When `doctrine.dbal.server_version` has no patch number (`8`, `8.0`) the listener
+  falls back to `utf8mb4_bin` and logs a warning. Existing tables need the `ALTER` in UPGRADING.
+- The GDPR export and erasure already re-checked every row with `===` and are unchanged. Tests now cover look-alike
+  keys and IPs on SQLite with a folding collation, and on MySQL 8.4 and MariaDB 11.4 in CI.
+
 ### Changed
 
 - Demo uses the UiKit base style and FormKit forms (REQ-DEMO-014/015). The `symfony8` demo only: the `symfony8-tailwind` demo keeps its Tailwind host on purpose (it shows the `ui_theme: tailwind` widget). The consent widget, its diagnostics script and the bundle admin pages are unchanged; the Bootstrap CDN, the host-theme tokens and the admin layout bridge are gone.

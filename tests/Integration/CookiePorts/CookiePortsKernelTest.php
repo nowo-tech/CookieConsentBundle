@@ -13,6 +13,7 @@ use Symfony\Component\HttpKernel\HttpKernel;
 
 use function array_map;
 use function array_values;
+use function md5;
 use function restore_error_handler;
 use function set_error_handler;
 use function str_contains;
@@ -82,7 +83,7 @@ final class CookiePortsKernelTest extends TestCase
         self::assertInstanceOf(HttpKernel::class, $http);
 
         for ($i = 0; $i < 3; ++$i) {
-            $request  = Request::create('/cookie_consent', 'POST', ['cookie_consent' => ['use_all_cookies' => '']], ['Cookie_Consent_Key' => 'key-1']);
+            $request  = Request::create('/cookie_consent', 'POST', ['cookie_consent' => ['use_all_cookies' => '']], ['Cookie_Consent_Key' => md5('key-1')]);
             $response = $http->handle($request, catch: false);
             $http->terminate($request, $response);
 

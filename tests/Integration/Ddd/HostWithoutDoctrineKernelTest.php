@@ -16,6 +16,7 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\HttpKernel;
 
 use function gc_collect_cycles;
+use function md5;
 use function memory_get_usage;
 
 /**
@@ -73,7 +74,7 @@ final class HostWithoutDoctrineKernelTest extends TestCase
         for ($i = 0; $i < 600; ++$i) {
             $visitor = $i % 2 === 0 ? 'alice' : 'bob';
             $choice  = $visitor === 'alice' ? 'use_all_cookies' : 'use_only_functional_cookies';
-            $request = Request::create('/cookie_consent', 'POST', ['cookie_consent' => [$choice => '']], ['Cookie_Consent_Key' => 'key-' . $visitor]);
+            $request = Request::create('/cookie_consent', 'POST', ['cookie_consent' => [$choice => '']], ['Cookie_Consent_Key' => md5('key-' . $visitor)]);
             $this->handle($request);
 
             if ($i === 99) {

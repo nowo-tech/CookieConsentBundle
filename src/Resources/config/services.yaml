@@ -100,6 +100,14 @@ services:
     arguments:
       $managerRegistry: '@doctrine'
 
+  # REQ-SEC-006 (1.30.2): binary NO PAD collation on cookie_consent_key / ip_address (MySQL / MariaDB schemas).
+  Nowo\CookieConsentBundle\Doctrine\ConsentLogCollationListener:
+    arguments:
+      $doctrine: '@doctrine'
+      $logger: '@?logger'
+    tags:
+      - { name: doctrine.event_listener, event: postGenerateSchemaTable }
+
   Nowo\CookieConsentBundle\PersonalData\CookieConsentPersonalDataEraserInterface:
     alias: Nowo\CookieConsentBundle\PersonalData\CookieConsentPersonalDataEraser
 

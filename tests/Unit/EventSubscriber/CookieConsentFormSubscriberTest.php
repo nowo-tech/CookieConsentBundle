@@ -90,7 +90,7 @@ final class CookieConsentFormSubscriberTest extends TestCase
         $subscriber = new CookieConsentFormSubscriber($formFactory, $logger, $handler, true);
 
         $request = Request::create('/', 'POST');
-        $request->cookies->set(CookieNameEnum::COOKIE_CONSENT_KEY_NAME, 'existing-key');
+        $request->cookies->set(CookieNameEnum::COOKIE_CONSENT_KEY_NAME, '0123456789abcdef0123456789abcdef');
 
         $event = new ResponseEvent(
             $this->createMock(HttpKernelInterface::class),
@@ -129,6 +129,36 @@ final class CookieConsentFormSubscriberTest extends TestCase
 
         self::assertMatchesRegularExpression('/^[a-f0-9]{32}$/', $keys[0]);
         self::assertNotSame($keys[0], $keys[1]);
+    }
+
+    public function testAMalformedKeyCookieIsReplacedByANewKey(): void
+    {
+        $keys    = [];
+        $handler = $this->createMock(CookieHandler::class);
+        $handler->expects(self::exactly(3))->method('save')->willReturnCallback(static function (array $categories, string $key) use (&$keys): void {
+            $keys[] = $key;
+        });
+
+        $form = $this->createMock(FormInterface::class);
+        $form->method('isSubmitted')->willReturn(true);
+        $form->method('isValid')->willReturn(true);
+        $form->method('getData')->willReturn(['required' => true]);
+        $formFactory = $this->createMock(FormFactoryInterface::class);
+        $formFactory->method('create')->willReturn($form);
+
+        $subscriber = new CookieConsentFormSubscriber($formFactory, $this->createMock(CookieLogger::class), $handler, false);
+        // REQ-SEC-006: a look-alike of a real key (case, trailing space) never reaches the log as that key.
+        foreach (['0123456789ABCDEF0123456789ABCDEF', '0123456789abcdef0123456789abcdef ', '0123456789abcdef0123456789abcdef'] as $cookie) {
+            $request = Request::create('/', 'POST');
+            $request->cookies->set(CookieNameEnum::COOKIE_CONSENT_KEY_NAME, $cookie);
+            $subscriber->onResponse(new ResponseEvent($this->createMock(HttpKernelInterface::class), $request, HttpKernelInterface::MAIN_REQUEST, new Response()));
+        }
+
+        self::assertMatchesRegularExpression('/\A[a-f0-9]{32}\z/D', $keys[0]);
+        self::assertNotSame('0123456789abcdef0123456789abcdef', $keys[0]);
+        self::assertMatchesRegularExpression('/\A[a-f0-9]{32}\z/D', $keys[1]);
+        self::assertNotSame('0123456789abcdef0123456789abcdef', $keys[1]);
+        self::assertSame('0123456789abcdef0123456789abcdef', $keys[2]);
     }
 
     public function testSkipsLoggerWhenDisabled(): void
