@@ -16,6 +16,7 @@ use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\Form\FormInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpKernel\Exception\UnprocessableEntityHttpException;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Contracts\Translation\TranslatorInterface;
 
@@ -82,7 +83,7 @@ class CookieDefinitionController extends AbstractController
         $definition = $this->getDefinition($config, $id);
 
         if (!$this->isCsrfFormValid('demo_cookie_consent_cookies_delete', ['configId' => $configId, 'id' => $definition->getId()], 'delete-cookie-definition-' . $definition->getId(), $request)) {
-            throw $this->createAccessDeniedException();
+            throw new UnprocessableEntityHttpException('Invalid CSRF token.');
         }
 
         $entityManager->remove($definition);

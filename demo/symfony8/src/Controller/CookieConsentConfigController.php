@@ -17,6 +17,7 @@ use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\Form\FormInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpKernel\Exception\UnprocessableEntityHttpException;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Contracts\Translation\TranslatorInterface;
 
@@ -156,7 +157,7 @@ class CookieConsentConfigController extends AbstractController
         $tokenId = 'delete-cookie-consent-config-' . $translation->getId();
 
         if (!$this->isCsrfFormValid('demo_cookie_consent_config_delete', ['id' => $translation->getId()], $tokenId, $request)) {
-            throw $this->createAccessDeniedException('Invalid CSRF token.');
+            throw new UnprocessableEntityHttpException('Invalid CSRF token.');
         }
 
         $configId = $translation->getConfig()?->getId();
@@ -184,7 +185,7 @@ class CookieConsentConfigController extends AbstractController
         $tokenId = 'delete-cookie-consent-profile-' . $config->getId();
 
         if (!$this->isCsrfFormValid('demo_cookie_consent_config_delete_profile', ['configId' => $config->getId()], $tokenId, $request)) {
-            throw $this->createAccessDeniedException('Invalid CSRF token.');
+            throw new UnprocessableEntityHttpException('Invalid CSRF token.');
         }
 
         $entityManager->remove($config);
