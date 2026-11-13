@@ -173,7 +173,8 @@ visitor's rows were returned or erased; the collation makes the SQL pre-filter e
 
    Do not use `TRIM`, `DISTINCT`, `LOWER` alone or `COLLATE …_ai_ci` to compare keys: they fold too.
 
-2. The `ALTER`:
+2. The `ALTER`. `MODIFY` redefines the column: restate every existing attribute (length, nullability, `DEFAULT`,
+   `COMMENT` ...):
 
    ```sql
    -- MySQL 8.0.17+
