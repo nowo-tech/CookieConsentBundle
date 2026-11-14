@@ -18,13 +18,15 @@ final class CookieConsentPersonalDataSubjectTest extends TestCase
 {
     public function testFromConsentKeyKeepsTheKeyAsGiven(): void
     {
-        $subject = CookieConsentPersonalDataSubject::fromConsentKey(' Key-A ');
+        $subject = CookieConsentPersonalDataSubject::fromConsentKey('Key-A');
 
-        self::assertSame([' Key-A '], $subject->consentKeys());
+        self::assertSame(['Key-A'], $subject->consentKeys());
         self::assertSame([], $subject->ipWindows());
-        self::assertTrue($subject->matches(' Key-A ', 'unknown', new DateTimeImmutable()));
-        self::assertFalse($subject->matches('key-a', 'unknown', new DateTimeImmutable()));
-        self::assertFalse($subject->matches('Key-A', 'unknown', new DateTimeImmutable()));
+        self::assertTrue($subject->matches('Key-A', 'unknown', new DateTimeImmutable()));
+        // REQ-SEC-006: look-alikes of the key are other keys.
+        foreach (['key-a', "K\u{00E9}y-A", 'Key-A ', "Key-A\n", "Key-A\u{00A0}", "Key-\u{200B}A"] as $lookalike) {
+            self::assertFalse($subject->matches($lookalike, 'unknown', new DateTimeImmutable()), $lookalike);
+        }
     }
 
     public function testFromIpWindow(): void
@@ -63,6 +65,13 @@ final class CookieConsentPersonalDataSubjectTest extends TestCase
     {
         yield 'empty' => [''];
         yield 'nul byte' => ["key\0"];
+        yield 'edge spaces' => [' Key-A '];
+        yield 'trailing space' => ['key '];
+        yield 'trailing newline' => ["key\n"];
+        yield 'NBSP' => ["key\u{00A0}"];
+        yield 'ZWSP' => ["k\u{200B}ey"];
+        yield 'BOM' => ["\u{FEFF}key"];
+        yield 'invalid UTF-8' => ["key\xC3"];
         yield 'too long' => [str_repeat('k', 256)];
     }
 

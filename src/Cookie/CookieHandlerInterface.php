@@ -12,6 +12,10 @@ use Symfony\Component\HttpFoundation\Response;
  *
  * {@see CookieHandler} is the default implementation; alias this interface to your own service to change how the
  * consent is stored in the browser.
+ *
+ * @deprecated since 1.30, implement the framework-free {@see ConsentCookieWriterInterface} instead (REQ-ARCH-001 rule 3:
+ *             no `Request` / `Response` in public ports); removed in 2.0. The bundle still calls a service that
+ *             implements only this interface, and triggers a deprecation when it does.
  */
 interface CookieHandlerInterface
 {

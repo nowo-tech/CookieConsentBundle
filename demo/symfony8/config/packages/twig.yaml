@@ -1,4 +1,4 @@
 twig:
     default_path: '%kernel.project_dir%/templates'
-    # The bundle admin forms (UiKit page/form, page/settings) use the host form theme.
-    form_themes: ['bootstrap_5_layout.html.twig']
+    # The demo forms and the bundle admin forms (UiKit page/form, page/settings) use UiKit's form theme.
+    form_themes: ['@NowoUiKit/form/nowo_ui_layout.html.twig']

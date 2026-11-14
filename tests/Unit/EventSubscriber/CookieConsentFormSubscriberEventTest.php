@@ -53,12 +53,12 @@ final class CookieConsentFormSubscriberEventTest extends TestCase
         );
 
         $request = Request::create('/', 'POST');
-        $request->cookies->set(CookieNameEnum::COOKIE_CONSENT_KEY_NAME, 'visitor-key');
+        $request->cookies->set(CookieNameEnum::COOKIE_CONSENT_KEY_NAME, '0123456789abcdef0123456789abcdef');
         $subscriber->onResponse($this->responseEvent($request));
 
         self::assertSame(['save', 'log', 'event'], $this->calls);
         self::assertCount(1, $events);
-        self::assertSame('visitor-key', $events[0]->consentKey);
+        self::assertSame('0123456789abcdef0123456789abcdef', $events[0]->consentKey);
         self::assertSame(['analytics' => true, 'marketing' => false], $events[0]->categories);
         self::assertSame(['_ga' => true, '_fbp' => false], $events[0]->granularCookies);
         self::assertTrue($events[0]->logged);

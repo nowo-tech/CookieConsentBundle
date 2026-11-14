@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Nowo\CookieConsentBundle\Cookie;
 
 use DateInterval;
+use DateTimeImmutable;
 use Nowo\CookieConsentBundle\Enum\CookieNameEnum;
 use Psr\Clock\ClockInterface;
 use Symfony\Component\HttpFoundation\Cookie;
@@ -19,9 +20,12 @@ use const JSON_THROW_ON_ERROR;
 /**
  * Writes cookie consent and category cookies onto the HTTP response.
  *
+ * Implements the framework-free {@see ConsentCookieWriterInterface} (1.30) and the deprecated
+ * {@see CookieHandlerInterface}; both produce the same cookies with the same attributes.
+ *
  * @final since 1.19, will be final in 2.0 (not an extension point; decorate or replace the service instead)
  */
-class CookieHandler implements CookieHandlerInterface
+class CookieHandler implements CookieHandlerInterface, ConsentCookieWriterInterface
 {
     /**
      * Creates a new cookie handler.
@@ -42,26 +46,79 @@ class CookieHandler implements CookieHandlerInterface
      * @param string $key The anonymous consent key
      * @param Response $response The HTTP response to modify
      * @param array<string, bool> $granularCookies Optional per-cookie consent map
+     *
+     * @deprecated since 1.30, use {@see consentCookies()} (REQ-ARCH-001 rule 3); removed in 2.0
      */
     public function save(array $categories, string $key, Response $response, array $granularCookies = []): void
     {
+        foreach ($this->consentValues($categories, $key, $granularCookies) as $name => $value) {
+            $this->saveCookie((string) $name, $value, $response);
+        }
+    }
+
+    /**
+     * Returns the consent cookies of a saved consent (1.30, framework-free twin of {@see save()}).
+     *
+     * @param array<string, bool|string> $categories The submitted category values
+     * @param string $key The anonymous consent key
+     * @param array<string, bool> $granularCookies Optional per-cookie consent map
+     */
+    public function consentCookies(array $categories, string $key, array $granularCookies = []): ConsentCookieJar
+    {
+        $jar = new ConsentCookieJar();
+
+        foreach ($this->consentValues($categories, $key, $granularCookies) as $name => $value) {
+            $jar = $jar->with(ConsentCookie::persistent((string) $name, $value, $this->expirationDate(), $this->httpOnly));
+        }
+
+        return $jar;
+    }
+
+    /**
+     * Returns the cookies to expire for an outdated consent (1.30, framework-free twin of {@see clear()}).
+     *
+     * @param ConsentRequestCookies $requestCookies The cookie names the request carries
+     */
+    public function expiredConsentCookies(ConsentRequestCookies $requestCookies): ConsentCookieJar
+    {
+        $jar = new ConsentCookieJar();
+
+        foreach ($this->clearableNames($requestCookies->names()) as $name) {
+            $jar = $jar->with(ConsentCookie::expired($name, $this->httpOnly));
+        }
+
+        return $jar;
+    }
+
+    /**
+     * The cookie values of a saved consent, by cookie name, in the order they are written.
+     *
+     * @param array<string, bool|string> $categories
+     * @param array<string, bool> $granularCookies
+     *
+     * @return array<string, string>
+     */
+    private function consentValues(array $categories, string $key, array $granularCookies): array
+    {
         // UTC ISO-8601 (stable across locales); not RFC 2822 `date('r')`.
-        $this->saveCookie(CookieNameEnum::COOKIE_CONSENT_NAME, gmdate('Y-m-d\TH:i:s\Z'), $response);
-        $this->saveCookie(CookieNameEnum::COOKIE_CONSENT_KEY_NAME, $key, $response);
+        $values = [
+            CookieNameEnum::COOKIE_CONSENT_NAME     => gmdate('Y-m-d\TH:i:s\Z'),
+            CookieNameEnum::COOKIE_CONSENT_KEY_NAME => $key,
+        ];
 
         foreach ($categories as $category => $permitted) {
             if ($category === 'required' || $category === 'cookies') {
                 continue;
             }
 
-            $stringValue = $permitted === true || $permitted === 'true' ? 'true' : 'false';
-            $this->saveCookie(CookieNameEnum::getCookieCategoryName((string) $category), $stringValue, $response);
+            $values[CookieNameEnum::getCookieCategoryName((string) $category)] = $permitted === true || $permitted === 'true' ? 'true' : 'false';
         }
 
         if ($granularCookies !== []) {
-            $encoded = json_encode($this->normalizeGranularCookies($granularCookies), JSON_THROW_ON_ERROR);
-            $this->saveCookie(CookieNameEnum::COOKIE_CONSENT_GRANULAR_NAME, $encoded, $response);
+            $values[CookieNameEnum::COOKIE_CONSENT_GRANULAR_NAME] = json_encode($this->normalizeGranularCookies($granularCookies), JSON_THROW_ON_ERROR);
         }
+
+        return $values;
     }
 
     /**
@@ -73,10 +130,28 @@ class CookieHandler implements CookieHandlerInterface
      *
      * @param Request $request The request whose cookies are expired
      * @param Response $response The response that receives the expired cookies
+     *
+     * @deprecated since 1.30, use {@see expiredConsentCookies()} (REQ-ARCH-001 rule 3); removed in 2.0
      */
     public function clear(Request $request, Response $response): void
     {
-        foreach (array_keys($request->cookies->all()) as $name) {
+        foreach ($this->clearableNames(array_keys($request->cookies->all())) as $name) {
+            $response->headers->clearCookie($name, '/', null, true, $this->httpOnly, Cookie::SAMESITE_LAX);
+        }
+    }
+
+    /**
+     * Keeps the consent, granular and category cookie names (not `Cookie_Consent_Key`).
+     *
+     * @param array<int|string> $names
+     *
+     * @return list<string>
+     */
+    private function clearableNames(array $names): array
+    {
+        $clearable = [];
+
+        foreach ($names as $name) {
             $name = (string) $name;
 
             if ($name !== CookieNameEnum::COOKIE_CONSENT_NAME
@@ -85,8 +160,10 @@ class CookieHandler implements CookieHandlerInterface
                 continue;
             }
 
-            $response->headers->clearCookie($name, '/', null, true, $this->httpOnly, Cookie::SAMESITE_LAX);
+            $clearable[] = $name;
         }
+
+        return $clearable;
     }
 
     /**
@@ -109,6 +186,14 @@ class CookieHandler implements CookieHandlerInterface
         return $normalized;
     }
 
+    private function expirationDate(): DateTimeImmutable
+    {
+        return DateTimeImmutable::createFromInterface($this->clock->now())->add(new DateInterval('P1Y'));
+    }
+
+    /**
+     * @deprecated since 1.30, only used by the deprecated {@see save()}; removed in 2.0
+     */
     protected function saveCookie(string $name, string $value, Response $response): void
     {
         $expirationDate = $this->clock->now()->add(new DateInterval('P1Y'));

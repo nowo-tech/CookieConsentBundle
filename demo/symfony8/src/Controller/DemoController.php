@@ -13,6 +13,7 @@ use Symfony\Component\Form\FormInterface;
 use Symfony\Component\HttpFoundation\Cookie;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpKernel\Exception\UnprocessableEntityHttpException;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Contracts\Translation\TranslatorInterface;
 
@@ -49,7 +50,7 @@ class DemoController extends AbstractController
     public function resetConsent(Request $request): Response
     {
         if (!$this->isCsrfFormValid('demo_reset_consent', [], 'demo_reset_consent', $request)) {
-            throw $this->createAccessDeniedException('Invalid CSRF token.');
+            throw new UnprocessableEntityHttpException('Invalid CSRF token.');
         }
 
         $response = $this->redirectToRoute('demo_home');

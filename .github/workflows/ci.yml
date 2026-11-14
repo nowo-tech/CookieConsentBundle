@@ -119,6 +119,8 @@ jobs:
         include:
           - db: MySQL 8.4
             url: mysql://root@127.0.0.1:3306/cookie_consent?serverVersion=8.4&charset=utf8mb4
+          - db: MariaDB 11.4
+            url: mysql://root@127.0.0.1:3307/cookie_consent?serverVersion=11.4.3-MariaDB&charset=utf8mb4
           - db: PostgreSQL 17
             url: postgresql://postgres@127.0.0.1:5432/cookie_consent?serverVersion=17&charset=utf8
 
@@ -131,6 +133,15 @@ jobs:
         ports: ['3306:3306']
         options: >-
           --health-cmd="mysqladmin ping -h 127.0.0.1"
+          --health-interval=5s --health-timeout=5s --health-retries=20
+      mariadb:
+        image: mariadb:11.4
+        env:
+          MARIADB_ALLOW_EMPTY_ROOT_PASSWORD: 'yes'
+          MARIADB_DATABASE: cookie_consent
+        ports: ['3307:3306']
+        options: >-
+          --health-cmd="healthcheck.sh --connect --innodb_initialized"
           --health-interval=5s --health-timeout=5s --health-retries=20
       postgres:
         image: postgres:17
