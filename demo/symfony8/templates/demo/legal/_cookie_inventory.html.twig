@@ -1,13 +1,13 @@
 {% set inventory = nowo_cookie_consent_cookie_inventory() %}
 
 {% if inventory is not empty %}
-    <section class="mb-4">
-        <h2 class="h5">{{ 'demo.legal.cookies.inventory.title'|trans }}</h2>
-        <p class="text-secondary small">{{ 'demo.legal.cookies.inventory.lead'|trans }}</p>
-        <div class="table-responsive mt-3">
-            <table class="table table-sm table-bordered align-middle mb-0">
-                <caption class="text-start small text-muted">{{ 'nowo_cookie_consent.inventory.caption'|trans({}, 'NowoCookieConsentBundle') }}</caption>
-                <thead class="table-light">
+    <section>
+        <h2>{{ 'demo.legal.cookies.inventory.title'|trans }}</h2>
+        <p class="nowo-ui-muted">{{ 'demo.legal.cookies.inventory.lead'|trans }}</p>
+        <div class="nowo-ui-table-wrap">
+            <table class="nowo-ui-table nowo-ui-data-table--compact">
+                <caption class="nowo-ui-table__caption">{{ 'nowo_cookie_consent.inventory.caption'|trans({}, 'NowoCookieConsentBundle') }}</caption>
+                <thead>
                     <tr>
                         <th scope="col">{{ 'nowo_cookie_consent.inventory.name'|trans({}, 'NowoCookieConsentBundle') }}</th>
                         <th scope="col">{{ 'nowo_cookie_consent.inventory.provider'|trans({}, 'NowoCookieConsentBundle') }}</th>
@@ -19,9 +19,9 @@
                 <tbody>
                     {% for row in inventory %}
                         <tr>
-                            <td><code>{{ row.name }}</code></td>
+                            <td><code class="nowo-ui-code">{{ row.name }}</code></td>
                             <td>{{ row.provider }}</td>
-                            <td class="small">{{ row.purpose }}</td>
+                            <td>{{ row.purpose }}</td>
                             <td>{{ ('demo.cookies.category.' ~ row.category)|trans }}</td>
                             <td>{{ row.duration }}</td>
                         </tr>

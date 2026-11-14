@@ -2,6 +2,10 @@
 
 {% block title %}{{ 'demo.legal.cookies.title'|trans }}{% endblock %}
 
+{% block nowo_ui_page_header %}
+    {{ include(nowo_ui_partial('page_header'), {title: 'demo.legal.cookies.title'|trans}) }}
+{% endblock %}
+
 {% block body %}
     {% include 'demo/legal/_layout.html.twig' with {
         title: 'demo.legal.cookies.title',

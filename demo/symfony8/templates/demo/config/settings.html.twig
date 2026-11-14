@@ -3,24 +3,14 @@
 
 {% block title %}{{ 'demo.config.settings.title'|trans }}{% endblock %}
 
+{% block nowo_ui_page_header %}
+    {{ include(nowo_ui_partial('page_header'), {
+        title: is_new_profile|default(false) ? 'demo.config.new_profile'|trans : 'demo.config.settings.title'|trans ~ ' — ' ~ config.displayName,
+        intro: 'demo.config.settings.lead_profiles'|trans,
+    }) }}
+{% endblock %}
+
 {% block body %}
-    {% include 'demo/_nav.html.twig' %}
-
-    <main class="container pb-5">
-        <div class="row justify-content-center">
-            <div class="col-lg-8">
-                <div class="card shadow-sm">
-                    <div class="card-body p-4">
-                        <h1 class="h4 mb-2">
-                            {% if is_new_profile|default(false) %}
-                                {{ 'demo.config.new_profile'|trans }}
-                            {% else %}
-                                {{ 'demo.config.settings.title'|trans }} — {{ config.displayName }}
-                            {% endif %}
-                        </h1>
-                        <p class="text-muted mb-4">{{ 'demo.config.settings.lead_profiles'|trans }}</p>
-
-                        {% form_theme form with ['bootstrap_5_layout.html.twig'] %}
                         {{ form_start(form) }}
                             {# Sections open at the first field of each settings section (CookieConsentConfigFullSettingsType order); the child loop renders every field. #}
                             {% set _sections = {
@@ -36,25 +26,20 @@
                                 {% if not child.rendered %}
                                     {% if _sections[child.vars.name] is defined %}
                                         {% set _section = _sections[child.vars.name] %}
-                                        {% if _section_open %}</section>{% endif %}
-                                        <section class="border rounded-3 p-3 p-md-4 mb-4">
-                                            <h2 class="h6 text-uppercase text-muted fw-semibold mb-1">{{ _section[0] }}</h2>
-                                            <p class="small text-muted mb-3">{{ _section[1] }}</p>
+                                        {% if _section_open %}</div></section>{% endif %}
+                                        <section class="nowo-ui-card"><div class="nowo-ui-card__body">
+                                            <h2 class="nowo-ui-card__title">{{ _section[0] }}</h2>
+                                            <p class="nowo-ui-muted">{{ _section[1] }}</p>
                                         {% set _section_open = true %}
                                     {% endif %}
                                     {{ form_row(child) }}
                                 {% endif %}
                             {% endfor %}
-                            {% if _section_open %}</section>{% endif %}
+                            {% if _section_open %}</div></section>{% endif %}
 
-                            <div class="d-flex gap-2">
-                                <button type="submit" class="btn btn-primary">{{ 'demo.config.settings.save'|trans }}</button>
-                                <a href="{{ demo_route.path('demo_cookie_consent_config_index') }}" class="btn btn-outline-secondary">{{ 'demo.config.form.cancel'|trans }}</a>
+                            <div class="nowo-ui-form__actions">
+                                <button type="submit" class="nowo-ui-btn nowo-ui-btn--primary">{{ 'demo.config.settings.save'|trans }}</button>
+                                <a href="{{ demo_route.path('demo_cookie_consent_config_index') }}" class="nowo-ui-btn nowo-ui-btn--outline">{{ 'demo.config.form.cancel'|trans }}</a>
                             </div>
                         {{ form_end(form) }}
-                    </div>
-                </div>
-            </div>
-        </div>
-    </main>
 {% endblock %}

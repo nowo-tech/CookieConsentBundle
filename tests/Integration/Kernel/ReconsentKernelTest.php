@@ -163,7 +163,7 @@ final class ReconsentKernelTest extends TestCase
         // 3. With the new cookies the banner stays closed and the new choice applies.
         $fresh = [
             CookieNameEnum::COOKIE_CONSENT_NAME                => $stored[CookieNameEnum::COOKIE_CONSENT_NAME],
-            CookieNameEnum::COOKIE_CONSENT_KEY_NAME            => 'visitor-key',
+            CookieNameEnum::COOKIE_CONSENT_KEY_NAME            => md5('visitor-key'),
             CookieNameEnum::getCookieCategoryName('analytics') => $stored[CookieNameEnum::getCookieCategoryName('analytics')],
         ];
         [$html, $request, $response] = $this->visit($fresh);
@@ -174,7 +174,7 @@ final class ReconsentKernelTest extends TestCase
         // 4. The consent log records the profile revision the visitor answered.
         $em = $this->em();
         $em->clear();
-        $logs = $em->getRepository(CookieConsentLog::class)->findBy(['cookieConsentKey' => 'visitor-key']);
+        $logs = $em->getRepository(CookieConsentLog::class)->findBy(['cookieConsentKey' => md5('visitor-key')]);
         self::assertNotEmpty($logs);
         foreach ($logs as $log) {
             self::assertSame(2, $log->getConsentRevision());
@@ -196,7 +196,7 @@ final class ReconsentKernelTest extends TestCase
         self::assertMatchesRegularExpression('/<input[^>]+name="cookie_consent\[page_route\]"[^>]+value="nowo_cookie_consent\.show"/', (string) $rendered->getContent());
 
         foreach (['shop_checkout' => 7, '' => 1, 'not a route!' => 1] as $pageRoute => $expected) {
-            $key = 'key-' . $expected . '-' . md5((string) $pageRoute);
+            $key = md5('key-' . $expected . '-' . (string) $pageRoute);
             $this->kernel()->handle(Request::create('/cookie_consent', 'POST', [
                 'cookie_consent' => ['use_all_cookies' => '', 'page_route' => $pageRoute],
             ], [CookieNameEnum::COOKIE_CONSENT_KEY_NAME => $key]));
@@ -310,7 +310,7 @@ final class ReconsentKernelTest extends TestCase
     {
         return [
             CookieNameEnum::COOKIE_CONSENT_NAME                => self::OLD_CONSENT,
-            CookieNameEnum::COOKIE_CONSENT_KEY_NAME            => 'visitor-key',
+            CookieNameEnum::COOKIE_CONSENT_KEY_NAME            => md5('visitor-key'),
             CookieNameEnum::getCookieCategoryName('analytics') => 'true',
             CookieNameEnum::getCookieCategoryName('marketing') => 'true',
         ];
