@@ -3,8 +3,8 @@
 | Field | Value |
 |-------|-------|
 | Package | `nowo-tech/cookie-consent-bundle` (`symfony-bundle`) |
-| Audited revision | `v1.30.0` (first audit `v1.10.0`; the 1.28-1.30 ports and the kept-alive tests are covered in the last section) |
-| Audit date | 2026-09-24, refreshed 2026-11-12 |
+| Audited revision | `v1.30.0` (first audit `v1.10.0`; the 1.28-1.30 ports and the kept-alive tests are covered in the last section); 1.30.2 additions listed in the service table |
+| Audit date | 2026-09-24, refreshed 2026-11-12 and 2026-11-16 (1.30.2) |
 | Method | Manual review of every PHP file under `src/` (services, controllers, subscribers, Doctrine listener, Twig extensions, renderer, form types, repositories, DI extension, compiler passes, `Resources/config/services.yaml`). Symfony `Translator` / `LocaleSwitcher` internals checked in `vendor/` where the bundle depends on them |
 | **Verdict** | ✅ **Viable under scenario B** (`reset_kernel false`) — request data is read per call, bundle memos are cleared at the start of every main request by a bundle-owned subscriber, database texts no longer mutate the shared translator. Clearing the application's EntityManager identity map between requests remains the application's responsibility |
 | Original verdict | ❌ Not viable (as of `v1.9.7` / `e36c6b8`) — `CookieChecker` and `CookieLogger` captured the main `Request` in their constructor |
@@ -62,6 +62,8 @@ A bundle that is safe under **B** is safe under **A** and under classic mode / P
 | `Config\CookieConsentConfigResolver` | yes | `$resolvedByLocaleAndRoute` cache; `ResetInterface` + reset per main request | ✅ | ✅ |
 | `Config\CookieInventoryProvider` | yes | 4 cache properties; `ResetInterface` + reset per main request | ✅ | ✅ |
 | `Repository\CookieConsentConfigRepository` | yes | cached config entities; `ResetInterface` + reset per main request | ✅ | ✅ |
+| `Doctrine\ConsentLogCollationListener` (1.30.2) | yes | none: `ManagerRegistry` and logger only; the server version is read per schema event, no memo | ✅ | ✅ |
+| `Cookie\ConsentKey` (1.30.2) | no (static helpers) | none: validates or generates the key per call | ✅ | ✅ |
 | `Config\CmpUxOptionsResolver`, `Config\CookieConsentConfigPayloadFactory`, `Config\CookieConsentConfigSelector`, `Config\CookieConsentRouteTargeting`, `Config\CookieConsentRoutePatternMatcher`, `Locale\LocaleResolver`, `Clock\SystemClock` | yes | none (`readonly` config; `RequestStack` read per call) | ✅ | ✅ |
 | `Render\CookieConsentModalRenderer` | yes | none; stores the resolved config on the request only | ✅ | ✅ |
 | `EventSubscriber\CookieConsentConfigTranslationSubscriber` (`kernel.request`, 19) | yes | none; stores the resolved config on the request only | ✅ | ✅ |

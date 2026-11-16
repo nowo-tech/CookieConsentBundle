@@ -95,7 +95,9 @@ GDPR **cookie consent** for Symfony: modal with category toggles, granular per-c
 
 ### Frontend (TypeScript)
 
-- **FR-UI-001–013**: Modal entry, category/granular toggles, iframe manager, step wizard, theme/visual config, diagnostics, logger.
+- **FR-UI-001–015**: Modal entry, category/granular toggles, iframe manager, step wizard, theme/visual config, diagnostics, logger.
+- **FR-UI-014**: `intro-more.ts` + `_intro_more.html.twig` — "Show more" toggle of the clamped first-layer intro on phones (1.23).
+- **FR-UI-015**: `motion.ts` — close with a fade and a timer fallback; immediate close without a transition.
 - **FR-BUILD-001**: Vite output `nowo-consent-modal.js`.
 - **FR-SEC-002**: `csrf.ts` — SameOrigin CSRF helpers for XHR consent posts.
 - **FR-TEST-TS-001**: Co-located Vitest under `src/Resources/assets/src/*.test.ts` (16 files).
@@ -112,11 +114,26 @@ GDPR **cookie consent** for Symfony: modal with category toggles, granular per-c
 - **FR-ROUT-001**: `routing.yaml`.
 - **FR-DI-001**: `services.yaml`.
 
+
+### Ports, personal data and exact keys (1.27–1.30)
+
+- **FR-VIEW-001**: `ConsentProfileView` / `CookieDefinitionView` — read-only scalar views, so host code never holds the entities (1.28).
+- **FR-PORT-001**: `ConsentCookieWriterInterface` with the `ConsentCookieJar` / `ConsentCookie` value objects, applied by `Http\ConsentCookieJarApplier` / `ConsentCookieResponseWriter`, wired by `ConsentCookieWriterPass`; `CookieHandlerInterface` (Request / Response) deprecated since 1.30.
+- **FR-COOKIE-002**: `ConsentIpAnonymizer` and `ConsentKey` (strict key format, random key otherwise, 1.30.2).
+- **FR-DDD-001**: Host without Doctrine — `CookieConsentWithoutDoctrinePass`, `NullCookieLogger`.
+- **FR-DDD-002**: Dedicated entity manager (`doctrine.entity_manager`) — `CookieConsentEntityManagerPass`, `CookieConsentManagerRegistry`, `ExcludedEntityNamespaceDriver` (DoctrineBundle 3.4, 1.30.1).
+- **FR-EVT-003**: `ConsentSavedEvent` — scalars, dispatched after the consent was logged.
+- **FR-GDPR-001**: Eraser port + `CookieConsentPersonalDataEraser`, `CookieConsentLogRows`, `CookieConsentErasureResult`, `CookieConsentPersonalDataErasedEvent` after commit.
+- **FR-GDPR-002**: Subject VO (refuses unusable keys), subject resolver port, IP window VO / provider port, `IpWindowSubjectResolver`.
+- **FR-GDPR-003**: Exporter port + `CookieConsentPersonalDataExporter`.
+- **FR-GDPR-004**: Optional UserKit bridges (`PersonalData/UserKit`).
+- **FR-EXACT-001**: Look-alike ids (REQ-SEC-006) — `ConsentLogCollationListener` (binary NO PAD collation on `cookie_consent_key` / `ip_address`, warning on a version without patch number), `===` re-checks of every row.
+
 ---
 
 ## Success Criteria
 
-- **SC-001**: **136/136** files under `src/` mapped in [`code-inventory.md`](code-inventory.md) (includes 16 co-located Vitest files; audited 2026-10-20).
+- **SC-001**: **180/180** files under `src/` mapped in [`code-inventory.md`](code-inventory.md) (includes 19 co-located Vitest files; audited 2026-11-16, 1.30.2).
 - **SC-002**: Config keys match `docs/CONFIGURATION.md`.
 - **SC-003**: `composer qa`, `pnpm test`, PHPUnit, PHPStan pass.
 - **SC-004**: FrankenPHP worker scenario B (`reset_kernel false`) viable per [`docs/FRANKENPHP-WORKER-AUDIT.md`](../../docs/FRANKENPHP-WORKER-AUDIT.md).
