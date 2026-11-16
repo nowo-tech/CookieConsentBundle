@@ -2,7 +2,7 @@
 
 **Baseline spec**: [`spec.md`](spec.md)  
 **Package**: `nowo-tech/cookie-consent-bundle`  
-**Last audited**: 2026-10-20
+**Last audited**: 2026-11-16
 
 ## TypeScript production (`src/Resources/assets/src/`)
 
@@ -25,6 +25,8 @@
 | `Resources/assets/src/step-manager.ts` | Step wizard UI | FR-UI-013 |
 | `Resources/assets/src/csrf.ts` | SameOrigin CSRF helpers for XHR consent posts | FR-SEC-002 |
 | `Resources/assets/src/vite-env.d.ts` | Vite client type declarations (build-time only) | FR-BUILD-001 |
+| `Resources/assets/src/intro-more.ts` | "Show more" toggle of the clamped first-layer intro (1.23) | FR-UI-014 |
+| `Resources/assets/src/motion.ts` | Close with a fade, timer fallback, no-transition path | FR-UI-015 |
 
 ## TypeScript tests (co-located Vitest)
 
@@ -48,6 +50,9 @@ Co-located Vitest sources under `src/` (compiled/tested in CI; not shipped to Pa
 | `Resources/assets/src/csrf.test.ts` | Vitest: CSRF helpers | FR-TEST-TS-001 |
 | `Resources/assets/src/inject-styles.test.ts` | Vitest: nonce-aware style injection | FR-TEST-TS-001 |
 | `Resources/assets/src/theme-contrast.test.ts` | Vitest: theme contrast | FR-TEST-TS-001 |
+| `Resources/assets/src/equal-prominence.test.ts` | Vitest: equal-prominence buttons | FR-TEST-TS-001 |
+| `Resources/assets/src/intro-more.test.ts` | Vitest: intro "Show more" toggle | FR-TEST-TS-001 |
+| `Resources/assets/src/motion.test.ts` | Vitest: close motion | FR-TEST-TS-001 |
 
 ## Symfony config, assets, translations, Twig (`src/Resources/`)
 
@@ -85,6 +90,7 @@ Co-located Vitest sources under `src/` (compiled/tested in CI; not shipped to Pa
 | `Resources/public/nowo-cookie-consent.css` | CSP-safe modal stylesheet (no injected inline styles needed) | FR-ASSET-002, FR-CSP-002 |
 | `Resources/public/nowo-cookie-consent-admin.css` | Admin UI stylesheet on UiKit tokens | FR-ASSET-002, FR-ADMIN-001 |
 | `Resources/views/admin/cookie_definition/_translations_tabs.html.twig` | Per-locale translation tabs (FormKit `locale_tabs`) | FR-TWIG-003, FR-I18N-002 |
+| `Resources/views/_intro_more.html.twig` | "Show more" intro toggle partial (1.23) | FR-TWIG-003, FR-UI-014 |
 
 ## PHP classes
 | `Admin/AdminChrome.php` | Admin chrome hooks (class/attribute map, partial paths) | 002 FR-CHROME-001 |
@@ -158,15 +164,53 @@ Co-located Vitest sources under `src/` (compiled/tested in CI; not shipped to Pa
 | `Form/Settings/CookieConsentConfigRouteTargetingSettingsType.php` | Per-section settings form | FR-ADMIN-002, FR-FORM-001 |
 | `Http/ColdStartRequestAttributes.php` | Cold-start request attribute contract (skip DB-backed consent) | FR-CFG-004 |
 | `Locale/ConfiguredLocales.php` | `enabled_locales` normalizer (list / parameter / env) | FR-I18N-002 |
+| `Config/ConsentProfileView.php` | Read-only scalar view of the resolved consent profile (1.28) | FR-VIEW-001 |
+| `Config/CookieDefinitionView.php` | Read-only scalar view of a cookie definition (1.28) | FR-VIEW-001 |
+| `Cookie/ConsentCookie.php` | Cookie value object of the writer port (1.30) | FR-PORT-001 |
+| `Cookie/ConsentCookieJar.php` | Immutable jar of consent cookies to set / clear (1.30) | FR-PORT-001 |
+| `Cookie/ConsentCookieWriterInterface.php` | Framework-free cookie writer port (1.30) | FR-PORT-001 |
+| `Cookie/CookieHandlerInterface.php` | Request / Response cookie handler port, deprecated since 1.30 | FR-COOKIE-001, FR-PORT-001 |
+| `Cookie/CookieCheckerInterface.php` | Consent checker port | FR-COOKIE-001 |
+| `Cookie/CookieLoggerInterface.php` | Consent logger port (scalars) | FR-COOKIE-001 |
+| `Cookie/NullCookieLogger.php` | No-op logger for hosts without Doctrine | FR-COOKIE-001, FR-DDD-001 |
+| `Cookie/ConsentRequestCookies.php` | Consent cookies read from the request as scalars | FR-COOKIE-001 |
+| `Cookie/ConsentIpAnonymizer.php` | IP anonymisation before logging | FR-COOKIE-002 |
+| `Cookie/ConsentKey.php` | Strict consent key format, new random key otherwise (1.30.2) | FR-COOKIE-002, FR-EXACT-001 |
+| `DependencyInjection/Compiler/ConsentCookieWriterPass.php` | Writer port wiring, decorators and BC with the deprecated handler | FR-PORT-001 |
+| `DependencyInjection/Compiler/CookieConsentEntityManagerPass.php` | Mapping only on the dedicated entity manager (1.27, 1.30.1) | FR-DDD-002 |
+| `DependencyInjection/Compiler/CookieConsentWithoutDoctrinePass.php` | Host without Doctrine: null logger, no ORM services | FR-DDD-001 |
+| `Doctrine/CookieConsentManagerRegistry.php` | Registry resolving bundle entities to the dedicated manager | FR-DDD-002 |
+| `Doctrine/ExcludedEntityNamespaceDriver.php` | Driver mapping nothing for the bundle namespace on other managers (1.30.1) | FR-DDD-002 |
+| `Doctrine/UtcDateTimeImmutableType.php` | UTC datetime type of the consent log | FR-ORM-001 |
+| `Doctrine/ConsentLogCollationListener.php` | Binary NO PAD collation on cookie_consent_key / ip_address (1.30.2) | FR-EXACT-001 |
+| `Event/ConsentSavedEvent.php` | Scalar event after the consent was logged | FR-EVT-003 |
+| `EventSubscriber/CookieConsentOutdatedConsentSubscriber.php` | Re-consent when the profile requires it | FR-EVT-001 |
+| `Http/ConsentCookieJarApplier.php` | Writes a ConsentCookieJar on the response | FR-PORT-001 |
+| `Http/ConsentCookieResponseWriter.php` | Per-response writer built by the listeners | FR-PORT-001 |
+| `PersonalData/CookieConsentErasureResult.php` | Erasure counts | FR-GDPR-001 |
+| `PersonalData/CookieConsentIpWindow.php` | IP + time window value object | FR-GDPR-002 |
+| `PersonalData/CookieConsentIpWindowProviderInterface.php` | IP window provider port | FR-GDPR-002 |
+| `PersonalData/CookieConsentLogRows.php` | Exact re-check of log rows (===) | FR-GDPR-001, FR-EXACT-001 |
+| `PersonalData/CookieConsentPersonalDataErasedEvent.php` | Scalar event after the erasure committed | FR-GDPR-001 |
+| `PersonalData/CookieConsentPersonalDataEraser.php` | Erases consent log rows of a subject | FR-GDPR-001 |
+| `PersonalData/CookieConsentPersonalDataEraserInterface.php` | Eraser port | FR-GDPR-001 |
+| `PersonalData/CookieConsentPersonalDataExporter.php` | Exports consent log rows of a subject | FR-GDPR-003 |
+| `PersonalData/CookieConsentPersonalDataExporterInterface.php` | Exporter port | FR-GDPR-003 |
+| `PersonalData/CookieConsentPersonalDataSubject.php` | Subject VO, refuses unusable keys (1.30.2) | FR-GDPR-002, FR-EXACT-001 |
+| `PersonalData/CookieConsentPersonalDataSubjectResolverInterface.php` | Subject resolver port | FR-GDPR-002 |
+| `PersonalData/IpWindowSubjectResolver.php` | Default resolver by IP window | FR-GDPR-002 |
+| `PersonalData/UserKit/CookieConsentLogsPersonalDataEraser.php` | Optional UserKit eraser bridge | FR-GDPR-004 |
+| `PersonalData/UserKit/CookieConsentsPersonalDataExportProvider.php` | Optional UserKit export bridge | FR-GDPR-004 |
+| `PersonalData/UserKit/UserKitSubjects.php` | UserKit user to subjects | FR-GDPR-004 |
 
 ## Coverage summary
 
 | Category | Files | Mapped |
 | --- | ---: | ---: |
-| TypeScript production | 17 | 17 |
-| TypeScript tests (Vitest) | 16 | 16 |
-| Resources (YAML/CSS/JS/i18n/Twig) | 32 | 32 |
-| PHP classes | 71 | 71 |
-| **Total production sources** | **136** | **136** |
+| TypeScript production | 19 | 19 |
+| TypeScript tests (Vitest) | 19 | 19 |
+| Resources (YAML/CSS/JS/i18n/Twig) | 33 | 33 |
+| PHP classes | 109 | 109 |
+| **Total production sources** | **180** | **180** |
 
-Audit command: `git ls-files src | wc -l` → 136 (co-located Vitest files included as `FR-TEST-TS-001`).
+Audit command: `git ls-files src | wc -l` → 180 (1.30.2; co-located Vitest files included as `FR-TEST-TS-001`).

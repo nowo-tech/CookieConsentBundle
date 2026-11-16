@@ -267,6 +267,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Documentation
+
+- Spec Kit inventory maps all 180 `src/` files; README coverage figures match CI (99.60% PHP, 97.66% TS); worker audit lists the 1.30.2 services (REQ compliance sweep 2026-11-16).
+
 ## [1.30.2] - 2026-11-13
 
 Next patch: 1.30.2. REQ-SEC-006 (look-alike ids) for the consent key and the consent log. See
