@@ -3,6 +3,7 @@
 ## Table of contents
 
 - [Unreleased](#unreleased)
+- [To 1.30.4](#to-1304)
   - [Asset package and CDN base URLs](#asset-package-and-cdn-base-urls)
 - [To 1.30.3](#to-1303)
 - [To 1.30.2](#to-1302)
@@ -135,6 +136,14 @@
 - [Getting help](#getting-help)
 
 ## Unreleased
+
+## To 1.30.4
+
+From **1.30.3**:
+
+```bash
+composer update nowo-tech/cookie-consent-bundle
+```
 
 ### Asset package and CDN base URLs
 
