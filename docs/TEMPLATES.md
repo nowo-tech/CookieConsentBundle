@@ -71,7 +71,7 @@ listed read-only in `<div data-nowo-cc-region="other-translations">` and kept on
 (CSRF token, fields a host form extension adds). Text controls come from the seeded `cookie_consent` FormKit profile with
 the UiKit `input_full` slot.
 
-**Bundle stylesheet.** The list and form pages append `bundles/nowocookieconsent/nowo-cookie-consent-admin.css` to
+**Bundle stylesheet.** The list and form pages append `nowo-cookie-consent-admin.css` (asset package `nowo_cookie_consent`) to
 `nowo_ui_styles` (local asset, no CDN). It only lays out the bundle's own data-block markup (`nowo-cc-admin-*` classes:
 form grid, translations table, nowrap / clamp cells of the inventory; one-line row actions come from UiKit 2.2) and reads UiKit tokens; a
 host theme can override it like any stylesheet loaded after UiKit's.

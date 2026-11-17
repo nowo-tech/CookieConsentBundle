@@ -129,7 +129,7 @@ final class AdminPagesTemplateTest extends PageContractTestCase
         self::assertMatchesRegularExpression('#<code class="[^"]*pc-code[^"]*">_ga</code>#', $content);
         self::assertStringContainsString('class="nowo-ui-muted pc-muted nowo-cc-admin-clamp" title="Distinguishes visitors for Google Analytics."', $content);
         self::assertSame(4 * 3, substr_count($content, 'nowo-cc-admin-nowrap'), 'name, category, duration and default never wrap (3 rows)');
-        self::assertStringContainsString('href="/assets/bundles/nowocookieconsent/nowo-cookie-consent-admin.css"', $this->render(self::VIEWS . 'cookie_definition/index.html.twig', AdminPageFixtures::definitionList())->blockHtml('nowo_ui_styles'));
+        self::assertStringContainsString('href="/assets/nowo-cookie-consent-admin.css"', $this->render(self::VIEWS . 'cookie_definition/index.html.twig', AdminPageFixtures::definitionList())->blockHtml('nowo_ui_styles'));
         self::assertStringContainsString('Analytics', $content);
         self::assertStringContainsString('Required', $content);
         self::assertStringContainsString('Distinguishes visitors for Google Analytics.', $content);
@@ -196,7 +196,7 @@ final class AdminPagesTemplateTest extends PageContractTestCase
         $content = $page->blockHtml('nowo_ui_content');
         $id      = 'nowo-cc-definition-translations';
 
-        self::assertStringContainsString('href="/assets/bundles/nowocookieconsent/nowo-cookie-consent-admin.css"', $page->blockHtml('nowo_ui_styles'));
+        self::assertStringContainsString('href="/assets/nowo-cookie-consent-admin.css"', $page->blockHtml('nowo_ui_styles'));
         self::assertMatchesRegularExpression('#<div class="nowo-cc-admin-form__grid" data-nowo-cc-region="definition-fields">.*name="cookie_definition\[name\]".*name="cookie_definition\[sortOrder\]".*</div>#s', $content);
         self::assertStringContainsString('<legend class="nowo-cc-admin-translations__legend">Translations</legend>', $content);
         self::assertStringNotContainsString('nowo-cc-admin-translations__table', $content, 'no add / delete rows table any more');
