@@ -270,6 +270,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- The `nowo_cookie_consent` asset package is registered only when `symfony/asset` is installed (`class_exists(Package::class)` guard); with it installed nothing changes.
+
+### Documentation
+
+- USAGE / UPGRADING: the package is local; the host's default `framework.assets.base_urls` (CDN) and `base_path` are not inherited.
+
+### Tests
+
+- Kernel test of the rendered asset URL (`/bundles/nowocookieconsent/nowo-cookie-consent.css`), with and without host `base_urls` / `base_path` (audit SE follow-up).
+
 ## [1.30.3] - 2026-11-17
 
 ### Changed

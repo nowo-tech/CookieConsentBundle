@@ -35,6 +35,7 @@ use Nowo\CookieConsentBundle\Security\CookieConsentAccessCheckerInterface;
 use Nowo\CookieConsentBundle\Twig\CookieConsentAdminTwigExtension;
 use Nowo\UiKitBundle\Theme\ThemeSlots;
 use Nowo\UserKitBundle\PersonalData\PersonalDataEraserInterface as UserKitPersonalDataEraserInterface;
+use Symfony\Component\Asset\Package;
 use Symfony\Component\Config\FileLocator;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\Definition;
@@ -45,6 +46,7 @@ use Symfony\Component\DependencyInjection\Reference;
 use Symfony\Component\Translation\Loader\ArrayLoader;
 
 use function array_key_exists;
+use function class_exists;
 use function interface_exists;
 use function is_array;
 use function is_string;
@@ -361,13 +363,13 @@ class NowoCookieConsentExtension extends Extension implements PrependExtensionIn
     }
 
     /**
-     * Registers the bundle asset package before the FrameworkExtension processes assets,
-     * and seeds UiKit defaults from web_ui when the host has not set nowo_ui_kit (REQ-UI-001-kit).
+     * Registers the bundle asset package before the FrameworkExtension processes assets (only when symfony/asset is
+     * installed; the package is local, the host's default `base_urls` are not inherited), and seeds UiKit defaults from web_ui when the host has not set nowo_ui_kit (REQ-UI-001-kit).
      */
     public function prepend(ContainerBuilder $container): void
     {
         $this->prependFormKitDefaults($container);
-        if ($container->hasExtension('framework')) {
+        if ($container->hasExtension('framework') && class_exists(Package::class)) {
             $container->prependExtensionConfig('framework', [
                 'assets' => [
                     'packages' => [
