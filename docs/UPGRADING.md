@@ -3,6 +3,7 @@
 ## Table of contents
 
 - [Unreleased](#unreleased)
+- [To 1.30.3](#to-1303)
 - [To 1.30.2](#to-1302)
 - [To 1.30.1](#to-1301)
 - [To 1.30.0](#to-1300)
@@ -133,6 +134,14 @@
 - [Getting help](#getting-help)
 
 ## Unreleased
+
+## To 1.30.3
+
+From **1.30.2**:
+
+```bash
+composer update nowo-tech/cookie-consent-bundle
+```
 
 ## To 1.30.2
 

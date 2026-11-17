@@ -464,7 +464,7 @@ otherwise the bundle writer when `CookieHandlerInterface` is still the bundle's 
 `CookieHandlerInterface::save()` / `clear()` methods, as in 1.29. That last case covers a decorator of `CookieHandler`
 or of `CookieHandlerInterface` (`#[AsDecorator]`), a replaced class and a `CookieHandler` subclass (an overridden
 `saveCookie()` still runs); it reports one `E_USER_DEPRECATED` notice at container build, never per request. See
-[UPGRADING](UPGRADING.md#unreleased).
+[UPGRADING](UPGRADING.md#to-1303).
 
 ### Read-only views (1.28)
 
