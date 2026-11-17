@@ -3,6 +3,7 @@
 ## Table of contents
 
 - [Unreleased](#unreleased)
+  - [Asset package and CDN base URLs](#asset-package-and-cdn-base-urls)
 - [To 1.30.3](#to-1303)
 - [To 1.30.2](#to-1302)
 - [To 1.30.1](#to-1301)
@@ -134,6 +135,10 @@
 - [Getting help](#getting-help)
 
 ## Unreleased
+
+### Asset package and CDN base URLs
+
+The `nowo_cookie_consent` asset package is a local package (`base_path: /bundles/nowocookieconsent`): the host's default `framework.assets.base_urls` (CDN) and `base_path` are **not** inherited by it, so `asset('nowo-cookie-consent.css', 'nowo_cookie_consent')` always resolves to the application's own `/bundles/nowocookieconsent/...` (run `assets:install`). To serve the files from a CDN, publish them there and link them by absolute URL in your layout. The package is registered only when `symfony/asset` is installed.
 
 ## To 1.30.3
 

@@ -98,6 +98,8 @@ Override chrome with `--nowo-cc-*` custom properties in host CSS. Do not fork th
 
 After upgrading the bundle, run `php bin/console assets:install` so `nowo-consent-modal.js` and `nowo-cookie-consent.css` are published.
 
+The `nowo_cookie_consent` asset package is a local package (`base_path: /bundles/nowocookieconsent`): the host's default `framework.assets.base_urls` (CDN) and `base_path` are **not** inherited by it, so `asset('nowo-cookie-consent.css', 'nowo_cookie_consent')` always resolves to the application's own `/bundles/nowocookieconsent/...` (run `assets:install`). To serve the files from a CDN, publish them there and link them by absolute URL in your layout. The package is registered only when `symfony/asset` is installed.
+
 ## Conditional scripts
 
 Load analytics only when the category is allowed:
