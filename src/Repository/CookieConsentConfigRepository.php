@@ -5,8 +5,12 @@ declare(strict_types=1);
 namespace Nowo\CookieConsentBundle\Repository;
 
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
+use Doctrine\DBAL\LockMode;
+use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\Persistence\ManagerRegistry;
 use Nowo\CookieConsentBundle\Entity\CookieConsentConfig;
+use Nowo\TransactionContract\TransientStorageFailure;
+use Nowo\TransactionDoctrine\DoctrineTransactionRunner;
 use SortDirection;
 use Symfony\Contracts\Service\ResetInterface;
 
@@ -59,6 +63,67 @@ class CookieConsentConfigRepository extends ServiceEntityRepository implements R
     public function reset(): void
     {
         $this->clearRuntimeCache();
+    }
+
+    /**
+     * Saves the admin changes of one profile in one transaction (1.31, REQ-RUNTIME-003 rules 1 and 4).
+     *
+     * When the profile is the default one, the "only one default" rule is enforced inside the same transaction:
+     * - the enabled profiles are locked first, in id order (`SELECT ... FOR UPDATE`), so two saves never deadlock and
+     *   the second one waits for the first and then reads its committed flags (PostgreSQL READ COMMITTED included);
+     * - the flush writes the profile;
+     * - one atomic UPDATE clears the flag of every other enabled profile.
+     *
+     * Two admins making two profiles the default at the same time therefore leave exactly one default (the later
+     * commit), where the former read-then-write of the loaded profiles could leave both. A lock conflict is thrown as
+     * {@see TransientStorageFailure} (409 + CONFLICT_001 on the admin route).
+     *
+     * @param EntityManagerInterface $entityManager the manager of the bundle entities (it holds the form's changes)
+     */
+    public function saveSettings(CookieConsentConfig $config, EntityManagerInterface $entityManager): void
+    {
+        DoctrineTransactionRunner::forConnection($entityManager->getConnection())->run(function () use ($config, $entityManager): void {
+            $default = $config->isDefault();
+            if ($default) {
+                $this->lockEnabledProfiles();
+            }
+
+            $entityManager->flush();
+
+            if ($default) {
+                $this->clearOtherDefaults($config);
+            }
+        });
+        $this->clearRuntimeCache();
+    }
+
+    /**
+     * Locks the rows of the enabled profiles in id order (fixed order: no deadlock between two saves).
+     */
+    private function lockEnabledProfiles(): void
+    {
+        $this->createQueryBuilder('config')
+            ->select('config.id')
+            ->andWhere('config.enabled = :enabled')
+            ->setParameter('enabled', true)
+            ->orderBy('config.id', SortDirection::Ascending)
+            ->getQuery()
+            ->setLockMode(LockMode::PESSIMISTIC_WRITE)
+            ->getScalarResult();
+    }
+
+    /**
+     * Clears the default flag of every other enabled profile with one atomic UPDATE.
+     */
+    private function clearOtherDefaults(CookieConsentConfig $keep): void
+    {
+        $this->getEntityManager()
+            ->createQuery('UPDATE ' . CookieConsentConfig::class . ' config SET config.default = :off WHERE config.default = :on AND config.enabled = :enabled AND config.id <> :keep')
+            ->setParameter('off', false)
+            ->setParameter('on', true)
+            ->setParameter('enabled', true)
+            ->setParameter('keep', $keep->getId())
+            ->execute();
     }
 
     /**

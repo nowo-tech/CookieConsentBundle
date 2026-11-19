@@ -3,6 +3,7 @@
 ## Table of contents
 
 - [Unreleased](#unreleased)
+  - [Concurrency: conflict answers and the consent log (REQ-RUNTIME-003)](#concurrency-conflict-answers-and-the-consent-log-req-runtime-003)
 - [To 1.30.4](#to-1304)
   - [Asset package and CDN base URLs](#asset-package-and-cdn-base-urls)
 - [To 1.30.3](#to-1303)
@@ -136,6 +137,34 @@
 - [Getting help](#getting-help)
 
 ## Unreleased
+
+### Concurrency: conflict answers and the consent log (REQ-RUNTIME-003)
+
+- **New dependencies:** `nowo-tech/transaction-contract` ^1.0 and `nowo-tech/transaction-doctrine` ^1.6 (installed by
+  `composer update nowo-tech/cookie-consent-bundle -w`). Registering transaction-doctrine's Symfony bundle is optional.
+- **Lock conflicts answer 409.** A deadlock, lock wait timeout or serialization failure of the consent POST or of a
+  bundle admin route used to be a 500 (admin) or was swallowed (consent POST). It now answers 409 with
+  `X-Conflict-Code: CONFLICT_001` + `Retry-After` (retry) or `CONFLICT_002` (reload). Set
+  `nowo_cookie_consent.conflict_response.status: 503` to keep a 503. See [CONCURRENCY](CONCURRENCY.md).
+- **The consent log is no longer swallowed.** Any other database failure of the consent log (for example a missing
+  table because the migration was not run) is now a real error of the request, and no consent cookie is set. Before,
+  the cookies were set without log rows. Run the bundle's migration before enabling `use_logger`, and keep the
+  SiteBackup cold-start attributes during a restore.
+- **Order:** the log rows are written before the consent cookies are set. A custom `CookieHandlerInterface` /
+  `ConsentCookieWriterInterface` now runs after `CookieLoggerInterface::log()`.
+- **`CookieLogger::log()`** throws `Nowo\TransactionContract\TransientStorageFailure` (with the DBAL exception as
+  previous) for a lock conflict, instead of the DBAL exception itself. Catch `TransientStorageFailure`, or walk
+  `getPrevious()`.
+- **Admin settings save:** `CookieConsentConfigRepository::saveSettings()` saves a profile in one transaction and keeps
+  one default profile; the controller no longer clears the other defaults in memory.
+- **Duplicate cookie names:** saving a cookie definition with a name already used in the profile answers 409
+  (`X-Error-Code: COOKIE_CONSENT_DUPLICATE_KEY`) instead of a 500.
+- **Commit tracking:** by default the bundle registers transaction-doctrine's `CommitTrackingMiddleware` on the
+  connection of its entity manager (`conflict_response.commit_tracking: bundle`). With transaction-doctrine's bundle and
+  `commit_detection` on, its ledger is reused and nothing is added. `commit_tracking: off` registers no middleware.
+- transaction-doctrine's `DoctrineTransactionRunner::forHostEntityManager()` is not used by this bundle (it writes the
+  log with DBAL, never through your entity manager), so its LogicException on unflushed host changes cannot come from
+  the bundle.
 
 ## To 1.30.4
 

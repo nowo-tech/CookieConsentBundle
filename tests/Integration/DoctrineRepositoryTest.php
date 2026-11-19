@@ -101,6 +101,33 @@ final class DoctrineRepositoryTest extends TestCase
         self::assertSame($nonDefault, $repository->findAllEnabledNonDefault());
     }
 
+    public function testSaveSettingsKeepsOnlyOneEnabledDefault(): void
+    {
+        $old      = (new CookieConsentConfig())->setEnabled(true)->setDefault(true)->setName('Old default');
+        $new      = (new CookieConsentConfig())->setEnabled(true)->setDefault(false)->setName('New default');
+        $disabled = (new CookieConsentConfig())->setEnabled(false)->setDefault(true)->setName('Disabled');
+        foreach ([$old, $new, $disabled] as $config) {
+            $this->entityManager->persist($config);
+        }
+        $this->entityManager->flush();
+
+        $repository = new CookieConsentConfigRepository($this->createRegistry());
+        self::assertSame($old->getId(), $repository->findDefaultEnabled()?->getId());
+
+        $new->setDefault(true)->setName('New default (saved)');
+        $repository->saveSettings($new, $this->entityManager);
+
+        $flags = $this->entityManager->getConnection()->fetchAllKeyValue('SELECT name, is_default FROM dashboard_cookie_config ORDER BY id');
+        self::assertSame(['Old default' => 0, 'New default (saved)' => 1, 'Disabled' => 1], array_map(intval(...), $flags), 'disabled profiles keep their flag, as before');
+        self::assertSame($new->getId(), $repository->findDefaultEnabled()?->getId(), 'the memo was cleared');
+        self::assertSame(0, $this->entityManager->getConnection()->getTransactionNestingLevel());
+
+        $new->setName('Renamed, not default');
+        $new->setDefault(false);
+        $repository->saveSettings($new, $this->entityManager);
+        self::assertSame('Renamed, not default', $this->entityManager->getConnection()->fetchOne('SELECT name FROM dashboard_cookie_config WHERE id = ?', [$new->getId()]));
+    }
+
     public function testConfigRepositoryRuntimeCacheReturnsSameResultsUntilCleared(): void
     {
         $default = (new CookieConsentConfig())

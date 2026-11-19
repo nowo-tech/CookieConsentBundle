@@ -6,6 +6,7 @@ namespace Nowo\CookieConsentBundle;
 
 use Doctrine\Bundle\DoctrineBundle\DependencyInjection\Compiler\DoctrineOrmMappingsPass;
 use Nowo\CookieConsentBundle\DependencyInjection\Compiler\ConsentCookieWriterPass;
+use Nowo\CookieConsentBundle\DependencyInjection\Compiler\CookieConsentCommitTrackingPass;
 use Nowo\CookieConsentBundle\DependencyInjection\Compiler\CookieConsentEntityManagerPass;
 use Nowo\CookieConsentBundle\DependencyInjection\Compiler\CookieConsentSecurityPass;
 use Nowo\CookieConsentBundle\DependencyInjection\Compiler\CookieConsentWithoutDoctrinePass;
@@ -47,6 +48,9 @@ class NowoCookieConsentBundle extends Bundle
 
         // After the mapping passes above (and DoctrineBundle's auto_mapping): keep the entities on one manager.
         $container->addCompilerPass(new CookieConsentEntityManagerPass(), PassConfig::TYPE_BEFORE_OPTIMIZATION, -10);
+
+        // 1.31 (REQ-RUNTIME-003): scope the commit-tracking middleware before DoctrineBundle's MiddlewaresPass (priority 0).
+        $container->addCompilerPass(new CookieConsentCommitTrackingPass(), PassConfig::TYPE_BEFORE_OPTIMIZATION, 5);
 
         // 1.30: after decoration and alias resolution, pick the consent cookie port once (REQ-ARCH-001 rule 3).
         $container->addCompilerPass(new ConsentCookieWriterPass(), PassConfig::TYPE_BEFORE_REMOVING);

@@ -56,7 +56,8 @@ final class CookieConsentFormSubscriberEventTest extends TestCase
         $request->cookies->set(CookieNameEnum::COOKIE_CONSENT_KEY_NAME, '0123456789abcdef0123456789abcdef');
         $subscriber->onResponse($this->responseEvent($request));
 
-        self::assertSame(['save', 'log', 'event'], $this->calls);
+        // 1.31: the proof of consent first, then the cookies (a failed log sets no consent cookie).
+        self::assertSame(['log', 'save', 'event'], $this->calls);
         self::assertCount(1, $events);
         self::assertSame('0123456789abcdef0123456789abcdef', $events[0]->consentKey);
         self::assertSame(['analytics' => true, 'marketing' => false], $events[0]->categories);
@@ -111,9 +112,16 @@ final class CookieConsentFormSubscriberEventTest extends TestCase
             null,
             $dispatcher,
         );
-        $subscriber->onResponse($this->responseEvent(Request::create('/', 'POST')));
+        // 1.31 (REQ-RUNTIME-003 rule 8): a database failure of the log is no longer swallowed, and no cookie is set.
+        try {
+            $subscriber->onResponse($this->responseEvent(Request::create('/', 'POST')));
+            self::fail('The database failure of the log must propagate.');
+        } catch (DBALException $exception) {
+            self::assertSame('down', $exception->getMessage());
+        }
 
         self::assertFalse($dispatched);
+        self::assertNotContains('save', $this->calls);
     }
 
     public function testNoEventWhenTheLogThrows(): void

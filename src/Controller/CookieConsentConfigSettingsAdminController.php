@@ -88,11 +88,10 @@ final class CookieConsentConfigSettingsAdminController extends AbstractControlle
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
-            if ($config->isDefault()) {
-                $this->clearOtherDefaultFlags($config);
-            }
-
-            $entityManager->flush();
+            // 1.31 (REQ-RUNTIME-003 rules 1, 4): one transaction for the save and the "only one default" rule (ordered
+            // row locks, then an atomic UPDATE of the other profiles). A lock conflict answers 409 + CONFLICT_001
+            // (CookieConsentConflictListener).
+            $this->configRepository->saveSettings($config, $entityManager);
 
             $this->addFlash(
                 'success',
@@ -126,18 +125,5 @@ final class CookieConsentConfigSettingsAdminController extends AbstractControlle
         }
 
         return $config;
-    }
-
-    private function clearOtherDefaultFlags(CookieConsentConfig $current): void
-    {
-        foreach ($this->configRepository->findAllEnabled() as $config) {
-            if ($config->getId() === $current->getId()) {
-                continue;
-            }
-
-            if ($config->isDefault()) {
-                $config->setDefault(false);
-            }
-        }
     }
 }
