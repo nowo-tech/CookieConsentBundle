@@ -110,7 +110,7 @@ Co-located Vitest sources under `src/` (compiled/tested in CI; not shipped to Pa
 | `Controller/CookieDefinitionAdminController.php` | HTTP controller | FR-CTRL-001 |
 | `Cookie/CookieChecker.php` | Cookie handling | FR-COOKIE-001 |
 | `Cookie/CookieHandler.php` | Cookie handling | FR-COOKIE-001 |
-| `Cookie/CookieLogger.php` | Cookie handling | FR-COOKIE-001 |
+| `Cookie/CookieLogger.php` | Cookie handling (consent log in one runner transaction) | FR-COOKIE-001, FR-CONC-001 |
 | `Clock/SystemClock.php` | Default PSR-20 clock | FR-DI-002 |
 | `DependencyInjection/Compiler/CookieConsentSecurityPass.php` | Security wiring | FR-SEC-001 |
 | `DependencyInjection/Compiler/TwigPathsPass.php` | Compiler pass | FR-TWIG-001 |
@@ -131,6 +131,8 @@ Co-located Vitest sources under `src/` (compiled/tested in CI; not shipped to Pa
 | `EventSubscriber/CookieConsentRuntimeCacheResetSubscriber.php` | Worker memo reset | FR-WORKER-002 |
 | `EventSubscriber/CookieConsentSchemaReadySubscriber.php` | Events | FR-EVT-001, FR-EVT-002 |
 | `EventListener/CookieConsentConfigRuntimeCacheListener.php` | Doctrine cache invalidation | FR-WORKER-002 |
+| `EventListener/CookieConsentConflictListener.php` | Conflict answers (409 + CONFLICT codes), closed manager replacement | FR-CONC-002 |
+| `DependencyInjection/Compiler/CookieConsentCommitTrackingPass.php` | Commit-tracking scope (bundle connection / transaction-doctrine ledger) | FR-CONC-002 |
 | `Form/CookieConsentConfigSettingsType.php` | Form type | FR-FORM-001 |
 | `Form/CookieConsentType.php` | Form type | FR-FORM-001 |
 | `Form/CookieDefinitionTranslationType.php` | Form type | FR-FORM-001 |

@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace Nowo\CookieConsentBundle\Tests\Support\PersonalData;
 
 use DateTimeImmutable;
+use Doctrine\DBAL\Connection;
+use Doctrine\DBAL\Driver\Middleware;
 use Doctrine\DBAL\DriverManager;
 use Doctrine\DBAL\Tools\DsnParser;
 use Doctrine\DBAL\Types\Types;
@@ -17,22 +19,24 @@ use Doctrine\Persistence\ObjectManager;
 use Doctrine\Persistence\ObjectRepository;
 use LogicException;
 use Nowo\CookieConsentBundle\Doctrine\UtcDateTimeImmutableType;
-use Nowo\CookieConsentBundle\Entity\CookieConsentLog;
 
 use function array_map;
 use function dirname;
 use function getenv;
 use function is_string;
+use function str_starts_with;
 
 use const PHP_VERSION_ID;
 
 /**
  * The consent log on in-memory SQLite, or on the database of `COOKIE_CONSENT_TEST_DATABASE_URL` (MySQL / PostgreSQL in
- * CI and the local Docker run), plus a one-manager registry (tests only).
+ * CI and the local Docker run), plus a one-manager registry of the bundle entities (tests only).
  */
 final class ConsentLogDatabase implements ManagerRegistry
 {
     public const URL_ENV = 'COOKIE_CONSENT_TEST_DATABASE_URL';
+
+    private const ENTITY_NAMESPACE = 'Nowo\\CookieConsentBundle\\Entity\\';
 
     private function __construct(
         public readonly EntityManagerInterface $entityManager,
@@ -44,17 +48,10 @@ final class ConsentLogDatabase implements ManagerRegistry
      */
     public static function create(bool $withSchema = true): self
     {
-        UtcDateTimeImmutableType::register();
-        $config = ORMSetup::createAttributeMetadataConfiguration(paths: [dirname(__DIR__, 3) . '/src/Entity'], isDevMode: true);
-        if (PHP_VERSION_ID >= 80400) {
-            $config->enableNativeLazyObjects(true);
-        }
-
-        $url    = self::url();
-        $params = $url === null ? ['driver' => 'pdo_sqlite', 'memory' => true] : (new DsnParser(['mysql' => 'pdo_mysql', 'pgsql' => 'pdo_pgsql', 'postgresql' => 'pdo_pgsql']))->parse($url);
-        $em     = new EntityManager(DriverManager::getConnection($params, $config), $config);
-        $tool   = new SchemaTool($em);
-        $all    = $em->getMetadataFactory()->getAllMetadata();
+        $url  = self::url();
+        $em   = self::connect()->entityManager;
+        $tool = new SchemaTool($em);
+        $all  = $em->getMetadataFactory()->getAllMetadata();
         if ($url !== null) {
             $tool->dropSchema($all);
         }
@@ -63,6 +60,27 @@ final class ConsentLogDatabase implements ManagerRegistry
         }
 
         return new self($em);
+    }
+
+    /**
+     * Another session on the same database (schema untouched), optionally with DBAL middlewares (1.31: concurrency
+     * tests open a second connection, and count commits with transaction-doctrine's middleware).
+     *
+     * @param list<Middleware> $middlewares
+     */
+    public static function connect(array $middlewares = []): self
+    {
+        UtcDateTimeImmutableType::register();
+        $config = ORMSetup::createAttributeMetadataConfiguration(paths: [dirname(__DIR__, 3) . '/src/Entity'], isDevMode: true);
+        if (PHP_VERSION_ID >= 80400) {
+            $config->enableNativeLazyObjects(true);
+        }
+        $config->setMiddlewares($middlewares);
+
+        $url    = self::url();
+        $params = $url === null ? ['driver' => 'pdo_sqlite', 'memory' => true] : (new DsnParser(['mysql' => 'pdo_mysql', 'pgsql' => 'pdo_pgsql', 'postgresql' => 'pdo_pgsql']))->parse($url);
+
+        return new self(new EntityManager(DriverManager::getConnection($params, $config), $config));
     }
 
     /**
@@ -121,7 +139,7 @@ final class ConsentLogDatabase implements ManagerRegistry
         return 'default';
     }
 
-    public function getConnection(?string $name = null): object
+    public function getConnection(?string $name = null): Connection
     {
         return $this->entityManager->getConnection();
     }
@@ -168,6 +186,6 @@ final class ConsentLogDatabase implements ManagerRegistry
 
     public function getManagerForClass(string $class): ?ObjectManager
     {
-        return $class === CookieConsentLog::class ? $this->entityManager : null;
+        return str_starts_with($class, self::ENTITY_NAMESPACE) ? $this->entityManager : null;
     }
 }

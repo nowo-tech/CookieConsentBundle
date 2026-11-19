@@ -4,11 +4,12 @@ declare(strict_types=1);
 
 namespace Nowo\CookieConsentBundle\Cookie;
 
-use Doctrine\DBAL\Connection;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\Persistence\ManagerRegistry;
 use Nowo\CookieConsentBundle\Config\ResolvedCookieConsentConfig;
 use Nowo\CookieConsentBundle\Entity\CookieConsentLog;
+use Nowo\TransactionContract\TransientStorageFailure;
+use Nowo\TransactionDoctrine\DoctrineTransactionRunner;
 use Psr\Clock\ClockInterface;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
@@ -56,6 +57,9 @@ class CookieLogger implements CookieLoggerInterface
      * The rows are written with DBAL INSERTs in one transaction on the connection of the entity manager that maps
      * {@see CookieConsentLog} (`doctrine.entity_manager`, else the default one). No entity manager is flushed, so
      * pending changes of the host's unit of work are never committed by a consent POST, and none is reset.
+     *
+     * Since 1.31 a lock conflict (deadlock, lock wait timeout, serialization failure) is thrown as
+     * {@see TransientStorageFailure} with the DBAL exception as previous; no row is stored.
      *
      * @param array<string, bool|string> $categories The submitted category values
      * @param string $key The anonymous consent key
@@ -151,7 +155,11 @@ class CookieLogger implements CookieLoggerInterface
             $rows[] = [$data, $types];
         }
 
-        $connection->transactional(static function (Connection $connection) use ($table, $rows): void {
+        // 1.31 (REQ-RUNTIME-003 rules 1, 3): transaction-doctrine's runner. Inside an open host transaction the rows go
+        // in a savepoint; after a failure the levels it opened are rolled back (a savepoint the server dropped after a
+        // deadlock closes the connection instead of poisoning it), and a lock conflict is rethrown as
+        // TransientStorageFailure with the storage error as previous. One attempt: nothing is replayed.
+        DoctrineTransactionRunner::forConnection($connection, null, $this->logger)->run(static function () use ($connection, $table, $rows): void {
             foreach ($rows as [$data, $types]) {
                 $connection->insert($table, $data, $types);
             }

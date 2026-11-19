@@ -55,7 +55,11 @@ final class CookieConsentConfigSettingsAdminControllerTest extends AbstractContr
 
         $configRepository = $this->createMock(CookieConsentConfigRepository::class);
         $configRepository->method('find')->willReturn($config);
-        $configRepository->method('findAllEnabled')->willReturn([$config, $otherDefault]);
+        // 1.31: the repository saves in one transaction and clears the other defaults atomically.
+        $configRepository->expects(self::once())->method('saveSettings')->willReturnCallback(static function (CookieConsentConfig $saved) use ($config, $otherDefault): void {
+            self::assertSame($config, $saved);
+            $otherDefault->setDefault(false);
+        });
 
         $form = $this->createMock(FormInterface::class);
         $form->method('createView')->willReturn(new FormView());
@@ -70,7 +74,6 @@ final class CookieConsentConfigSettingsAdminControllerTest extends AbstractContr
         )->willReturn($form);
 
         $entityManager = $this->createMock(EntityManagerInterface::class);
-        $entityManager->expects(self::once())->method('flush');
 
         $translator = $this->createMock(TranslatorInterface::class);
         $translator->method('trans')->willReturn('saved');

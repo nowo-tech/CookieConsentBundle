@@ -12,8 +12,10 @@ use Nowo\CookieConsentBundle\Config\CookieInventoryNormalizer;
 use Nowo\CookieConsentBundle\Controller\CookieConsentConfigSettingsAdminController;
 use Nowo\CookieConsentBundle\Controller\CookieDefinitionAdminController;
 use Nowo\CookieConsentBundle\Cookie\CookieLogger;
+use Nowo\CookieConsentBundle\DependencyInjection\Compiler\CookieConsentCommitTrackingPass;
 use Nowo\CookieConsentBundle\Doctrine\ConsentLogCollationListener;
 use Nowo\CookieConsentBundle\Doctrine\CookieConsentManagerRegistry;
+use Nowo\CookieConsentBundle\EventListener\CookieConsentConflictListener;
 use Nowo\CookieConsentBundle\EventSubscriber\CookieConsentConfigTranslationSubscriber;
 use Nowo\CookieConsentBundle\EventSubscriber\CookieConsentSchemaReadySubscriber;
 use Nowo\CookieConsentBundle\Locale\ConfiguredLocales;
@@ -33,16 +35,21 @@ use Nowo\CookieConsentBundle\Security\AllowAllCookieConsentAccessChecker;
 use Nowo\CookieConsentBundle\Security\ConfigurableCookieConsentAccessChecker;
 use Nowo\CookieConsentBundle\Security\CookieConsentAccessCheckerInterface;
 use Nowo\CookieConsentBundle\Twig\CookieConsentAdminTwigExtension;
+use Nowo\TransactionDoctrine\Symfony\Conflict\ConflictResponsePolicy;
+use Nowo\TransactionDoctrine\WriteUnit\CommitLedger;
+use Nowo\TransactionDoctrine\WriteUnit\Dbal\CommitTrackingMiddleware;
 use Nowo\UiKitBundle\Theme\ThemeSlots;
 use Nowo\UserKitBundle\PersonalData\PersonalDataEraserInterface as UserKitPersonalDataEraserInterface;
 use Symfony\Component\Asset\Package;
 use Symfony\Component\Config\FileLocator;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
+use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\DependencyInjection\Definition;
 use Symfony\Component\DependencyInjection\Extension\Extension;
 use Symfony\Component\DependencyInjection\Extension\PrependExtensionInterface;
 use Symfony\Component\DependencyInjection\Loader\YamlFileLoader;
 use Symfony\Component\DependencyInjection\Reference;
+use Symfony\Component\HttpKernel\KernelEvents;
 use Symfony\Component\Translation\Loader\ArrayLoader;
 
 use function array_key_exists;
@@ -70,6 +77,15 @@ class NowoCookieConsentExtension extends Extension implements PrependExtensionIn
 
     /** Registry decorator wired into the bundle's repositories and logger when `doctrine.entity_manager` is set. */
     public const MANAGER_REGISTRY_SERVICE = 'nowo_cookie_consent.manager_registry';
+
+    /** 1.31: real commits counted by {@see self::COMMIT_TRACKING_MIDDLEWARE}, read by the conflict answer. */
+    public const COMMIT_LEDGER_SERVICE = 'nowo_cookie_consent.commit_ledger';
+
+    /** 1.31: transaction-doctrine's commit-tracking DBAL middleware (scoped by {@see CookieConsentCommitTrackingPass}). */
+    public const COMMIT_TRACKING_MIDDLEWARE = 'nowo_cookie_consent.commit_tracking_middleware';
+
+    /** 1.31: container parameter holding `conflict_response.commit_tracking` (bundle, all or off). */
+    public const COMMIT_TRACKING_PARAMETER = 'nowo_cookie_consent.conflict_response.commit_tracking';
 
     /**
      * Processes configuration and loads service definitions.
@@ -190,6 +206,7 @@ class NowoCookieConsentExtension extends Extension implements PrependExtensionIn
 
         $this->registerAccessChecker($container, $security);
         $this->wireEntityManager($container, $entityManagerName);
+        $this->registerConflictAnswer($container, $config['conflict_response'], $entityManagerName);
 
         if ($tablePrefix !== '') {
             $container->setDefinition(
@@ -240,6 +257,50 @@ class NowoCookieConsentExtension extends Extension implements PrependExtensionIn
         $container->register(CookieConsentsPersonalDataExportProvider::class, CookieConsentsPersonalDataExportProvider::class)
             ->setAutowired(true)
             ->addTag('nowo_user_kit.personal_data.export_provider', ['priority' => CookieConsentsPersonalDataExportProvider::PRIORITY]);
+    }
+
+    /**
+     * 1.31 (REQ-RUNTIME-003 rule 6): 409 (or 503) + CONFLICT_001 / CONFLICT_002 instead of a 500 for lock conflicts of
+     * the consent POST and the bundle's routes. Unset options follow transaction-doctrine's policy service when its
+     * bundle is registered.
+     *
+     * Commit tracking (`conflict_response.commit_tracking`): `bundle` (default) and `all` register transaction-doctrine's
+     * commit-tracking middleware; {@see CookieConsentCommitTrackingPass} scopes it to the bundle's connection (`bundle`),
+     * or drops it and reuses transaction-doctrine's own ledger when that bundle's `commit_detection` is on. `off`
+     * registers neither the ledger nor the middleware.
+     *
+     * @param array{status: int|null, retry_after: int|null, commit_tracking: string} $conflictResponse
+     */
+    private function registerConflictAnswer(ContainerBuilder $container, array $conflictResponse, ?string $entityManagerName): void
+    {
+        $container->setParameter(self::COMMIT_TRACKING_PARAMETER, $conflictResponse['commit_tracking']);
+        $tracking = $conflictResponse['commit_tracking'] !== 'off';
+        if ($tracking) {
+            $container->setDefinition(self::COMMIT_LEDGER_SERVICE, new Definition(CommitLedger::class));
+            $container->setDefinition(self::COMMIT_TRACKING_MIDDLEWARE, (new Definition(CommitTrackingMiddleware::class, [new Reference(self::COMMIT_LEDGER_SERVICE)]))
+                ->addTag('doctrine.middleware'));
+        }
+
+        $policy = $conflictResponse['status'] === null && $conflictResponse['retry_after'] === null
+            ? new Reference(ConflictResponsePolicy::class, ContainerInterface::NULL_ON_INVALID_REFERENCE)
+            : new Definition(ConflictResponsePolicy::class, [
+                $conflictResponse['status'] ?? ConflictResponsePolicy::STATUS_CONFLICT,
+                $conflictResponse['retry_after'] ?? ConflictResponsePolicy::DEFAULT_RETRY_AFTER,
+            ]);
+
+        $registry = $entityManagerName !== null
+            ? new Reference(self::MANAGER_REGISTRY_SERVICE)
+            : new Reference('doctrine', ContainerInterface::NULL_ON_INVALID_REFERENCE);
+
+        $container->setDefinition(CookieConsentConflictListener::class, (new Definition(CookieConsentConflictListener::class, [
+            $policy,
+            $tracking ? new Reference(self::COMMIT_LEDGER_SERVICE) : null,
+            new Reference('request_stack', ContainerInterface::NULL_ON_INVALID_REFERENCE),
+            $registry,
+            $entityManagerName,
+        ]))
+            ->addTag('kernel.event_listener', ['event' => KernelEvents::REQUEST, 'method' => 'onRequest', 'priority' => CookieConsentConflictListener::REQUEST_PRIORITY])
+            ->addTag('kernel.event_listener', ['event' => KernelEvents::EXCEPTION, 'method' => 'onException', 'priority' => CookieConsentConflictListener::PRIORITY]));
     }
 
     /**

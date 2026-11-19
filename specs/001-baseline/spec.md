@@ -129,6 +129,12 @@ GDPR **cookie consent** for Symfony: modal with category toggles, granular per-c
 - **FR-GDPR-004**: Optional UserKit bridges (`PersonalData/UserKit`).
 - **FR-EXACT-001**: Look-alike ids (REQ-SEC-006) — `ConsentLogCollationListener` (binary NO PAD collation on `cookie_consent_key` / `ip_address`, warning on a version without patch number), `===` re-checks of every row.
 
+### Concurrency (1.31, REQ-RUNTIME-003)
+
+- **FR-CONC-001**: The consent log is written before the consent cookies, in one transaction through transaction-doctrine's runner (`CookieLogger`); a failed log sets no cookie, dispatches no event and is never swallowed (`CookieConsentFormSubscriber`).
+- **FR-CONC-002**: Lock conflicts of the consent POST and of the bundle routes answer 409 (or 503) + `X-Conflict-Code` `CONFLICT_001` (+ `Retry-After`) / `CONFLICT_002`; admin unique keys answer the domain 409 `COOKIE_CONSENT_DUPLICATE_KEY`; a closed bundle manager is replaced (`CookieConsentConflictListener`). Commit tracking is scoped to the bundle's connection or reuses transaction-doctrine's ledger (`CookieConsentCommitTrackingPass`).
+- **FR-CONC-003**: "Only one default profile" — `CookieConsentConfigRepository::saveSettings()` locks the enabled profiles in id order, flushes and clears the other defaults with one atomic UPDATE, in one transaction.
+
 ---
 
 ## Success Criteria

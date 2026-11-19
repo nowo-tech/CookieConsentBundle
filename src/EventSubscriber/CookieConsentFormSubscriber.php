@@ -16,6 +16,7 @@ use Nowo\CookieConsentBundle\Cookie\CookieLogger;
 use Nowo\CookieConsentBundle\Cookie\CookieLoggerInterface;
 use Nowo\CookieConsentBundle\Enum\CookieNameEnum;
 use Nowo\CookieConsentBundle\Event\ConsentSavedEvent;
+use Nowo\CookieConsentBundle\EventListener\CookieConsentConflictListener;
 use Nowo\CookieConsentBundle\Form\CookieConsentType;
 use Nowo\CookieConsentBundle\Http\ColdStartRequestAttributes;
 use Nowo\CookieConsentBundle\Http\ConsentCookieResponseWriter;
@@ -29,6 +30,7 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Event\ResponseEvent;
 use Symfony\Component\HttpKernel\KernelEvents;
 use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
+use Throwable;
 
 use function in_array;
 use function is_array;
@@ -43,6 +45,11 @@ use function strlen;
  */
 class CookieConsentFormSubscriber implements EventSubscriberInterface
 {
+    /** Request attribute set once the consent of the request was handled (1.31): the error response is not handled again. */
+    public const HANDLED_ATTRIBUTE = '_nowo_cookie_consent_handled';
+
+    private readonly CookieConsentConflictListener $conflicts;
+
     /**
      * Creates a new cookie consent form subscriber.
      *
@@ -56,6 +63,7 @@ class CookieConsentFormSubscriber implements EventSubscriberInterface
      * @param EventDispatcherInterface|null $eventDispatcher Dispatches {@see ConsentSavedEvent} (1.26)
      * @param ClockInterface|null $clock Clock for the event time (1.26)
      * @param ConsentCookieWriterInterface|null $cookieWriter Framework-free consent cookie port (1.30)
+     * @param CookieConsentConflictListener|null $conflicts Conflict answer of a failed consent write (1.31, REQ-RUNTIME-003)
      */
     public function __construct(
         private readonly FormFactoryInterface $formFactory,
@@ -67,7 +75,9 @@ class CookieConsentFormSubscriber implements EventSubscriberInterface
         private readonly ?EventDispatcherInterface $eventDispatcher = null,
         private readonly ?ClockInterface $clock = null,
         private readonly ?ConsentCookieWriterInterface $cookieWriter = null,
+        ?CookieConsentConflictListener $conflicts = null,
     ) {
+        $this->conflicts = $conflicts ?? new CookieConsentConflictListener();
     }
 
     /**
@@ -96,7 +106,7 @@ class CookieConsentFormSubscriber implements EventSubscriberInterface
         $request  = $event->getRequest();
         $response = $event->getResponse();
 
-        if (ColdStartRequestAttributes::shouldSkipDatabaseAccess($request)) {
+        if (ColdStartRequestAttributes::shouldSkipDatabaseAccess($request) || $request->attributes->has(self::HANDLED_ATTRIBUTE)) {
             return;
         }
 
@@ -104,17 +114,38 @@ class CookieConsentFormSubscriber implements EventSubscriberInterface
             $form = $this->createCookieConsentForm();
             $form->handleRequest($request);
 
-            if ($form->isSubmitted() && $form->isValid()) {
-                /** @var array<string, bool|string> $data */
-                $data = $form->getData();
-                $this->rememberAnsweredProfile($form, $request);
-                $this->handleFormSubmit($data, $request, $response);
+            if (!$form->isSubmitted() || !$form->isValid()) {
+                return;
             }
+
+            /** @var array<string, bool|string> $data */
+            $data = $form->getData();
+            $this->rememberAnsweredProfile($form, $request);
         } catch (DBALException|ORMException $exception) {
+            // Reads only (form and profile): nothing was written and no consent cookie is set.
             $this->logger?->debug(
                 'Skipping cookie consent form handling during cold start.',
                 ['exception' => $exception],
             );
+
+            return;
+        }
+
+        // 1.31: a failed write throws and the application's error page answers; the error response passes through this
+        // listener again and must not save the consent a second time.
+        $request->attributes->set(self::HANDLED_ATTRIBUTE, true);
+
+        try {
+            $this->handleFormSubmit($data, $request, $response);
+        } catch (Throwable $failure) {
+            // REQ-RUNTIME-003 rule 6 / 8: a lock conflict answers 409 + CONFLICT_001 (nothing committed, retry) or
+            // CONFLICT_002; any other failure of the consent write stays a real error (never swallowed: no consent
+            // cookie without its proof of consent).
+            if ($this->conflicts->isLockConflict($failure)) {
+                throw $this->conflicts->httpExceptionFor($request, $failure);
+            }
+
+            throw $failure;
         }
     }
 
@@ -154,14 +185,16 @@ class CookieConsentFormSubscriber implements EventSubscriberInterface
         $cookieConsentKey = $this->getCookieConsentKey($request);
         $granularCookies  = $this->extractGranularCookies($categories);
 
-        (new ConsentCookieResponseWriter($this->cookieHandler, $this->cookieWriter))
-            ->save($categories, $cookieConsentKey, $response, $granularCookies);
-
+        // The proof of consent first (1.31, REQ-RUNTIME-003): a failing log throws here, before any consent cookie is
+        // set, and no event is dispatched.
         if ($this->useLogger) {
             $this->cookieLogger->log($categories, $cookieConsentKey);
         }
 
-        // After the log rows are flushed (1.26, DDD P2): a failing log throws above and no event is dispatched.
+        (new ConsentCookieResponseWriter($this->cookieHandler, $this->cookieWriter))
+            ->save($categories, $cookieConsentKey, $response, $granularCookies);
+
+        // After the log rows are committed (1.26, DDD P2).
         $this->eventDispatcher?->dispatch(new ConsentSavedEvent(
             $cookieConsentKey,
             $this->normalizeCategories($categories),

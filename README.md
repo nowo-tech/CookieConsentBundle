@@ -91,6 +91,7 @@ See [Demo with FrankenPHP](docs/DEMO-FRANKENPHP.md) for development vs. producti
 - [Installation](docs/INSTALLATION.md)
 - [Configuration](docs/CONFIGURATION.md)
 - [Usage](docs/USAGE.md)
+- [Concurrency (REQ-RUNTIME-003)](docs/CONCURRENCY.md)
 - [Contributing](docs/CONTRIBUTING.md)
 - [Code of Conduct](CODE_OF_CONDUCT.md)
 - [Changelog](docs/CHANGELOG.md)

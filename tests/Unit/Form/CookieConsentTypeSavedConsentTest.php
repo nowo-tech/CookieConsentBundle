@@ -53,7 +53,8 @@ final class CookieConsentTypeSavedConsentTest extends TypeTestCase
         $form = $this->factory->create(CookieConsentType::class);
 
         foreach ($form->getConfig()->getEventDispatcher()->getListeners(FormEvents::PRE_SUBMIT) as $listener) {
-            $callable = is_array($listener) ? ($listener[0] ?? null) : $listener;
+            // Symfony 7.4 / 8 type the listeners differently: take the first element of an array listener.
+            $callable = is_array($listener) ? reset($listener) : $listener;
 
             if (!$callable instanceof Closure) {
                 continue;

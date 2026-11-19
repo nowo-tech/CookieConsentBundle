@@ -10,6 +10,7 @@
   - [Appearance and behaviour of the modal](#appearance-and-behaviour-of-the-modal)
   - [Admin Web UI and security](#admin-web-ui-and-security)
   - [GDPR personal data (`personal_data`)](#gdpr-personal-data-personal_data)
+  - [Conflict answers (`conflict_response`)](#conflict-answers-conflict_response)
 - [Dedicated entity manager](#dedicated-entity-manager)
 - [Table prefix](#table-prefix)
 - [Locale detection](#locale-detection)
@@ -241,6 +242,17 @@ nowo_cookie_consent:
 | `personal_data.ip_windows` | `off` | `off`: erase by consent key only (IP windows in a subject are ignored). `erase`: also delete the rows of the subject's IP windows (an anonymised IP matches every visitor of the same /24 or /48 in the window). IP windows are never exported |
 | `personal_data.ip_window_margin` | `PT0S` | ISO 8601 duration added before and after every window an IP window provider returns (only with `ip_windows: erase`) |
 | `personal_data.subject_resolver` | `null` | Service id implementing `CookieConsentPersonalDataSubjectResolverInterface`; default: the windows of the tagged `CookieConsentIpWindowProviderInterface` services (only with `ip_windows: erase`, else no subject). See [USAGE](USAGE.md#gdpr-erasure-and-export) |
+
+### Conflict answers (`conflict_response`)
+
+Since 1.31 (REQ-RUNTIME-003). A lock conflict of the consent POST or of a bundle route answers 409 with
+`X-Conflict-Code: CONFLICT_001` (+ `Retry-After`) or `CONFLICT_002`. See [CONCURRENCY](CONCURRENCY.md).
+
+| Key | Default | Description |
+|-----|---------|-------------|
+| `conflict_response.status` | `null` | `409` or `503`. Null: nowo-tech/transaction-doctrine's `conflict_response` when its bundle is registered, else 409 |
+| `conflict_response.retry_after` | `null` | `Retry-After` seconds of a `CONFLICT_001` answer. Null: transaction-doctrine's, else 1 |
+| `conflict_response.commit_tracking` | `bundle` | Commits counted for `CONFLICT_002` without transaction-doctrine's `commit_detection`: `bundle` (the connection of the bundle's entity manager only), `all` (every connection) or `off` |
 
 ## Dedicated entity manager
 
