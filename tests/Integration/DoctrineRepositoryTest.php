@@ -120,6 +120,8 @@ final class DoctrineRepositoryTest extends TestCase
         $flags = $this->entityManager->getConnection()->fetchAllKeyValue('SELECT name, is_default FROM dashboard_cookie_config ORDER BY id');
         self::assertSame(['Old default' => 0, 'New default (saved)' => 1, 'Disabled' => 1], array_map(intval(...), $flags), 'disabled profiles keep their flag, as before');
         self::assertSame($new->getId(), $repository->findDefaultEnabled()?->getId(), 'the memo was cleared');
+        self::assertFalse($old->isDefault(), 'the loaded profile was refreshed after the atomic UPDATE');
+        self::assertTrue($disabled->isDefault());
         self::assertSame(0, $this->entityManager->getConnection()->getTransactionNestingLevel());
 
         $new->setName('Renamed, not default');

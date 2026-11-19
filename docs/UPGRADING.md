@@ -162,6 +162,15 @@
 - **Commit tracking:** by default the bundle registers transaction-doctrine's `CommitTrackingMiddleware` on the
   connection of its entity manager (`conflict_response.commit_tracking: bundle`). With transaction-doctrine's bundle and
   `commit_detection` on, its ledger is reused and nothing is added. `commit_tracking: off` registers no middleware.
+  That connection is usually your default one. On **DBAL 3** a connection wrapped by the middleware returns `null`
+  from `Connection::commit()` instead of `true` (DBAL 4 returns `void`). If your code reads that return value, set
+  `nowo_cookie_consent.conflict_response.commit_tracking: off`, or register transaction-doctrine's Symfony bundle with
+  `commit_detection` on (the bundle then adds no middleware of its own).
+- **Consents without log rows (security advisory, Low, >= 1.0.0 < 1.31.0).** Before 1.31 a failed consent-log write
+  was swallowed after the consent cookies had been set, so some visitors may hold a consent with no proof of consent.
+  After upgrading, publish a new consent revision marked as requiring re-consent (profile settings, *Behavior*: answer
+  **Yes** to *Ask visitors to consent again?*, see [USAGE](USAGE.md#asking-visitors-again-re-consent)), so every
+  visitor is asked again and each new answer is logged.
 - transaction-doctrine's `DoctrineTransactionRunner::forHostEntityManager()` is not used by this bundle (it writes the
   log with DBAL, never through your entity manager), so its LogicException on unflushed host changes cannot come from
   the bundle.

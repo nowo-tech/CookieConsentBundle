@@ -299,12 +299,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
-- A database failure of the consent log was swallowed (logged at debug level) after the consent cookies had been set,
-  so a deadlock or lock wait timeout left the visitor with consent cookies and no proof of consent. The failure now
-  answers a conflict (lock conflicts) or stays a real error, and no cookie is set.
+- **Security advisory (Low), affected 1.0.0–1.30.4 (>= 1.0.0 < 1.31.0):** a database failure of the consent log was
+  swallowed (logged at debug level) after the consent cookies had been set, so a deadlock, a lock wait timeout or any
+  other database error left the visitor with consent cookies and no proof of consent. The failure now answers a
+  conflict (lock conflicts) or stays a real error, and no cookie is set. After upgrading, publish a new consent revision
+  that requires re-consent (see UPGRADING).
 - Two admins making two profiles the default at the same time could leave both as default (read-then-write of the
   loaded profiles). The save now locks the enabled profiles in id order and clears the other defaults with one atomic
-  `UPDATE`, in the save's transaction.
+  `UPDATE`, in the save's transaction; the other profiles already loaded in the request are refreshed.
 - A failed admin flush that closed the bundle's entity manager is now replaced on the bundle's routes (never an open
   manager).
 

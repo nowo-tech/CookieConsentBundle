@@ -124,6 +124,14 @@ class CookieConsentConfigRepository extends ServiceEntityRepository implements R
             ->setParameter('enabled', true)
             ->setParameter('keep', $keep->getId())
             ->execute();
+
+        // The UPDATE bypasses the unit of work: the other profiles already loaded would keep a stale isDefault().
+        $entityManager = $this->getEntityManager();
+        foreach ($entityManager->getUnitOfWork()->getIdentityMap()[CookieConsentConfig::class] ?? [] as $loaded) {
+            if ($loaded !== $keep && $loaded instanceof CookieConsentConfig && $loaded->isEnabled()) {
+                $entityManager->refresh($loaded);
+            }
+        }
     }
 
     /**

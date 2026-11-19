@@ -69,7 +69,10 @@ On the consent POST and the bundle's routes (`CookieConsentConflictListener`; yo
 - The consent modal's script posts with XHR and only closes the modal on a 2xx answer: after a 409 the modal stays
   open and the visitor saves again.
 - A consent whose log rows committed and that then fails in a listener of `ConsentSavedEvent` (your code) on a lock
-  conflict answers `CONFLICT_002`: the rows are stored, the cookies are not set.
+  conflict answers `CONFLICT_002` with commit tracking on (`commit_tracking: bundle` / `all`, or transaction-doctrine's
+  `commit_detection`): the rows are stored, the cookies are not set. With `commit_tracking: off` and no
+  transaction-doctrine ledger the answer is `CONFLICT_001`, and the visitor's retry stores a second set of rows: harmless,
+  since the log is append-only and every consent is its own set.
 - The codes are `Nowo\TransactionDoctrine\ConflictCode` values.
 
 ## What is not a conflict
