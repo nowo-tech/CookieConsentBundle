@@ -610,7 +610,7 @@ Host templates and demos **must not** reintroduce raw `<form>`, `<input>`, `<tex
 
 ## Scrollbars
 
-Scrollable areas of this bundle (the consent modal, its body and the preferences list) use the same thin scrollbar as UiKit: 6px wide, thumb in the text colour at
+Scrollable areas of this bundle (the consent modal, its body, the preferences list and `.cm__desc` / `.pm__body` of `cookieconsent.css`) use the same thin scrollbar as UiKit: 6px wide, thumb in the text colour at
 28 % (45 % on hover), transparent track, no arrow buttons. Hosts restyle them **only** through the shared tokens
 `--nowo-ui-scrollbar-size`, `--nowo-ui-scrollbar-thumb`, `--nowo-ui-scrollbar-thumb-hover` and
 `--nowo-ui-scrollbar-track`; each has a fallback, so nothing is needed without UiKit. Do not set `scrollbar-width` or
