@@ -3,6 +3,7 @@
 ## Table of contents
 
 - [Unreleased](#unreleased)
+- [To 1.32.0](#to-1320)
 - [To 1.31.0](#to-1310)
   - [Concurrency: conflict answers and the consent log (REQ-RUNTIME-003)](#concurrency-conflict-answers-and-the-consent-log-req-runtime-003)
 - [To 1.30.4](#to-1304)
@@ -138,6 +139,14 @@
 - [Getting help](#getting-help)
 
 ## Unreleased
+
+## To 1.32.0
+
+From **1.31.0**:
+
+```bash
+composer update nowo-tech/cookie-consent-bundle
+```
 
 ## To 1.31.0
 
