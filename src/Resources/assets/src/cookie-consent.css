@@ -1497,3 +1497,54 @@ html[data-theme='dark'] .nowo-cookie-consent.nowo-cookie-consent--dark-mode {
   outline: 2px solid var(--nowo-cc-btn-primary-bg);
   outline-offset: 2px;
 }
+
+/*
+ * Scrollbars: thin 6px bar matching UiKit. Hosts restyle only through the --nowo-ui-scrollbar-* tokens.
+ * The ::-webkit-scrollbar rules apply when the engine supports them; otherwise the standard properties are used.
+ */
+.nowo-cookie-consent.modal::-webkit-scrollbar,
+.nowo-cookie-consent .modal-body::-webkit-scrollbar,
+.nowo-cookie-consent__preferences-body::-webkit-scrollbar,
+.nowo-cookie-consent[data-nowo-ui-theme='tailwind'] .nowo-cookie-consent__scrollable::-webkit-scrollbar {
+  width: var(--nowo-ui-scrollbar-size, 6px);
+  height: var(--nowo-ui-scrollbar-size, 6px);
+}
+
+.nowo-cookie-consent.modal::-webkit-scrollbar-track,
+.nowo-cookie-consent .modal-body::-webkit-scrollbar-track,
+.nowo-cookie-consent__preferences-body::-webkit-scrollbar-track,
+.nowo-cookie-consent[data-nowo-ui-theme='tailwind'] .nowo-cookie-consent__scrollable::-webkit-scrollbar-track {
+  background: var(--nowo-ui-scrollbar-track, transparent);
+}
+
+.nowo-cookie-consent.modal::-webkit-scrollbar-thumb,
+.nowo-cookie-consent .modal-body::-webkit-scrollbar-thumb,
+.nowo-cookie-consent__preferences-body::-webkit-scrollbar-thumb,
+.nowo-cookie-consent[data-nowo-ui-theme='tailwind'] .nowo-cookie-consent__scrollable::-webkit-scrollbar-thumb {
+  background: var(--nowo-ui-scrollbar-thumb, color-mix(in srgb, currentColor 28%, transparent));
+  border-radius: 999px;
+}
+
+.nowo-cookie-consent.modal::-webkit-scrollbar-thumb:hover,
+.nowo-cookie-consent .modal-body::-webkit-scrollbar-thumb:hover,
+.nowo-cookie-consent__preferences-body::-webkit-scrollbar-thumb:hover,
+.nowo-cookie-consent[data-nowo-ui-theme='tailwind'] .nowo-cookie-consent__scrollable::-webkit-scrollbar-thumb:hover {
+  background: var(--nowo-ui-scrollbar-thumb-hover, color-mix(in srgb, currentColor 45%, transparent));
+}
+
+.nowo-cookie-consent.modal::-webkit-scrollbar-button,
+.nowo-cookie-consent .modal-body::-webkit-scrollbar-button,
+.nowo-cookie-consent__preferences-body::-webkit-scrollbar-button,
+.nowo-cookie-consent[data-nowo-ui-theme='tailwind'] .nowo-cookie-consent__scrollable::-webkit-scrollbar-button {
+  display: none;
+}
+
+@supports not selector(::-webkit-scrollbar) {
+  .nowo-cookie-consent.modal,
+  .nowo-cookie-consent .modal-body,
+  .nowo-cookie-consent__preferences-body,
+  .nowo-cookie-consent[data-nowo-ui-theme='tailwind'] .nowo-cookie-consent__scrollable {
+    scrollbar-width: thin;
+    scrollbar-color: var(--nowo-ui-scrollbar-thumb, color-mix(in srgb, currentColor 28%, transparent)) var(--nowo-ui-scrollbar-track, transparent);
+  }
+}
