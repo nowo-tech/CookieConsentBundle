@@ -45,6 +45,7 @@ Regenerate with `make -C demo/symfony8 demo-screenshots` (REQ-DEMO-013).
 - [Database profile copy (`nowo_cookie_consent_trans`)](#database-profile-copy-nowo_cookie_consent_trans)
 - [Demo](#demo)
   - [Forms (REQ-TWIG-005)](#forms-req-twig-005)
+- [Scrollbars](#scrollbars)
 
 ## Embed the modal
 
@@ -606,3 +607,12 @@ Bundle views and both demos render every form through Symfony Form Types (Form K
 ```
 
 Host templates and demos **must not** reintroduce raw `<form>`, `<input>`, `<textarea>` or `<select>` markup. `make check-no-raw-html-form` (part of `release-check`) enforces it; the only allowlisted files are the two form themes (`form/cookie_consent_theme*.html.twig`), which implement Symfony's `checkbox_widget` block.
+
+## Scrollbars
+
+Scrollable areas of this bundle (the consent modal, its body and the preferences list) use the same thin scrollbar as UiKit: 6px wide, thumb in the text colour at
+28 % (45 % on hover), transparent track, no arrow buttons. Hosts restyle them **only** through the shared tokens
+`--nowo-ui-scrollbar-size`, `--nowo-ui-scrollbar-thumb`, `--nowo-ui-scrollbar-thumb-hover` and
+`--nowo-ui-scrollbar-track`; each has a fallback, so nothing is needed without UiKit. Do not set `scrollbar-width` or
+`scrollbar-color` on these elements: on Chromium 121+ they disable the `::-webkit-scrollbar` rules (the standard
+properties are only applied by the bundle where `::-webkit-scrollbar` is unsupported).
