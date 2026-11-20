@@ -4,12 +4,15 @@ declare(strict_types=1);
 
 namespace Nowo\CookieConsentBundle\Concurrency;
 
+use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\EntityManagerInterface;
+use Doctrine\ORM\PersistentCollection;
 
 use function array_map;
 use function array_values;
 use function explode;
 use function implode;
+use function spl_object_id;
 use function sprintf;
 
 /**
@@ -28,13 +31,16 @@ final class RowVersionGuard
     /**
      * Advances the row by one version when it still has the version the edited page was built from.
      *
+     * With `$expected` null (a host's own write, no page behind it) the row is advanced without the version check, so a
+     * page opened before that write is refused as stale instead of overwriting it.
+     *
      * @param EntityManagerInterface $entityManager The manager of the entity (only its connection is used; it is never flushed, cleared or reset)
      * @param VersionedRowInterface $row The edited entity
-     * @param int $expected The version carried by the submitted page
+     * @param int|null $expected The version carried by the submitted page, or null for an unchecked write
      *
      * @throws StaleVersionException when the row was saved by someone else since the page was opened, or no longer exists
      */
-    public static function advance(EntityManagerInterface $entityManager, VersionedRowInterface $row, int $expected): void
+    public static function advance(EntityManagerInterface $entityManager, VersionedRowInterface $row, ?int $expected): void
     {
         $connection = $entityManager->getConnection();
         $platform   = $connection->getDatabasePlatform();
@@ -44,39 +50,61 @@ final class RowVersionGuard
 
         $table    = implode('.', array_map($platform->quoteSingleIdentifier(...), explode('.', $metadata->getTableName())));
         $version  = $platform->quoteSingleIdentifier($metadata->getColumnName('rowVersion'));
-        $affected = $connection->executeStatement(
-            sprintf(
-                'UPDATE %s SET %s = %s + 1 WHERE %s = ? AND %s = ?',
-                $table,
-                $version,
-                $version,
-                $platform->quoteSingleIdentifier($metadata->getColumnName($metadata->getSingleIdentifierFieldName())),
-                $version,
-            ),
-            [$id, $expected],
-        );
-
-        if ((int) $affected !== 1) {
-            throw new StaleVersionException($row::class, $id, $expected);
+        $idColumn = $platform->quoteSingleIdentifier($metadata->getColumnName($metadata->getSingleIdentifierFieldName()));
+        $sql      = sprintf('UPDATE %s SET %s = %s + 1 WHERE %s = ?', $table, $version, $version, $idColumn);
+        $params   = [$id];
+        if ($expected !== null) {
+            $sql .= sprintf(' AND %s = ?', $version);
+            $params[] = $expected;
         }
 
-        $row->setRowVersion($expected + 1);
+        $affected = (int) $connection->executeStatement($sql, $params);
+
+        if ($expected !== null) {
+            if ($affected !== 1) {
+                throw new StaleVersionException($row::class, $id, $expected);
+            }
+
+            $row->setRowVersion($expected + 1);
+
+            return;
+        }
+
+        if ($affected === 1) {
+            // The row lock is held until the commit: the version read back is the one the flush writes.
+            $row->setRowVersion((int) $connection->fetchOne(sprintf('SELECT %s FROM %s WHERE %s = ?', $version, $table, $idColumn), [$id]));
+        }
     }
 
     /**
-     * Drops the unsaved form changes of a refused (stale) edit from the managed entities: a refresh of the row and of its
-     * managed children, never a clear or a reset of the manager (it may be the host's). Without it, a later flush of
-     * the same manager (worker mode, kernel reset off) would write the outdated page over the other admin's save.
+     * Drops the unsaved form changes of a refused (stale) edit from the managed entities: the row and the children of
+     * its collections (translations) are refreshed, and the orphan removals the form scheduled are cancelled. Never a
+     * clear or a reset of the manager (it may be the host's). Without it, a later flush of the same manager (worker
+     * mode, kernel reset off) would write the outdated page over the other admin's save, or delete a translation the
+     * form had blanked (`removeElement()` on an orphan-removal collection schedules the delete at once).
      * Children the form added and that were never persisted are dropped with the row's refreshed collections.
      *
      * @param EntityManagerInterface $entityManager The manager of the entity
      * @param VersionedRowInterface $row The edited entity
-     * @param iterable<object> $children The entities the form edited through the row (translations), read before the refresh
+     * @param iterable<Collection<array-key, covariant object>> $collections The collections the form edited through the row (translations), read before the refresh
      */
-    public static function discard(EntityManagerInterface $entityManager, VersionedRowInterface $row, iterable $children = []): void
+    public static function discard(EntityManagerInterface $entityManager, VersionedRowInterface $row, iterable $collections = []): void
     {
+        $unitOfWork = $entityManager->getUnitOfWork();
+        $children   = [];
+        foreach ($collections as $collection) {
+            // The snapshot holds the children as loaded, including those the form removed from the collection.
+            foreach ($collection instanceof PersistentCollection ? $collection->getSnapshot() : [] as $child) {
+                $children[spl_object_id($child)] = $child;
+            }
+            foreach ($collection as $child) {
+                $children[spl_object_id($child)] = $child;
+            }
+        }
+
         $entityManager->refresh($row);
         foreach ($children as $child) {
+            $unitOfWork->cancelOrphanRemoval($child);
             if ($entityManager->contains($child)) {
                 $entityManager->refresh($child);
             }

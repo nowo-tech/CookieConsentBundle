@@ -299,6 +299,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   before you deploy** (the bundle ships no migrations; see UPGRADING). Making a profile the default advances the version of
   the profiles it demotes.
 - Custom admin templates that list the form fields one by one must render `form.rowVersion` (`form_rest()` does).
+- A `saveSettings()` call without a version (host code) advances the profile's `row_version` unchecked, so an admin page opened before it is refused as stale.
+- **Run the migration first:** until the column exists every page that renders the banner (the whole public site) fails.
+- A refused stale definition edit cancels the orphan removals the form scheduled for blanked translation tabs, so a later flush of the same manager deletes no translation.
 - `docs/CONCURRENCY.md`: the "later save wins" residual risk of the admin edits is closed.
 
 ## [1.32.0] - 2026-11-19

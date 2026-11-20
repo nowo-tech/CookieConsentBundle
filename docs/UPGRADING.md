@@ -149,8 +149,10 @@ From **1.32.0**:
 composer update nowo-tech/cookie-consent-bundle
 ```
 
-**Add one column to two tables before you deploy** (the bundle ships no migrations; the mapped entities select it, so the
-pages that read a profile or a cookie definition fail until it exists). Run `php bin/console doctrine:migrations:diff`
+**Run the migration before you deploy the new code: until the column exists, every page that renders the consent
+banner fails, which means the whole public site, not only the admin.** The mapped entities select the column, and the
+banner reads the consent profile and its cookie definitions on every page. The bundle ships no migrations: add one column
+to two tables. Run `php bin/console doctrine:migrations:diff`
 and review it, or `doctrine:schema:update --force` where you use that. With a dedicated manager use
 `--em=cookie_consent`. On MySQL 8.4, MariaDB 11.4 and PostgreSQL 16 the migration is (add your `doctrine.table_prefix`
 to the table names):
@@ -176,7 +178,8 @@ What changes:
   `form_fields` partial) must also render the hidden field: `{{ form_row(form.rowVersion) }}`, or `form_rest(form)`. The
   shipped templates already do. Without the field every save is answered as stale (never a silent overwrite).
 - **Host code** that calls `CookieConsentConfigRepository::saveSettings($config, $em)` is unchanged (no check without
-  the new third argument `$expectedVersion`). A host form type extending the section types gets the field with them.
+  the new third argument `$expectedVersion`), but the write advances the profile's version, so an admin page opened
+  before it is refused as stale instead of overwriting it. A host form type extending the section types gets the field with them.
 - Making a profile the default also advances the version of the profiles it demotes, so a page of the old default
   opened before cannot write its flag back.
 - Deleting a cookie definition is not versioned (delete by id, idempotent).

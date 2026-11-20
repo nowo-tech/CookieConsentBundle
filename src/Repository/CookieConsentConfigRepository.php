@@ -84,7 +84,7 @@ class CookieConsentConfigRepository extends ServiceEntityRepository implements R
      * {@see TransientStorageFailure} (409 + CONFLICT_001 on the admin route).
      *
      * @param EntityManagerInterface $entityManager the manager of the bundle entities (it holds the form's changes)
-     * @param int|null $expectedVersion the row version of the edited page (the form's hidden token); null saves without the check (a host's own code)
+     * @param int|null $expectedVersion the row version of the edited page (the form's hidden token); null saves without the check but still advances the version (a host's own code)
      *
      * @throws StaleVersionException when `$expectedVersion` is no longer the profile's version
      */
@@ -96,9 +96,8 @@ class CookieConsentConfigRepository extends ServiceEntityRepository implements R
                 $this->lockEnabledProfiles();
             }
 
-            if ($expectedVersion !== null) {
-                RowVersionGuard::advance($entityManager, $config, $expectedVersion);
-            }
+            // With no token (host code) the version still advances, unchecked: pages opened before are stale.
+            RowVersionGuard::advance($entityManager, $config, $expectedVersion);
 
             $entityManager->flush();
 

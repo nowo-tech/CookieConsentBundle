@@ -131,6 +131,30 @@ final class RowVersionDatabaseTest extends TestCase
         $repository->saveSettings($config, $this->em);
 
         self::assertSame('Host code', $this->em->getConnection()->fetchOne('SELECT name FROM dashboard_cookie_config WHERE id = ?', [$config->getId()]));
+        self::assertSame(6, $this->storedVersion('dashboard_cookie_config', (int) $config->getId()), 'a host write advances the version unchecked');
+        self::assertSame(6, $config->getRowVersion());
+    }
+
+    public function testAnUncheckedAdvanceOfADeletedRowChangesNothing(): void
+    {
+        $config = $this->profile('A', false);
+        $this->em->getConnection()->executeStatement('DELETE FROM dashboard_cookie_config WHERE id = ?', [$config->getId()]);
+
+        RowVersionGuard::advance($this->em, $config, null);
+
+        self::assertSame(1, $config->getRowVersion());
+    }
+
+    public function testAPageOpenedBeforeAHostWriteIsStale(): void
+    {
+        $config     = $this->profile('A', false);
+        $repository = new CookieConsentConfigRepository($this->db);
+
+        $config->setName('Host code');
+        $repository->saveSettings($config, $this->em);
+
+        $this->expectException(StaleVersionException::class);
+        $repository->saveSettings($config->setName('Stale page'), $this->em, 1);
     }
 
     public function testMakingAProfileTheDefaultAdvancesTheVersionOfTheProfilesItDemotes(): void
@@ -192,6 +216,8 @@ final class RowVersionDatabaseTest extends TestCase
         $repository  = new CookieDefinitionRepository($this->db);
         $translation = (new CookieDefinitionTranslation())->setLocale('en')->setProvider('Google')->setPurpose('Statistics');
         $definition->addTranslation($translation);
+        $blanked = (new CookieDefinitionTranslation())->setLocale('fr')->setProvider('Google FR')->setPurpose('Stats FR');
+        $definition->addTranslation($blanked);
         $repository->saveEdit($definition, $this->em, 1);
 
         // Another admin saved version 3 meanwhile; this page (version 2) edits the definition and its translations.
@@ -199,17 +225,27 @@ final class RowVersionDatabaseTest extends TestCase
         $definition->setDuration('1 day');
         $translation->setProvider('Stale provider');
         $definition->addTranslation((new CookieDefinitionTranslation())->setLocale('es')->setProvider('Stale es')->setPurpose('Stale'));
+        // The admin blanked the stored 'fr' tab: removeTranslation() schedules its orphan removal at once.
+        $definition->removeTranslation($blanked);
 
         try {
             $repository->saveEdit($definition, $this->em, 2);
             self::fail('A stale edit must be refused.');
         } catch (StaleVersionException) {
-            RowVersionGuard::discard($this->em, $definition, $definition->getTranslations()->toArray());
+            RowVersionGuard::discard($this->em, $definition, [$definition->getTranslations()]);
         }
+        $unitOfWork = $this->em->getUnitOfWork();
+        $unitOfWork->computeChangeSets();
+        self::assertSame([], $unitOfWork->getScheduledEntityInsertions(), 'nothing left scheduled to insert');
+        self::assertSame([], $unitOfWork->getScheduledEntityUpdates(), 'nothing left scheduled to update');
+        self::assertSame([], $unitOfWork->getScheduledEntityDeletions(), 'nothing left scheduled to delete (no orphan removal)');
+        self::assertSame([], $unitOfWork->getScheduledCollectionUpdates());
+        self::assertSame([], $unitOfWork->getScheduledCollectionDeletions());
         $this->em->flush();
 
         self::assertSame('1 year', $this->em->getConnection()->fetchOne('SELECT duration FROM dashboard_cookie_definition WHERE id = ?', [$definition->getId()]));
-        self::assertSame(['en' => 'Google'], $this->em->getConnection()->fetchAllKeyValue('SELECT locale, provider FROM dashboard_cookie_definition_translation'), 'a later flush writes nothing of the refused page');
+        self::assertEquals(['en' => 'Google', 'fr' => 'Google FR'], $this->em->getConnection()->fetchAllKeyValue('SELECT locale, provider FROM dashboard_cookie_definition_translation ORDER BY locale'), 'a later flush writes nothing of the refused page and deletes no blanked tab');
+        self::assertCount(2, $definition->getTranslations());
         self::assertSame('1 year', $definition->getDuration(), 'the managed entity shows the stored row again');
         self::assertTrue($this->em->isOpen());
     }

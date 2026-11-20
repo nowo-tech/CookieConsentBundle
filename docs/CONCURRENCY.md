@@ -64,8 +64,9 @@ and before the flush, `RowVersionGuard::advance()` runs one atomic
   flush writes the change;
 - no row matched: another admin saved the row after the page was opened (or deleted it). `StaleVersionException` is
   thrown before anything is flushed; the controller drops the form's changes from the managed entities (`refresh()` of
-  the row and of its managed translations: the manager is never cleared or reset, and a later flush of it writes nothing
-  of the refused page) and re-renders the form with **409**,
+  the row and of its managed translations, and the orphan removals the form scheduled for blanked translation tabs are
+  cancelled: the manager is never cleared or reset, and a later flush of it writes nothing of the refused page and
+  deletes no translation) and re-renders the form with **409**,
   `X-Error-Code: COOKIE_CONSENT_STALE_VERSION` and an "changed by someone else, reload" message. No `X-Conflict-Code`
   and no `Retry-After`: it is not a lock conflict, and repeating the same page can never succeed.
 
@@ -79,7 +80,7 @@ template that lists the fields one by one must render `form.rowVersion`; `form_r
 The version advances on every admin save, also when only a translation changed (the translation rows belong to the
 definition's save). Making a profile the default also advances the version of the profiles it demotes, so a page of the
 old default opened before cannot write the old flag back. `saveSettings($config, $em)` without the third argument (host
-code) saves without the check. The bundle has no Messenger handlers and no console command that writes.
+code) saves without the check but still advances the version, so a page opened before the host's write is refused. The bundle has no Messenger handlers and no console command that writes.
 
 ## Conflict answers and codes
 
