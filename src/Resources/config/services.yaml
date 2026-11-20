@@ -109,7 +109,7 @@ services:
       $doctrine: '@doctrine'
       $logger: '@?logger'
     tags:
-      - { name: doctrine.event_listener, event: postGenerateSchemaTable }
+      - { name: doctrine.event_listener, event: postGenerateSchema }
 
   Nowo\CookieConsentBundle\PersonalData\CookieConsentPersonalDataEraserInterface:
     alias: Nowo\CookieConsentBundle\PersonalData\CookieConsentPersonalDataEraser
