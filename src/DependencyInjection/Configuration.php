@@ -12,6 +12,7 @@ use Nowo\CookieConsentBundle\Config\PreferencesBubbleIconSanitizer;
 use Nowo\CookieConsentBundle\Enum\CategoryEnum;
 use Nowo\CookieConsentBundle\Enum\DisabledRoutesEnum;
 use Nowo\TransactionDoctrine\Symfony\Conflict\ConflictResponsePolicy;
+use Symfony\Component\Config\Definition\Builder\ArrayNodeDefinition;
 use Symfony\Component\Config\Definition\Builder\TreeBuilder;
 use Symfony\Component\Config\Definition\ConfigurationInterface;
 
@@ -65,7 +66,22 @@ class Configuration implements ConfigurationInterface
         $rootNode    = $treeBuilder->getRootNode();
 
         $rootNode
-            ->addDefaultsIfNotSet()
+            ->addDefaultsIfNotSet();
+        $this->addDoctrineToUseCookieInventorySections($rootNode);
+        $this->addCookieInventoryToRouteTargetingModeSections($rootNode);
+        $this->addTargetRoutesToPreferenceSectionsSections($rootNode);
+        $this->addWebUiSection($rootNode);
+        $this->addSecurityToConflictResponseSections($rootNode);
+
+        return $treeBuilder;
+    }
+
+    /**
+     * Adds the `doctrine` to `use_cookie_inventory` settings.
+     */
+    private function addDoctrineToUseCookieInventorySections(ArrayNodeDefinition $rootNode): void
+    {
+        $rootNode
             ->children()
                 ->arrayNode('doctrine')
                     ->info('Doctrine DBAL connection and table prefix for cookie consent entities.')
@@ -118,6 +134,16 @@ class Configuration implements ConfigurationInterface
                     ->defaultFalse()
                     ->info('Expose cookie definitions (name, category/block, duration, provider, purpose) in the preferences modal and legal pages.')
                 ->end()
+            ->end();
+    }
+
+    /**
+     * Adds the `cookie_inventory` to `route_targeting_mode` settings.
+     */
+    private function addCookieInventoryToRouteTargetingModeSections(ArrayNodeDefinition $rootNode): void
+    {
+        $rootNode
+            ->children()
                 ->arrayNode('cookie_inventory')
                     ->defaultValue([])
                     ->info('Static cookie definitions when not using Doctrine entities (ignored when the active profile has CookieDefinition rows).')
@@ -201,6 +227,16 @@ class Configuration implements ConfigurationInterface
                     ->defaultValue('all')
                     ->info('Controls where the modal auto-opens: all pages, only listed routes, or all except listed routes.')
                 ->end()
+            ->end();
+    }
+
+    /**
+     * Adds the `target_routes` to `preference_sections` settings.
+     */
+    private function addTargetRoutesToPreferenceSectionsSections(ArrayNodeDefinition $rootNode): void
+    {
+        $rootNode
+            ->children()
                 ->arrayNode('target_routes')
                     ->scalarPrototype()->end()
                     ->defaultValue([])
@@ -279,120 +315,157 @@ class Configuration implements ConfigurationInterface
                         ->end()
                     ->end()
                 ->end()
-                ->arrayNode('web_ui')
-                    ->addDefaultsIfNotSet()
-                    ->beforeNormalization()
-                        ->ifArray()
-                        ->then(static fn (array $v): array => self::normalizeWebUi($v))
+            ->end();
+    }
+
+    /**
+     * Adds the `enabled` to `list_page_size` settings.
+     */
+    private function addWebUiEnabledToListPageSizeSections(ArrayNodeDefinition $webUi): void
+    {
+        $webUi
+            ->children()
+                ->booleanNode('enabled')
+                    ->defaultTrue()
+                    ->info('When false, admin access subscriber is not registered (routes still load; prefer security firewall).')
+                ->end()
+                ->scalarNode('path_prefix')
+                    ->defaultValue('/cookie-consent-config')
+                    ->cannotBeEmpty()
+                    ->info('Deprecated since 1.15 and ignored: admin routes are always mounted under /cookie-consent-config (use the import prefix of the bundle routes to move them).')
+                    ->setDeprecated('nowo-tech/cookie-consent-bundle', '1.15', 'The "%path%.%node%" option is ignored (admin routes are always /cookie-consent-config/...; use the "prefix" of the routes import to move them) and will be removed in 2.0.')
+                    ->validate()
+                        ->ifTrue(static fn ($v): bool => !is_string($v) || !str_starts_with($v, '/'))
+                        ->thenInvalid('path_prefix must be a string starting with /')
                     ->end()
+                ->end()
+                ->scalarNode('layout_template')
+                    ->defaultNull()
+                    ->info('Per-bundle layout override of the admin pages (REQ-UI-003). Null (default) = the UiKit admin layout (nowo_ui_kit.layouts.admin). The layout must render the UiKit canonical blocks (nowo_ui_content, nowo_ui_page_header, …).')
+                ->end()
+                ->arrayNode('templates')
+                    ->info('Per-page template override (REQ-UI-003): ' . implode(', ', array_keys(self::PAGE_TEMPLATES)) . '. Use a thin template that extends the shipped one ("@!NowoCookieConsentBundle/…") and overrides a data block.')
+                    ->useAttributeAsKey('page')
+                    ->normalizeKeys(false)
+                    ->scalarPrototype()->cannotBeEmpty()->end()
+                    ->validate()
+                        ->ifTrue(static fn (array $v): bool => array_diff_key($v, self::PAGE_TEMPLATES) !== [])
+                        ->then(static function (array $v): never {
+                            throw new InvalidArgumentException(sprintf('Unknown web_ui.templates page(s): %s. Known pages: %s.', implode(', ', array_keys(array_diff_key($v, self::PAGE_TEMPLATES))), implode(', ', array_keys(self::PAGE_TEMPLATES))));
+                        })
+                    ->end()
+                ->end()
+                ->enumNode('css_framework')
+                    ->values([...self::CSS_FRAMEWORKS, null])
+                    ->defaultNull()
+                    ->info('Deprecated since 1.16: set nowo_ui_kit.css_framework. When set (and nowo_ui_kit.css_framework is not), seeds the UiKit stack.')
+                    ->setDeprecated('nowo-tech/cookie-consent-bundle', '1.16', 'The "%path%.%node%" option is deprecated: the admin pages inherit nowo_ui_kit.css_framework. It will be removed in 2.0.')
+                ->end()
+                ->enumNode('icon_set')
+                    ->values(['bootstrap-icons', 'tabler-icons', 'ux_icon', 'svg_inline', 'none', null])
+                    ->defaultNull()
+                    ->info('Deprecated since 1.16: set nowo_ui_kit.icon_set. When set (and nowo_ui_kit.icon_set is not), seeds the UiKit icon set.')
+                    ->setDeprecated('nowo-tech/cookie-consent-bundle', '1.16', 'The "%path%.%node%" option is deprecated: the admin pages inherit nowo_ui_kit.icon_set. It will be removed in 2.0.')
+                ->end()
+                ->integerNode('list_page_size')
+                    ->defaultValue(20)
+                    ->min(1)
+                    ->max(200)
+                    ->info('Default page size for admin cookie definition lists.')
+                ->end()
+            ->end();
+    }
+
+    /**
+     * Adds the `chrome` section.
+     */
+    private function addWebUiChromeSection(ArrayNodeDefinition $webUi): void
+    {
+        $webUi
+            ->children()
+                ->arrayNode('chrome')
+                    ->info('Deprecated since 1.16 (1.13 admin chrome hooks): bridged into nowo_ui_kit.theme.bundles.NowoCookieConsentBundle; see docs/UPGRADING.md "Template contract".')
+                    ->setDeprecated('nowo-tech/cookie-consent-bundle', '1.16', 'The "%path%.%node%" option is deprecated: the admin pages use the UiKit page scaffolds and theme slots; configure nowo_ui_kit.theme.bundles.NowoCookieConsentBundle (see UPGRADING "Template contract"). It will be removed in 2.0.')
+                    ->addDefaultsIfNotSet()
                     ->children()
-                        ->booleanNode('enabled')
-                            ->defaultTrue()
-                            ->info('When false, admin access subscriber is not registered (routes still load; prefer security firewall).')
+                        ->enumNode('page_title_tag')
+                            ->values(AdminChrome::PAGE_TITLE_TAGS)
+                            ->defaultValue('h1')
+                            ->info('Ignored since 1.16: the heading comes from the UiKit page_header partial (override it through theme.partials.page_header).')
                         ->end()
-                        ->scalarNode('path_prefix')
-                            ->defaultValue('/cookie-consent-config')
-                            ->cannotBeEmpty()
-                            ->info('Deprecated since 1.15 and ignored: admin routes are always mounted under /cookie-consent-config (use the import prefix of the bundle routes to move them).')
-                            ->setDeprecated('nowo-tech/cookie-consent-bundle', '1.15', 'The "%path%.%node%" option is ignored (admin routes are always /cookie-consent-config/...; use the "prefix" of the routes import to move them) and will be removed in 2.0.')
-                            ->validate()
-                                ->ifTrue(static fn ($v): bool => !is_string($v) || !str_starts_with($v, '/'))
-                                ->thenInvalid('path_prefix must be a string starting with /')
-                            ->end()
+                        ->enumNode('row_actions_display')
+                            ->values(AdminChrome::ROW_ACTIONS_DISPLAYS)
+                            ->defaultValue('inherit')
+                            ->info('Row actions display of the cookie list: text | icon | icon_text | inherit (default: nowo_ui_kit.row_actions_display).')
                         ->end()
-                        ->scalarNode('layout_template')
-                            ->defaultNull()
-                            ->info('Per-bundle layout override of the admin pages (REQ-UI-003). Null (default) = the UiKit admin layout (nowo_ui_kit.layouts.admin). The layout must render the UiKit canonical blocks (nowo_ui_content, nowo_ui_page_header, …).')
-                        ->end()
-                        ->arrayNode('templates')
-                            ->info('Per-page template override (REQ-UI-003): ' . implode(', ', array_keys(self::PAGE_TEMPLATES)) . '. Use a thin template that extends the shipped one ("@!NowoCookieConsentBundle/…") and overrides a data block.')
-                            ->useAttributeAsKey('page')
+                        ->arrayNode('classes')
+                            ->info('1.x element key => classes (see AdminChrome::SLOT_MAP), bridged into the UiKit theme slots.')
+                            ->useAttributeAsKey('name')
                             ->normalizeKeys(false)
-                            ->scalarPrototype()->cannotBeEmpty()->end()
+                            ->scalarPrototype()->end()
                             ->validate()
-                                ->ifTrue(static fn (array $v): bool => array_diff_key($v, self::PAGE_TEMPLATES) !== [])
+                                ->ifTrue(static fn (array $v): bool => array_diff_key($v, AdminChrome::DEFAULT_CLASSES) !== [])
                                 ->then(static function (array $v): never {
-                                    throw new InvalidArgumentException(sprintf('Unknown web_ui.templates page(s): %s. Known pages: %s.', implode(', ', array_keys(array_diff_key($v, self::PAGE_TEMPLATES))), implode(', ', array_keys(self::PAGE_TEMPLATES))));
+                                    throw new InvalidArgumentException(sprintf('Unknown web_ui.chrome.classes key(s): %s. Known keys: %s.', implode(', ', array_keys(array_diff_key($v, AdminChrome::DEFAULT_CLASSES))), implode(', ', array_keys(AdminChrome::DEFAULT_CLASSES))));
                                 })
                             ->end()
                         ->end()
-                        ->enumNode('css_framework')
-                            ->values([...self::CSS_FRAMEWORKS, null])
-                            ->defaultNull()
-                            ->info('Deprecated since 1.16: set nowo_ui_kit.css_framework. When set (and nowo_ui_kit.css_framework is not), seeds the UiKit stack.')
-                            ->setDeprecated('nowo-tech/cookie-consent-bundle', '1.16', 'The "%path%.%node%" option is deprecated: the admin pages inherit nowo_ui_kit.css_framework. It will be removed in 2.0.')
+                        ->arrayNode('attributes')
+                            ->info('1.x element key (same keys as classes) => extra HTML attributes, bridged into the UiKit theme slot attributes.')
+                            ->useAttributeAsKey('name')
+                            ->normalizeKeys(false)
+                            ->arrayPrototype()
+                                ->useAttributeAsKey('name')
+                                ->normalizeKeys(false)
+                                ->scalarPrototype()->end()
+                            ->end()
+                            ->validate()
+                                ->ifTrue(static fn (array $v): bool => array_diff_key($v, AdminChrome::DEFAULT_CLASSES) !== [])
+                                ->then(static function (array $v): never {
+                                    throw new InvalidArgumentException(sprintf('Unknown web_ui.chrome.attributes key(s): %s. Known keys: %s.', implode(', ', array_keys(array_diff_key($v, AdminChrome::DEFAULT_CLASSES))), implode(', ', array_keys(AdminChrome::DEFAULT_CLASSES))));
+                                })
+                            ->end()
                         ->end()
-                        ->enumNode('icon_set')
-                            ->values(['bootstrap-icons', 'tabler-icons', 'ux_icon', 'svg_inline', 'none', null])
-                            ->defaultNull()
-                            ->info('Deprecated since 1.16: set nowo_ui_kit.icon_set. When set (and nowo_ui_kit.icon_set is not), seeds the UiKit icon set.')
-                            ->setDeprecated('nowo-tech/cookie-consent-bundle', '1.16', 'The "%path%.%node%" option is deprecated: the admin pages inherit nowo_ui_kit.icon_set. It will be removed in 2.0.')
-                        ->end()
-                        ->integerNode('list_page_size')
-                            ->defaultValue(20)
-                            ->min(1)
-                            ->max(200)
-                            ->info('Default page size for admin cookie definition lists.')
-                        ->end()
-                        ->arrayNode('chrome')
-                            ->info('Deprecated since 1.16 (1.13 admin chrome hooks): bridged into nowo_ui_kit.theme.bundles.NowoCookieConsentBundle; see docs/UPGRADING.md "Template contract".')
-                            ->setDeprecated('nowo-tech/cookie-consent-bundle', '1.16', 'The "%path%.%node%" option is deprecated: the admin pages use the UiKit page scaffolds and theme slots; configure nowo_ui_kit.theme.bundles.NowoCookieConsentBundle (see UPGRADING "Template contract"). It will be removed in 2.0.')
-                            ->addDefaultsIfNotSet()
-                            ->children()
-                                ->enumNode('page_title_tag')
-                                    ->values(AdminChrome::PAGE_TITLE_TAGS)
-                                    ->defaultValue('h1')
-                                    ->info('Ignored since 1.16: the heading comes from the UiKit page_header partial (override it through theme.partials.page_header).')
-                                ->end()
-                                ->enumNode('row_actions_display')
-                                    ->values(AdminChrome::ROW_ACTIONS_DISPLAYS)
-                                    ->defaultValue('inherit')
-                                    ->info('Row actions display of the cookie list: text | icon | icon_text | inherit (default: nowo_ui_kit.row_actions_display).')
-                                ->end()
-                                ->arrayNode('classes')
-                                    ->info('1.x element key => classes (see AdminChrome::SLOT_MAP), bridged into the UiKit theme slots.')
-                                    ->useAttributeAsKey('name')
-                                    ->normalizeKeys(false)
-                                    ->scalarPrototype()->end()
-                                    ->validate()
-                                        ->ifTrue(static fn (array $v): bool => array_diff_key($v, AdminChrome::DEFAULT_CLASSES) !== [])
-                                        ->then(static function (array $v): never {
-                                            throw new InvalidArgumentException(sprintf('Unknown web_ui.chrome.classes key(s): %s. Known keys: %s.', implode(', ', array_keys(array_diff_key($v, AdminChrome::DEFAULT_CLASSES))), implode(', ', array_keys(AdminChrome::DEFAULT_CLASSES))));
-                                        })
-                                    ->end()
-                                ->end()
-                                ->arrayNode('attributes')
-                                    ->info('1.x element key (same keys as classes) => extra HTML attributes, bridged into the UiKit theme slot attributes.')
-                                    ->useAttributeAsKey('name')
-                                    ->normalizeKeys(false)
-                                    ->arrayPrototype()
-                                        ->useAttributeAsKey('name')
-                                        ->normalizeKeys(false)
-                                        ->scalarPrototype()->end()
-                                    ->end()
-                                    ->validate()
-                                        ->ifTrue(static fn (array $v): bool => array_diff_key($v, AdminChrome::DEFAULT_CLASSES) !== [])
-                                        ->then(static function (array $v): never {
-                                            throw new InvalidArgumentException(sprintf('Unknown web_ui.chrome.attributes key(s): %s. Known keys: %s.', implode(', ', array_keys(array_diff_key($v, AdminChrome::DEFAULT_CLASSES))), implode(', ', array_keys(AdminChrome::DEFAULT_CLASSES))));
-                                        })
-                                    ->end()
-                                ->end()
-                                ->arrayNode('templates')
-                                    ->info('Partial paths: tabs / pagination (bridged to the UiKit partials), form_theme, form_fields, styles_after (still applied by the admin pages).')
-                                    ->useAttributeAsKey('name')
-                                    ->normalizeKeys(false)
-                                    ->scalarPrototype()->end()
-                                    ->validate()
-                                        ->ifTrue(static fn (array $v): bool => array_diff_key($v, AdminChrome::DEFAULT_TEMPLATES) !== [])
-                                        ->then(static function (array $v): never {
-                                            throw new InvalidArgumentException(sprintf('Unknown web_ui.chrome.templates key(s): %s. Known keys: %s.', implode(', ', array_keys(array_diff_key($v, AdminChrome::DEFAULT_TEMPLATES))), implode(', ', array_keys(AdminChrome::DEFAULT_TEMPLATES))));
-                                        })
-                                    ->end()
-                                ->end()
+                        ->arrayNode('templates')
+                            ->info('Partial paths: tabs / pagination (bridged to the UiKit partials), form_theme, form_fields, styles_after (still applied by the admin pages).')
+                            ->useAttributeAsKey('name')
+                            ->normalizeKeys(false)
+                            ->scalarPrototype()->end()
+                            ->validate()
+                                ->ifTrue(static fn (array $v): bool => array_diff_key($v, AdminChrome::DEFAULT_TEMPLATES) !== [])
+                                ->then(static function (array $v): never {
+                                    throw new InvalidArgumentException(sprintf('Unknown web_ui.chrome.templates key(s): %s. Known keys: %s.', implode(', ', array_keys(array_diff_key($v, AdminChrome::DEFAULT_TEMPLATES))), implode(', ', array_keys(AdminChrome::DEFAULT_TEMPLATES))));
+                                })
                             ->end()
                         ->end()
                     ->end()
                 ->end()
+            ->end();
+    }
+
+    /**
+     * Adds the `web_ui` section; its large children have their own methods.
+     */
+    private function addWebUiSection(ArrayNodeDefinition $rootNode): void
+    {
+        $webUi = $rootNode->children()->arrayNode('web_ui');
+        $webUi
+            ->addDefaultsIfNotSet()
+            ->beforeNormalization()
+                ->ifArray()
+                ->then(static fn (array $v): array => self::normalizeWebUi($v))
+            ->end();
+        $this->addWebUiEnabledToListPageSizeSections($webUi);
+        $this->addWebUiChromeSection($webUi);
+    }
+
+    /**
+     * Adds the `security` to `conflict_response` settings.
+     */
+    private function addSecurityToConflictResponseSections(ArrayNodeDefinition $rootNode): void
+    {
+        $rootNode
+            ->children()
                 ->arrayNode('security')
                     ->addDefaultsIfNotSet()
                     ->children()
@@ -464,8 +537,6 @@ class Configuration implements ConfigurationInterface
                     ->end()
                 ->end()
             ->end();
-
-        return $treeBuilder;
     }
 
     /**
