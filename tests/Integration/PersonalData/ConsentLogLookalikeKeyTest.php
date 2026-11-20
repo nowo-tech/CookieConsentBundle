@@ -48,7 +48,7 @@ final class ConsentLogLookalikeKeyTest extends TestCase
         $this->db         = ConsentLogDatabase::create(false);
         $em               = $this->db->entityManager;
         $this->connection = $em->getConnection();
-        $em->getEventManager()->addEventListener(ToolEvents::postGenerateSchemaTable, new ConsentLogCollationListener($this->db));
+        $em->getEventManager()->addEventListener(ToolEvents::postGenerateSchema, new ConsentLogCollationListener());
         (new SchemaTool($em))->createSchema($em->getMetadataFactory()->getAllMetadata());
 
         if ($this->connection->getDatabasePlatform() instanceof SQLitePlatform) {
@@ -74,7 +74,7 @@ final class ConsentLogLookalikeKeyTest extends TestCase
         $collations = $this->connection->fetchAllKeyValue(
             "SELECT COLUMN_NAME, COLLATION_NAME FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'dashboard_cookie_log' AND COLUMN_NAME IN ('cookie_consent_key', 'ip_address')",
         );
-        self::assertSame(['cookie_consent_key', 'ip_address'], $this->sorted(array_map('strval', array_keys($collations))));
+        self::assertSame(['cookie_consent_key', 'ip_address'], $this->sorted(array_map(strval(...), array_keys($collations))));
         foreach ($collations as $collation) {
             self::assertContains($collation, ['utf8mb4_0900_bin', 'utf8mb4_nopad_bin']);
         }

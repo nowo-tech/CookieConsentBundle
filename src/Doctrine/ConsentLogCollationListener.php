@@ -10,8 +10,9 @@ use Doctrine\DBAL\Platforms\AbstractPlatform;
 use Doctrine\DBAL\Platforms\MariaDBPlatform;
 use Doctrine\DBAL\Platforms\MySQL80Platform;
 use Doctrine\DBAL\Schema\ColumnEditor;
+use Doctrine\DBAL\Schema\Schema;
 use Doctrine\DBAL\Schema\Table;
-use Doctrine\ORM\EntityManagerInterface;
+use Doctrine\ORM\Tools\Event\GenerateSchemaEventArgs;
 use Doctrine\ORM\Tools\Event\GenerateSchemaTableEventArgs;
 use Doctrine\Persistence\ManagerRegistry;
 use Nowo\CookieConsentBundle\Entity\CookieConsentLog;
@@ -41,7 +42,16 @@ use function version_compare;
  * existing tables need the `ALTER` of UPGRADING. A MySQL `server_version` without its patch number (`8`, `8.0`) cannot
  * select `utf8mb4_0900_bin`: a warning is logged and `utf8mb4_bin` is used.
  *
- * Stateless (REQ-RUNTIME-002): the platform is read from the registry on each event.
+ * 1.33.1 (audit XI): applied on `postGenerateSchema`, once the schema tool has added every foreign key, by table name.
+ * 1.30.2–1.33.0 replaced the table on `postGenerateSchemaTable` (`setClassTable()`, DBAL 4.5+), and ORM 3.7–3.8's schema
+ * tool then added the table's foreign keys to the table it had replaced, losing them on MySQL / MariaDB (latent: the
+ * consent log has no foreign key today). Now:
+ *
+ * - DBAL 4.5+ with an ORM that has `GenerateSchemaEventArgs::setSchema()`: the table is rebuilt with its table editor
+ *   (foreign keys and indexes included) and swapped into a new schema given back with `setSchema()`;
+ * - otherwise (older DBAL): the column's platform options are set in place.
+ *
+ * Stateless (REQ-RUNTIME-002): the platform is read from the schema tool's entity manager on each event.
  *
  * @internal
  */
@@ -62,10 +72,15 @@ final readonly class ConsentLogCollationListener
     /** Consent log fields that identify a visitor. */
     public const FIELDS = ['cookieConsentKey', 'ipAddress'];
 
+    /**
+     * @param ManagerRegistry|null $doctrine unused since 1.33.1 (the platform comes from the schema tool's entity
+     *                                       manager); kept for BC
+     */
     public function __construct(
-        private ManagerRegistry $doctrine,
+        ?ManagerRegistry $doctrine = null,
         private ?LoggerInterface $logger = null,
     ) {
+        unset($doctrine);
     }
 
     /**
@@ -85,28 +100,33 @@ final readonly class ConsentLogCollationListener
         };
     }
 
-    public function postGenerateSchemaTable(GenerateSchemaTableEventArgs $args): void
+    /**
+     * Gives the key columns of the consent log their exact-match collation in the generated schema, keeping every foreign
+     * key and index of the table.
+     */
+    public function postGenerateSchema(GenerateSchemaEventArgs $args): void
     {
-        $metadata = $args->getClassMetadata();
-        if ($metadata->getName() !== CookieConsentLog::class) {
+        $entityManager = $args->getEntityManager();
+        if ($entityManager->getMetadataFactory()->isTransient(CookieConsentLog::class)) {
             return;
         }
-        $manager = $this->doctrine->getManagerForClass($metadata->getName());
-        if (!$manager instanceof EntityManagerInterface) {
-            return;
-        }
-        $connection = $manager->getConnection();
+        $connection = $entityManager->getConnection();
         $platform   = $connection->getDatabasePlatform();
-        $version    = $platform instanceof MySQL80Platform ? self::serverVersion($connection) : null;
+        $version    = $platform instanceof MySQL80Platform ? $this->serverVersion($connection) : null;
         $collation  = self::collationFor($platform, $version);
-        if ($collation === null) {
+        $metadata   = $entityManager->getClassMetadata(CookieConsentLog::class);
+        $tableName  = $metadata->getTableName();
+        $schema     = $args->getSchema();
+        if ($collation === null || $tableName === '' || !$schema->hasTable($tableName)) {
             return;
         }
-        $this->warnAboutPartialVersion($platform, self::configuredVersion($connection), $collation);
+        $this->warnAboutPartialVersion($platform, $this->configuredVersion($connection), $collation);
 
-        $original = $table = $args->getClassTable();
-        // @phpstan-ignore function.alreadyNarrowedType, function.alreadyNarrowedType (older doctrine/dbal / doctrine/orm)
-        $editor = method_exists($table, 'edit') && method_exists($args, 'setClassTable');
+        // the editor path replaces the table in a new schema: it needs Table::edit() and Schema::edit() (DBAL 4.5+) and an
+        // ORM that accepts the new schema (3.7+)
+        // @phpstan-ignore function.alreadyNarrowedType, function.alreadyNarrowedType, function.alreadyNarrowedType (older doctrine/dbal / doctrine/orm)
+        $editor   = method_exists(Table::class, 'edit') && method_exists(Schema::class, 'edit') && method_exists($args, 'setSchema');
+        $original = $table = $schema->getTable($tableName);
         foreach (self::FIELDS as $field) {
             $column = $metadata->hasField($field) ? $metadata->getColumnName($field) : null;
             if ($column !== null && $column !== '' && $table->hasColumn($column)) {
@@ -114,8 +134,18 @@ final readonly class ConsentLogCollationListener
             }
         }
         if ($table !== $original) {
-            $args->setClassTable($table);
+            $args->setSchema($schema->edit()->dropTableByUnquotedName($tableName)->addTable($table)->create());
         }
+    }
+
+    /**
+     * No longer subscribed (1.33.1, audit XI): replacing the table there lost its foreign keys. Kept for BC; does nothing.
+     *
+     * @deprecated since 1.33.1, the collation is applied on postGenerateSchema ({@see self::postGenerateSchema()})
+     */
+    public function postGenerateSchemaTable(GenerateSchemaTableEventArgs $args): void
+    {
+        unset($args);
     }
 
     /**
@@ -133,7 +163,8 @@ final readonly class ConsentLogCollationListener
             })->create();
         }
 
-        $table->getColumn($column)
+        // DBAL 4.5 deprecates the setters for the editors, and no editor changes a table in place (ORM 3.6 cannot swap it)
+        @$table->getColumn($column)
             ->setPlatformOption('charset', 'utf8mb4')
             ->setPlatformOption('collation', $collation);
 
@@ -156,7 +187,7 @@ final readonly class ConsentLogCollationListener
     /**
      * The server version configured on the connection (also on a primary / replica connection), if any.
      */
-    private static function configuredVersion(Connection $connection): ?string
+    private function configuredVersion(Connection $connection): ?string
     {
         $params  = $connection->getParams();
         $primary = $params['primary'] ?? null;
@@ -168,9 +199,9 @@ final readonly class ConsentLogCollationListener
     /**
      * The configured server version, else the one the server reports (null when it cannot be read: unknown).
      */
-    private static function serverVersion(Connection $connection): ?string
+    private function serverVersion(Connection $connection): ?string
     {
-        $version = self::configuredVersion($connection);
+        $version = $this->configuredVersion($connection);
         if ($version !== null) {
             return $version;
         }
@@ -180,7 +211,7 @@ final readonly class ConsentLogCollationListener
             return $connection->getServerVersion();
         }
 
-        return self::wrappedServerVersion($connection); // @codeCoverageIgnore
+        return $this->wrappedServerVersion($connection); // @codeCoverageIgnore
     }
 
     /**
@@ -188,7 +219,7 @@ final readonly class ConsentLogCollationListener
      *
      * @codeCoverageIgnore
      */
-    private static function wrappedServerVersion(Connection $connection): ?string
+    private function wrappedServerVersion(Connection $connection): ?string
     {
         $driver  = method_exists($connection, 'getWrappedConnection') ? $connection->getWrappedConnection() : null;
         $version = is_object($driver) && is_callable([$driver, 'getServerVersion']) ? $driver->getServerVersion() : null;
