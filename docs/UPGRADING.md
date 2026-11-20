@@ -3,6 +3,7 @@
 ## Table of contents
 
 - [Unreleased](#unreleased)
+  - [Admin edits: row version (REQ-RUNTIME-003 rule 4)](#admin-edits-row-version-req-runtime-003-rule-4)
 - [To 1.32.0](#to-1320)
 - [To 1.31.0](#to-1310)
   - [Concurrency: conflict answers and the consent log (REQ-RUNTIME-003)](#concurrency-conflict-answers-and-the-consent-log-req-runtime-003)
@@ -139,6 +140,48 @@
 - [Getting help](#getting-help)
 
 ## Unreleased
+
+### Admin edits: row version (REQ-RUNTIME-003 rule 4)
+
+From **1.32.0**:
+
+```bash
+composer update nowo-tech/cookie-consent-bundle
+```
+
+**Add one column to two tables before you deploy** (the bundle ships no migrations; the mapped entities select it, so the
+pages that read a profile or a cookie definition fail until it exists). Run `php bin/console doctrine:migrations:diff`
+and review it, or `doctrine:schema:update --force` where you use that. With a dedicated manager use
+`--em=cookie_consent`. On MySQL 8.4, MariaDB 11.4 and PostgreSQL 16 the migration is (add your `doctrine.table_prefix`
+to the table names):
+
+```sql
+ALTER TABLE dashboard_cookie_config ADD row_version INT DEFAULT 1 NOT NULL;
+ALTER TABLE dashboard_cookie_definition ADD row_version INT DEFAULT 1 NOT NULL;
+```
+
+Do not fill it: `1` is the correct value for every existing row. The migration is safe to run before the new code is
+deployed (the old code ignores the column), so run it first on a rolling deploy.
+
+What changes:
+
+- **A stale admin page is refused.** Two admins editing the same profile or cookie definition used to overwrite each
+  other (the later save wrote back every field its page showed). Now each edit form carries the row version of its page
+  in a hidden field, and the save checks and advances it in the save's transaction. A page opened before another admin's
+  save answers **409** with `X-Error-Code: COOKIE_CONSENT_STALE_VERSION`: the form is shown again with the text the admin
+  typed and a "changed by someone else" message (a flash of type `error`; translation key
+  `nowo_cookie_consent.admin.stale_version`), and nothing is written. It is a domain answer, not `CONFLICT_001` /
+  `CONFLICT_002`: there is no `Retry-After`, and the admin reloads the page and applies the change again.
+- **Custom templates** that render the admin form fields one by one (`web_ui.templates.*`, the deprecated
+  `form_fields` partial) must also render the hidden field: `{{ form_row(form.rowVersion) }}`, or `form_rest(form)`. The
+  shipped templates already do. Without the field every save is answered as stale (never a silent overwrite).
+- **Host code** that calls `CookieConsentConfigRepository::saveSettings($config, $em)` is unchanged (no check without
+  the new third argument `$expectedVersion`). A host form type extending the section types gets the field with them.
+- Making a profile the default also advances the version of the profiles it demotes, so a page of the old default
+  opened before cannot write its flag back.
+- Deleting a cookie definition is not versioned (delete by id, idempotent).
+- `CookieConsentConfig` and `CookieDefinition` implement the new `VersionedRowInterface` (`getRowVersion()`,
+  `setRowVersion()`); host subclasses keep working.
 
 ## To 1.32.0
 

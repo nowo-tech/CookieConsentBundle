@@ -104,6 +104,11 @@ nowo_cookie_consent:
 Prefer theming UiKit (`nowo_ui_kit.theme`, or `templates/bundles/NowoUiKitBundle/page/*.html.twig` for a whole view
 type) over per-page overrides.
 
+A page template of your own that lists the form fields one by one must render the hidden version field of the edit forms
+(`{{ form_row(form.rowVersion) }}` on the cookie definition and settings forms, or `form_rest(form)`): the save checks
+it, and a form without it is answered as an outdated page (409, never a silent overwrite; see
+[CONCURRENCY](CONCURRENCY.md)).
+
 ## Layout
 
 `web_ui.layout_template` (default `null`) is the per-bundle layout override; null uses `nowo_ui_kit.layouts.admin`

@@ -8,6 +8,8 @@ use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\DBAL\LockMode;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\Persistence\ManagerRegistry;
+use Nowo\CookieConsentBundle\Concurrency\RowVersionGuard;
+use Nowo\CookieConsentBundle\Concurrency\StaleVersionException;
 use Nowo\CookieConsentBundle\Entity\CookieConsentConfig;
 use Nowo\TransactionContract\TransientStorageFailure;
 use Nowo\TransactionDoctrine\DoctrineTransactionRunner;
@@ -69,6 +71,9 @@ class CookieConsentConfigRepository extends ServiceEntityRepository implements R
      * Saves the admin changes of one profile in one transaction (1.31, REQ-RUNTIME-003 rules 1 and 4).
      *
      * When the profile is the default one, the "only one default" rule is enforced inside the same transaction:
+     * - with `$expectedVersion`, the profile's row version is checked and advanced first (compare-and-swap, 1.33):
+     *   a profile saved by someone else since the page was opened throws {@see StaleVersionException} and nothing is
+     *   written;
      * - the enabled profiles are locked first, in id order (`SELECT ... FOR UPDATE`), so two saves never deadlock and
      *   the second one waits for the first and then reads its committed flags (PostgreSQL READ COMMITTED included);
      * - the flush writes the profile;
@@ -79,13 +84,20 @@ class CookieConsentConfigRepository extends ServiceEntityRepository implements R
      * {@see TransientStorageFailure} (409 + CONFLICT_001 on the admin route).
      *
      * @param EntityManagerInterface $entityManager the manager of the bundle entities (it holds the form's changes)
+     * @param int|null $expectedVersion the row version of the edited page (the form's hidden token); null saves without the check (a host's own code)
+     *
+     * @throws StaleVersionException when `$expectedVersion` is no longer the profile's version
      */
-    public function saveSettings(CookieConsentConfig $config, EntityManagerInterface $entityManager): void
+    public function saveSettings(CookieConsentConfig $config, EntityManagerInterface $entityManager, ?int $expectedVersion = null): void
     {
-        DoctrineTransactionRunner::forConnection($entityManager->getConnection())->run(function () use ($config, $entityManager): void {
+        DoctrineTransactionRunner::forConnection($entityManager->getConnection())->run(function () use ($config, $entityManager, $expectedVersion): void {
             $default = $config->isDefault();
             if ($default) {
                 $this->lockEnabledProfiles();
+            }
+
+            if ($expectedVersion !== null) {
+                RowVersionGuard::advance($entityManager, $config, $expectedVersion);
             }
 
             $entityManager->flush();
@@ -113,12 +125,13 @@ class CookieConsentConfigRepository extends ServiceEntityRepository implements R
     }
 
     /**
-     * Clears the default flag of every other enabled profile with one atomic UPDATE.
+     * Clears the default flag of every other enabled profile with one atomic UPDATE. It advances their row version too:
+     * an admin who opened such a profile before this save is asked to reload, not left to write the old flag back.
      */
     private function clearOtherDefaults(CookieConsentConfig $keep): void
     {
         $this->getEntityManager()
-            ->createQuery('UPDATE ' . CookieConsentConfig::class . ' config SET config.default = :off WHERE config.default = :on AND config.enabled = :enabled AND config.id <> :keep')
+            ->createQuery('UPDATE ' . CookieConsentConfig::class . ' config SET config.default = :off, config.rowVersion = config.rowVersion + 1 WHERE config.default = :on AND config.enabled = :enabled AND config.id <> :keep')
             ->setParameter('off', false)
             ->setParameter('on', true)
             ->setParameter('enabled', true)

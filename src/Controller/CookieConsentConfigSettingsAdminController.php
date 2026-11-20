@@ -7,7 +7,9 @@ namespace Nowo\CookieConsentBundle\Controller;
 use Doctrine\ORM\EntityManagerInterface;
 use Nowo\CookieConsentBundle\Admin\AdminPageFactory;
 use Nowo\CookieConsentBundle\Admin\CookieConsentConfigSettingsSection;
+use Nowo\CookieConsentBundle\Concurrency\StaleVersionException;
 use Nowo\CookieConsentBundle\Entity\CookieConsentConfig;
+use Nowo\CookieConsentBundle\Form\RowVersionField;
 use Nowo\CookieConsentBundle\Repository\CookieConsentConfigRepository;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\RedirectResponse;
@@ -87,21 +89,35 @@ final class CookieConsentConfigSettingsAdminController extends AbstractControlle
         $form   = $this->createForm($sectionEnum->formType(), $config);
         $form->handleRequest($request);
 
+        $stale = false;
         if ($form->isSubmitted() && $form->isValid()) {
-            // 1.31 (REQ-RUNTIME-003 rules 1, 4): one transaction for the save and the "only one default" rule (ordered
-            // row locks, then an atomic UPDATE of the other profiles). A lock conflict answers 409 + CONFLICT_001
-            // (CookieConsentConflictListener).
-            $this->configRepository->saveSettings($config, $entityManager);
+            try {
+                // 1.31 (REQ-RUNTIME-003 rules 1, 4): one transaction for the save and the "only one default" rule (ordered
+                // row locks, then an atomic UPDATE of the other profiles). A lock conflict answers 409 + CONFLICT_001
+                // (CookieConsentConflictListener).
+                // 1.33 (rule 4): the page's row version is checked and advanced in the same transaction; a profile
+                // saved by someone else since the page was opened is not overwritten.
+                $this->configRepository->saveSettings($config, $entityManager, RowVersionField::read($form));
+            } catch (StaleVersionException) {
+                $stale = true;
+                // Drop the form's unsaved changes from the managed entity (a refresh of this entity only: the manager is
+                // never cleared or reset), so no later flush of the manager can write them over the other admin's save.
+                $entityManager->refresh($config);
+                // The UiKit layout prints the flashes of every type above the page.
+                $this->addFlash('error', $this->translator->trans(StaleVersionException::MESSAGE_KEY, [], 'NowoCookieConsentBundle'));
+            }
 
-            $this->addFlash(
-                'success',
-                $this->translator->trans('nowo_cookie_consent.admin.config.settings.updated', [], 'NowoCookieConsentBundle'),
-            );
+            if (!$stale) {
+                $this->addFlash(
+                    'success',
+                    $this->translator->trans('nowo_cookie_consent.admin.config.settings.updated', [], 'NowoCookieConsentBundle'),
+                );
 
-            return $this->redirectToRoute('nowo_cookie_consent_config_settings_section', [
-                'configId' => $configId,
-                'section'  => $sectionEnum->value,
-            ]);
+                return $this->redirectToRoute('nowo_cookie_consent_config_settings_section', [
+                    'configId' => $configId,
+                    'section'  => $sectionEnum->value,
+                ]);
+            }
         }
 
         $view = $form->createView();
@@ -113,7 +129,20 @@ final class CookieConsentConfigSettingsAdminController extends AbstractControlle
             'form'     => $view,
             'section'  => $sectionEnum,
             'sections' => CookieConsentConfigSettingsSection::cases(),
-        ], new Response(null, $form->isSubmitted() ? Response::HTTP_UNPROCESSABLE_ENTITY : Response::HTTP_OK));
+        ], $this->answer($form->isSubmitted(), $stale));
+    }
+
+    /**
+     * The status of the re-rendered page: 409 + `X-Error-Code: COOKIE_CONSENT_STALE_VERSION` for a stale edit (a
+     * domain answer, never CONFLICT_001 / CONFLICT_002: retrying the same page cannot succeed), 422 for a form error.
+     */
+    private function answer(bool $submitted, bool $stale): Response
+    {
+        if ($stale) {
+            return new Response(null, Response::HTTP_CONFLICT, ['X-Error-Code' => StaleVersionException::ERROR_CODE]);
+        }
+
+        return new Response(null, $submitted ? Response::HTTP_UNPROCESSABLE_ENTITY : Response::HTTP_OK);
     }
 
     private function getConfig(int $configId): CookieConsentConfig

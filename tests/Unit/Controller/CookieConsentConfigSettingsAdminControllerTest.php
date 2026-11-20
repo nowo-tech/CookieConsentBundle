@@ -6,8 +6,10 @@ namespace Nowo\CookieConsentBundle\Tests\Unit\Controller;
 
 use Doctrine\ORM\EntityManagerInterface;
 use Nowo\CookieConsentBundle\Admin\CookieConsentConfigSettingsSection;
+use Nowo\CookieConsentBundle\Concurrency\StaleVersionException;
 use Nowo\CookieConsentBundle\Controller\CookieConsentConfigSettingsAdminController;
 use Nowo\CookieConsentBundle\Entity\CookieConsentConfig;
+use Nowo\CookieConsentBundle\Form\RowVersionField;
 use Nowo\CookieConsentBundle\Form\Settings\CookieConsentConfigProfileSettingsType;
 use Nowo\CookieConsentBundle\Repository\CookieConsentConfigRepository;
 use Nowo\CookieConsentBundle\Tests\Support\AdminPageFixtures;
@@ -127,6 +129,65 @@ final class CookieConsentConfigSettingsAdminControllerTest extends AbstractContr
             Request::create('/settings/not-a-section'),
             $this->createMock(EntityManagerInterface::class),
         );
+    }
+
+    public function testStaleSaveReRendersTheFormWith409AndSavesNothing(): void
+    {
+        $config = (new CookieConsentConfig())->setEnabled(true);
+        $this->setEntityId($config, 1);
+
+        $configRepository = $this->createMock(CookieConsentConfigRepository::class);
+        $configRepository->method('find')->willReturn($config);
+        // 1.33: the page's version token reaches the save; a refused save is a domain answer.
+        $configRepository->expects(self::once())->method('saveSettings')
+            ->with($config, self::anything(), 4)
+            ->willThrowException(new StaleVersionException(CookieConsentConfig::class, 1, 4));
+
+        $entityManager = $this->createMock(EntityManagerInterface::class);
+        // The form's unsaved changes are dropped from the managed profile (never clear() or reset the manager).
+        $entityManager->expects(self::once())->method('refresh')->with($config);
+        $entityManager->expects(self::never())->method('clear');
+        $entityManager->expects(self::never())->method('flush');
+
+        $controller = $this->staleController($configRepository, $this->submittedFormFactory($config, 4));
+
+        $response = $controller->section(1, CookieConsentConfigSettingsSection::Profile->value, Request::create('/settings/profile', 'POST'), $entityManager);
+
+        self::assertSame(409, $response->getStatusCode());
+        self::assertSame(StaleVersionException::ERROR_CODE, $response->headers->get('X-Error-Code'));
+        self::assertFalse($response->headers->has('X-Conflict-Code'), 'a domain answer, not CONFLICT_001 / CONFLICT_002');
+        self::assertFalse($response->headers->has('Retry-After'));
+        self::assertSame('rendered', (string) $response->getContent());
+    }
+
+    private function staleController(CookieConsentConfigRepository $configRepository, FormFactoryInterface $formFactory): CookieConsentConfigSettingsAdminController
+    {
+        $translator = $this->createMock(TranslatorInterface::class);
+        $translator->method('trans')->willReturn('stale message');
+
+        $controller = new CookieConsentConfigSettingsAdminController($configRepository, $translator, AdminPageFixtures::factory());
+        $this->configureController($controller, formFactory: $formFactory);
+
+        return $controller;
+    }
+
+    private function submittedFormFactory(CookieConsentConfig $config, int $token): FormFactoryInterface
+    {
+        $field = $this->createMock(FormInterface::class);
+        $field->method('getData')->willReturn((string) $token);
+
+        $form = $this->createMock(FormInterface::class);
+        $form->method('createView')->willReturn(new FormView());
+        $form->method('isSubmitted')->willReturn(true);
+        $form->method('isValid')->willReturn(true);
+        $form->method('handleRequest');
+        $form->method('has')->with(RowVersionField::NAME)->willReturn(true);
+        $form->method('get')->with(RowVersionField::NAME)->willReturn($field);
+
+        $formFactory = $this->createMock(FormFactoryInterface::class);
+        $formFactory->method('create')->with(CookieConsentConfigProfileSettingsType::class, $config)->willReturn($form);
+
+        return $formFactory;
     }
 
     private function createSettingsController(): CookieConsentConfigSettingsAdminController

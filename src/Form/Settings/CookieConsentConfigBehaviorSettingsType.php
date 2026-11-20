@@ -6,6 +6,7 @@ namespace Nowo\CookieConsentBundle\Form\Settings;
 
 use DateTimeImmutable;
 use Nowo\CookieConsentBundle\Entity\CookieConsentConfig;
+use Nowo\CookieConsentBundle\Form\RowVersionField;
 use Symfony\Component\Form\Extension\Core\Type\ColorType;
 use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\Form\FormError;
@@ -37,6 +38,7 @@ final class CookieConsentConfigBehaviorSettingsType extends AbstractCookieConsen
     public function buildForm(FormBuilderInterface $builder, array $options): void
     {
         $this->rememberTranslationDomain($options);
+        RowVersionField::add($builder);
 
         $labelPrefix  = $options['label_prefix'];
         $choicePrefix = $options['choice_label_prefix'];

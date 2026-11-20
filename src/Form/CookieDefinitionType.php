@@ -73,6 +73,8 @@ class CookieDefinitionType extends AbstractType
      */
     public function buildForm(FormBuilderInterface $builder, array $options): void
     {
+        RowVersionField::add($builder);
+
         $categoryChoices = [
             $options['category_label_prefix'] . 'required'      => 'required',
             $options['category_label_prefix'] . 'functionality' => 'functionality',
