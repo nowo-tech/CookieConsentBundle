@@ -186,6 +186,34 @@ final class RowVersionDatabaseTest extends TestCase
         self::assertTrue($this->em->isOpen());
     }
 
+    public function testDiscardingARefusedEditLeavesNothingForALaterFlushOfTheSameManager(): void
+    {
+        $definition  = $this->definition('_ga');
+        $repository  = new CookieDefinitionRepository($this->db);
+        $translation = (new CookieDefinitionTranslation())->setLocale('en')->setProvider('Google')->setPurpose('Statistics');
+        $definition->addTranslation($translation);
+        $repository->saveEdit($definition, $this->em, 1);
+
+        // Another admin saved version 3 meanwhile; this page (version 2) edits the definition and its translations.
+        $this->em->getConnection()->executeStatement('UPDATE dashboard_cookie_definition SET duration = ?, row_version = 3 WHERE id = ?', ['1 year', $definition->getId()]);
+        $definition->setDuration('1 day');
+        $translation->setProvider('Stale provider');
+        $definition->addTranslation((new CookieDefinitionTranslation())->setLocale('es')->setProvider('Stale es')->setPurpose('Stale'));
+
+        try {
+            $repository->saveEdit($definition, $this->em, 2);
+            self::fail('A stale edit must be refused.');
+        } catch (StaleVersionException) {
+            RowVersionGuard::discard($this->em, $definition, $definition->getTranslations()->toArray());
+        }
+        $this->em->flush();
+
+        self::assertSame('1 year', $this->em->getConnection()->fetchOne('SELECT duration FROM dashboard_cookie_definition WHERE id = ?', [$definition->getId()]));
+        self::assertSame(['en' => 'Google'], $this->em->getConnection()->fetchAllKeyValue('SELECT locale, provider FROM dashboard_cookie_definition_translation'), 'a later flush writes nothing of the refused page');
+        self::assertSame('1 year', $definition->getDuration(), 'the managed entity shows the stored row again');
+        self::assertTrue($this->em->isOpen());
+    }
+
     public function testEveryVersionedTableMapsTheColumn(): void
     {
         foreach (['dashboard_cookie_config', 'dashboard_cookie_definition'] as $table) {

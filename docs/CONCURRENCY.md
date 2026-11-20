@@ -63,8 +63,9 @@ and before the flush, `RowVersionGuard::advance()` runs one atomic
 - one row matched: the page was current, the row now holds the next version (and the row lock until the commit), and the
   flush writes the change;
 - no row matched: another admin saved the row after the page was opened (or deleted it). `StaleVersionException` is
-  thrown before anything is flushed; the controller drops the form's changes from the managed entity (`refresh()` of
-  that entity only: the manager is never cleared or reset) and re-renders the form with **409**,
+  thrown before anything is flushed; the controller drops the form's changes from the managed entities (`refresh()` of
+  the row and of its managed translations: the manager is never cleared or reset, and a later flush of it writes nothing
+  of the refused page) and re-renders the form with **409**,
   `X-Error-Code: COOKIE_CONSENT_STALE_VERSION` and an "changed by someone else, reload" message. No `X-Conflict-Code`
   and no `Retry-After`: it is not a lock conflict, and repeating the same page can never succeed.
 

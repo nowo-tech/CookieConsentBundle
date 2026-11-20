@@ -7,6 +7,7 @@ namespace Nowo\CookieConsentBundle\Controller;
 use Doctrine\ORM\EntityManagerInterface;
 use Nowo\CookieConsentBundle\Admin\AdminPageFactory;
 use Nowo\CookieConsentBundle\Admin\CookieConsentConfigSettingsSection;
+use Nowo\CookieConsentBundle\Concurrency\RowVersionGuard;
 use Nowo\CookieConsentBundle\Concurrency\StaleVersionException;
 use Nowo\CookieConsentBundle\Entity\CookieConsentConfig;
 use Nowo\CookieConsentBundle\Form\RowVersionField;
@@ -102,7 +103,7 @@ final class CookieConsentConfigSettingsAdminController extends AbstractControlle
                 $stale = true;
                 // Drop the form's unsaved changes from the managed entity (a refresh of this entity only: the manager is
                 // never cleared or reset), so no later flush of the manager can write them over the other admin's save.
-                $entityManager->refresh($config);
+                RowVersionGuard::discard($entityManager, $config);
                 // The UiKit layout prints the flashes of every type above the page.
                 $this->addFlash('error', $this->translator->trans(StaleVersionException::MESSAGE_KEY, [], 'NowoCookieConsentBundle'));
             }

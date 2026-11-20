@@ -62,4 +62,24 @@ final class RowVersionGuard
 
         $row->setRowVersion($expected + 1);
     }
+
+    /**
+     * Drops the unsaved form changes of a refused (stale) edit from the managed entities: a refresh of the row and of its
+     * managed children, never a clear or a reset of the manager (it may be the host's). Without it, a later flush of
+     * the same manager (worker mode, kernel reset off) would write the outdated page over the other admin's save.
+     * Children the form added and that were never persisted are dropped with the row's refreshed collections.
+     *
+     * @param EntityManagerInterface $entityManager The manager of the entity
+     * @param VersionedRowInterface $row The edited entity
+     * @param iterable<object> $children The entities the form edited through the row (translations), read before the refresh
+     */
+    public static function discard(EntityManagerInterface $entityManager, VersionedRowInterface $row, iterable $children = []): void
+    {
+        $entityManager->refresh($row);
+        foreach ($children as $child) {
+            if ($entityManager->contains($child)) {
+                $entityManager->refresh($child);
+            }
+        }
+    }
 }
