@@ -3,6 +3,7 @@
 ## Table of contents
 
 - [Unreleased](#unreleased)
+- [To 1.33.1](#to-1331)
 - [To 1.33.0](#to-1330)
   - [Admin edits: row version (REQ-RUNTIME-003 rule 4)](#admin-edits-row-version-req-runtime-003-rule-4)
 - [To 1.32.0](#to-1320)
@@ -141,6 +142,14 @@
 - [Getting help](#getting-help)
 
 ## Unreleased
+
+## To 1.33.1
+
+From **1.33.0**:
+
+```bash
+composer update nowo-tech/cookie-consent-bundle
+```
 
 ## To 1.33.0
 
