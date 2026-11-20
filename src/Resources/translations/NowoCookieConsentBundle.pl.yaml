@@ -80,6 +80,7 @@ nowo_cookie_consent.admin.cookie_definition.type.third_party: 'Podmiotu trzecieg
 nowo_cookie_consent.admin.area_nav.label: 'Administracja zgodą na pliki cookie'
 nowo_cookie_consent.admin.area_nav.settings: 'Ustawienia'
 nowo_cookie_consent.admin.area_nav.cookies: 'Spis plików cookie'
+nowo_cookie_consent.admin.stale_version: 'Ten element został zmieniony przez kogoś innego po otwarciu strony. Twoje zmiany nie zostały zapisane. Odśwież stronę i zastosuj je ponownie.'
 nowo_cookie_consent.admin.config.settings.title: 'Ustawienia wyświetlania'
 nowo_cookie_consent.admin.config.settings.lead: 'Ustawienia profilu zgody „%profile%”.'
 nowo_cookie_consent.admin.config.settings.save: 'Zapisz ustawienia'

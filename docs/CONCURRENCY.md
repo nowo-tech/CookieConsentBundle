@@ -21,8 +21,9 @@ half stored, or confirmed to the visitor without its log rows.
 
 - **One transaction per write unit.** The consent log writes its rows (one per category) with DBAL `INSERT`s in one
   transaction through nowo-tech/transaction-doctrine's runner (`DoctrineTransactionRunner::forConnection()`). The
-  profile settings save (flush + "only one default" rule) runs in one runner transaction. The cookie definition
-  create / edit / delete is a single ORM `flush()`, which Doctrine runs in one transaction. The GDPR eraser deletes in
+  profile settings save (version check + flush + "only one default" rule) runs in one runner transaction, and so does
+  the cookie definition edit (version check + flush). The cookie definition create / delete is a single ORM `flush()`,
+  which Doctrine runs in one transaction. The GDPR eraser deletes in
   batches of 500, one transaction per batch (or inside the caller's transaction, such as UserKit's erasure run).
 - **Your entity manager is never flushed, cleared or reset by a consent.** The consent log bypasses the unit of work,
   so your pending changes are never committed by a consent POST. On the bundle's admin routes, a manager closed by a
@@ -43,13 +44,43 @@ half stored, or confirmed to the visitor without its log rows.
 | Write path | Transaction | Control | Conflict answer |
 | --- | --- | --- | --- |
 | Consent POST (`CookieConsentFormSubscriber` on `kernel.response` of the page the form posts to, `CookieLogger::log()`) | One runner transaction (a savepoint inside yours): one `INSERT` per category | Append-only: no read-modify-write, counter or "only one" rule; each consent is its own set of rows | 409 `CONFLICT_001` / `CONFLICT_002` (the application's error page); no cookie set |
-| Admin profile settings (`CookieConsentConfigSettingsAdminController::section`, `CookieConsentConfigRepository::saveSettings()`) | One runner transaction: lock, flush, update | "Only one default profile": `SELECT … FOR UPDATE` of the enabled profiles in id order, then one atomic `UPDATE` clears the other defaults | 409 `CONFLICT_001` / `CONFLICT_002` |
-| Admin cookie definition create / edit / delete (`CookieDefinitionAdminController`) | One flush | Unique `(config_id, name)`; unique `(definition_id, locale)` translation | Lock conflict: 409 `CONFLICT_001` / `CONFLICT_002`. Unique key: 409 `COOKIE_CONSENT_DUPLICATE_KEY` (domain) |
+| Admin profile settings (`CookieConsentConfigSettingsAdminController::section`, `CookieConsentConfigRepository::saveSettings()`) | One runner transaction: lock, version check, flush, update | Optimistic `row_version` (compare-and-swap, below). "Only one default profile": `SELECT … FOR UPDATE` of the enabled profiles in id order, then one atomic `UPDATE` clears the other defaults and advances their `row_version` | Lock conflict: 409 `CONFLICT_001` / `CONFLICT_002`. Stale page: 409 `COOKIE_CONSENT_STALE_VERSION` (domain) |
+| Admin cookie definition edit (`CookieDefinitionAdminController::edit`, `CookieDefinitionRepository::saveEdit()`) | One runner transaction: version check, flush (definition and translations) | Optimistic `row_version` (compare-and-swap, below); unique `(config_id, name)`; unique `(definition_id, locale)` translation | Lock conflict: 409 `CONFLICT_001` / `CONFLICT_002`. Stale page: 409 `COOKIE_CONSENT_STALE_VERSION` (domain). Unique key: 409 `COOKIE_CONSENT_DUPLICATE_KEY` (domain) |
+| Admin cookie definition create / delete (`CookieDefinitionAdminController`) | One flush | Create: unique `(config_id, name)`. Delete by id, idempotent: deleting a definition another admin just edited removes it, which is what the admin asked for | Lock conflict: 409 `CONFLICT_001` / `CONFLICT_002`. Unique key: 409 `COOKIE_CONSENT_DUPLICATE_KEY` (domain) |
 | GDPR erasure (`CookieConsentPersonalDataEraser::erase()`, UserKit eraser) | One transaction per batch of 500 ids, or the caller's transaction | Delete by id; idempotent (a second run deletes nothing) | Rethrown to the caller (UserKit, your command) |
 | Profile and cookie definition translations | Written by the settings / definition saves above (cascade), in their transaction | Unique `(config_id, locale)` / `(definition_id, locale)` | As the save that writes them; a unique key on the definition page answers the domain 409 |
 
-`flush()` in `src/`: the settings save (inside `saveSettings()`'s runner) and the cookie definition controller's single
-flush per action. The bundle has no Messenger handlers and no console command that writes.
+`flush()` in `src/`: the settings save and the definition edit (each inside its repository's runner) and the cookie
+definition controller's single flush for a create or a delete.
+
+### Lost updates: the row version (1.33)
+
+`CookieConsentConfig` and `CookieDefinition` have an integer column `row_version` (default 1). Every admin edit form
+carries it as a hidden field `rowVersion` (unmapped; the version of the page). On save, inside the save's transaction
+and before the flush, `RowVersionGuard::advance()` runs one atomic
+`UPDATE … SET row_version = row_version + 1 WHERE id = ? AND row_version = ?`:
+
+- one row matched: the page was current, the row now holds the next version (and the row lock until the commit), and the
+  flush writes the change;
+- no row matched: another admin saved the row after the page was opened (or deleted it). `StaleVersionException` is
+  thrown before anything is flushed; the controller drops the form's changes from the managed entities (`refresh()` of
+  the row and of its managed translations, and the orphan removals the form scheduled for blanked translation tabs are
+  cancelled: the manager is never cleared or reset, and a later flush of it writes nothing of the refused page and
+  deletes no translation) and re-renders the form with **409**,
+  `X-Error-Code: COOKIE_CONSENT_STALE_VERSION` and an "changed by someone else, reload" message. No `X-Conflict-Code`
+  and no `Retry-After`: it is not a lock conflict, and repeating the same page can never succeed.
+
+Two admins saving at the same moment: the second `UPDATE` waits for the first one's commit (a lock wait, bounded by the
+database timeout like any other), then matches no row. Only a wait past the timeout is `CONFLICT_001`.
+
+The check reads the database, never the identity map, so a manager that kept a loaded row across requests (worker mode
+with the kernel reset off) cannot make a stale page look current. A missing or non-numeric token is stale (a custom
+template that lists the fields one by one must render `form.rowVersion`; `form_rest()` does).
+
+The version advances on every admin save, also when only a translation changed (the translation rows belong to the
+definition's save). Making a profile the default also advances the version of the profiles it demotes, so a page of the
+old default opened before cannot write the old flag back. `saveSettings($config, $em)` without the third argument (host
+code) saves without the check but still advances the version, so a page opened before the host's write is refused. The bundle has no Messenger handlers and no console command that writes.
 
 ## Conflict answers and codes
 
@@ -59,6 +90,7 @@ On the consent POST and the bundle's routes (`CookieConsentConflictListener`; yo
 | --- | --- | --- | --- | --- |
 | `CONFLICT_001` | Deadlock, lock wait timeout or serialization failure (MySQL 1213 / 1205, MariaDB 1020, PostgreSQL 40001 / 40P01 / 55P03, anywhere in the exception chain, or the runner's `TransientStorageFailure`) and nothing committed since the request started | 409 (`conflict_response.status`) | Yes: `conflict_response.retry_after`, else 1 s | Retry |
 | `CONFLICT_002` | The same after a commit earlier in the request (transaction-doctrine's request mark, `ConflictCode::forRequest()`, when its bundle is registered with `commit_detection`; otherwise the bundle's own ledger, fed by transaction-doctrine's commit-tracking middleware on the bundle's connection), a `ConcurrencyConflict` that committed, or a lost savepoint with no deadlock behind it (outcome unknown) | 409 (`conflict_response.status`) | No | Reload, do not repeat blindly |
+| `COOKIE_CONSENT_STALE_VERSION` (`X-Error-Code`) | An admin save of a profile or a cookie definition made on a page that another admin's save has outdated (1.33) | 409 (HTML: the form again with the message) | No | Reload the page and apply the change again |
 | `COOKIE_CONSENT_DUPLICATE_KEY` (`X-Error-Code`) | An admin save refused by a unique key: two admins adding the same cookie name or translation at once (or a name already used) | 409 | No | Reload the page and apply the change again |
 
 - The `CONFLICT_*` code is in the `X-Conflict-Code` header, which only ever holds `CONFLICT_001` or `CONFLICT_002`. The
@@ -84,6 +116,8 @@ On the consent POST and the bundle's routes (`CookieConsentConflictListener`; yo
   no cookie is set and the request fails. Before 1.31 a database error of the log was logged at debug level and the
   consent cookies were set without log rows.
 - Validation errors stay form errors (422).
+- A **stale admin page** is not a conflict either (see the row version above): its own domain answer, never
+  `CONFLICT_001` / `CONFLICT_002`.
 
 ## Host options
 
@@ -137,7 +171,20 @@ nowo_cookie_consent:
   - inside an open host transaction only the log's savepoint rolls back: the host's work commits;
   - two admins making two profiles the default at once (a second PHP process) leave exactly one default, the second
     save having waited for the first one's locks; a save that meets the other's lock past its timeout answers
-    `CONFLICT_001` and saves nothing.
+    `CONFLICT_001` and saves nothing;
+  - two admins open the same profile: the first save is whole (`row_version` 2), the second is refused as stale with
+    nothing written, its connection and manager stay usable, and after a reload it saves;
+  - a simultaneous profile save and a simultaneous cookie definition edit (a second PHP process holding the row lock):
+    the loser waits, then is refused as stale, and the stored row is the winner's whole (no lost update); past the lock
+    timeout the loser gets `CONFLICT_001` material (`TransientStorageFailure`), not a stale answer;
+  - making a profile the default makes an open page of the demoted profile stale: never two defaults.
+- `tests/Integration/Database/RowVersionDatabaseTest.php` (SQLite, and the three servers in the same job): the guard
+  advances once and refuses the same token twice, a missing token and a deleted row are stale, the settings save and the
+  definition edit check and advance the version (a translation-only change too), a stale save writes nothing, the manager
+  stays open and the nesting level 0.
+- `tests/Integration/Kernel/AdminPagesKernelTest.php`: the edit pages carry the token; a stale definition edit and a stale
+  profile save answer 409 with `COOKIE_CONSENT_STALE_VERSION`, the message and the typed text, store nothing, and save
+  after a reload; a submission without the token is refused.
 - `tests/Unit/EventListener/CookieConsentConflictListenerTest.php` maps every case: `CONFLICT_001` for each vendor
   code, `CONFLICT_002` (own ledger, transaction-doctrine's mark, committed `ConcurrencyConflict`, lost savepoint), 503,
   a runner's hint, the duplicate key on each admin controller, lost connections and other errors left alone, host
@@ -159,9 +206,10 @@ COOKIE_CONSENT_TEST_DATABASE_URL='mysql://root@127.0.0.1:3306/cookie_consent?ser
 
 ## Residual risks
 
-- **Two admins editing the same profile or cookie definition: the later save wins whole.** There is no version column
-  and the admin form posts every field, so a page opened before another admin's save writes back the values it showed.
-  Each save is whole, never a mix inside one row. Admin-only path; a version column needs a schema change.
+- **Nothing accepted for the admin edits of a profile or a cookie definition** since 1.33: a stale page is refused (see
+  the row version above). The version is per row: two admins editing different sections (tabs) of the same profile
+  conflict too, as the second page is outdated by the first save. A host's own template that drops the hidden
+  `rowVersion` field gets the stale answer on every save, never a silent overwrite.
 - **Profiles that are disabled keep their default flag**, as before: only enabled profiles take part in the "only one
   default" rule (the resolver only reads enabled profiles).
 - **DBAL 3 without savepoints.** On DBAL 3 with `use_savepoints: false`, a consent log that fails inside an open

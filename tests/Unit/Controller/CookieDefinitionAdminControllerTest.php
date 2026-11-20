@@ -5,11 +5,13 @@ declare(strict_types=1);
 namespace Nowo\CookieConsentBundle\Tests\Unit\Controller;
 
 use Doctrine\ORM\EntityManagerInterface;
+use Nowo\CookieConsentBundle\Concurrency\StaleVersionException;
 use Nowo\CookieConsentBundle\Controller\CookieDefinitionAdminController;
 use Nowo\CookieConsentBundle\Entity\CookieConsentConfig;
 use Nowo\CookieConsentBundle\Entity\CookieDefinition;
 use Nowo\CookieConsentBundle\Form\CookieDefinitionType;
 use Nowo\CookieConsentBundle\Form\DeleteCookieDefinitionType;
+use Nowo\CookieConsentBundle\Form\RowVersionField;
 use Nowo\CookieConsentBundle\Repository\CookieConsentConfigRepository;
 use Nowo\CookieConsentBundle\Repository\CookieDefinitionRepository;
 use Nowo\CookieConsentBundle\Tests\Support\AdminPageFixtures;
@@ -405,28 +407,72 @@ final class CookieDefinitionAdminControllerTest extends AbstractControllerTestCa
 
         $definitionRepository = $this->createMock(CookieDefinitionRepository::class);
         $definitionRepository->method('find')->willReturn($definition);
+        // 1.33: the edit is saved by the repository, with the version token of the submitted page.
+        $entityManager = $this->createMock(EntityManagerInterface::class);
+        $definitionRepository->expects(self::once())->method('saveEdit')->with($definition, $entityManager, 7);
+
+        $controller = $this->createDefinitionController(
+            config: $config,
+            definitionRepository: $definitionRepository,
+            formFactory: $this->submittedFormFactory(7),
+        );
+
+        $response = $controller->edit(1, 5, Request::create('/edit', 'POST'), $entityManager);
+
+        self::assertInstanceOf(RedirectResponse::class, $response);
+    }
+
+    public function testStaleEditReRendersTheFormWith409AndSavesNothing(): void
+    {
+        $config     = $this->createEnabledConfig(1);
+        $definition = (new CookieDefinition())->setName('_ga')->setConfig($config);
+        $this->setEntityId($definition, 5);
+
+        $definitionRepository = $this->createMock(CookieDefinitionRepository::class);
+        $definitionRepository->method('find')->willReturn($definition);
+        $definitionRepository->method('saveEdit')->willThrowException(new StaleVersionException(CookieDefinition::class, 5, 1));
+
+        $entityManager = $this->createMock(EntityManagerInterface::class);
+        // The form's unsaved changes are dropped from the managed entity (never clear() or reset the manager).
+        $entityManager->expects(self::once())->method('refresh')->with($definition);
+        $entityManager->expects(self::never())->method('clear');
+        $entityManager->expects(self::never())->method('flush');
+
+        $controller = $this->createDefinitionController(
+            config: $config,
+            definitionRepository: $definitionRepository,
+            formFactory: $this->submittedFormFactory(1),
+        );
+
+        $response = $controller->edit(1, 5, Request::create('/edit', 'POST'), $entityManager);
+
+        self::assertSame(409, $response->getStatusCode());
+        self::assertSame(StaleVersionException::ERROR_CODE, $response->headers->get('X-Error-Code'));
+        self::assertFalse($response->headers->has('X-Conflict-Code'), 'a domain answer, not CONFLICT_001 / CONFLICT_002');
+        self::assertFalse($response->headers->has('Retry-After'));
+        self::assertSame('rendered', (string) $response->getContent());
+    }
+
+    /**
+     * A submitted, valid form whose hidden row version token is `$token`.
+     */
+    private function submittedFormFactory(int $token): FormFactoryInterface
+    {
+        $field = $this->createMock(FormInterface::class);
+        $field->method('getData')->willReturn((string) $token);
 
         $form = $this->createMock(FormInterface::class);
         $form->method('createView')->willReturn(new FormView());
         $form->method('isSubmitted')->willReturn(true);
         $form->method('isValid')->willReturn(true);
         $form->method('handleRequest');
+        $form->method('has')->with(RowVersionField::NAME)->willReturn(true);
+        $form->method('get')->with(RowVersionField::NAME)->willReturn($field);
 
         $formFactory = $this->createMock(FormFactoryInterface::class);
         $formFactory->method('create')->with(CookieDefinitionType::class)->willReturn($form);
 
-        $entityManager = $this->createMock(EntityManagerInterface::class);
-        $entityManager->expects(self::once())->method('flush');
-
-        $controller = $this->createDefinitionController(
-            config: $config,
-            definitionRepository: $definitionRepository,
-            formFactory: $formFactory,
-        );
-
-        $response = $controller->edit(1, 5, Request::create('/edit', 'POST'), $entityManager);
-
-        self::assertInstanceOf(RedirectResponse::class, $response);
+        return $formFactory;
     }
 
     public function testNewPersistsRequiredCategoryAsAllowedByDefault(): void

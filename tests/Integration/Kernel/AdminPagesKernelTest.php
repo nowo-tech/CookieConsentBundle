@@ -194,6 +194,79 @@ final class AdminPagesKernelTest extends TestCase
         self::assertSame(['es' => 'Google ES', 'xx' => 'Kept provider'], $this->providers($id));
     }
 
+    public function testAStaleDefinitionEditAnswers409WithTheMessageAndSavesNothing(): void
+    {
+        [$configId, $definitionId] = $this->boot([]);
+        $browser                   = $this->browser();
+        $crawler                   = $browser->request('GET', sprintf('/cookie-consent-config/%d/cookies/%d/edit', $configId, $definitionId));
+
+        self::assertCount(1, $crawler->filter('input[type="hidden"][name="cookie_definition[rowVersion]"][value="1"]'), 'the page carries its row version');
+
+        // Another admin saves the definition while this page is open.
+        $this->entityManager()->getConnection()->executeStatement('UPDATE dashboard_cookie_definition SET duration = ?, row_version = 2 WHERE id = ?', ['1 year', $definitionId]);
+
+        $crawler = $browser->submit($crawler->filter('form[name="cookie_definition"]')->form(), ['cookie_definition[duration]' => '1 day']);
+        $answer  = $browser->getResponse();
+
+        self::assertSame(Response::HTTP_CONFLICT, $answer->getStatusCode());
+        self::assertSame('COOKIE_CONSENT_STALE_VERSION', $answer->headers->get('X-Error-Code'));
+        self::assertFalse($answer->headers->has('X-Conflict-Code'));
+        self::assertFalse($answer->headers->has('Retry-After'));
+        self::assertStringContainsString('changed by someone else', (string) $answer->getContent());
+        self::assertSame('1 day', $crawler->filter('input[name="cookie_definition[duration]"]')->attr('value'), 'the admin keeps the text typed');
+        self::assertSame('1 year', $this->entityManager()->getConnection()->fetchOne('SELECT duration FROM dashboard_cookie_definition WHERE id = ?', [$definitionId]), 'the other admin\'s save is kept');
+        self::assertSame(2, (int) $this->entityManager()->getConnection()->fetchOne('SELECT row_version FROM dashboard_cookie_definition WHERE id = ?', [$definitionId]));
+
+        // The page opened again carries the new version and saves.
+        $crawler = $browser->request('GET', sprintf('/cookie-consent-config/%d/cookies/%d/edit', $configId, $definitionId));
+        self::assertCount(1, $crawler->filter('input[type="hidden"][name="cookie_definition[rowVersion]"][value="2"]'));
+        $browser->submit($crawler->filter('form[name="cookie_definition"]')->form(), ['cookie_definition[duration]' => '1 day']);
+        self::assertSame(Response::HTTP_FOUND, $browser->getResponse()->getStatusCode());
+        self::assertSame('1 day', $this->entityManager()->getConnection()->fetchOne('SELECT duration FROM dashboard_cookie_definition WHERE id = ?', [$definitionId]));
+        self::assertSame(3, (int) $this->entityManager()->getConnection()->fetchOne('SELECT row_version FROM dashboard_cookie_definition WHERE id = ?', [$definitionId]));
+    }
+
+    public function testAStaleProfileSaveAnswers409WithTheMessageAndSavesNothing(): void
+    {
+        [$configId] = $this->boot([]);
+        $browser    = $this->browser();
+        $crawler    = $browser->request('GET', sprintf('/cookie-consent-config/%d/settings/profile', $configId));
+        $form       = $crawler->filter('input[name$="[name]"]')->closest('form')?->form();
+        self::assertNotNull($form);
+        $nameField = (string) $crawler->filter('input[name$="[name]"]')->attr('name');
+
+        $this->entityManager()->getConnection()->executeStatement('UPDATE dashboard_cookie_config SET name = ?, row_version = 2 WHERE id = ?', ['Other admin', $configId]);
+
+        $crawler = $browser->submit($form, [$nameField => 'Stale page']);
+        $answer  = $browser->getResponse();
+
+        self::assertSame(Response::HTTP_CONFLICT, $answer->getStatusCode());
+        self::assertSame('COOKIE_CONSENT_STALE_VERSION', $answer->headers->get('X-Error-Code'));
+        self::assertFalse($answer->headers->has('X-Conflict-Code'));
+        self::assertStringContainsString('changed by someone else', (string) $answer->getContent());
+        self::assertSame('Stale page', $crawler->filter(sprintf('input[name="%s"]', $nameField))->attr('value'), 'the admin keeps the text typed');
+        self::assertSame('Other admin', $this->entityManager()->getConnection()->fetchOne('SELECT name FROM dashboard_cookie_config WHERE id = ?', [$configId]));
+
+        $crawler = $browser->request('GET', sprintf('/cookie-consent-config/%d/settings/profile', $configId));
+        $browser->submit($crawler->filter(sprintf('input[name="%s"]', $nameField))->closest('form')?->form() ?? self::fail('no form'), [$nameField => 'Fresh page']);
+        self::assertSame(Response::HTTP_FOUND, $browser->getResponse()->getStatusCode());
+        self::assertSame('Fresh page', $this->entityManager()->getConnection()->fetchOne('SELECT name FROM dashboard_cookie_config WHERE id = ?', [$configId]));
+    }
+
+    public function testASubmissionWithoutTheVersionTokenIsRefused(): void
+    {
+        [$configId, $definitionId] = $this->boot([]);
+        $browser                   = $this->browser();
+        $crawler                   = $browser->request('GET', sprintf('/cookie-consent-config/%d/cookies/%d/edit', $configId, $definitionId));
+        $form                      = $crawler->filter('form[name="cookie_definition"]')->form();
+        $form->remove('cookie_definition[rowVersion]');
+
+        $browser->submit($form, ['cookie_definition[duration]' => 'forged']);
+
+        self::assertSame(Response::HTTP_CONFLICT, $browser->getResponse()->getStatusCode(), 'a template that drops the token never overwrites silently');
+        self::assertNotSame('forged', $this->entityManager()->getConnection()->fetchOne('SELECT duration FROM dashboard_cookie_definition WHERE id = ?', [$definitionId]));
+    }
+
     public function testInvalidTranslationTabIsMarkedAndOpened(): void
     {
         [$configId] = $this->boot([]);

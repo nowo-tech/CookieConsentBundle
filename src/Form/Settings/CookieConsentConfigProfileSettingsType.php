@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Nowo\CookieConsentBundle\Form\Settings;
 
 use Nowo\CookieConsentBundle\Entity\CookieConsentConfig;
+use Nowo\CookieConsentBundle\Form\RowVersionField;
 use Symfony\Component\Form\FormBuilderInterface;
 
 /**
@@ -19,6 +20,7 @@ final class CookieConsentConfigProfileSettingsType extends AbstractCookieConsent
     public function buildForm(FormBuilderInterface $builder, array $options): void
     {
         $this->rememberTranslationDomain($options);
+        RowVersionField::add($builder);
 
         $labelPrefix = $options['label_prefix'];
 

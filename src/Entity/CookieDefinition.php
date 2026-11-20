@@ -8,6 +8,8 @@ use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
+use Nowo\CookieConsentBundle\Concurrency\RowVersionGuard;
+use Nowo\CookieConsentBundle\Concurrency\VersionedRowInterface;
 use Nowo\CookieConsentBundle\Repository\CookieDefinitionRepository;
 use Symfony\Component\Validator\Constraints as Assert;
 
@@ -17,7 +19,7 @@ use Symfony\Component\Validator\Constraints as Assert;
 /**
  * Doctrine entity describing a single cookie in the inventory for a consent profile.
  */
-class CookieDefinition
+class CookieDefinition implements VersionedRowInterface
 {
     public const TYPE_FIRST_PARTY = 'first_party';
 
@@ -28,6 +30,13 @@ class CookieDefinition
     #[ORM\Column(type: Types::INTEGER)]
     /** @phpstan-ignore property.unusedType */
     private ?int $id = null;
+
+    /**
+     * Row version for the admin edits (REQ-RUNTIME-003 rule 4): advanced by one on every admin save, in the save's
+     * transaction, and checked against the version the edit page was built from ({@see RowVersionGuard}).
+     */
+    #[ORM\Column(name: 'row_version', type: Types::INTEGER, options: ['default' => 1])]
+    private int $rowVersion = 1;
 
     #[ORM\Column(length: 120)]
     #[Assert\NotBlank]
@@ -78,6 +87,29 @@ class CookieDefinition
     public function getId(): ?int
     {
         return $this->id;
+    }
+
+    /**
+     * The row version this process last read or wrote (carried by the edit form as its base token).
+     *
+     * @return int The row version, 1 for a row never saved by an admin edit
+     */
+    public function getRowVersion(): int
+    {
+        return $this->rowVersion;
+    }
+
+    /**
+     * Records the row version after the admin save advanced it (set by {@see RowVersionGuard}, not by forms).
+     *
+     * @param int $rowVersion The version the row has in the database
+     */
+    public function setRowVersion(int $rowVersion): static
+    {
+        // @igor-ignore - Doctrine entity field; instance-scoped, not a shared service.
+        $this->rowVersion = $rowVersion;
+
+        return $this;
     }
 
     /**
