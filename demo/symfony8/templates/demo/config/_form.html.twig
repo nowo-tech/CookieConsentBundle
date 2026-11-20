@@ -1,6 +1,4 @@
-{% import 'demo/_routes.html.twig' as demo_route %}
 {{ form_start(form) }}
-    <p class="nowo-ui-muted">{{ 'demo.config.form.lead'|trans }}</p>
     {% for child in form %}
         {% if not child.rendered %}
             {{ form_row(child) }}
@@ -8,7 +6,7 @@
     {% endfor %}
 
     <div class="nowo-ui-form__actions">
+        <a href="{{ path('demo_cookie_consent_config_index', { _locale: app.request.locale }) }}" class="nowo-ui-btn nowo-ui-btn--outline">{{ 'demo.config.form.cancel'|trans }}</a>
         <button type="submit" class="nowo-ui-btn nowo-ui-btn--primary">{{ submit_label|default('Save') }}</button>
-        <a href="{{ demo_route.path('demo_cookie_consent_config_index') }}" class="nowo-ui-btn nowo-ui-btn--outline">{{ 'demo.config.form.cancel'|trans }}</a>
     </div>
 {{ form_end(form) }}

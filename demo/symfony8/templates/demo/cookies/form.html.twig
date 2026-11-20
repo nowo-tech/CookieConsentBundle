@@ -1,5 +1,4 @@
 {% extends 'base.html.twig' %}
-{% import 'demo/_routes.html.twig' as demo_route %}
 
 {% block title %}{{ isNew ? 'demo.cookies.new_title'|trans : 'demo.cookies.edit_title'|trans({'%name%': definition.name}) }}{% endblock %}
 
@@ -11,8 +10,8 @@
 {% endblock %}
 
 {% block body %}
-    <div class="nowo-ui-card">
-        <div class="nowo-ui-card__body">
+    {% embed '@NowoUiKit/demo_platform/_section.html.twig' with {title: isNew ? 'demo.cookies.new_title'|trans : 'demo.cookies.edit_title'|trans({'%name%': definition.name}), kind: 'form', form: form, config: config} %}
+        {% block section_body %}
             {{ form_start(form) }}
                 {# Name/duration and category/type/sortOrder keep their order; the loop renders the remaining fields; translations use the locale tabs below. #}
                 {% for child in form %}
@@ -21,7 +20,7 @@
                     {% endif %}
                 {% endfor %}
 
-                <h2 class="nowo-ui-card__title">{{ 'demo.cookies.fields.translations'|trans }}</h2>
+                <h3>{{ 'demo.cookies.fields.translations'|trans }}</h3>
                 <p class="nowo-ui-muted">{{ 'demo.cookies.translations_lead'|trans }}</p>
                 {# Bundle 1.18: one fixed tab per enabled locale (FormKit locale_tabs, entries mode; UiKit renderer). #}
                 {{ include('@NowoFormKitBundle/form/_locale_tabs.html.twig', {
@@ -36,12 +35,12 @@
                 {{ form_errors(form.translations) }}
 
                 <div class="nowo-ui-form__actions">
+                    <a class="nowo-ui-btn nowo-ui-btn--outline" href="{{ path('demo_cookie_consent_cookies_index', { configId: config.id, _locale: app.request.locale }) }}">{{ 'demo.config.form.cancel'|trans }}</a>
                     <button type="submit" class="nowo-ui-btn nowo-ui-btn--primary">{{ 'demo.cookies.save'|trans }}</button>
-                    <a class="nowo-ui-btn nowo-ui-btn--outline" href="{{ demo_route.path('demo_cookie_consent_cookies_index', { configId: config.id }) }}">{{ 'demo.config.form.cancel'|trans }}</a>
                 </div>
             {{ form_end(form) }}
-        </div>
-    </div>
+        {% endblock %}
+    {% endembed %}
 {% endblock %}
 
 {% block javascripts %}

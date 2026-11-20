@@ -1,5 +1,4 @@
 {% extends 'base.html.twig' %}
-{% import 'demo/_routes.html.twig' as demo_route %}
 
 {% block title %}{{ 'demo.config.settings.title'|trans }}{% endblock %}
 
@@ -11,35 +10,39 @@
 {% endblock %}
 
 {% block body %}
-                        {{ form_start(form) }}
-                            {# Sections open at the first field of each settings section (CookieConsentConfigFullSettingsType order); the child loop renders every field. #}
-                            {% set _sections = {
-                                'enabled': ['demo.config.settings.section.profile'|trans, 'demo.config.settings.section.profile_lead'|trans],
-                                'autoShow': ['demo.config.settings.section.behavior'|trans, 'demo.config.settings.section.behavior_lead'|trans],
-                                'colorTheme': ['demo.config.settings.section.appearance'|trans, 'demo.config.settings.section.appearance_lead'|trans],
-                                'consentModalLayout': ['demo.config.settings.section.consent_modal'|trans, 'demo.config.settings.section.consent_modal_lead'|trans],
-                                'preferencesModalLayout': ['demo.config.settings.section.preferences_modal'|trans, 'demo.config.settings.section.preferences_modal_lead'|trans],
-                                'autoShowRouteMode': ['demo.config.settings.section.route_targeting'|trans, 'demo.config.settings.section.route_targeting_lead'|trans],
-                            } %}
-                            {% set _section_open = false %}
-                            {% for child in form %}
-                                {% if not child.rendered %}
-                                    {% if _sections[child.vars.name] is defined %}
-                                        {% set _section = _sections[child.vars.name] %}
-                                        {% if _section_open %}</div></section>{% endif %}
-                                        <section class="nowo-ui-card"><div class="nowo-ui-card__body">
-                                            <h2 class="nowo-ui-card__title">{{ _section[0] }}</h2>
-                                            <p class="nowo-ui-muted">{{ _section[1] }}</p>
-                                        {% set _section_open = true %}
-                                    {% endif %}
-                                    {{ form_row(child) }}
-                                {% endif %}
-                            {% endfor %}
-                            {% if _section_open %}</div></section>{% endif %}
+    {% embed '@NowoUiKit/demo_platform/_section.html.twig' with {title: 'demo.config.settings.title'|trans, kind: 'form', form: form} %}
+        {% block section_body %}
+            {{ form_start(form) }}
+                {# Sections open at the first field of each settings section (CookieConsentConfigFullSettingsType order); the child loop renders every field. #}
+                {% set _sections = {
+                    'enabled': ['demo.config.settings.section.profile'|trans, 'demo.config.settings.section.profile_lead'|trans],
+                    'autoShow': ['demo.config.settings.section.behavior'|trans, 'demo.config.settings.section.behavior_lead'|trans],
+                    'colorTheme': ['demo.config.settings.section.appearance'|trans, 'demo.config.settings.section.appearance_lead'|trans],
+                    'consentModalLayout': ['demo.config.settings.section.consent_modal'|trans, 'demo.config.settings.section.consent_modal_lead'|trans],
+                    'preferencesModalLayout': ['demo.config.settings.section.preferences_modal'|trans, 'demo.config.settings.section.preferences_modal_lead'|trans],
+                    'autoShowRouteMode': ['demo.config.settings.section.route_targeting'|trans, 'demo.config.settings.section.route_targeting_lead'|trans],
+                } %}
+                {% set _section_open = false %}
+                {% for child in form %}
+                    {% if not child.rendered %}
+                        {% if _sections[child.vars.name] is defined %}
+                            {% set _section = _sections[child.vars.name] %}
+                            {% if _section_open %}</section>{% endif %}
+                            <section aria-labelledby="settings-section-{{ child.vars.name }}">
+                                <h3 id="settings-section-{{ child.vars.name }}">{{ _section[0] }}</h3>
+                                <p class="nowo-ui-muted">{{ _section[1] }}</p>
+                            {% set _section_open = true %}
+                        {% endif %}
+                        {{ form_row(child) }}
+                    {% endif %}
+                {% endfor %}
+                {% if _section_open %}</section>{% endif %}
 
-                            <div class="nowo-ui-form__actions">
-                                <button type="submit" class="nowo-ui-btn nowo-ui-btn--primary">{{ 'demo.config.settings.save'|trans }}</button>
-                                <a href="{{ demo_route.path('demo_cookie_consent_config_index') }}" class="nowo-ui-btn nowo-ui-btn--outline">{{ 'demo.config.form.cancel'|trans }}</a>
-                            </div>
-                        {{ form_end(form) }}
+                <div class="nowo-ui-form__actions">
+                    <a href="{{ path('demo_cookie_consent_config_index', { _locale: app.request.locale }) }}" class="nowo-ui-btn nowo-ui-btn--outline">{{ 'demo.config.form.cancel'|trans }}</a>
+                    <button type="submit" class="nowo-ui-btn nowo-ui-btn--primary">{{ 'demo.config.settings.save'|trans }}</button>
+                </div>
+            {{ form_end(form) }}
+        {% endblock %}
+    {% endembed %}
 {% endblock %}

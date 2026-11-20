@@ -1,30 +1,44 @@
 {#-
-  REQ-DEMO-014: the demo shell is UiKit's admin layout with UiKit's default theme (nowo-ui.css from the bundle's own
-  asset package, no CSS framework, no CDN, no token overrides). It is also the layout of the bundle admin pages
-  (nowo_ui_kit.layouts.admin, REQ-UI-003). The consent widget and its diagnostics script are the bundle's own, unchanged.
+  REQ-DEMO-014: the demo runs inside UiKit's shared demo platform shell (@NowoUiKit/demo_platform/layout.html.twig).
+  This file only declares the demo (nowo_ui_demo_platform). It is also the layout of the bundle admin pages
+  (nowo_ui_kit.layouts, REQ-UI-003). The consent widget, its preferences link and its diagnostics script are the
+  bundle's own, unchanged.
 -#}
-{% extends '@NowoUiKit/layout/admin.html.twig' %}
-{% import 'demo/_routes.html.twig' as demo_route %}
+{% extends '@NowoUiKit/demo_platform/layout.html.twig' %}
+{% set _locale = app.request.locale %}
+{% set nowo_ui_demo_platform = {
+    bundle: 'Cookie Consent',
+    home_route: 'demo_home',
+    home_params: {_locale: _locale},
+    repository: 'https://github.com/nowo-tech/CookieConsentBundle',
+    translation_domain: 'messages',
+    locales: nowo_cookie_consent_enabled_locales(),
+    nav: [
+        {label: 'demo.nav.home', route: 'demo_home', params: {_locale: _locale}, section: 'demo.nav.section_demo'},
+        {label: 'demo.nav.config', route: 'demo_cookie_consent_config_index', params: {_locale: _locale}, active: ['demo_cookie_consent_*', 'nowo_cookie_consent_*'], section: 'demo.nav.section_admin'},
+        {label: 'demo.nav.privacy', route: 'demo_privacy_policy', params: {_locale: _locale}, section: 'demo.nav.section_legal'},
+        {label: 'demo.nav.cookies', route: 'demo_cookie_policy', params: {_locale: _locale}, section: 'demo.nav.section_legal'},
+        {label: 'demo.nav.consent', route: 'demo_consent_information', params: {_locale: _locale}, section: 'demo.nav.section_legal'},
+    ],
+} %}
 
-{% block nowo_ui_document_title %}{% block title %}Cookie Consent Demo{% endblock %}{% endblock %}
+{% block nowo_ui_document_title %}{% block title %}Cookie Consent Demo{% endblock %} — Symfony 8{% endblock %}
 
 {% block nowo_ui_head %}
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 128 128%22><text y=%221.2em%22 font-size=%2296%22>🍪</text></svg>">
     {% block stylesheets %}{% endblock %}
-    {% if app.debug %}
-        {#- Dev only: keep the consent banner and the preferences bubble clear of the open WebProfiler toolbar (36px). -#}
-        <style>
-            body:has(.sf-toolbar-opened) .nowo-cookie-consent.show { padding-bottom: calc(1rem + 36px); }
-            body:has(.sf-toolbar-opened) .nowo-cookie-consent__preferences-bubble[class*='--bottom-'] { bottom: calc(1.25rem + 36px); }
-        </style>
-    {% endif %}
 {% endblock %}
 
-{% block nowo_ui_navigation %}
-    {% include 'demo/_nav.html.twig' %}
+{#- The bundle's own consent kit stylesheet (shipped asset): linking it keeps the script from injecting a <style>. -#}
+{% block nowo_ui_styles %}
+    {{ parent() }}
+    <link rel="stylesheet" href="{{ asset('nowo-cookie-consent.css', 'nowo_cookie_consent') }}" data-nowo-cookie-consent-css>
 {% endblock %}
 
-{% block nowo_ui_content %}{% block body %}{% endblock %}{% endblock %}
+{#- The bundle's own preferences link: under the nav on every page (the phone top bar has no room for it). -#}
+{% block nowo_ui_demo_platform_aside_end %}
+    {% include '@NowoCookieConsentBundle/cookie_consent_manage_link.html.twig' with { class: 'nowo-ui-btn nowo-ui-btn--outline nowo-ui-btn--sm' } %}
+{% endblock %}
 
 {% block nowo_ui_body %}
     {{ parent() }}

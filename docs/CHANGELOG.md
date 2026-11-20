@@ -285,6 +285,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Demo: aligned with UiKit and FormKit (`demo-nav-*` test ids on the shared `demo-masthead`; the unused skeleton `assets/app.js` and its sky-blue `app.css` are gone).
 - Requires `nowo-tech/transaction-doctrine` ^1.8.1 (fixes GHSA-9wh3-m3m5-jffx and GHSA-65w2-9r4h-848g).
+- Demo: runs in UiKit's demo platform shell (`@NowoUiKit/demo_platform/layout.html.twig`, UiKit ^2.60): the demo declares itself in `templates/base.html.twig` (nav sections, locale pills, the bundle's preferences link in the aside), pages use the page header and section cards, the demo's own header, the toolbar `<style>` and the inline `confirm()` handlers are gone (UiKit confirm dialogs), the consent kit stylesheet is linked instead of injected, a demo-platform e2e spec checks the layout rules, the drawer and axe, and the README screenshots no longer show the Symfony toolbar.
 
 ### Fixed
 

@@ -1,10 +1,8 @@
 {% set inventory = nowo_cookie_consent_cookie_inventory() %}
 
 {% if inventory is not empty %}
-    <section>
-        <h2>{{ 'demo.legal.cookies.inventory.title'|trans }}</h2>
-        <p class="nowo-ui-muted">{{ 'demo.legal.cookies.inventory.lead'|trans }}</p>
-        <div class="nowo-ui-table-wrap">
+    {% embed '@NowoUiKit/demo_platform/_section.html.twig' with {title: 'demo.legal.cookies.inventory.title'|trans, intro: 'demo.legal.cookies.inventory.lead'|trans, kind: 'table', inventory: inventory} %}
+        {% block section_body %}
             <table class="nowo-ui-table nowo-ui-data-table--compact">
                 <caption class="nowo-ui-table__caption">{{ 'nowo_cookie_consent.inventory.caption'|trans({}, 'NowoCookieConsentBundle') }}</caption>
                 <thead>
@@ -21,13 +19,13 @@
                         <tr>
                             <td><code class="nowo-ui-code">{{ row.name }}</code></td>
                             <td>{{ row.provider }}</td>
-                            <td>{{ row.purpose }}</td>
+                            <td class="nowo-ui-cell--wrap">{{ row.purpose }}</td>
                             <td>{{ ('demo.cookies.category.' ~ row.category)|trans }}</td>
                             <td>{{ row.duration }}</td>
                         </tr>
                     {% endfor %}
                 </tbody>
             </table>
-        </div>
-    </section>
+        {% endblock %}
+    {% endembed %}
 {% endif %}
