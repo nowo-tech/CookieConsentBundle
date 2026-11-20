@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## Table of contents
 
 - [[Unreleased]](#unreleased)
+- [[1.33.0] - 2026-11-20](#1330---2026-11-20)
 - [[1.32.0] - 2026-11-19](#1320---2026-11-19)
   - [Changed](#changed)
 - [[1.31.0] - 2026-11-19](#1310---2026-11-19)
@@ -283,6 +284,32 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - Requires `nowo-tech/transaction-doctrine` ^1.8.1 (fixes GHSA-9wh3-m3m5-jffx and GHSA-65w2-9r4h-848g).
+
+## [1.33.0] - 2026-11-20
+
+**Added**
+
+- **Admin edits are checked against a row version (REQ-RUNTIME-003 rule 4, lost update).** New integer column
+  `row_version` (default 1) on `CookieConsentConfig` and `CookieDefinition`; the edit forms carry it as a hidden
+  `rowVersion` field, and the save advances it with one atomic compare-and-swap `UPDATE` inside the save's transaction
+  (`RowVersionGuard`, `CookieConsentConfigRepository::saveSettings()` with the new `$expectedVersion` argument, new
+  `CookieDefinitionRepository::saveEdit()`). A page that another admin's save has outdated is answered **409** with
+  `X-Error-Code: COOKIE_CONSENT_STALE_VERSION`: the form again with the typed text and a "changed by someone else, reload"
+  message, nothing written, no `Retry-After` (a domain answer, not `CONFLICT_001` / `CONFLICT_002`). Translation key
+  `nowo_cookie_consent.admin.stale_version` in the nine catalogues.
+- Real-database race tests (MySQL 8.4, MariaDB 11.4, PostgreSQL 16): two admins on the same profile, a simultaneous
+  profile save and cookie definition edit, a lock timeout that stays `CONFLICT_001`, and the demoted-default case.
+
+**Changed**
+
+- **Schema: add `row_version INT DEFAULT 1 NOT NULL` to `dashboard_cookie_config` and `dashboard_cookie_definition`
+  before you deploy** (the bundle ships no migrations; see UPGRADING). Making a profile the default advances the version of
+  the profiles it demotes.
+- Custom admin templates that list the form fields one by one must render `form.rowVersion` (`form_rest()` does).
+- A `saveSettings()` call without a version (host code) advances the profile's `row_version` unchecked, so an admin page opened before it is refused as stale.
+- **Run the migration first:** until the column exists every page that renders the banner (the whole public site) fails.
+- A refused stale definition edit cancels the orphan removals the form scheduled for blanked translation tabs, so a later flush of the same manager deletes no translation.
+- `docs/CONCURRENCY.md`: the "later save wins" residual risk of the admin edits is closed.
 
 ## [1.32.0] - 2026-11-19
 

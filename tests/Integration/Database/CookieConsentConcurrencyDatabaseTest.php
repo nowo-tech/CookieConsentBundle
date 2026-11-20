@@ -7,13 +7,16 @@ namespace Nowo\CookieConsentBundle\Tests\Integration\Database;
 use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\Platforms\AbstractMySQLPlatform;
 use Doctrine\DBAL\Platforms\PostgreSQLPlatform;
+use Nowo\CookieConsentBundle\Concurrency\StaleVersionException;
 use Nowo\CookieConsentBundle\Cookie\CookieHandler;
 use Nowo\CookieConsentBundle\Cookie\CookieLogger;
 use Nowo\CookieConsentBundle\Entity\CookieConsentConfig;
+use Nowo\CookieConsentBundle\Entity\CookieDefinition;
 use Nowo\CookieConsentBundle\Enum\CookieNameEnum;
 use Nowo\CookieConsentBundle\EventListener\CookieConsentConflictListener;
 use Nowo\CookieConsentBundle\EventSubscriber\CookieConsentFormSubscriber;
 use Nowo\CookieConsentBundle\Repository\CookieConsentConfigRepository;
+use Nowo\CookieConsentBundle\Repository\CookieDefinitionRepository;
 use Nowo\CookieConsentBundle\Tests\Support\PersonalData\ConsentLogDatabase;
 use Nowo\TransactionContract\TransientStorageFailure;
 use Nowo\TransactionDoctrine\ConflictCode;
@@ -279,6 +282,165 @@ final class CookieConsentConcurrencyDatabaseTest extends TestCase
         self::assertTrue($b->entityManager->isOpen(), 'the lock failed before the flush: the manager stays open');
     }
 
+    public function testTwoAdminsOpenTheSameProfileTheSecondSaveIsStaleAndTheFirstStaysWhole(): void
+    {
+        [$first] = $this->profiles();
+        $b       = $this->session();
+        $pageA   = $this->db->entityManager->find(CookieConsentConfig::class, $first);
+        $pageB   = $b->entityManager->find(CookieConsentConfig::class, $first);
+        self::assertInstanceOf(CookieConsentConfig::class, $pageA);
+        self::assertInstanceOf(CookieConsentConfig::class, $pageB);
+        self::assertSame($pageA->getRowVersion(), $pageB->getRowVersion(), 'both admins opened the same version');
+
+        $pageA->setName('first (admin A)');
+        (new CookieConsentConfigRepository($this->db))->saveSettings($pageA, $this->db->entityManager, $pageA->getRowVersion());
+
+        $pageB->setName('first (admin B)')->setPriority(9);
+        $stale = null;
+
+        try {
+            (new CookieConsentConfigRepository($b))->saveSettings($pageB, $b->entityManager, 1);
+        } catch (StaleVersionException $caught) {
+            $stale = $caught;
+        }
+
+        self::assertInstanceOf(StaleVersionException::class, $stale, 'a stale save is a domain answer, never a silent overwrite');
+        self::assertSame(['first (admin A)', 0, 2], $this->profileRow($first), 'the first admin\'s save is whole: name, priority, version');
+        $connection = $b->entityManager->getConnection();
+        self::assertSame(0, $connection->getTransactionNestingLevel());
+        self::assertSame(1, (int) $connection->fetchOne('SELECT 1'), 'the connection is still usable');
+        self::assertTrue($b->entityManager->isOpen(), 'the manager was not closed by the refused save');
+
+        // The second admin reloads and applies the change again on the current page.
+        $b->entityManager->refresh($pageB);
+        $pageB->setName('first (admin B)');
+        (new CookieConsentConfigRepository($b))->saveSettings($pageB, $b->entityManager, $pageB->getRowVersion());
+        self::assertSame(['first (admin B)', 0, 3], $this->profileRow($first));
+    }
+
+    public function testASimultaneousProfileSaveWaitsForTheWinnerAndThenIsStale(): void
+    {
+        [$first] = $this->profiles();
+        $b       = $this->session();
+        self::setLockTimeout($b->entityManager->getConnection(), 10);
+        $page = $b->entityManager->find(CookieConsentConfig::class, $first);
+        self::assertInstanceOf(CookieConsentConfig::class, $page);
+
+        // Both pages were opened at version 1; the other process saves first and keeps the row locked for 1.5 s.
+        $child   = $this->startSaveEdit('profile', $first, 1, 1500, 'first (winner)');
+        $started = hrtime(true);
+        $page->setName('first (loser)');
+        $stale = null;
+
+        try {
+            (new CookieConsentConfigRepository($b))->saveSettings($page, $b->entityManager, 1);
+        } catch (StaleVersionException $caught) {
+            $stale = $caught;
+        }
+        $waited = (hrtime(true) - $started) / 1e9;
+        self::assertSame("DONE\n", $this->finish($child));
+
+        self::assertGreaterThan(0.5, $waited, 'the loser waited for the winner\'s row lock, then found the version moved');
+        self::assertInstanceOf(StaleVersionException::class, $stale);
+        self::assertSame(['first (winner)', 0, 2], $this->profileRow($first), 'no lost update: the winner\'s save is the stored row');
+        self::assertSame(0, $b->entityManager->getConnection()->getTransactionNestingLevel());
+        self::assertTrue($b->entityManager->isOpen());
+    }
+
+    public function testASimultaneousDefinitionEditWaitsForTheWinnerAndThenIsStale(): void
+    {
+        $definition = $this->definition('_ga');
+        $b          = $this->session();
+        self::setLockTimeout($b->entityManager->getConnection(), 10);
+        $page = $b->entityManager->find(CookieDefinition::class, $definition);
+        self::assertInstanceOf(CookieDefinition::class, $page);
+
+        $child   = $this->startSaveEdit('definition', $definition, 1, 1500, '_ga_winner');
+        $started = hrtime(true);
+        $page->setName('_ga_loser');
+        $stale = null;
+
+        try {
+            (new CookieDefinitionRepository($b))->saveEdit($page, $b->entityManager, 1);
+        } catch (StaleVersionException $caught) {
+            $stale = $caught;
+        }
+        $waited = (hrtime(true) - $started) / 1e9;
+        self::assertSame("DONE\n", $this->finish($child));
+
+        self::assertGreaterThan(0.5, $waited, 'the loser waited for the winner\'s row lock');
+        self::assertInstanceOf(StaleVersionException::class, $stale);
+        $row = $this->db->entityManager->getConnection()->fetchAssociative('SELECT name, row_version FROM dashboard_cookie_definition WHERE id = ?', [$definition]);
+        self::assertSame(['name' => '_ga_winner', 'row_version' => 2], ['name' => $row['name'] ?? null, 'row_version' => (int) ($row['row_version'] ?? 0)], 'no lost update');
+        self::assertSame(0, $b->entityManager->getConnection()->getTransactionNestingLevel());
+        self::assertTrue($b->entityManager->isOpen());
+    }
+
+    public function testADefinitionEditThatMeetsTheWinnersLockPastItsTimeoutIsAConflictNotAStaleAnswer(): void
+    {
+        $definition = $this->definition('_ga');
+        $b          = $this->session();
+        self::setLockTimeout($b->entityManager->getConnection(), 1);
+        $page = $b->entityManager->find(CookieDefinition::class, $definition);
+        self::assertInstanceOf(CookieDefinition::class, $page);
+
+        $child = $this->startSaveEdit('definition', $definition, 1, 3000, '_ga_winner');
+        $page->setName('_ga_loser');
+        $failure = null;
+
+        try {
+            (new CookieDefinitionRepository($b))->saveEdit($page, $b->entityManager, 1);
+        } catch (TransientStorageFailure $caught) {
+            $failure = $caught;
+        }
+        self::assertSame("DONE\n", $this->finish($child));
+
+        self::assertInstanceOf(TransientStorageFailure::class, $failure, 'a lock wait timeout stays CONFLICT_001 material: retry is safe');
+        $row = $this->db->entityManager->getConnection()->fetchAssociative('SELECT name, row_version FROM dashboard_cookie_definition WHERE id = ?', [$definition]);
+        self::assertSame('_ga_winner', $row['name'] ?? null);
+        self::assertSame(0, $b->entityManager->getConnection()->getTransactionNestingLevel());
+    }
+
+    public function testMakingAProfileTheDefaultMakesAnOpenPageOfTheDemotedProfileStale(): void
+    {
+        [$first, , $initial] = $this->profiles();
+        $b                   = $this->session();
+        $oldDefault          = $b->entityManager->find(CookieConsentConfig::class, $initial);
+        self::assertInstanceOf(CookieConsentConfig::class, $oldDefault);
+        self::assertTrue($oldDefault->isDefault());
+
+        $page = $this->db->entityManager->find(CookieConsentConfig::class, $first);
+        self::assertInstanceOf(CookieConsentConfig::class, $page);
+        $page->setDefault(true);
+        (new CookieConsentConfigRepository($this->db))->saveSettings($page, $this->db->entityManager, 1);
+
+        // The admin who opened the old default's page before that save cannot write the old flag back.
+        $oldDefault->setDefault(true)->setName('initial (stale page)');
+        $this->expectException(StaleVersionException::class);
+        (new CookieConsentConfigRepository($b))->saveSettings($oldDefault, $b->entityManager, 1);
+    }
+
+    public function testTwoDefaultProfilesNeverResultFromAStalePage(): void
+    {
+        [$first, , $initial] = $this->profiles();
+        $b                   = $this->session();
+        $page                = $b->entityManager->find(CookieConsentConfig::class, $initial);
+        self::assertInstanceOf(CookieConsentConfig::class, $page);
+
+        $other = $this->db->entityManager->find(CookieConsentConfig::class, $first);
+        self::assertInstanceOf(CookieConsentConfig::class, $other);
+        $other->setDefault(true);
+        (new CookieConsentConfigRepository($this->db))->saveSettings($other, $this->db->entityManager, 1);
+
+        try {
+            (new CookieConsentConfigRepository($b))->saveSettings($page->setName('initial (stale page)'), $b->entityManager, 1);
+            self::fail('The demoted profile\'s page is stale.');
+        } catch (StaleVersionException) {
+        }
+
+        self::assertSame([$first], $this->defaults(), 'exactly one default');
+    }
+
     private function session(?CommitLedger $ledger = null): ConsentLogDatabase
     {
         $session = ConsentLogDatabase::connect($ledger instanceof CommitLedger ? [new CommitTrackingMiddleware($ledger)] : []);
@@ -391,6 +553,57 @@ final class CookieConsentConcurrencyDatabaseTest extends TestCase
         $em->clear();
 
         return [$ids[0], $ids[1], $ids[2]];
+    }
+
+    /**
+     * @return array{string, int, int} name, priority and row version of a profile
+     */
+    private function profileRow(int $id): array
+    {
+        $row = $this->db->entityManager->getConnection()->fetchAssociative('SELECT name, priority, row_version FROM dashboard_cookie_config WHERE id = ?', [$id]);
+        self::assertIsArray($row);
+
+        return [(string) $row['name'], (int) $row['priority'], (int) $row['row_version']];
+    }
+
+    private function definition(string $name): int
+    {
+        [$profile] = $this->profiles();
+        $em        = $this->db->entityManager;
+        $owner     = $em->find(CookieConsentConfig::class, $profile);
+        self::assertInstanceOf(CookieConsentConfig::class, $owner);
+        $definition = (new CookieDefinition())->setName($name)->setConfig($owner);
+        $em->persist($definition);
+        $em->flush();
+        $id = (int) $definition->getId();
+        $em->clear();
+
+        return $id;
+    }
+
+    /**
+     * @return array{0: resource, 1: array<int, resource>}
+     */
+    private function startSaveEdit(string $kind, int $id, int $token, int $holdMs, string $name): array
+    {
+        // @phpstan-ignore frankenphp.classic.noUnlimitedIoTimeout (test-only child process; pipes read with stream_set_timeout)
+        $process = proc_open(
+            [PHP_BINARY, dirname(__DIR__, 2) . '/Fixtures/concurrency/save-edit.php', $kind, (string) $id, (string) $token, (string) $holdMs, $name],
+            [1 => ['pipe', 'w'], 2 => ['pipe', 'w']],
+            $pipes,
+            null,
+            [ConsentLogDatabase::URL_ENV => (string) getenv(ConsentLogDatabase::URL_ENV), 'PATH' => (string) getenv('PATH')],
+        );
+        self::assertTrue(is_resource($process));
+        // Bounded: the child holds its locks for $holdMs and its own session has a lock timeout.
+        stream_set_timeout($pipes[1], 30);
+        stream_set_timeout($pipes[2], 30);
+        $line = fgets($pipes[1]);
+        if ($line !== "LOCKED\n") {
+            throw new RuntimeException('The second process did not take its locks: ' . trim((string) $line) . ' ' . stream_get_contents($pipes[2]));
+        }
+
+        return [$process, $pipes];
     }
 
     /**
