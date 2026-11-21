@@ -4,8 +4,13 @@ declare(strict_types=1);
 
 namespace Nowo\CookieConsentBundle\Tests\Unit\DependencyInjection;
 
+use Doctrine\Bundle\DoctrineBundle\DoctrineBundle;
 use Doctrine\ORM\EntityManagerInterface;
 use Nowo\CookieConsentBundle\Admin\AdminPageFactory;
+use Nowo\CookieConsentBundle\Config\CookieConsentConfigReader;
+use Nowo\CookieConsentBundle\Config\CookieConsentConfigReaderInterface;
+use Nowo\CookieConsentBundle\Config\CookieConsentConfigResolver;
+use Nowo\CookieConsentBundle\Config\CookieInventoryProvider;
 use Nowo\CookieConsentBundle\Controller\CookieConsentConfigSettingsAdminController;
 use Nowo\CookieConsentBundle\Controller\CookieDefinitionAdminController;
 use Nowo\CookieConsentBundle\Cookie\CookieChecker;
@@ -18,20 +23,30 @@ use Nowo\CookieConsentBundle\DependencyInjection\Configuration;
 use Nowo\CookieConsentBundle\DependencyInjection\NowoCookieConsentExtension;
 use Nowo\CookieConsentBundle\DependencyInjection\TablePrefixListener;
 use Nowo\CookieConsentBundle\Doctrine\CookieConsentManagerRegistry;
+use Nowo\CookieConsentBundle\Entity\CookieConsentConfig;
 use Nowo\CookieConsentBundle\Event\ConsentSavedEvent;
+use Nowo\CookieConsentBundle\EventListener\CookieConsentConflictListener;
 use Nowo\CookieConsentBundle\EventSubscriber\CookieConsentConfigTranslationSubscriber;
+use Nowo\CookieConsentBundle\EventSubscriber\CookieConsentPrivateManagerBoundarySubscriber;
 use Nowo\CookieConsentBundle\EventSubscriber\CookieConsentSchemaReadySubscriber;
 use Nowo\CookieConsentBundle\Repository\CookieConsentConfigRepository;
+use Nowo\CookieConsentBundle\Repository\CookieDefinitionRepository;
 use Nowo\CookieConsentBundle\Security\AllowAllCookieConsentAccessChecker;
 use Nowo\CookieConsentBundle\Security\ConfigurableCookieConsentAccessChecker;
 use Nowo\CookieConsentBundle\Security\CookieConsentAccessCheckerInterface;
 use Nowo\CookieConsentBundle\Twig\CookieConsentAdminTwigExtension;
+use Nowo\TransactionDoctrine\PrivateManager\PrivateEntityManager;
+use Nowo\TransactionDoctrine\PrivateManager\PrivateEntityManagerMiddleware;
+use Nowo\TransactionDoctrine\PrivateManager\PrivateManagerRegistry;
 use Nowo\UiKitBundle\DependencyInjection\Configuration as UiKitConfiguration;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use ReflectionMethod;
 use Symfony\Bundle\FrameworkBundle\DependencyInjection\FrameworkExtension;
 use Symfony\Component\Config\Definition\Processor;
+use Symfony\Component\DependencyInjection\Argument\IteratorArgument;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
+use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\DependencyInjection\Definition;
 use Symfony\Component\DependencyInjection\Extension\Extension;
 use Symfony\Component\DependencyInjection\Reference;
@@ -106,6 +121,113 @@ final class NowoCookieConsentExtensionTest extends TestCase
             self::assertArrayHasKey(EntityManagerInterface::class . ' $entityManager', $bindings, $controller);
             self::assertSame('doctrine.orm.cookie_consent_entity_manager', (string) $bindings[EntityManagerInterface::class . ' $entityManager']->getValues()[0]);
         }
+    }
+
+    public function testPrivateEntityManagerIsOffByDefault(): void
+    {
+        $container = new ContainerBuilder();
+        $container->setParameter('kernel.bundles', ['DoctrineBundle' => DoctrineBundle::class]);
+        (new NowoCookieConsentExtension())->load([[]], $container);
+
+        self::assertFalse($container->getParameter(NowoCookieConsentExtension::PRIVATE_ENTITY_MANAGER_PARAMETER));
+        self::assertFalse($container->hasDefinition(NowoCookieConsentExtension::PRIVATE_ENTITY_MANAGER_SERVICE));
+        self::assertFalse($container->hasDefinition(NowoCookieConsentExtension::PRIVATE_REGISTRY_SERVICE));
+        self::assertFalse($container->hasDefinition(NowoCookieConsentExtension::PRIVATE_MIDDLEWARE_SERVICE));
+        // Excluded from the resource scan (Symfony keeps an abstract `container.excluded` placeholder only).
+        self::assertFalse($container->hasDefinition(CookieConsentPrivateManagerBoundarySubscriber::class) && !$container->getDefinition(CookieConsentPrivateManagerBoundarySubscriber::class)->hasTag('container.excluded'));
+        self::assertSame('doctrine', (string) $container->getDefinition(CookieConsentConflictListener::class)->getArgument(3));
+    }
+
+    public function testPrivateEntityManagerNeedsDoctrineBundle(): void
+    {
+        $container = new ContainerBuilder();
+        (new NowoCookieConsentExtension())->load([['doctrine' => ['private_entity_manager' => true]]], $container);
+
+        self::assertFalse($container->getParameter(NowoCookieConsentExtension::PRIVATE_ENTITY_MANAGER_PARAMETER));
+        self::assertFalse($container->hasDefinition(NowoCookieConsentExtension::PRIVATE_ENTITY_MANAGER_SERVICE));
+    }
+
+    /**
+     * @return iterable<string, array{0: string|null, 1: string}>
+     */
+    public static function privateSources(): iterable
+    {
+        yield 'default manager' => [null, ''];
+        yield 'doctrine.entity_manager' => ['cookie_consent', 'cookie_consent'];
+    }
+
+    #[DataProvider('privateSources')]
+    public function testPrivateEntityManagerWiresTheBundleServicesToThePrivateManager(?string $entityManager, string $source): void
+    {
+        $container = new ContainerBuilder();
+        $container->setParameter('kernel.bundles', ['DoctrineBundle' => DoctrineBundle::class]);
+        (new NowoCookieConsentExtension())->load([['doctrine' => ['private_entity_manager' => true, 'entity_manager' => $entityManager]]], $container);
+
+        self::assertTrue($container->getParameter(NowoCookieConsentExtension::PRIVATE_ENTITY_MANAGER_PARAMETER));
+        self::assertSame($source, $container->getParameter(NowoCookieConsentExtension::PRIVATE_SOURCE_MANAGER_PARAMETER));
+        $sourceArgument = '%' . NowoCookieConsentExtension::PRIVATE_SOURCE_MANAGER_PARAMETER . '%';
+
+        $manager = $container->getDefinition(NowoCookieConsentExtension::PRIVATE_ENTITY_MANAGER_SERVICE);
+        self::assertSame(PrivateEntityManager::class, $manager->getClass());
+        self::assertSame('doctrine', (string) $manager->getArgument(0));
+        self::assertSame($sourceArgument, $manager->getArgument(1));
+        self::assertSame(CookieConsentConfig::class, $manager->getArgument(2));
+        self::assertSame('NowoCookieConsentBundle', $manager->getArgument(3));
+        self::assertTrue($manager->hasTag(PrivateEntityManager::TAG));
+        self::assertSame([['method' => 'reset']], $manager->getTag('kernel.reset'));
+
+        $registry = $container->getDefinition(NowoCookieConsentExtension::PRIVATE_REGISTRY_SERVICE);
+        self::assertSame(PrivateManagerRegistry::class, $registry->getClass());
+        self::assertSame(NowoCookieConsentExtension::PRIVATE_ENTITY_MANAGER_SERVICE, (string) $registry->getArgument(1));
+        self::assertSame(['Nowo\\CookieConsentBundle\\Entity'], $registry->getArgument(2));
+        self::assertSame($sourceArgument, $registry->getArgument(3));
+
+        $middleware = $container->getDefinition(NowoCookieConsentExtension::PRIVATE_MIDDLEWARE_SERVICE);
+        self::assertSame(PrivateEntityManagerMiddleware::class, $middleware->getClass());
+        self::assertFalse($middleware->hasTag('doctrine.middleware'), 'tagged by the compiler pass, for the source connection only');
+
+        foreach ([CookieConsentConfigRepository::class, CookieDefinitionRepository::class] as $repository) {
+            self::assertSame(NowoCookieConsentExtension::PRIVATE_REGISTRY_SERVICE, (string) $container->getDefinition($repository)->getArgument('$registry'), $repository);
+        }
+
+        foreach ([CookieDefinitionAdminController::class, CookieConsentConfigSettingsAdminController::class] as $controller) {
+            $bindings = $container->getDefinition($controller)->getBindings();
+            self::assertSame(NowoCookieConsentExtension::PRIVATE_ENTITY_MANAGER_SERVICE, (string) $bindings[EntityManagerInterface::class . ' $entityManager']->getValues()[0], $controller);
+        }
+
+        $listener = $container->getDefinition(CookieConsentConflictListener::class);
+        self::assertSame(NowoCookieConsentExtension::PRIVATE_REGISTRY_SERVICE, (string) $listener->getArgument(3));
+        self::assertSame($sourceArgument, $listener->getArgument(4));
+
+        // The consent log and the GDPR ports keep the source manager (DBAL only, they never flush).
+        $logger = $container->getDefinition(CookieLogger::class)->getArguments()['$managerRegistry'] ?? null;
+        self::assertNotSame(NowoCookieConsentExtension::PRIVATE_REGISTRY_SERVICE, $logger instanceof Reference ? (string) $logger : null);
+
+        $boundaries = $container->getDefinition(CookieConsentPrivateManagerBoundarySubscriber::class);
+        self::assertTrue($boundaries->hasTag('kernel.event_subscriber'));
+        $resettables = $boundaries->getArgument(0);
+        self::assertInstanceOf(IteratorArgument::class, $resettables);
+        $ids = [];
+        foreach ($resettables->getValues() as $reference) {
+            self::assertInstanceOf(Reference::class, $reference);
+            self::assertSame(ContainerInterface::IGNORE_ON_UNINITIALIZED_REFERENCE, $reference->getInvalidBehavior());
+            $ids[] = (string) $reference;
+        }
+        self::assertSame([
+            NowoCookieConsentExtension::PRIVATE_ENTITY_MANAGER_SERVICE,
+            CookieConsentConfigRepository::class,
+            CookieConsentConfigResolver::class,
+            CookieInventoryProvider::class,
+        ], $ids);
+    }
+
+    public function testConfigReaderPortIsAliased(): void
+    {
+        $container = new ContainerBuilder();
+        (new NowoCookieConsentExtension())->load([[]], $container);
+
+        self::assertSame(CookieConsentConfigReader::class, (string) $container->getAlias(CookieConsentConfigReaderInterface::class));
+        self::assertTrue($container->hasDefinition(CookieConsentConfigReader::class));
     }
 
     public function testEntityManagerWiringSkipsRemovedServices(): void

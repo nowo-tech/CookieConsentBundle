@@ -12,6 +12,7 @@
   - [GDPR personal data (`personal_data`)](#gdpr-personal-data-personal_data)
   - [Conflict answers (`conflict_response`)](#conflict-answers-conflict_response)
 - [Dedicated entity manager](#dedicated-entity-manager)
+- [Private entity manager](#private-entity-manager)
 - [Table prefix](#table-prefix)
 - [Locale detection](#locale-detection)
   - [UI theme](#ui-theme)
@@ -49,6 +50,7 @@ nowo_cookie_consent:
     doctrine:
         table_prefix: ''
         # entity_manager: cookie_consent   # optional dedicated entity manager (default: the default one)
+        # private_entity_manager: false    # 1.34: true = saves never flush your entity manager (opt-in)
 
     # Deprecated: use doctrine.table_prefix instead
     # table_prefix: ''
@@ -143,6 +145,7 @@ Every key accepted under `nowo_cookie_consent` (run `php bin/console config:dump
 |-----|---------|-------------|
 | `doctrine.table_prefix` | `''` | Prefix for every bundle table (see [Table prefix](#table-prefix)) |
 | `doctrine.entity_manager` | `null` | Since 1.27. Name of the entity manager the bundle entities are mapped on; null = the default one. The mapping is registered on that manager **only** (removed from the others, even a default manager with `auto_mapping: true` or a default metadata driver such as DoctrineBundle 3.4 `auto_discover_entities`; fixed in Unreleased); the logger, repositories, schema probe and admin controllers all use it. The build fails if the manager does not exist. Consents are written with DBAL inserts (no flush of any entity manager) |
+| `doctrine.private_entity_manager` | `false` | Since 1.34 (REQ-ARCH-001 rule 6, opt-in). `true`: the repositories, the admin controllers and the conflict listener use a private entity manager of the bundle (transaction-doctrine's `PrivateEntityManager`), created on the connection, mapping and event manager of `doctrine.entity_manager` (else the default manager). Same tables; a profile or definition save never flushes your manager. Dropped at every request / message / command boundary and at `kernel.reset`. Ignored without DoctrineBundle. See [Private entity manager](#private-entity-manager) |
 | `doctrine.connection` | `default` | **Deprecated since 1.15, ignored.** Use `doctrine.entity_manager`; the option will be removed in 2.0 |
 | `table_prefix` | `''` | **Deprecated since 1.3.** Use `doctrine.table_prefix` |
 | `use_logger` | `true` | Persist consent choices to `CookieConsentLog` |
@@ -277,6 +280,30 @@ nowo_cookie_consent:
 ```
 
 The bundle tables then exist only on `cookie_consent` (run its schema tool or migrations with `--em=cookie_consent`).
+
+## Private entity manager
+
+Since 1.34 (opt-in, REQ-ARCH-001 rule 6). Keeps the bundle's writes out of your unit of work without a second
+connection or database:
+
+```yaml
+nowo_cookie_consent:
+    doctrine:
+        private_entity_manager: true
+```
+
+- The private manager is created on your default manager's connection, mapping and event manager (or on
+  `doctrine.entity_manager`'s when set): the tables, migrations and connection stay the same.
+- Admin saves (profile settings, cookie definitions) flush only the private manager, inside the bundle's own
+  transaction; your pending changes are never written by them. A transaction you opened around a bundle call still
+  includes the bundle's rows (same connection, savepoints).
+- A failed save closes only the private manager; the next use creates a fresh one. It is also dropped at the start and
+  end of every main request, Messenger message and outermost console command (FrankenPHP worker mode with the kernel
+  reset off included) and at `kernel.reset`, so no entity loaded by the bundle survives a unit of work.
+- Entities you get from the bundle's repositories belong to the private manager: read them through
+  `CookieConsentConfigReaderInterface` (view objects) or reference them by id; never persist or flush them with your
+  own manager.
+- The default (`false`) keeps the 1.x behaviour; no deprecation notice is triggered.
 
 ## Table prefix
 

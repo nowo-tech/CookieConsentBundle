@@ -218,5 +218,6 @@ COOKIE_CONSENT_TEST_DATABASE_URL='mysql://root@127.0.0.1:3306/cookie_consent?ser
 - **Commit detection covers the bundle's connection by default.** Without transaction-doctrine's `commit_detection`, a
   commit of yours on another Doctrine connection earlier in the request is counted only with `commit_tracking: all`, and
   a commit through another client (PDO, another library) is never counted.
-- **A host closed manager.** Without `doctrine.entity_manager` a failed admin flush closes your default manager; the
-  bundle replaces it on its own routes (it was closed already), never an open one.
+- **A host closed manager.** Without `doctrine.entity_manager` (and without `doctrine.private_entity_manager: true`,
+  1.34) a failed admin flush closes your default manager; the bundle replaces it on its own routes (it was closed
+  already), never an open one. With the private manager, a failed save closes only the private one.
