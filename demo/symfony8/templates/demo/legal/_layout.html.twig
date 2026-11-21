@@ -1,33 +1,25 @@
-{% import 'demo/_routes.html.twig' as demo_route %}
-
-<article class="nowo-ui-card">
-    <div class="nowo-ui-card__body">
-        <p class="nowo-ui-muted">{{ 'demo.legal.updated'|trans }}</p>
-
+{#- One legal page: the sections of the page in one card, the cookie inventory (cookie policy) and the related pages. -#}
+{% embed '@NowoUiKit/demo_platform/_section.html.twig' with {title: title|trans, intro: 'demo.legal.updated'|trans, kind: 'detail', sections: sections, show_inventory: show_inventory|default(false)} %}
+    {% block section_body %}
         {% for section in sections %}
             <section>
-                <h2>{{ section.title|trans }}</h2>
+                <h3>{{ section.title|trans }}</h3>
                 <p>{{ section.body|trans }}</p>
             </section>
         {% endfor %}
-
-        {% if show_inventory|default(false) %}
-            {% include 'demo/legal/_cookie_inventory.html.twig' %}
-        {% endif %}
-
+    {% endblock %}
+    {% block section_footer %}
         <nav aria-label="{{ 'demo.legal.related'|trans }}" class="nowo-ui-row-actions">
-            <a class="nowo-ui-btn nowo-ui-btn--sm nowo-ui-btn--outline" href="{{ demo_route.path('demo_privacy_policy') }}">
-                {{ 'demo.nav.privacy'|trans }}
-            </a>
-            <a class="nowo-ui-btn nowo-ui-btn--sm nowo-ui-btn--outline" href="{{ demo_route.path('demo_cookie_policy') }}">
-                {{ 'demo.nav.cookies'|trans }}
-            </a>
-            <a class="nowo-ui-btn nowo-ui-btn--sm nowo-ui-btn--outline" href="{{ demo_route.path('demo_consent_information') }}">
-                {{ 'demo.nav.consent'|trans }}
-            </a>
-            <button type="button" class="nowo-ui-btn nowo-ui-btn--sm nowo-ui-btn--primary" data-cc="show-preferencesModal">
+            <a class="nowo-ui-btn nowo-ui-btn--sm nowo-ui-btn--outline" href="{{ path('demo_privacy_policy', { _locale: app.request.locale }) }}">{{ 'demo.nav.privacy'|trans }}</a>
+            <a class="nowo-ui-btn nowo-ui-btn--sm nowo-ui-btn--outline" href="{{ path('demo_cookie_policy', { _locale: app.request.locale }) }}">{{ 'demo.nav.cookies'|trans }}</a>
+            <a class="nowo-ui-btn nowo-ui-btn--sm nowo-ui-btn--outline" href="{{ path('demo_consent_information', { _locale: app.request.locale }) }}">{{ 'demo.nav.consent'|trans }}</a>
+            <button type="button" class="nowo-ui-btn nowo-ui-btn--sm nowo-ui-btn--outline" data-cc="show-preferencesModal">
                 {{ 'nowo_cookie_consent.manage_link'|trans({}, 'NowoCookieConsentBundle') }}
             </button>
         </nav>
-    </div>
-</article>
+    {% endblock %}
+{% endembed %}
+
+{% if show_inventory|default(false) %}
+    {% include 'demo/legal/_cookie_inventory.html.twig' %}
+{% endif %}

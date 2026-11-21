@@ -1,5 +1,4 @@
 {% extends 'base.html.twig' %}
-{% import 'demo/_routes.html.twig' as demo_route %}
 
 {% block title %}{{ 'demo.home.title'|trans }}{% endblock %}
 
@@ -14,10 +13,10 @@
 {% endblock %}
 
 {% block body %}
-    <section class="nowo-ui-card">
-        <div class="nowo-ui-card__body">
-            {% include 'demo/_home_content.html.twig' %}
+    {% include 'demo/_home_content.html.twig' %}
 
+    {% embed '@NowoUiKit/demo_platform/_section.html.twig' with {title: 'demo.home.reset'|trans, intro: 'demo.home.reset_help'|trans, kind: 'form', reset_form: reset_form} %}
+        {% block section_body %}
             {{ form_start(reset_form) }}
                 {% for child in reset_form %}
                     {% if not child.rendered %}
@@ -25,8 +24,7 @@
                     {% endif %}
                 {% endfor %}
                 <button type="submit" class="nowo-ui-btn nowo-ui-btn--danger">{{ 'demo.home.reset'|trans }}</button>
-                <span class="nowo-ui-muted">{{ 'demo.home.reset_help'|trans }}</span>
             {{ form_end(reset_form) }}
-        </div>
-    </section>
+        {% endblock %}
+    {% endembed %}
 {% endblock %}

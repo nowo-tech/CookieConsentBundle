@@ -1,0 +1,12 @@
+{#- UiKit confirm dialog around a Symfony delete form (the demo keeps the form and its CSRF token, UiKit owns the dialog).
+    Parameters: id, title, message, form (FormView), label. Print it in `nowo_ui_modals`. -#}
+{% set _footer %}
+    {{ form_start(form) }}
+        {% for child in form %}
+            {% if not child.rendered %}{{ form_row(child) }}{% endif %}
+        {% endfor %}
+        <button type="button" class="nowo-ui-btn nowo-ui-btn--outline" data-nowo-confirm-close autofocus>{{ 'action.cancel'|trans({}, 'NowoUiKitBundle') }}</button>
+        <button type="submit" class="nowo-ui-btn nowo-ui-btn--danger">{{ label }}</button>
+    {{ form_end(form) }}
+{% endset %}
+{{ include(nowo_ui_partial('confirm'), {id: id, title: title, body: '<p>' ~ message|e ~ '</p>', footer: _footer}, false) }}

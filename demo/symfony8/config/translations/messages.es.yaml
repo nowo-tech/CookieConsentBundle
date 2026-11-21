@@ -1,4 +1,7 @@
 demo.brand: 'Demo Cookie Consent'
+demo.nav.section_demo: 'Demo'
+demo.nav.section_admin: 'Administración'
+demo.nav.section_legal: 'Páginas legales'
 demo.nav.home: 'Inicio'
 demo.nav.config: 'Configuración de cookies'
 demo.home.title: 'Cookie Consent Bundle'

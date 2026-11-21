@@ -1,63 +1,54 @@
 {% extends 'base.html.twig' %}
-{% import 'demo/_routes.html.twig' as demo_route %}
 
 {% block title %}{{ 'demo.cookies.title'|trans({'%profile%': config.displayName}) }}{% endblock %}
 
 {% block nowo_ui_page_header %}
     {% set _toolbar %}
-        <a class="nowo-ui-btn nowo-ui-btn--outline" href="{{ demo_route.path('demo_cookie_consent_config_show', { configId: config.id }) }}">{{ 'demo.cookies.back_to_profile'|trans }}</a>
-        <a class="nowo-ui-btn nowo-ui-btn--primary" href="{{ demo_route.path('demo_cookie_consent_cookies_new', { configId: config.id }) }}">{{ 'demo.cookies.new'|trans }}</a>
+        <a class="nowo-ui-btn nowo-ui-btn--outline" href="{{ path('demo_cookie_consent_config_show', { configId: config.id, _locale: app.request.locale }) }}">{{ 'demo.cookies.back_to_profile'|trans }}</a>
+        <a class="nowo-ui-btn nowo-ui-btn--primary" href="{{ path('demo_cookie_consent_cookies_new', { configId: config.id, _locale: app.request.locale }) }}">{{ 'demo.cookies.new'|trans }}</a>
     {% endset %}
     {{ include(nowo_ui_partial('page_header'), {title: 'demo.cookies.title'|trans({'%profile%': config.displayName}), intro: 'demo.cookies.lead'|trans, toolbar: _toolbar}) }}
 {% endblock %}
 
 {% block body %}
-        <div class="nowo-ui-card">
-            <div class="nowo-ui-table-wrap">
-                <table class="nowo-ui-table nowo-ui-table--striped">
-                    <thead>
+    {% embed '@NowoUiKit/demo_platform/_section.html.twig' with {title: 'demo.cookies.title'|trans({'%profile%': config.displayName}), kind: 'table', empty: definitions is empty, state_message: 'demo.cookies.empty'|trans, definitions: definitions, config: config} %}
+        {% block section_body %}
+            <table class="nowo-ui-table nowo-ui-table--striped">
+                <thead>
+                    <tr>
+                        <th>{{ 'demo.cookies.table.name'|trans }}</th>
+                        <th>{{ 'demo.cookies.table.provider'|trans }}</th>
+                        <th class="nowo-ui-cell--wrap">{{ 'demo.cookies.table.purpose'|trans }}</th>
+                        <th>{{ 'demo.cookies.table.category'|trans }}</th>
+                        <th>{{ 'demo.cookies.table.duration'|trans }}</th>
+                        <th>{{ 'demo.cookies.table.allowed_by_default'|trans }}</th>
+                        <th>{{ 'demo.cookies.table.actions'|trans }}</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for definition in definitions %}
+                        {% set translation = definition.findTranslation(app.request.locale) ?? definition.findTranslation('en') %}
                         <tr>
-                            <th>{{ 'demo.cookies.table.name'|trans }}</th>
-                            <th>{{ 'demo.cookies.table.provider'|trans }}</th>
-                            <th>{{ 'demo.cookies.table.purpose'|trans }}</th>
-                            <th>{{ 'demo.cookies.table.category'|trans }}</th>
-                            <th>{{ 'demo.cookies.table.duration'|trans }}</th>
-                            <th>{{ 'demo.cookies.table.allowed_by_default'|trans }}</th>
-                            <th>{{ 'demo.cookies.table.actions'|trans }}</th>
+                            <td><code class="nowo-ui-code">{{ definition.name }}</code></td>
+                            <td>{{ translation ? translation.provider : '' }}</td>
+                            <td class="nowo-ui-cell--wrap">{{ translation ? translation.purpose : '' }}</td>
+                            <td><span class="nowo-ui-badge nowo-ui-badge--neutral">{{ ('demo.cookies.category.' ~ definition.category)|trans }}</span></td>
+                            <td>{{ definition.duration }}</td>
+                            <td>{{ definition.allowedByDefault ? 'demo.cookies.yes'|trans : 'demo.cookies.no'|trans }}</td>
+                            <td class="nowo-ui-table__actions">
+                                <a class="nowo-ui-btn nowo-ui-btn--sm nowo-ui-btn--outline" href="{{ path('demo_cookie_consent_cookies_edit', { configId: config.id, id: definition.id, _locale: app.request.locale }) }}">{{ 'demo.cookies.edit'|trans }}</a>
+                                <button type="button" class="nowo-ui-btn nowo-ui-btn--sm nowo-ui-btn--danger" data-nowo-confirm-open data-nowo-confirm-target="delete-cookie-{{ definition.id }}">{{ 'demo.cookies.delete'|trans }}</button>
+                            </td>
                         </tr>
-                    </thead>
-                    <tbody>
-                        {% for definition in definitions %}
-                            {% set translation = definition.findTranslation(app.request.locale) ?? definition.findTranslation('en') %}
-                            <tr>
-                                <td><code class="nowo-ui-code">{{ definition.name }}</code></td>
-                                <td>{{ translation ? translation.provider : '' }}</td>
-                                <td>{{ translation ? translation.purpose : '' }}</td>
-                                <td><span class="nowo-ui-badge nowo-ui-badge--neutral">{{ ('demo.cookies.category.' ~ definition.category)|trans }}</span></td>
-                                <td>{{ definition.duration }}</td>
-                                <td>{{ definition.allowedByDefault ? 'demo.cookies.yes'|trans : 'demo.cookies.no'|trans }}</td>
-                                <td class="nowo-ui-table__actions">
-                                    <a class="nowo-ui-btn nowo-ui-btn--sm nowo-ui-btn--outline" href="{{ demo_route.path('demo_cookie_consent_cookies_edit', { configId: config.id, id: definition.id }) }}">{{ 'demo.cookies.edit'|trans }}</a>
-                                    {% set delete_form_view = delete_forms[definition.id] %}
-                                    {{ form_start(delete_form_view, {attr: {class: 'nowo-ui-row-actions__form', onsubmit: "return confirm('" ~ ('demo.cookies.delete_confirm'|trans({'%name%': definition.name})|e('js')) ~ "');"}}) }}
-                                        {% for child in delete_form_view %}
-                                            {% if not child.rendered %}
-                                                {{ form_row(child) }}
-                                            {% endif %}
-                                        {% endfor %}
-                                        <button type="submit" class="nowo-ui-btn nowo-ui-btn--sm nowo-ui-btn--danger">{{ 'demo.cookies.delete'|trans }}</button>
-                                    {{ form_end(delete_form_view) }}
-                                </td>
-                            </tr>
-                        {% else %}
-                            <tr>
-                                <td colspan="7" class="nowo-ui-muted">
-                                    {{ 'demo.cookies.empty'|trans }}
-                                </td>
-                            </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
-        </div>
+                    {% endfor %}
+                </tbody>
+            </table>
+        {% endblock %}
+    {% endembed %}
+{% endblock %}
+
+{% block nowo_ui_modals %}
+    {% for definition in definitions %}
+        {{ include('demo/_delete_confirm.html.twig', {id: 'delete-cookie-' ~ definition.id, title: 'demo.cookies.delete'|trans, message: 'demo.cookies.delete_confirm'|trans({'%name%': definition.name}), form: delete_forms[definition.id], label: 'demo.cookies.delete'|trans}) }}
+    {% endfor %}
 {% endblock %}

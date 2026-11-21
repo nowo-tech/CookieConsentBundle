@@ -1,89 +1,63 @@
-{% import 'demo/_routes.html.twig' as demo_route %}
+{% embed '@NowoUiKit/demo_platform/_section.html.twig' with {title: 'demo.home.consent_saved'|trans, intro: 'demo.home.playground_hint'|trans, kind: 'list'} %}
+    {% block section_body %}
+        <ul class="nowo-ui-list">
+            <li class="nowo-ui-list-item">
+                <span>{{ 'demo.home.consent_saved'|trans }}</span>
+                <span class="nowo-ui-badge nowo-ui-badge--{{ nowo_cookie_consent_is_saved() ? 'success' : 'warning' }}">
+                    {{ nowo_cookie_consent_is_saved() ? 'demo.home.yes'|trans : 'demo.home.no'|trans }}
+                </span>
+            </li>
+            {% for category in ['functionality', 'preferences', 'analytics', 'marketing'] %}
+                <li class="nowo-ui-list-item">
+                    <span>{{ ('demo.home.' ~ category ~ '_allowed')|trans }}</span>
+                    <span class="nowo-ui-badge nowo-ui-badge--{{ nowo_cookie_consent_is_category_allowed(category) ? 'success' : 'neutral' }}">
+                        {{ nowo_cookie_consent_is_category_allowed(category) ? 'demo.home.yes'|trans : 'demo.home.no'|trans }}
+                    </span>
+                </li>
+            {% endfor %}
+        </ul>
+    {% endblock %}
+{% endembed %}
 
-{% macro category_badge(allowed) %}
-    <span class="nowo-ui-badge nowo-ui-badge--{{ allowed ? 'success' : 'neutral' }}">
-        {{ allowed ? 'demo.home.loaded'|trans : 'demo.home.blocked'|trans }}
-    </span>
-{% endmacro %}
+{% embed '@NowoUiKit/demo_platform/_section.html.twig' with {title: 'demo.home.blocking_title'|trans, intro: 'demo.home.blocking_lead'|trans, kind: 'list'} %}
+    {% block section_body %}
+        <ul class="nowo-ui-list">
+            <li class="nowo-ui-list-item">
+                <span>{{ 'demo.home.functionality_widget'|trans }}</span>
+                {{ include('demo/_category_badge.html.twig', {allowed: nowo_cookie_consent_is_category_allowed('functionality')}) }}
+            </li>
+            <li class="nowo-ui-list-item">
+                <span>{{ 'demo.home.preferences_storage'|trans }}</span>
+                {{ include('demo/_category_badge.html.twig', {allowed: nowo_cookie_consent_is_category_allowed('preferences')}) }}
+            </li>
+            <li class="nowo-ui-list-item">
+                <span>{{ 'demo.home.analytics_script'|trans }}</span>
+                {{ include('demo/_category_badge.html.twig', {allowed: nowo_cookie_consent_is_category_allowed('analytics')}) }}
+            </li>
+            <li class="nowo-ui-list-item">
+                <span>{{ 'demo.home.marketing_script'|trans }}</span>
+                {{ include('demo/_category_badge.html.twig', {allowed: nowo_cookie_consent_is_category_allowed('marketing')}) }}
+            </li>
+        </ul>
 
-<section class="nowo-ui-flash nowo-ui-flash--info" role="note">
-    {{ 'demo.home.playground_hint'|trans }}
-</section>
+        <script type="text/plain" data-cookie-category="functionality">
+            window.__demoFunctionalityLoaded = true;
+        </script>
+        <script type="text/plain" data-cookie-category="preferences">
+            window.__demoPreferencesLoaded = true;
+        </script>
+        <script type="text/plain" data-cookie-category="analytics">
+            window.__demoAnalyticsLoaded = true;
+        </script>
 
-<ul class="nowo-ui-list">
-    <li class="nowo-ui-list-item">
-        <span>{{ 'demo.home.consent_saved'|trans }}</span>
-        <span class="nowo-ui-badge nowo-ui-badge--{{ nowo_cookie_consent_is_saved() ? 'success' : 'warning' }}">
-            {{ nowo_cookie_consent_is_saved() ? 'demo.home.yes'|trans : 'demo.home.no'|trans }}
-        </span>
-    </li>
-    <li class="nowo-ui-list-item">
-        <span>{{ 'demo.home.functionality_allowed'|trans }}</span>
-        <span class="nowo-ui-badge nowo-ui-badge--{{ nowo_cookie_consent_is_category_allowed('functionality') ? 'success' : 'neutral' }}">
-            {{ nowo_cookie_consent_is_category_allowed('functionality') ? 'demo.home.yes'|trans : 'demo.home.no'|trans }}
-        </span>
-    </li>
-    <li class="nowo-ui-list-item">
-        <span>{{ 'demo.home.preferences_allowed'|trans }}</span>
-        <span class="nowo-ui-badge nowo-ui-badge--{{ nowo_cookie_consent_is_category_allowed('preferences') ? 'success' : 'neutral' }}">
-            {{ nowo_cookie_consent_is_category_allowed('preferences') ? 'demo.home.yes'|trans : 'demo.home.no'|trans }}
-        </span>
-    </li>
-    <li class="nowo-ui-list-item">
-        <span>{{ 'demo.home.analytics_allowed'|trans }}</span>
-        <span class="nowo-ui-badge nowo-ui-badge--{{ nowo_cookie_consent_is_category_allowed('analytics') ? 'success' : 'neutral' }}">
-            {{ nowo_cookie_consent_is_category_allowed('analytics') ? 'demo.home.yes'|trans : 'demo.home.no'|trans }}
-        </span>
-    </li>
-    <li class="nowo-ui-list-item">
-        <span>{{ 'demo.home.marketing_allowed'|trans }}</span>
-        <span class="nowo-ui-badge nowo-ui-badge--{{ nowo_cookie_consent_is_category_allowed('marketing') ? 'success' : 'neutral' }}">
-            {{ nowo_cookie_consent_is_category_allowed('marketing') ? 'demo.home.yes'|trans : 'demo.home.no'|trans }}
-        </span>
-    </li>
-</ul>
-
-<section>
-    <h2>{{ 'demo.home.blocking_title'|trans }}</h2>
-    <p class="nowo-ui-muted">{{ 'demo.home.blocking_lead'|trans }}</p>
-    <ul class="nowo-ui-list">
-        <li class="nowo-ui-list-item">
-            <span>{{ 'demo.home.functionality_widget'|trans }}</span>
-            {{ _self.category_badge(nowo_cookie_consent_is_category_allowed('functionality')) }}
-        </li>
-        <li class="nowo-ui-list-item">
-            <span>{{ 'demo.home.preferences_storage'|trans }}</span>
-            {{ _self.category_badge(nowo_cookie_consent_is_category_allowed('preferences')) }}
-        </li>
-        <li class="nowo-ui-list-item">
-            <span>{{ 'demo.home.analytics_script'|trans }}</span>
-            {{ _self.category_badge(nowo_cookie_consent_is_category_allowed('analytics')) }}
-        </li>
-        <li class="nowo-ui-list-item">
-            <span>{{ 'demo.home.marketing_script'|trans }}</span>
-            {{ _self.category_badge(nowo_cookie_consent_is_category_allowed('marketing')) }}
-        </li>
-    </ul>
-
-    <script type="text/plain" data-cookie-category="functionality">
-        window.__demoFunctionalityLoaded = true;
-    </script>
-    <script type="text/plain" data-cookie-category="preferences">
-        window.__demoPreferencesLoaded = true;
-    </script>
-    <script type="text/plain" data-cookie-category="analytics">
-        window.__demoAnalyticsLoaded = true;
-    </script>
-
-    <div class="nowo-ui-card" style="aspect-ratio: 16 / 9; max-width: 24rem"
-         data-nowo-iframe-category="marketing"
-         data-nowo-iframe-src="https://example.com/embed/marketing-demo"
-         data-nowo-iframe-title="Demo marketing video placeholder"
-         data-nowo-iframe-allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture">
-        <p class="nowo-ui-card__body nowo-ui-muted">{{ 'demo.home.blocked'|trans }} — {{ 'demo.home.marketing_script'|trans }}</p>
-    </div>
-</section>
-
-<p>
-    <a class="nowo-ui-link" href="{{ demo_route.path('demo_cookie_policy') }}">{{ 'demo.home.inventory_link'|trans }}</a>
-</p>
+        <div data-nowo-iframe-category="marketing"
+             data-nowo-iframe-src="https://example.com/embed/marketing-demo"
+             data-nowo-iframe-title="Demo marketing video placeholder"
+             data-nowo-iframe-allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture">
+            <p class="nowo-ui-muted">{{ 'demo.home.blocked'|trans }} — {{ 'demo.home.marketing_script'|trans }}</p>
+        </div>
+    {% endblock %}
+    {% block section_footer %}
+        <a class="nowo-ui-link" href="{{ path('demo_cookie_policy', {_locale: app.request.locale}) }}">{{ 'demo.home.inventory_link'|trans }}</a>
+    {% endblock %}
+{% endembed %}

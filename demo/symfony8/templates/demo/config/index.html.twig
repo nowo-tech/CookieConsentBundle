@@ -1,75 +1,56 @@
 {% extends 'base.html.twig' %}
-{% import 'demo/_routes.html.twig' as demo_route %}
 
 {% block title %}{{ 'demo.config.title'|trans }}{% endblock %}
 
 {% block nowo_ui_page_header %}
     {% set _toolbar %}
-        <a class="nowo-ui-btn nowo-ui-btn--primary" href="{{ demo_route.path('demo_cookie_consent_config_new_profile') }}">{{ 'demo.config.new_profile'|trans }}</a>
+        <a class="nowo-ui-btn nowo-ui-btn--primary" href="{{ path('demo_cookie_consent_config_new_profile', { _locale: app.request.locale }) }}">{{ 'demo.config.new_profile'|trans }}</a>
     {% endset %}
     {{ include(nowo_ui_partial('page_header'), {title: 'demo.config.title'|trans, intro: 'demo.config.lead_profiles'|trans, toolbar: _toolbar}) }}
 {% endblock %}
 
 {% block body %}
-    <div class="nowo-ui-card">
-        <div class="nowo-ui-table-wrap">
-                <table class="nowo-ui-table nowo-ui-table--striped">
-                    <thead>
+    {% embed '@NowoUiKit/demo_platform/_section.html.twig' with {title: 'demo.config.title'|trans, kind: 'table', empty: configs is empty, state_message: 'demo.config.empty_profiles'|trans, configs: configs} %}
+        {% block section_body %}
+            <table class="nowo-ui-table nowo-ui-table--striped">
+                <thead>
+                    <tr>
+                        <th>{{ 'demo.config.table.profile'|trans }}</th>
+                        <th>{{ 'demo.config.table.route_patterns'|trans }}</th>
+                        <th class="nowo-ui-cell--num">{{ 'demo.config.table.priority'|trans }}</th>
+                        <th>{{ 'demo.config.table.consent_modal'|trans }}</th>
+                        <th>{{ 'demo.config.table.preferences_modal'|trans }}</th>
+                        <th>{{ 'demo.config.table.actions'|trans }}</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for config in configs %}
                         <tr>
-                            <th>{{ 'demo.config.table.profile'|trans }}</th>
-                            <th>{{ 'demo.config.table.route_patterns'|trans }}</th>
-                            <th>{{ 'demo.config.table.priority'|trans }}</th>
-                            <th>{{ 'demo.config.table.consent_modal'|trans }}</th>
-                            <th>{{ 'demo.config.table.preferences_modal'|trans }}</th>
-                            <th>{{ 'demo.config.table.actions'|trans }}</th>
+                            <td>
+                                <strong>{{ config.displayName }}</strong>
+                                {% if config.default %}
+                                    <span class="nowo-ui-badge nowo-ui-badge--neutral">{{ 'demo.config.default_badge'|trans }}</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if config.routePatterns is not empty %}
+                                    <code class="nowo-ui-code">{{ config.routePatterns|join(', ') }}</code>
+                                {% else %}
+                                    <span class="nowo-ui-muted">{{ 'demo.config.fallback_only'|trans }}</span>
+                                {% endif %}
+                            </td>
+                            <td class="nowo-ui-cell--num">{{ config.priority }}</td>
+                            <td>{{ config.consentModalLayout }} · {{ config.consentModalVariant }} · {{ config.consentModalPosition }}</td>
+                            <td>{{ config.preferencesModalLayout }} · {{ config.preferencesModalVariant }} · {{ config.preferencesModalPosition }}</td>
+                            <td class="nowo-ui-table__actions">
+                                <a class="nowo-ui-btn nowo-ui-btn--sm nowo-ui-btn--outline" href="{{ path('demo_cookie_consent_config_show', { configId: config.id, _locale: app.request.locale }) }}">{{ 'demo.config.view'|trans }}</a>
+                                <a class="nowo-ui-btn nowo-ui-btn--sm nowo-ui-btn--outline" href="{{ path('demo_cookie_consent_config_profile_settings', { configId: config.id, _locale: app.request.locale }) }}">{{ 'demo.config.display_settings'|trans }}</a>
+                                <a class="nowo-ui-btn nowo-ui-btn--sm nowo-ui-btn--outline" href="{{ path('demo_cookie_consent_cookies_index', { configId: config.id, _locale: app.request.locale }) }}">{{ 'demo.cookies.manage'|trans }}</a>
+                            </td>
                         </tr>
-                    </thead>
-                    <tbody>
-                        {% for config in configs %}
-                            <tr>
-                                <td>
-                                    <strong>{{ config.displayName }}</strong>
-                                    {% if config.default %}
-                                        <span class="nowo-ui-badge nowo-ui-badge--neutral">{{ 'demo.config.default_badge'|trans }}</span>
-                                    {% endif %}
-                                </td>
-                                <td>
-                                    {% if config.routePatterns is not empty %}
-                                        <code class="nowo-ui-code">{{ config.routePatterns|join(', ') }}</code>
-                                    {% else %}
-                                        <span class="nowo-ui-muted">{{ 'demo.config.fallback_only'|trans }}</span>
-                                    {% endif %}
-                                </td>
-                                <td>{{ config.priority }}</td>
-                                <td>
-                                    <span>{{ config.consentModalLayout }}</span>
-                                    <span class="nowo-ui-muted">·</span>
-                                    <span>{{ config.consentModalVariant }}</span>
-                                    <span class="nowo-ui-muted">·</span>
-                                    <span>{{ config.consentModalPosition }}</span>
-                                </td>
-                                <td>
-                                    <span>{{ config.preferencesModalLayout }}</span>
-                                    <span class="nowo-ui-muted">·</span>
-                                    <span>{{ config.preferencesModalVariant }}</span>
-                                    <span class="nowo-ui-muted">·</span>
-                                    <span>{{ config.preferencesModalPosition }}</span>
-                                </td>
-                                <td class="nowo-ui-table__actions">
-                                    <a class="nowo-ui-btn nowo-ui-btn--sm nowo-ui-btn--outline" href="{{ demo_route.path('demo_cookie_consent_config_show', { configId: config.id }) }}">{{ 'demo.config.view'|trans }}</a>
-                                    <a class="nowo-ui-btn nowo-ui-btn--sm nowo-ui-btn--outline" href="{{ demo_route.path('demo_cookie_consent_config_profile_settings', { configId: config.id }) }}">{{ 'demo.config.display_settings'|trans }}</a>
-                                    <a class="nowo-ui-btn nowo-ui-btn--sm nowo-ui-btn--outline" href="{{ demo_route.path('demo_cookie_consent_cookies_index', { configId: config.id }) }}">{{ 'demo.cookies.manage'|trans }}</a>
-                                </td>
-                            </tr>
-                        {% else %}
-                            <tr>
-                                <td colspan="6" class="nowo-ui-muted">
-                                    {{ 'demo.config.empty_profiles'|trans }}
-                                </td>
-                            </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
-        </div>
+                    {% endfor %}
+                </tbody>
+            </table>
+        {% endblock %}
+    {% endembed %}
 {% endblock %}

@@ -1,72 +1,62 @@
 {% extends 'base.html.twig' %}
-{% import 'demo/_routes.html.twig' as demo_route %}
 
 {% block title %}{{ config.displayName }}{% endblock %}
 
 {% block nowo_ui_page_header %}
     {% set _intro = config.routePatterns is not empty ? 'demo.config.profile_patterns'|trans({'%patterns%': config.routePatterns|join(', ')}) : 'demo.config.profile_fallback'|trans %}
-    {{ include(nowo_ui_partial('page_header'), {title: config.displayName, intro: _intro}) }}
+    {% set _toolbar %}
+        <a class="nowo-ui-btn nowo-ui-btn--outline" href="{{ path('demo_cookie_consent_config_index', { _locale: app.request.locale }) }}">{{ 'demo.config.back_to_profiles'|trans }}</a>
+        <a class="nowo-ui-btn nowo-ui-btn--outline" href="{{ path('demo_cookie_consent_config_profile_settings', { configId: config.id, _locale: app.request.locale }) }}">{{ 'demo.config.display_settings'|trans }}</a>
+        <a class="nowo-ui-btn nowo-ui-btn--outline" href="{{ path('demo_cookie_consent_cookies_index', { configId: config.id, _locale: app.request.locale }) }}">{{ 'demo.cookies.manage'|trans }}</a>
+        <a class="nowo-ui-btn nowo-ui-btn--outline" href="{{ path('nowo_cookie_consent_cookie_definitions_index', { configId: config.id }) }}" data-testid="bundle-admin-link">{{ 'demo.config.bundle_admin'|trans }}</a>
+        <a class="nowo-ui-btn nowo-ui-btn--primary" href="{{ path('demo_cookie_consent_config_new', { configId: config.id, _locale: app.request.locale }) }}">{{ 'demo.config.new_translation'|trans }}</a>
+    {% endset %}
+    {{ include(nowo_ui_partial('page_header'), {title: config.displayName, intro: _intro, toolbar: _toolbar}) }}
 {% endblock %}
 
 {% block body %}
-    <p class="nowo-ui-row-actions">
-        <a class="nowo-ui-btn nowo-ui-btn--outline" href="{{ demo_route.path('demo_cookie_consent_config_index') }}">{{ 'demo.config.back_to_profiles'|trans }}</a>
-        <a class="nowo-ui-btn nowo-ui-btn--outline" href="{{ demo_route.path('demo_cookie_consent_config_profile_settings', { configId: config.id }) }}">{{ 'demo.config.display_settings'|trans }}</a>
-        <a class="nowo-ui-btn nowo-ui-btn--outline" href="{{ demo_route.path('demo_cookie_consent_cookies_index', { configId: config.id }) }}">{{ 'demo.cookies.manage'|trans }}</a>
-        <a class="nowo-ui-btn nowo-ui-btn--outline" href="{{ path('nowo_cookie_consent_cookie_definitions_index', { configId: config.id }) }}" data-testid="bundle-admin-link">{{ 'demo.config.bundle_admin'|trans }}</a>
-        <a class="nowo-ui-btn nowo-ui-btn--primary" href="{{ demo_route.path('demo_cookie_consent_config_new', { configId: config.id }) }}">{{ 'demo.config.new_translation'|trans }}</a>
-    </p>
-
-        <div class="nowo-ui-card">
-            <div class="nowo-ui-table-wrap">
-                <table class="nowo-ui-table nowo-ui-table--striped">
-                    <thead>
+    {% embed '@NowoUiKit/demo_platform/_section.html.twig' with {title: 'demo.config.new_translation'|trans, kind: 'table', empty: translations is empty, state_message: 'demo.config.empty'|trans, translations: translations, delete_forms: delete_forms} %}
+        {% block section_body %}
+            <table class="nowo-ui-table nowo-ui-table--striped">
+                <thead>
+                    <tr>
+                        <th>{{ 'demo.config.table.locale'|trans }}</th>
+                        <th>{{ 'demo.config.table.title'|trans }}</th>
+                        <th class="nowo-ui-cell--wrap">{{ 'demo.config.table.intro'|trans }}</th>
+                        <th>{{ 'demo.config.table.actions'|trans }}</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for translation in translations %}
                         <tr>
-                            <th>{{ 'demo.config.table.locale'|trans }}</th>
-                            <th>{{ 'demo.config.table.title'|trans }}</th>
-                            <th>{{ 'demo.config.table.intro'|trans }}</th>
-                            <th>{{ 'demo.config.table.actions'|trans }}</th>
+                            <td><code class="nowo-ui-code">{{ translation.locale }}</code></td>
+                            <td>{{ translation.consentModalTitle }}</td>
+                            <td class="nowo-ui-cell--wrap">{{ translation.consentModalDescription }}</td>
+                            <td class="nowo-ui-table__actions">
+                                <a class="nowo-ui-btn nowo-ui-btn--sm nowo-ui-btn--outline" href="{{ path('demo_cookie_consent_config_edit', { id: translation.id, _locale: app.request.locale }) }}">{{ 'demo.config.edit'|trans }}</a>
+                                <button type="button" class="nowo-ui-btn nowo-ui-btn--sm nowo-ui-btn--danger" data-nowo-confirm-open data-nowo-confirm-target="delete-translation-{{ translation.id }}">{{ 'demo.config.delete'|trans }}</button>
+                            </td>
                         </tr>
-                    </thead>
-                    <tbody>
-                        {% for translation in translations %}
-                            <tr>
-                                <td><code class="nowo-ui-code">{{ translation.locale }}</code></td>
-                                <td>{{ translation.consentModalTitle }}</td>
-                                <td>{{ translation.consentModalDescription }}</td>
-                                <td class="nowo-ui-table__actions">
-                                    <a class="nowo-ui-btn nowo-ui-btn--sm nowo-ui-btn--outline" href="{{ demo_route.path('demo_cookie_consent_config_edit', { id: translation.id }) }}">{{ 'demo.config.edit'|trans }}</a>
-                                    {% set delete_form_view = delete_forms[translation.id] %}
-                                    {{ form_start(delete_form_view, {attr: {class: 'nowo-ui-row-actions__form', onsubmit: "return confirm('" ~ ('demo.config.delete_confirm'|trans({'%locale%': translation.locale})|e('js')) ~ "');"}}) }}
-                                        {% for child in delete_form_view %}
-                                            {% if not child.rendered %}
-                                                {{ form_row(child) }}
-                                            {% endif %}
-                                        {% endfor %}
-                                        <button type="submit" class="nowo-ui-btn nowo-ui-btn--sm nowo-ui-btn--danger">{{ 'demo.config.delete'|trans }}</button>
-                                    {{ form_end(delete_form_view) }}
-                                </td>
-                            </tr>
-                        {% else %}
-                            <tr>
-                                <td colspan="4" class="nowo-ui-muted">
-                                    {{ 'demo.config.empty'|trans }}
-                                </td>
-                            </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
-        </div>
+                    {% endfor %}
+                </tbody>
+            </table>
+        {% endblock %}
+    {% endembed %}
 
-        {% if not config.default %}
-            {{ form_start(delete_profile_form, {attr: {onsubmit: "return confirm('" ~ ('demo.config.delete_profile_confirm'|trans({'%name%': config.displayName})|e('js')) ~ "');"}}) }}
-                {% for child in delete_profile_form %}
-                    {% if not child.rendered %}
-                        {{ form_row(child) }}
-                    {% endif %}
-                {% endfor %}
-                <button type="submit" class="nowo-ui-btn nowo-ui-btn--danger">{{ 'demo.config.delete_profile'|trans }}</button>
-            {{ form_end(delete_profile_form) }}
-        {% endif %}
+    {% if not config.default %}
+        {% embed '@NowoUiKit/demo_platform/_section.html.twig' with {title: 'demo.config.delete_profile'|trans, kind: 'form', delete_profile_form: delete_profile_form} %}
+            {% block section_body %}
+                <button type="button" class="nowo-ui-btn nowo-ui-btn--danger" data-nowo-confirm-open data-nowo-confirm-target="delete-profile">{{ 'demo.config.delete_profile'|trans }}</button>
+            {% endblock %}
+        {% endembed %}
+    {% endif %}
+{% endblock %}
+
+{% block nowo_ui_modals %}
+    {% for translation in translations %}
+        {{ include('demo/_delete_confirm.html.twig', {id: 'delete-translation-' ~ translation.id, title: 'demo.config.delete'|trans, message: 'demo.config.delete_confirm'|trans({'%locale%': translation.locale}), form: delete_forms[translation.id], label: 'demo.config.delete'|trans}) }}
+    {% endfor %}
+    {% if not config.default %}
+        {{ include('demo/_delete_confirm.html.twig', {id: 'delete-profile', title: 'demo.config.delete_profile'|trans, message: 'demo.config.delete_profile_confirm'|trans({'%name%': config.displayName}), form: delete_profile_form, label: 'demo.config.delete_profile'|trans}) }}
+    {% endif %}
 {% endblock %}
