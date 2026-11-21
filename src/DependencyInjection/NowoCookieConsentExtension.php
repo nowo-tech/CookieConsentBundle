@@ -8,15 +8,20 @@ use Doctrine\DBAL\Connection;
 use Doctrine\ORM\EntityManagerInterface;
 use Nowo\CookieConsentBundle\Admin\AdminChrome;
 use Nowo\CookieConsentBundle\Admin\AdminPageFactory;
+use Nowo\CookieConsentBundle\Config\CookieConsentConfigResolver;
 use Nowo\CookieConsentBundle\Config\CookieInventoryNormalizer;
+use Nowo\CookieConsentBundle\Config\CookieInventoryProvider;
 use Nowo\CookieConsentBundle\Controller\CookieConsentConfigSettingsAdminController;
 use Nowo\CookieConsentBundle\Controller\CookieDefinitionAdminController;
 use Nowo\CookieConsentBundle\Cookie\CookieLogger;
 use Nowo\CookieConsentBundle\DependencyInjection\Compiler\CookieConsentCommitTrackingPass;
+use Nowo\CookieConsentBundle\DependencyInjection\Compiler\CookieConsentPrivateEntityManagerPass;
 use Nowo\CookieConsentBundle\Doctrine\ConsentLogCollationListener;
 use Nowo\CookieConsentBundle\Doctrine\CookieConsentManagerRegistry;
+use Nowo\CookieConsentBundle\Entity\CookieConsentConfig;
 use Nowo\CookieConsentBundle\EventListener\CookieConsentConflictListener;
 use Nowo\CookieConsentBundle\EventSubscriber\CookieConsentConfigTranslationSubscriber;
+use Nowo\CookieConsentBundle\EventSubscriber\CookieConsentPrivateManagerBoundarySubscriber;
 use Nowo\CookieConsentBundle\EventSubscriber\CookieConsentSchemaReadySubscriber;
 use Nowo\CookieConsentBundle\Locale\ConfiguredLocales;
 use Nowo\CookieConsentBundle\Locale\LocaleResolver;
@@ -35,6 +40,9 @@ use Nowo\CookieConsentBundle\Security\AllowAllCookieConsentAccessChecker;
 use Nowo\CookieConsentBundle\Security\ConfigurableCookieConsentAccessChecker;
 use Nowo\CookieConsentBundle\Security\CookieConsentAccessCheckerInterface;
 use Nowo\CookieConsentBundle\Twig\CookieConsentAdminTwigExtension;
+use Nowo\TransactionDoctrine\PrivateManager\PrivateEntityManager;
+use Nowo\TransactionDoctrine\PrivateManager\PrivateEntityManagerMiddleware;
+use Nowo\TransactionDoctrine\PrivateManager\PrivateManagerRegistry;
 use Nowo\TransactionDoctrine\Symfony\Conflict\ConflictResponsePolicy;
 use Nowo\TransactionDoctrine\WriteUnit\CommitLedger;
 use Nowo\TransactionDoctrine\WriteUnit\Dbal\CommitTrackingMiddleware;
@@ -42,6 +50,7 @@ use Nowo\UiKitBundle\Theme\ThemeSlots;
 use Nowo\UserKitBundle\PersonalData\PersonalDataEraserInterface as UserKitPersonalDataEraserInterface;
 use Symfony\Component\Asset\Package;
 use Symfony\Component\Config\FileLocator;
+use Symfony\Component\DependencyInjection\Argument\IteratorArgument;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\DependencyInjection\Definition;
@@ -86,6 +95,30 @@ class NowoCookieConsentExtension extends Extension implements PrependExtensionIn
 
     /** 1.31: container parameter holding `conflict_response.commit_tracking` (bundle, all or off). */
     public const COMMIT_TRACKING_PARAMETER = 'nowo_cookie_consent.conflict_response.commit_tracking';
+
+    /** 1.34: container parameter holding whether the private entity manager is on (`doctrine.private_entity_manager`). */
+    public const PRIVATE_ENTITY_MANAGER_PARAMETER = 'nowo_cookie_consent.doctrine.private_entity_manager';
+
+    /**
+     * 1.34: container parameter holding the application's manager the private one is created on: `doctrine.entity_manager`,
+     * else the default entity manager (resolved by {@see CookieConsentPrivateEntityManagerPass}).
+     */
+    public const PRIVATE_SOURCE_MANAGER_PARAMETER = 'nowo_cookie_consent.private_entity_manager.source_manager';
+
+    /** 1.34: the bundle's private entity manager (`doctrine.private_entity_manager: true`). */
+    public const PRIVATE_ENTITY_MANAGER_SERVICE = 'nowo_cookie_consent.private_entity_manager';
+
+    /** 1.34: the registry the bundle's repositories and conflict listener get in private mode (bundle entities → the private manager). */
+    public const PRIVATE_REGISTRY_SERVICE = 'nowo_cookie_consent.private_manager_registry';
+
+    /** 1.34: tells the private manager how the connection's transactions end (tagged by {@see CookieConsentPrivateEntityManagerPass}). */
+    public const PRIVATE_MIDDLEWARE_SERVICE = 'nowo_cookie_consent.private_entity_manager_middleware';
+
+    /** 1.34: the bundle named in the private manager's log messages. */
+    public const BUNDLE_NAME = 'NowoCookieConsentBundle';
+
+    /** 1.34: the bundle's entity namespace (resolved to the private manager). */
+    public const ENTITY_NAMESPACE = 'Nowo\\CookieConsentBundle\\Entity';
 
     /**
      * Processes configuration and loads service definitions.
@@ -206,7 +239,13 @@ class NowoCookieConsentExtension extends Extension implements PrependExtensionIn
 
         $this->registerAccessChecker($container, $security);
         $this->wireEntityManager($container, $entityManagerName);
-        $this->registerConflictAnswer($container, $config['conflict_response'], $entityManagerName);
+        // 1.34 (REQ-ARCH-001 rule 6, opt-in): only with DoctrineBundle (a host without it has no bundle tables).
+        $private = $config['doctrine']['private_entity_manager'] === true && $this->hasDoctrineBundle($container);
+        $container->setParameter(self::PRIVATE_ENTITY_MANAGER_PARAMETER, $private);
+        if ($private) {
+            $this->registerPrivateEntityManager($container, $entityManagerName);
+        }
+        $this->registerConflictAnswer($container, $config['conflict_response'], $entityManagerName, $private);
 
         if ($tablePrefix !== '') {
             $container->setDefinition(
@@ -271,7 +310,7 @@ class NowoCookieConsentExtension extends Extension implements PrependExtensionIn
      *
      * @param array{status: int|null, retry_after: int|null, commit_tracking: string} $conflictResponse
      */
-    private function registerConflictAnswer(ContainerBuilder $container, array $conflictResponse, ?string $entityManagerName): void
+    private function registerConflictAnswer(ContainerBuilder $container, array $conflictResponse, ?string $entityManagerName, bool $private = false): void
     {
         $container->setParameter(self::COMMIT_TRACKING_PARAMETER, $conflictResponse['commit_tracking']);
         $tracking = $conflictResponse['commit_tracking'] !== 'off';
@@ -288,16 +327,19 @@ class NowoCookieConsentExtension extends Extension implements PrependExtensionIn
                 $conflictResponse['retry_after'] ?? ConflictResponsePolicy::DEFAULT_RETRY_AFTER,
             ]);
 
-        $registry = $entityManagerName !== null
-            ? new Reference(self::MANAGER_REGISTRY_SERVICE)
-            : new Reference('doctrine', ContainerInterface::NULL_ON_INVALID_REFERENCE);
+        $registry = match (true) {
+            // 1.34: the private manager is the bundle's own; a closed one is replaced by the private registry.
+            $private                    => new Reference(self::PRIVATE_REGISTRY_SERVICE),
+            $entityManagerName !== null => new Reference(self::MANAGER_REGISTRY_SERVICE),
+            default                     => new Reference('doctrine', ContainerInterface::NULL_ON_INVALID_REFERENCE),
+        };
 
         $container->setDefinition(CookieConsentConflictListener::class, (new Definition(CookieConsentConflictListener::class, [
             $policy,
             $tracking ? new Reference(self::COMMIT_LEDGER_SERVICE) : null,
             new Reference('request_stack', ContainerInterface::NULL_ON_INVALID_REFERENCE),
             $registry,
-            $entityManagerName,
+            $private ? '%' . self::PRIVATE_SOURCE_MANAGER_PARAMETER . '%' : $entityManagerName,
         ]))
             ->addTag('kernel.event_listener', ['event' => KernelEvents::REQUEST, 'method' => 'onRequest', 'priority' => CookieConsentConflictListener::REQUEST_PRIORITY])
             ->addTag('kernel.event_listener', ['event' => KernelEvents::EXCEPTION, 'method' => 'onException', 'priority' => CookieConsentConflictListener::PRIORITY]));
@@ -375,6 +417,91 @@ class NowoCookieConsentExtension extends Extension implements PrependExtensionIn
                 EntityManagerInterface::class . ' $entityManager' => $entityManager,
             ]);
         }
+    }
+
+    /**
+     * 1.34 (REQ-ARCH-001 rule 6, opt-in): `doctrine.private_entity_manager: true`.
+     *
+     * The repositories (through a {@see PrivateManagerRegistry}), the admin controllers (their `$entityManager`
+     * argument) and the conflict listener work through transaction-doctrine's {@see PrivateEntityManager}, created on
+     * the connection, configuration and event manager of `doctrine.entity_manager` (else the default entity manager).
+     * Same tables and connection, no other host configuration: a profile or cookie definition save never flushes the
+     * application's pending changes, and a failed save closes only the private manager (replaced on the next use).
+     *
+     * The private manager is dropped at every outermost unit-of-work boundary ({@see CookieConsentPrivateManagerBoundarySubscriber};
+     * also by transaction-doctrine's bundle through the {@see PrivateEntityManager::TAG} tag when the host registers it)
+     * and at `kernel.reset`. The consent log, the GDPR ports and the schema probe keep the source manager's connection
+     * (DBAL only, they never flush a manager), so nothing changes for them.
+     */
+    private function registerPrivateEntityManager(ContainerBuilder $container, ?string $entityManagerName): void
+    {
+        $container->setParameter(self::PRIVATE_SOURCE_MANAGER_PARAMETER, $entityManagerName ?? '');
+        $source = '%' . self::PRIVATE_SOURCE_MANAGER_PARAMETER . '%';
+
+        $container->register(self::PRIVATE_ENTITY_MANAGER_SERVICE, PrivateEntityManager::class)
+            ->setAutowired(false)
+            ->setAutoconfigured(false)
+            ->setArguments([
+                new Reference('doctrine'),
+                $source,
+                CookieConsentConfig::class,
+                self::BUNDLE_NAME,
+                new Reference('logger', ContainerInterface::NULL_ON_INVALID_REFERENCE),
+            ])
+            ->addTag(PrivateEntityManager::TAG)
+            ->addTag('kernel.reset', ['method' => 'reset']);
+        $container->register(self::PRIVATE_REGISTRY_SERVICE, PrivateManagerRegistry::class)
+            ->setAutowired(false)
+            ->setAutoconfigured(false)
+            ->setArguments([
+                new Reference('doctrine'),
+                new Reference(self::PRIVATE_ENTITY_MANAGER_SERVICE),
+                [self::ENTITY_NAMESPACE],
+                $source,
+            ]);
+        // Tagged doctrine.middleware for the source manager's connection by CookieConsentPrivateEntityManagerPass.
+        $container->register(self::PRIVATE_MIDDLEWARE_SERVICE, PrivateEntityManagerMiddleware::class)
+            ->setAutowired(false)
+            ->setAutoconfigured(false)
+            ->setArguments([new Reference(self::PRIVATE_ENTITY_MANAGER_SERVICE)]);
+
+        $manager  = new Reference(self::PRIVATE_ENTITY_MANAGER_SERVICE);
+        $registry = new Reference(self::PRIVATE_REGISTRY_SERVICE);
+        foreach ([
+            CookieConsentConfigRepository::class,
+            CookieConsentConfigTranslationRepository::class,
+            CookieDefinitionRepository::class,
+            CookieDefinitionTranslationRepository::class,
+        ] as $repository) {
+            if ($container->hasDefinition($repository)) {
+                $container->getDefinition($repository)->setArgument('$registry', $registry);
+            }
+        }
+
+        foreach ([CookieConsentConfigSettingsAdminController::class, CookieDefinitionAdminController::class] as $controller) {
+            if (!$container->hasDefinition($controller)) {
+                continue;
+            }
+
+            $definition = $container->getDefinition($controller);
+            $definition->setBindings([EntityManagerInterface::class . ' $entityManager' => $manager] + $definition->getBindings());
+        }
+
+        // Only services the unit of work already built: a boundary never builds one (REQ-RUNTIME-002).
+        $container->register(CookieConsentPrivateManagerBoundarySubscriber::class, CookieConsentPrivateManagerBoundarySubscriber::class)
+            ->setAutowired(false)
+            ->setAutoconfigured(false)
+            ->setArguments([
+                new IteratorArgument([
+                    new Reference(self::PRIVATE_ENTITY_MANAGER_SERVICE, ContainerInterface::IGNORE_ON_UNINITIALIZED_REFERENCE),
+                    // Their memos hold entities of the dropped manager: cleared at the same boundaries.
+                    new Reference(CookieConsentConfigRepository::class, ContainerInterface::IGNORE_ON_UNINITIALIZED_REFERENCE),
+                    new Reference(CookieConsentConfigResolver::class, ContainerInterface::IGNORE_ON_UNINITIALIZED_REFERENCE),
+                    new Reference(CookieInventoryProvider::class, ContainerInterface::IGNORE_ON_UNINITIALIZED_REFERENCE),
+                ]),
+                new Reference('request_stack', ContainerInterface::NULL_ON_INVALID_REFERENCE),
+            ])
+            ->addTag('kernel.event_subscriber');
     }
 
     /**

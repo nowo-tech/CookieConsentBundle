@@ -38,6 +38,7 @@ Regenerate with `make -C demo/symfony8 demo-screenshots` (REQ-DEMO-013).
     - [Standard host](#standard-host)
     - [DDD host](#ddd-host)
   - [Read-only views (1.28)](#read-only-views-128)
+  - [Config read port (1.34)](#config-read-port-134)
   - [Known limitations](#known-limitations)
 - [Asking visitors again (re-consent)](#asking-visitors-again-re-consent)
 - [Theming the admin pages](#theming-the-admin-pages)
@@ -480,15 +481,48 @@ Host code that needs the resolved profile or the cookie table reads scalars, nev
   `list<Config\CookieDefinitionView>` (`name`, `provider`, `purpose`, `duration`, `category`, `type`,
   `allowedByDefault`), from the profile's rows or the YAML inventory.
 
+### Config read port (1.34)
+
+`Config\CookieConsentConfigReaderInterface` reads the ENABLED profiles as `ConsentProfileView` objects and ids, so
+host code never type-hints `CookieConsentConfigRepository` or holds the entity:
+
+```php
+use Nowo\CookieConsentBundle\Config\CookieConsentConfigReaderInterface;
+
+final readonly class CookieConsentAdminEntry
+{
+    public function __construct(private CookieConsentConfigReaderInterface $profiles)
+    {
+    }
+
+    public function settingsRouteParameters(): ?array
+    {
+        $id = $this->profiles->defaultProfileId();
+
+        return $id === null ? null : ['configId' => $id];
+    }
+}
+```
+
+- `defaultProfileId(): ?int`, `defaultProfile(?string $locale = null): ?ConsentProfileView`;
+- `enabledProfile(int $profileId, ?string $locale = null): ?ConsentProfileView` (null when missing or disabled);
+- `enabledProfiles(?string $locale = null): list<ConsentProfileView>` (priority, then id).
+
+With a locale, the view carries that locale's copy (`locale`, `translationMessages`); without one, none. Read-only,
+through the bundle's own manager (the private one with `doctrine.private_entity_manager: true`). Without Doctrine it
+answers no profile. Alias the interface to your own service to replace it.
+
 ### Known limitations
 
 - With DoctrineBundle registered, the entity mapping is registered even when `use_logger` and `use_database_config`
   are both `false` (BC: unmapping it would show the tables as a DROP in schema diffs); 2.0 maps them only when used.
-- The admin pages still flush the bundle's entity manager when you save a definition or a profile (use a dedicated
-  `doctrine.entity_manager` to keep that away from your own unit of work).
+- By default the admin pages still flush the bundle's entity manager when you save a definition or a profile. Since
+  1.34, `doctrine.private_entity_manager: true` keeps that away from your own unit of work on the same connection (or
+  use a dedicated `doctrine.entity_manager`).
 - `ResolvedCookieConsentConfig::getConfig()` / `getTranslation()` and `CookieInventoryProvider::listForLocale()` still
   take or return the bundle entities (the bundle uses them internally); prefer the views above.
-- There is no port for the profile source itself: a host provides profiles through YAML or the bundle tables.
+- There is no port for the profile source itself: a host provides profiles through YAML or the bundle tables (since
+  1.34, `CookieConsentConfigReaderInterface` reads them as view objects).
 
 ## Theming the admin pages
 

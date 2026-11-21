@@ -38,6 +38,8 @@ services:
       - '../../PersonalData/'
       # 1.31: registered by the extension (conflict_response options).
       - '../../EventListener/CookieConsentConflictListener.php'
+      # 1.34: registered by the extension with doctrine.private_entity_manager: true only.
+      - '../../EventSubscriber/CookieConsentPrivateManagerBoundarySubscriber.php'
 
   Nowo\CookieConsentBundle\Clock\SystemClock: ~
 
@@ -91,6 +93,10 @@ services:
 
   Nowo\CookieConsentBundle\Cookie\CookieLoggerInterface:
     alias: Nowo\CookieConsentBundle\Cookie\CookieLogger
+
+  # Read port over the enabled consent profiles (1.34, REQ-ARCH-001 rules 1 and 3): view objects and ids, no entity.
+  Nowo\CookieConsentBundle\Config\CookieConsentConfigReaderInterface:
+    alias: Nowo\CookieConsentBundle\Config\CookieConsentConfigReader
 
   # GDPR erasure / export ports of the consent log (1.29): documented API, type-hint the interfaces.
   Nowo\CookieConsentBundle\PersonalData\CookieConsentPersonalDataEraser:

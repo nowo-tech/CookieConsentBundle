@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Nowo\CookieConsentBundle\DependencyInjection\Compiler;
 
+use Nowo\CookieConsentBundle\Config\CookieConsentConfigReader;
 use Nowo\CookieConsentBundle\Config\CookieConsentConfigResolver;
 use Nowo\CookieConsentBundle\Config\CookieConsentConfigSelector;
 use Nowo\CookieConsentBundle\Config\CookieInventoryProvider;
@@ -95,6 +96,10 @@ final class CookieConsentWithoutDoctrinePass implements CompilerPassInterface
             ->setArgument('$translationRepository', null);
         $container->getDefinition(CookieInventoryProvider::class)->setArgument('$definitionRepository', null);
         $container->getDefinition(CookieConsentRuntimeCacheResetSubscriber::class)->setArgument('$configRepository', null);
+        // 1.34: the read port answers "no profile" on the YAML path.
+        if ($container->hasDefinition(CookieConsentConfigReader::class)) {
+            $container->getDefinition(CookieConsentConfigReader::class)->setArgument('$configRepository', null);
+        }
 
         // The admin pages edit the tables: their routes answer 404 (CookieConsentSecurityPass).
         $container->setParameter(Configuration::ALIAS . '.web_ui.enabled', false);

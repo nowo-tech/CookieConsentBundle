@@ -3,6 +3,8 @@
 ## Table of contents
 
 - [Unreleased](#unreleased)
+  - [Optional: private entity manager (REQ-ARCH-001 rule 6)](#optional-private-entity-manager-req-arch-001-rule-6)
+  - [Optional: read profiles through the port](#optional-read-profiles-through-the-port)
 - [To 1.33.1](#to-1331)
 - [To 1.33.0](#to-1330)
   - [Admin edits: row version (REQ-RUNTIME-003 rule 4)](#admin-edits-row-version-req-runtime-003-rule-4)
@@ -142,6 +144,50 @@
 - [Getting help](#getting-help)
 
 ## Unreleased
+
+From **1.33.x**:
+
+```bash
+composer update nowo-tech/cookie-consent-bundle
+```
+
+Nothing to change: the defaults keep the 1.33 behaviour. `nowo-tech/transaction-doctrine` moves to ^1.9.2.
+
+### Optional: private entity manager (REQ-ARCH-001 rule 6)
+
+Without a dedicated `doctrine.entity_manager`, the admin pages save profiles and cookie definitions by flushing the
+manager that maps the bundle entities, which is usually your default manager: any change your own code left pending
+in it is written by that flush. To keep the bundle away from your unit of work, opt in:
+
+```yaml
+nowo_cookie_consent:
+    doctrine:
+        private_entity_manager: true
+        # entity_manager: cookie_consent   # optional: the private manager is created on this one instead of the default
+```
+
+- Same tables, same connection, no migration, no other configuration.
+- Host code that saves through the repositories passes the bundle's manager: the controllers get it as their
+  `$entityManager` argument; elsewhere use `CookieConsentConfigRepository::saveSettings($config, $entityManager)` with the
+  manager that loaded `$config` (in private mode, entities loaded through the bundle's repositories belong to the
+  private manager, not to yours: do not persist them with your own manager, and reference profiles by id).
+- With `doctrine.entity_manager` set and `private_entity_manager` left `false`, nothing changes (a dedicated manager is
+  already the bundle's own).
+
+### Optional: read profiles through the port
+
+Type-hint `Nowo\CookieConsentBundle\Config\CookieConsentConfigReaderInterface` instead of the concrete
+`CookieConsentConfigRepository` when you only read profiles:
+
+```php
+// Before
+$config = $this->configRepository->findDefaultEnabled();
+$configId = $config?->getId();
+
+// After
+$configId = $this->configReader->defaultProfileId();
+$view     = $this->configReader->defaultProfile('en'); // ConsentProfileView (id, name, revision, copy…) or null
+```
 
 ## To 1.33.1
 
