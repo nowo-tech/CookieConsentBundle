@@ -3,6 +3,7 @@
 ## Table of contents
 
 - [Unreleased](#unreleased)
+- [To 1.34.0](#to-1340)
   - [Optional: private entity manager (REQ-ARCH-001 rule 6)](#optional-private-entity-manager-req-arch-001-rule-6)
   - [Optional: read profiles through the port](#optional-read-profiles-through-the-port)
 - [To 1.33.1](#to-1331)
@@ -144,6 +145,14 @@
 - [Getting help](#getting-help)
 
 ## Unreleased
+
+## To 1.34.0
+
+From **1.33.1**:
+
+```bash
+composer update nowo-tech/cookie-consent-bundle
+```
 
 From **1.33.x**:
 
