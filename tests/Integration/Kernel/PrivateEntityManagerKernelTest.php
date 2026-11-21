@@ -232,10 +232,7 @@ final class PrivateEntityManagerKernelTest extends TestCase
 
     private function service(string $id): object
     {
-        $service = $this->container()->get($id);
-        self::assertNotNull($service);
-
-        return $service;
+        return $this->container()->get($id);
     }
 
     private function hostManager(): EntityManagerInterface
