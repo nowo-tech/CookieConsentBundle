@@ -44,7 +44,7 @@ nowo_cookie_consent.admin.cookie_definition.deleted: 'Definição de cookie elim
 nowo_cookie_consent.admin.cookie_definition.delete_confirm: 'Eliminar la cookie "%name%"?'
 nowo_cookie_consent.admin.cookie_definition.empty: 'Aún no hay definiciones de cookie.'
 nowo_cookie_consent.admin.cookie_definition.yes: 'Sim'
-nowo_cookie_consent.admin.cookie_definition.no: 'No'
+nowo_cookie_consent.admin.cookie_definition.no: "Não"
 nowo_cookie_consent.admin.cookie_definition.table.name: 'Nome'
 nowo_cookie_consent.admin.cookie_definition.table.provider: 'Fornecedor'
 nowo_cookie_consent.admin.cookie_definition.table.purpose: 'Finalidade'

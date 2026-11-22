@@ -44,7 +44,7 @@ nowo_cookie_consent.admin.cookie_definition.deleted: 'Cookiedefinitie verwijderd
 nowo_cookie_consent.admin.cookie_definition.delete_confirm: 'Verwijderen la cookie "%name%"?'
 nowo_cookie_consent.admin.cookie_definition.empty: 'Aún no hay definiciones de cookie.'
 nowo_cookie_consent.admin.cookie_definition.yes: 'Ja'
-nowo_cookie_consent.admin.cookie_definition.no: 'No'
+nowo_cookie_consent.admin.cookie_definition.no: "Nee"
 nowo_cookie_consent.admin.cookie_definition.table.name: 'Naam'
 nowo_cookie_consent.admin.cookie_definition.table.provider: 'Aanbieder'
 nowo_cookie_consent.admin.cookie_definition.table.purpose: 'Doel'
