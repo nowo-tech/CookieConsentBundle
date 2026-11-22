@@ -2,7 +2,7 @@
 
 **Baseline spec**: [`spec.md`](spec.md)  
 **Package**: `nowo-tech/cookie-consent-bundle`  
-**Last audited**: 2026-11-16
+**Last audited**: 2026-11-22
 
 ## TypeScript production (`src/Resources/assets/src/`)
 
@@ -205,6 +205,19 @@ Co-located Vitest sources under `src/` (compiled/tested in CI; not shipped to Pa
 | `PersonalData/UserKit/CookieConsentsPersonalDataExportProvider.php` | Optional UserKit export bridge | FR-GDPR-004 |
 | `PersonalData/UserKit/UserKitSubjects.php` | UserKit user to subjects | FR-GDPR-004 |
 
+## Sources added 1.33–1.34 (sweep 2026-11-22)
+
+| Source file | Spec section | Requirement IDs |
+| --- | --- | --- |
+| `Concurrency/RowVersionGuard.php` | Compare-and-swap of the version column of an edited row (REQ-RUNTIME-003 rule 4, optimistic concurrency). | FR-CONC-004 |
+| `Concurrency/StaleVersionException.php` | An admin edit was made on a page that is no longer current: another admin saved the same row after the page was opened (REQ-RUNTIME-003 rule 4, optimistic concu | FR-CONC-004 |
+| `Concurrency/VersionedRowInterface.php` | An entity whose admin edits are checked against a row version (REQ-RUNTIME-003 rule 4). | FR-CONC-004 |
+| `Config/CookieConsentConfigReader.php` | Default `CookieConsentConfigReaderInterface` (1.34): maps the repository's enabled profiles to `ConsentProfileView` value objects. | FR-CFG-005 |
+| `Config/CookieConsentConfigReaderInterface.php` | Read port over the consent profiles (1.34, REQ-ARCH-001 rules 1 and 3): host code (a DDD application layer, an admin entry point, a bootstrap check) reads the p | FR-CFG-005 |
+| `DependencyInjection/Compiler/CookieConsentPrivateEntityManagerPass.php` | 1.34 (`doctrine.private_entity_manager: true`, REQ-ARCH-001 rule 6). | FR-DDD-003 |
+| `EventSubscriber/CookieConsentPrivateManagerBoundarySubscriber.php` | 1.34 (`doctrine.private_entity_manager: true`): drops the bundle's private entity manager, and clears the memos that hold its entities, at every outermost unit- | FR-DDD-003 |
+| `Form/RowVersionField.php` | The hidden base token of an admin edit form (REQ-RUNTIME-003 rule 4): the row version of the page, unmapped. | FR-CONC-004 |
+
 ## Coverage summary
 
 | Category | Files | Mapped |
@@ -213,6 +226,7 @@ Co-located Vitest sources under `src/` (compiled/tested in CI; not shipped to Pa
 | TypeScript tests (Vitest) | 19 | 19 |
 | Resources (YAML/CSS/JS/i18n/Twig) | 33 | 33 |
 | PHP classes | 109 | 109 |
-| **Total production sources** | **180** | **180** |
+| Sources added 1.33–1.34 (sweep 2026-11-22) | 8 | 8 |
+| **Total production sources** | **190** | **190** |
 
-Audit command: `git ls-files src | wc -l` → 180 (1.30.2; co-located Vitest files included as `FR-TEST-TS-001`).
+Audit command: `git ls-files src | wc -l` → **190** (2026-11-22, 1.34.2; co-located Vitest files included as `FR-TEST-TS-001`). The category rows above summed to 182 before this audit and are not re-split; the total is the verified file count and every tracked file under `src/` is named in this inventory.
