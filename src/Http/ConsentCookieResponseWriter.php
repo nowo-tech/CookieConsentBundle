@@ -24,6 +24,9 @@ use Symfony\Component\HttpFoundation\Response;
  */
 final readonly class ConsentCookieResponseWriter
 {
+    /**
+     * Creates the ConsentCookieResponseWriter with its collaborators.
+     */
     public function __construct(
         private CookieHandlerInterface $cookieHandler,
         private ?ConsentCookieWriterInterface $cookieWriter = null,

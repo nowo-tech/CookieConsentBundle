@@ -161,13 +161,13 @@ final readonly class CookieConsentLogRows
             foreach ($rows as $row) {
                 $after = (int) $row['id'];
                 $at    = $dateType->convertToPHPValue($row['recorded_at'], $this->platform);
-                if (!$at instanceof DateTimeInterface || !$subject->matches(self::string($row['consent_key']), self::string($row['ip']), $at)) {
+                if (!$at instanceof DateTimeInterface || !$subject->matches($this->string($row['consent_key']), $this->string($row['ip']), $at)) {
                     continue;
                 }
 
                 $matched[] = [
                     'id'               => $after,
-                    'cookie_name'      => self::string($row['cookie_name']),
+                    'cookie_name'      => $this->string($row['cookie_name']),
                     'allowed'          => (bool) $boolType->convertToPHPValue($row['cookie_value'], $this->platform),
                     'consent_revision' => $row['consent_revision'] === null ? null : (int) $row['consent_revision'],
                     'recorded_at'      => DateTimeImmutable::createFromInterface($at),
@@ -180,7 +180,7 @@ final readonly class CookieConsentLogRows
         } while (count($rows) === $batchSize);
     }
 
-    private static function string(mixed $value): string
+    private function string(mixed $value): string
     {
         return is_scalar($value) ? (string) $value : '';
     }

@@ -26,6 +26,11 @@ final readonly class IpWindowSubjectResolver implements CookieConsentPersonalDat
     ) {
     }
 
+    /**
+     * Resolves the personal-data subjects of the given user.
+     *
+     * @return list<CookieConsentPersonalDataSubject> no subject: nothing to erase / export
+     */
     public function subjectsFor(object $user, ?string $originalIdentifier): array
     {
         if (!$this->enabled) {

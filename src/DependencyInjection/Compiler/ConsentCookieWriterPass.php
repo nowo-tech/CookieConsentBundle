@@ -46,6 +46,9 @@ final class ConsentCookieWriterPass implements CompilerPassInterface
         CookieConsentOutdatedConsentSubscriber::class,
     ];
 
+    /**
+     * Adjusts the container definitions of this bundle during compilation.
+     */
     public function process(ContainerBuilder $container): void
     {
         if (!$container->has(ConsentCookieWriterInterface::class) || !$container->has(CookieHandlerInterface::class)) {

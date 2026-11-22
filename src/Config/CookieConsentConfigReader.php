@@ -24,11 +24,17 @@ final readonly class CookieConsentConfigReader implements CookieConsentConfigRea
     ) {
     }
 
+    /**
+     * Returns the id of the default consent profile, or null when there is none.
+     */
     public function defaultProfileId(): ?int
     {
         return $this->configRepository?->findDefaultEnabled()?->getId();
     }
 
+    /**
+     * Returns the default consent profile for the locale, or null when there is none.
+     */
     public function defaultProfile(?string $locale = null): ?ConsentProfileView
     {
         $config = $this->configRepository?->findDefaultEnabled();
@@ -36,6 +42,9 @@ final readonly class CookieConsentConfigReader implements CookieConsentConfigRea
         return $config instanceof CookieConsentConfig ? $this->view($config, $locale) : null;
     }
 
+    /**
+     * Returns the enabled consent profile with the given id for the locale, or null.
+     */
     public function enabledProfile(int $profileId, ?string $locale = null): ?ConsentProfileView
     {
         foreach ($this->configRepository?->findAllEnabled() ?? [] as $config) {
@@ -47,6 +56,11 @@ final readonly class CookieConsentConfigReader implements CookieConsentConfigRea
         return null;
     }
 
+    /**
+     * Returns every enabled consent profile for the locale.
+     *
+     * @return list<ConsentProfileView>
+     */
     public function enabledProfiles(?string $locale = null): array
     {
         $views = [];

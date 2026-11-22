@@ -24,6 +24,9 @@ final readonly class CookieConsentLogsPersonalDataEraser implements PersonalData
 
     public const PRIORITY = 110;
 
+    /**
+     * Creates the CookieConsentLogsPersonalDataEraser with its collaborators.
+     */
     public function __construct(
         private CookieConsentPersonalDataEraserInterface $eraser,
         private CookieConsentPersonalDataSubjectResolverInterface $resolver,
@@ -31,16 +34,25 @@ final readonly class CookieConsentLogsPersonalDataEraser implements PersonalData
     ) {
     }
 
+    /**
+     * Returns the key of this eraser.
+     */
     public function getKey(): string
     {
         return self::KEY;
     }
 
+    /**
+     * Tells whether this provider handles the given user.
+     */
     public function supports(object $user): bool
     {
         return true;
     }
 
+    /**
+     * Erases the personal data of the given request or subject.
+     */
     public function erase(ErasureRequest $request): void
     {
         foreach (UserKitSubjects::resolve($this->resolver, $request->user, $request->identifier(), $request->context, $this->eraseByIpWindow) as $subject) {

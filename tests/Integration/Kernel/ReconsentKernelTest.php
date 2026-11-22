@@ -196,7 +196,7 @@ final class ReconsentKernelTest extends TestCase
         self::assertMatchesRegularExpression('/<input[^>]+name="cookie_consent\[page_route\]"[^>]+value="nowo_cookie_consent\.show"/', (string) $rendered->getContent());
 
         foreach (['shop_checkout' => 7, '' => 1, 'not a route!' => 1] as $pageRoute => $expected) {
-            $key = md5('key-' . $expected . '-' . (string) $pageRoute);
+            $key = md5('key-' . $expected . '-' . $pageRoute);
             $this->kernel()->handle(Request::create('/cookie_consent', 'POST', [
                 'cookie_consent' => ['use_all_cookies' => '', 'page_route' => $pageRoute],
             ], [CookieNameEnum::COOKIE_CONSENT_KEY_NAME => $key]));
