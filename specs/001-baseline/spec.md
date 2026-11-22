@@ -135,6 +135,12 @@ GDPR **cookie consent** for Symfony: modal with category toggles, granular per-c
 - **FR-CONC-002**: Lock conflicts of the consent POST and of the bundle routes answer 409 (or 503) + `X-Conflict-Code` `CONFLICT_001` (+ `Retry-After`) / `CONFLICT_002`; admin unique keys answer the domain 409 `COOKIE_CONSENT_DUPLICATE_KEY`; a closed bundle manager is replaced (`CookieConsentConflictListener`). Commit tracking is scoped to the bundle's connection or reuses transaction-doctrine's ledger (`CookieConsentCommitTrackingPass`).
 - **FR-CONC-003**: "Only one default profile" — `CookieConsentConfigRepository::saveSettings()` locks the enabled profiles in id order, flushes and clears the other defaults with one atomic UPDATE, in one transaction.
 
+- **FR-CONC-004**: Admin edits carry the row version (1.33, REQ-RUNTIME-003 rule 4):  is the hidden base token of the edit form,  marks the entity,  compare-and-swaps the version column and  reports a page that is no longer current.
+
+### Config read port and private entity manager (1.34)
+
+- **FR-CFG-005**:  (default ) is the read port over the enabled consent profiles, answering  value objects (REQ-ARCH-001 rules 1 and 3).
+- **FR-DDD-003**:  (opt-in, REQ-ARCH-001 rule 6):  wires the bundle's own entity manager and  drops it, and clears the memos holding its entities, at every outermost unit-of-work boundary.
 ---
 
 ## Success Criteria
