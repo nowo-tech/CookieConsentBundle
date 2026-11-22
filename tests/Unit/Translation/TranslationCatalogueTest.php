@@ -23,7 +23,8 @@ use function sprintf;
 /**
  * Guards against untranslated strings: in every non-en catalogue (all domains) a key must exist, and a value identical to
  * the English one (any length, ignoring values without letters once placeholders are removed) must be listed in
- * ALLOWED_IDENTICAL for that locale. An allow-list entry that is no longer identical to English is reported as stale.
+ * ALLOWED_IDENTICAL for that locale. In the same way a value identical to the Spanish one (a copy-paste leftover) but different
+ * from English must be listed in ALLOWED_IDENTICAL_TO_ES. An allow-list entry that is no longer identical is reported as stale.
  */
 final class TranslationCatalogueTest extends TestCase
 {
@@ -104,6 +105,54 @@ final class TranslationCatalogueTest extends TestCase
         ],
     ];
 
+    /**
+     * Keys whose value is identical to the Spanish one yet differs from English, and is correct in that locale (true
+     * cognates and shared words such as "Perfil", "Barra" or "Cancelar"), per locale. Anything else identical to Spanish
+     * is a Spanish leftover that must be translated.
+     *
+     * @var array<string, list<string>>
+     */
+    private const ALLOWED_IDENTICAL_TO_ES = [
+        'ca' => [
+            'nowo_cookie_consent.analytics.title',
+            'nowo_cookie_consent.admin.cookie_definition.edit',
+            'nowo_cookie_consent.admin.cookie_definition.delete',
+            'nowo_cookie_consent.admin.cookie_definition.yes',
+            'nowo_cookie_consent.admin.cookie_definition.fields.locale',
+            'nowo_cookie_consent.admin.config.settings.section.profile',
+            'nowo_cookie_consent.admin.config.settings.fields.color_theme',
+            'nowo_cookie_consent.admin.config.settings.layout.bar',
+            'nowo_cookie_consent.admin.config.settings.position_x.none',
+        ],
+        'it' => [
+            'nowo_cookie_consent.admin.cookie_definition.table.type',
+            'nowo_cookie_consent.admin.cookie_definition.fields.type',
+            'nowo_cookie_consent.admin.config.settings.layout.bar',
+            'nowo_cookie_consent.admin.config.settings.position_y.middle',
+            'nowo_cookie_consent.admin.config.settings.position_x.center',
+        ],
+        'pt' => [
+            'nowo_cookie_consent.show_preferences',
+            'nowo_cookie_consent.intro_less',
+            'nowo_cookie_consent.analytics.title',
+            'nowo_cookie_consent.inventory.allow',
+            'nowo_cookie_consent.admin.cookie_definition.edit',
+            'nowo_cookie_consent.admin.cookie_definition.save',
+            'nowo_cookie_consent.admin.cookie_definition.cancel',
+            'nowo_cookie_consent.admin.cookie_definition.delete',
+            'nowo_cookie_consent.admin.cookie_definition.table.type',
+            'nowo_cookie_consent.admin.cookie_definition.fields.type',
+            'nowo_cookie_consent.admin.cookie_definition.fields.locale',
+            'nowo_cookie_consent.admin.config.settings.section.profile',
+            'nowo_cookie_consent.admin.config.settings.layout.bar',
+            'nowo_cookie_consent.admin.config.settings.position_y.middle',
+            'nowo_cookie_consent.admin.config.settings.position_x.center',
+            'nowo_cookie_consent.admin.config.settings.color_theme.light',
+            'nowo_cookie_consent.admin.config.settings.color_theme.light-funky',
+            'nowo_cookie_consent.admin.cookie_definition.edit_title',
+        ],
+    ];
+
     /** @return iterable<string, array{string, string}> */
     public static function catalogues(): iterable
     {
@@ -113,6 +162,16 @@ final class TranslationCatalogueTest extends TestCase
         foreach ($files as $file) {
             if (preg_match('/^(.+)\.([a-z]{2})\.yaml$/', basename($file), $m) === 1 && $m[2] !== 'en') {
                 yield basename($file) => [$m[1], $m[2]];
+            }
+        }
+    }
+
+    /** @return iterable<string, array{string, string}> */
+    public static function nonSpanishCatalogues(): iterable
+    {
+        foreach (self::catalogues() as $name => [$domain, $locale]) {
+            if ($locale !== 'es') {
+                yield $name => [$domain, $locale];
             }
         }
     }
@@ -144,6 +203,55 @@ final class TranslationCatalogueTest extends TestCase
         }
 
         self::assertSame([], $gaps, sprintf('Values identical to English in %s.%s.yaml (translate or allow-list)', $domain, $locale));
+    }
+
+    #[DataProvider('nonSpanishCatalogues')]
+    public function testNoUntranslatedSpanishValues(string $domain, string $locale): void
+    {
+        $english = $this->load($domain, 'en');
+        $spanish = $this->load($domain, 'es');
+        $target  = $this->load($domain, $locale);
+        $allowed = self::ALLOWED_IDENTICAL_TO_ES[$locale] ?? [];
+        $gaps    = [];
+
+        foreach ($spanish as $key => $value) {
+            if (!isset($target[$key]) || $target[$key] !== $value || ($english[$key] ?? null) === $value || in_array($key, $allowed, true)) {
+                continue;
+            }
+
+            if (preg_match('/[^\W\d_]/u', (string) preg_replace('/%[^%\s]+%|\{[^}]+\}/', '', $value)) === 1) {
+                $gaps[] = $key;
+            }
+        }
+
+        self::assertSame([], $gaps, sprintf('Values identical to Spanish (and different from English) in %s.%s.yaml (translate or allow-list)', $domain, $locale));
+    }
+
+    public function testSpanishAllowListHasNoStaleEntries(): void
+    {
+        $english = [];
+        $spanish = [];
+        $locales = [];
+
+        foreach (self::catalogues() as [$domain, $locale]) {
+            $english += $this->load($domain, 'en');
+            $spanish += $this->load($domain, 'es');
+            $locales[$locale] = ($locales[$locale] ?? []) + $this->load($domain, $locale);
+        }
+
+        $stale = [];
+
+        foreach (self::ALLOWED_IDENTICAL_TO_ES as $locale => $keys) {
+            foreach ($keys as $key) {
+                $value = $locales[$locale][$key] ?? null;
+
+                if ($value === null || $value !== ($spanish[$key] ?? null) || $value === ($english[$key] ?? null)) {
+                    $stale[] = $locale . ':' . $key;
+                }
+            }
+        }
+
+        self::assertSame([], $stale, 'Spanish allow-list entries that no longer exist, are no longer identical to Spanish or now equal English');
     }
 
     public function testAllowListHasNoStaleEntries(): void
