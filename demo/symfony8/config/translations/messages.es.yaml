@@ -291,3 +291,7 @@ demo.legal.consent.s4.body: 'Si rechaza las cookies no esenciales, las funciones
 demo.legal.consent.s5.title: '5. Prueba del consentimiento'
 demo.legal.consent.s5.body: 'Con el registro activo, la demo almacena IP anonimizada, marca temporal, categorías aceptadas y revisión de la política en MySQL con fines de responsabilidad proactiva. Describa este tratamiento en su aviso de privacidad en producción.'
 demo.config.bundle_admin: 'Admin del bundle (UiKit)'
+demo.cookies.table.purpose: 'Finalidad'
+demo.legal.cookies.inventory.title: 'Tabla de inventario de cookies'
+demo.legal.cookies.inventory.lead: 'Según sus decisiones de consentimiento, pueden instalarse las siguientes cookies. Los administradores mantienen esta lista por perfil de consentimiento.'
+demo.nav.legal: 'Legal'

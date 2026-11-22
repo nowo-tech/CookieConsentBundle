@@ -291,6 +291,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- Demos: the `symfony8` and `symfony8-tailwind` demo catalogues (`config/translations/messages.<locale>.yaml`) lacked about 100 keys in de, fr, it, nl, pt, ca and pl (the admin configuration page help texts, section titles, option labels, the cookie inventory page and the navigation entries), so those pages fell back to English; es lacked four. All keys are now translated in every demo locale. Demo only, no bundle change.
+
 ## [1.34.2] - 2026-11-22
 
 ### Fixed
