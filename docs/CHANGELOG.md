@@ -287,6 +287,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- Translations: `admin.cookie_definition.no` is now "Non" (fr), "Nee" (nl) and "Não" (pt) instead of "No"; `admin.config.settings.variant.inline` is now "En línea" (es), "En ligne" (fr) and "In linea" (it) instead of "Inline". A new strict `TranslationCatalogueTest` fails on a non-en locale missing a key, on a non-en value identical to English (any length, placeholders included; values without letters are skipped) unless allow-listed per locale (brands, units, protocols, loanwords, true cognates), and on stale allow-list entries.
+
 ## [1.34.0] - 2026-11-21
 
 ### Added

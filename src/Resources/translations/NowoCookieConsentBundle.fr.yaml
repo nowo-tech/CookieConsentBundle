@@ -44,7 +44,7 @@ nowo_cookie_consent.admin.cookie_definition.deleted: 'Définition de cookie supp
 nowo_cookie_consent.admin.cookie_definition.delete_confirm: 'Supprimer la cookie "%name%"?'
 nowo_cookie_consent.admin.cookie_definition.empty: 'Aucune définition de cookie pour l''instant. definiciones de cookie.'
 nowo_cookie_consent.admin.cookie_definition.yes: 'Oui'
-nowo_cookie_consent.admin.cookie_definition.no: 'No'
+nowo_cookie_consent.admin.cookie_definition.no: "Non"
 nowo_cookie_consent.admin.cookie_definition.table.name: 'Nom'
 nowo_cookie_consent.admin.cookie_definition.table.provider: 'Fournisseur'
 nowo_cookie_consent.admin.cookie_definition.table.purpose: 'Finalité'
@@ -183,7 +183,7 @@ nowo_cookie_consent.admin.config.settings.layout.box: 'Boîte'
 nowo_cookie_consent.admin.config.settings.layout.cloud: 'Nuage'
 nowo_cookie_consent.admin.config.settings.layout.bar: 'Barre'
 nowo_cookie_consent.admin.config.settings.variant.wide: 'Large'
-nowo_cookie_consent.admin.config.settings.variant.inline: 'Inline'
+nowo_cookie_consent.admin.config.settings.variant.inline: "En ligne"
 nowo_cookie_consent.admin.config.settings.position_y.top: 'Haut'
 nowo_cookie_consent.admin.config.settings.position_y.middle: 'Centre'
 nowo_cookie_consent.admin.config.settings.position_y.bottom: 'Bas'

@@ -183,7 +183,7 @@ nowo_cookie_consent.admin.config.settings.layout.box: 'Casella'
 nowo_cookie_consent.admin.config.settings.layout.cloud: 'Nuvola'
 nowo_cookie_consent.admin.config.settings.layout.bar: 'Barra'
 nowo_cookie_consent.admin.config.settings.variant.wide: 'Largo'
-nowo_cookie_consent.admin.config.settings.variant.inline: 'Inline'
+nowo_cookie_consent.admin.config.settings.variant.inline: "In linea"
 nowo_cookie_consent.admin.config.settings.position_y.top: 'In alto'
 nowo_cookie_consent.admin.config.settings.position_y.middle: 'Centro'
 nowo_cookie_consent.admin.config.settings.position_y.bottom: 'In basso'
