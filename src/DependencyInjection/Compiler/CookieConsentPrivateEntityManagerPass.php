@@ -23,6 +23,9 @@ use function is_string;
  */
 final class CookieConsentPrivateEntityManagerPass implements CompilerPassInterface
 {
+    /**
+     * Adjusts the container definitions of this bundle during compilation.
+     */
     public function process(ContainerBuilder $container): void
     {
         if (!$container->hasDefinition(NowoCookieConsentExtension::PRIVATE_MIDDLEWARE_SERVICE)) {

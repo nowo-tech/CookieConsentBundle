@@ -10,6 +10,9 @@ namespace Nowo\CookieConsentBundle\Config;
  */
 final readonly class CookieDefinitionView
 {
+    /**
+     * Creates the CookieDefinitionView with its collaborators.
+     */
     public function __construct(
         public string $name,
         public string $provider,

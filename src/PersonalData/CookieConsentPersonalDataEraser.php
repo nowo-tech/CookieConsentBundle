@@ -25,6 +25,9 @@ final readonly class CookieConsentPersonalDataEraser implements CookieConsentPer
     /** Rows per DELETE (and per transaction when the eraser opens its own). */
     public const BATCH_SIZE = 500;
 
+    /**
+     * Creates the CookieConsentPersonalDataEraser with its collaborators.
+     */
     public function __construct(
         private ManagerRegistry $managerRegistry,
         private ?EventDispatcherInterface $eventDispatcher = null,
@@ -33,6 +36,9 @@ final readonly class CookieConsentPersonalDataEraser implements CookieConsentPer
     ) {
     }
 
+    /**
+     * Erases the personal data of the given request or subject.
+     */
     public function erase(CookieConsentPersonalDataSubject $subject): CookieConsentErasureResult
     {
         // IP windows are opt-in (`personal_data.ip_windows: erase`): an anonymised IP is shared by every visitor of the

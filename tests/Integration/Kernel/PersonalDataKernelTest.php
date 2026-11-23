@@ -95,8 +95,7 @@ final class PersonalDataKernelTest extends TestCase
     {
         $this->kernel = new CookieConsentTestKernel(false, ['security' => ['allow_unauthenticated' => true]] + $personalData, publicIds: self::PUBLIC_IDS);
         $this->kernel->boot();
-        $container = $this->kernel->getContainer();
 
-        return $container;
+        return $this->kernel->getContainer();
     }
 }

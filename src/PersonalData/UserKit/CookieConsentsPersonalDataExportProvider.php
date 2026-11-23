@@ -23,22 +23,34 @@ final readonly class CookieConsentsPersonalDataExportProvider implements Persona
     /** Built-in UserKit providers use negative priorities, host sections come first. */
     public const PRIORITY = -50;
 
+    /**
+     * Creates the CookieConsentsPersonalDataExportProvider with its collaborators.
+     */
     public function __construct(
         private CookieConsentPersonalDataExporterInterface $exporter,
         private CookieConsentPersonalDataSubjectResolverInterface $resolver,
     ) {
     }
 
+    /**
+     * Returns the key of the export section.
+     */
     public function getSectionKey(): string
     {
         return self::SECTION_KEY;
     }
 
+    /**
+     * Tells whether this provider handles the given user.
+     */
     public function supports(object $user): bool
     {
         return true;
     }
 
+    /**
+     * Exports the personal data of the given user or subject.
+     */
     public function export(object $user): mixed
     {
         $identifier = $user instanceof UserInterface ? $user->getUserIdentifier() : null;

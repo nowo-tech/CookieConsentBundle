@@ -30,6 +30,9 @@ use function sprintf;
  */
 final class CookieConsentCommitTrackingPass implements CompilerPassInterface
 {
+    /**
+     * Adjusts the container definitions of this bundle during compilation.
+     */
     public function process(ContainerBuilder $container): void
     {
         if (!$container->hasDefinition(NowoCookieConsentExtension::COMMIT_TRACKING_MIDDLEWARE)) {

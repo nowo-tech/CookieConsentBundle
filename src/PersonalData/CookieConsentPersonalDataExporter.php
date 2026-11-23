@@ -17,11 +17,19 @@ use function usort;
  */
 final readonly class CookieConsentPersonalDataExporter implements CookieConsentPersonalDataExporterInterface
 {
+    /**
+     * Creates the CookieConsentPersonalDataExporter with its collaborators.
+     */
     public function __construct(
         private ManagerRegistry $managerRegistry,
     ) {
     }
 
+    /**
+     * Exports the personal data of the given user or subject.
+     *
+     * @return array{decisions: list<array{cookie_name: string, allowed: bool, consent_revision: int|null, recorded_at: string}>}
+     */
     public function export(CookieConsentPersonalDataSubject $subject): array
     {
         // Export by consent key only: an IP window also matches other visitors behind the same anonymised IP, whose

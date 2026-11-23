@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Nowo\CookieConsentBundle\Tests\Unit\DependencyInjection;
 
+use Doctrine\Bundle\DoctrineBundle\DoctrineBundle;
 use Nowo\CookieConsentBundle\DependencyInjection\Compiler\CookieConsentWithoutDoctrinePass;
 use Nowo\CookieConsentBundle\DependencyInjection\NowoCookieConsentExtension;
 use Nowo\CookieConsentBundle\Doctrine\CookieConsentManagerRegistry;
@@ -126,7 +127,7 @@ final class PersonalDataExtensionTest extends TestCase
     {
         $container = new ContainerBuilder();
         if ($doctrine) {
-            $container->setParameter('kernel.bundles', ['DoctrineBundle' => 'Doctrine\\Bundle\\DoctrineBundle\\DoctrineBundle']);
+            $container->setParameter('kernel.bundles', ['DoctrineBundle' => DoctrineBundle::class]);
         }
         (new NowoCookieConsentExtension())->load([$config], $container);
 

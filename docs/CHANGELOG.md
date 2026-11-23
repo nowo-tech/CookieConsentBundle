@@ -291,8 +291,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- CI: new `release-gates` job in `.github/workflows/ci.yml` runs the `make release-check` gates (`rector-dry`, `validate-phpdoc`, `validate-translations`, `check-twig-extra`) on every full-mode push and PR, so they no longer fail only at release time. CI only, no bundle change.
+- `make rector-dry` passes again: `CookieConsentLogRows::string()` (private) is an instance method (Rector `LocallyCalledStaticMethodToNonStaticRector`), plus three small test-only simplifications. No behaviour change.
+
 ### Fixed
 
+- `make validate-phpdoc` passes again: the 36 public methods that had no docblock (the Doctrine manager registry decorator, the config reader, the cookie jar, the personal-data eraser/exporter/subject resolver, the UserKit adapters, three compiler passes) now carry one, with the `@return` shape on the array-returning ones. Documentation only, no code change.
 - Demos: the `symfony8` and `symfony8-tailwind` demo catalogues (`config/translations/messages.<locale>.yaml`) lacked about 100 keys in de, fr, it, nl, pt, ca and pl (the admin configuration page help texts, section titles, option labels, the cookie inventory page and the navigation entries), so those pages fell back to English; es lacked four. All keys are now translated in every demo locale. Demo only, no bundle change.
 
 ## [1.34.2] - 2026-11-22

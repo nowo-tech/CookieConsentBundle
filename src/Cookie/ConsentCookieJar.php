@@ -40,6 +40,9 @@ final readonly class ConsentCookieJar
         return $this->cookies;
     }
 
+    /**
+     * Tells whether the jar holds no cookie.
+     */
     public function isEmpty(): bool
     {
         return $this->cookies === [];

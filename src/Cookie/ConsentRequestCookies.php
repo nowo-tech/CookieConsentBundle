@@ -40,6 +40,9 @@ final readonly class ConsentRequestCookies
         return $this->names;
     }
 
+    /**
+     * Tells whether the request carries a cookie with the given name.
+     */
     public function has(string $name): bool
     {
         return in_array($name, $this->names, true);
