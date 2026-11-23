@@ -39,6 +39,7 @@ Regenerate with `make -C demo/symfony8 demo-screenshots` (REQ-DEMO-013).
     - [DDD host](#ddd-host)
   - [Read-only views (1.28)](#read-only-views-128)
   - [Config read port (1.34)](#config-read-port-134)
+  - [Seeding and provisioning (1.36)](#seeding-and-provisioning-136)
   - [Known limitations](#known-limitations)
 - [Asking visitors again (re-consent)](#asking-visitors-again-re-consent)
 - [Theming the admin pages](#theming-the-admin-pages)
@@ -513,6 +514,136 @@ With a locale, the view carries that locale's copy (`locale`, `translationMessag
 through the bundle's own manager (the private one with `doctrine.private_entity_manager: true`). Without Doctrine it
 answers no profile. Alias the interface to your own service to replace it.
 
+### Seeding and provisioning (1.36)
+
+`Provisioning\CookieConsentProvisionerInterface` is the host **write** port for seeders, fixture loaders, installers
+and console commands: describe the default profile and its cookie inventory with value objects, and the bundle writes
+them with its own entity manager. Never write the bundle entities with your entity manager: with
+`doctrine.private_entity_manager: true` (the only mode in 2.0) they belong to the bundle's private manager, so your
+flush would not save them (or would insert them again).
+
+```php
+interface CookieConsentProvisionerInterface
+{
+    public function ensureDefaultProfile(DefaultProfileSpec $spec): ProvisioningResult;
+
+    public function upsertCookieDefinitions(CookieDefinitionSpecs $definitions): ProvisioningResult;
+}
+```
+
+A Beacon-like demo / platform seeder (a console command or an application service; it never sees an entity, a
+repository or an entity manager of the bundle):
+
+```php
+use Nowo\CookieConsentBundle\Provisioning\CookieConsentProvisionerInterface;
+use Nowo\CookieConsentBundle\Provisioning\CookieDefinitionSpecs;
+use Nowo\CookieConsentBundle\Provisioning\DefaultProfileSpec;
+use Nowo\CookieConsentBundle\Provisioning\ProfileTranslationSpec;
+
+final readonly class SeedCookieConsent
+{
+    public function __construct(private CookieConsentProvisionerInterface $cookieConsent)
+    {
+    }
+
+    public function __invoke(string $cookieFixtureJson): void
+    {
+        $profile = $this->cookieConsent->ensureDefaultProfile(DefaultProfileSpec::create()
+            ->withName('Platform')
+            ->withColorTheme('dark')
+            ->withConsentModalLayout('box')
+            ->withConsentModalVariant('wide')
+            ->withConsentModalPositionY('bottom')
+            ->withConsentModalPositionX('right')
+            ->withGranularCookieSelection(true)
+            ->withPreferencesBubbleEnabled(true)
+            ->withTranslation(new ProfileTranslationSpec('en', 'We use cookies', 'We use cookies to run and improve the platform.', 'Accept all', 'Only necessary', privacyRoute: 'app_privacy'))
+            ->withTranslation(new ProfileTranslationSpec('es', 'Usamos cookies', 'Usamos cookies para la plataforma.', 'Aceptar todas', 'Solo necesarias', privacyRoute: 'app_privacy')));
+
+        // The JSON fixture uses the `cookie_inventory` shape:
+        // [{"name": "_ga", "category": "analytics", "duration": "2 years", "type": "third_party", "sort_order": 1,
+        //   "translations": {"en": {"provider": "Google", "purpose": "Statistics"}}}, ...]
+        $cookies = $this->cookieConsent->upsertCookieDefinitions(
+            CookieDefinitionSpecs::fromArray(json_decode($cookieFixtureJson, true, 512, JSON_THROW_ON_ERROR)),
+        );
+
+        // e.g. "profile 12: created 0, updated 1, unchanged 0; cookies: created 3, updated 0, unchanged 9"
+    }
+}
+```
+
+What it does:
+
+- **Natural keys, exact.** The enabled default profile; a copy's locale; a cookie's name within the default profile;
+  a cookie copy's locale. Keys are compared byte for byte (`===`, REQ-SEC-006): `NID` and `nid` are two cookies. On a
+  MySQL / MariaDB case-insensitive collation the unique key refuses such a look-alike, and the call throws
+  `CookieConsentProvisioningException` instead of updating the other cookie.
+- **Idempotent.** A second run with the same specification writes nothing and reports every item unchanged
+  (`ProvisioningResult`: `created`, `updated`, `unchanged`, `profileId`, `hasChanges()`; a translation change counts
+  as an update of its profile or cookie). Nothing is ever deleted: cookies the list does not name and copies of other
+  locales stay.
+- **Only what you give.** `DefaultProfileSpec` has one `with*()` per display and targeting setting of the profile
+  (name, priority, route patterns, auto-show and its routes, script tags, cookie clearing, bots, page interaction,
+  lazy HTML, both modals' layout / variant / positions / buttons, theme, dark mode, transitions, two-step, preferences
+  first, iframe placeholders, granular selection, preferences bubble). Settings you never give keep their stored value
+  (or the entity default when the profile is created), so the admin pages own the rest. The re-consent state
+  (`revision`, `reconsent_required_at`) is not provisioned. The same goes for copies and cookies: a
+  `ProfileTranslationSpec` always writes its four required texts, and an optional text only when it is given (null,
+  or a key missing from `fromArray()`, keeps the stored text an admin may have edited; `""` clears it). A
+  `CookieDefinitionSpec` writes only the fields given (a cookie whose `category` is omitted keeps its category, it is
+  never reclassified); a new cookie takes the entity defaults for the rest (category `required`). As on the admin
+  page, a `required` cookie is always pre-ticked: `allowedByDefault: false` with an effective `required` category is
+  refused. The grouped preference sections of a copy are kept.
+- **Privacy link.** `privacyRoute` is a Symfony route name without required parameters (letters, digits, `_`, `.`,
+  `-`), never a URL or a path: the value object refuses anything else. Since 1.36 the modal also renders a route that
+  cannot be generated (unknown, or needing parameters) without the link and logs a warning, instead of failing the
+  page.
+- **Validated first.** Every value object refuses what the bundle cannot store (unknown choices, a variant or position
+  the layout does not offer, texts longer than their column, malformed locales, names or privacy routes, a priority or
+  sort order outside a signed 32-bit integer, a key given twice) with `InvalidProvisioningSpecException`, before
+  anything is written. The layout combination is checked again against the profile's effective values (the ones you
+  give merged with the stored ones, or the entity defaults for a new profile) when you give the layout, variant or a
+  position of a modal: `create()->withConsentModalLayout('bar')` alone is refused, because a new profile's default
+  variant `wide` and position `left` do not exist for a bar (give `inline`, `bottom` and a null horizontal position). `DefaultProfileSpec::fromArray()`,
+  `ProfileTranslationSpec::fromArray()`, `CookieDefinitionSpec::fromArray()` and `CookieDefinitionSpecs::fromArray()`
+  build them from decoded JSON / YAML, refusing unknown keys and values of the wrong type (no coercion).
+- **One transaction per call**, through transaction-doctrine's runner (a savepoint inside a transaction of yours,
+  whose commit then decides). An item whose stored values change advances its `row_version`: an admin page opened
+  before is refused as stale instead of writing the old values back.
+- **Your entity manager is never touched.** The port writes through a private entity manager of its own on the
+  connection of the bundle's manager (`doctrine.entity_manager`, else your default one), in every
+  `doctrine.private_entity_manager` mode, including the deprecated `false`: your managers are never flushed, cleared or
+  reset, and your pending changes are never written. That manager is dropped when every call returns.
+- **The default profile.** "The default profile" is the enabled one flagged default (the lowest id if, against the
+  rule, several are). A disabled default does not count: the port then creates a new, enabled default profile, which
+  turns the banner on again (the disabled row keeps its flag). Creating one clears the default flag of any other
+  enabled profile, as the admin save does.
+- **Two seeders at once** (REQ-RUNTIME-003): every call holds the bundle's provisioning lock, a session lock taken
+  before its transaction begins (MySQL / MariaDB `GET_LOCK()`, PostgreSQL `pg_try_advisory_lock()` polled; SQLite has
+  one writer at a time), so the second seeder waits, then finds the first one's rows under any isolation level: never
+  two default profiles or the same cookie twice. The enabled profiles are then read with `SELECT ... FOR UPDATE`, as
+  the admin "make default" save does, so a seeder and an admin making a profile the default at the same moment also
+  leave one default. Every wait for the provisioning lock is bounded (10 seconds), then `TransientStorageFailure`. A
+  unique key refusing a write (an admin adding the same cookie at that moment) and a lock conflict are retried (3
+  attempts outside a transaction, then `CookieConsentProvisioningException` / `TransientStorageFailure`).
+- **Inside a transaction of yours** there is one attempt and your commit decides. On PostgreSQL the lock is then a
+  transaction-level one held until your commit, under READ COMMITTED only (REPEATABLE READ / SERIALIZABLE are refused
+  with a `LogicException`: an older snapshot cannot see another seeder's profile). On MySQL / MariaDB the call is
+  refused with a `LogicException` (a session lock would be released before your commit): call the port outside your
+  transaction, as a console seeder does.
+- **Worker-safe** (REQ-RUNTIME-002): stateless services; no entity survives a call (FrankenPHP worker mode with the
+  kernel reset off, long console commands, Messenger handlers). The port's manager shares your manager's event
+  manager, so your Doctrine listeners see its flushes; entities other managers loaded earlier in the same unit (the
+  bundle's reader, your manager in the deprecated mode) are not refreshed: read again after provisioning if the same
+  command needs the new values.
+- Registered only with DoctrineBundle (a host on the YAML path has no profile tables). Alias the interface to your own
+  service to replace it.
+
+Read access: `CookieConsentConfigReaderInterface` ([Config read port](#config-read-port-134)) answers the profiles as
+`ConsentProfileView` objects (the provisioned profile included, by `ProvisioningResult::$profileId` or
+`defaultProfileId()`), and `CookieInventoryProvider::viewsForLocale()` the cookie table as `CookieDefinitionView`
+objects ([Read-only views](#read-only-views-128)).
+
 ### Known limitations
 
 - With DoctrineBundle registered, the entity mapping is registered even when `use_logger` and `use_database_config`
@@ -523,7 +654,8 @@ answers no profile. Alias the interface to your own service to replace it.
 - `ResolvedCookieConsentConfig::getConfig()` / `getTranslation()` and `CookieInventoryProvider::listForLocale()` still
   take or return the bundle entities (the bundle uses them internally); prefer the views above.
 - There is no port for the profile source itself: a host provides profiles through YAML or the bundle tables (since
-  1.34, `CookieConsentConfigReaderInterface` reads them as view objects).
+  1.34, `CookieConsentConfigReaderInterface` reads them as view objects; since 1.36,
+  `CookieConsentProvisionerInterface` writes the default profile and its cookies).
 
 ## Theming the admin pages
 

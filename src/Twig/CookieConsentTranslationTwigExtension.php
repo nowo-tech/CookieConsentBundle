@@ -5,8 +5,13 @@ declare(strict_types=1);
 namespace Nowo\CookieConsentBundle\Twig;
 
 use Nowo\CookieConsentBundle\Config\ResolvedCookieConsentConfig;
+use Psr\Log\LoggerInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\RequestStack;
+use Symfony\Component\Routing\Exception\InvalidParameterException;
+use Symfony\Component\Routing\Exception\MissingMandatoryParametersException;
+use Symfony\Component\Routing\Exception\RouteNotFoundException;
+use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 use Symfony\Contracts\Translation\TranslatorInterface;
 use Twig\Extension\AbstractExtension;
 use Twig\TwigFunction;
@@ -26,11 +31,15 @@ final class CookieConsentTranslationTwigExtension extends AbstractExtension
 
     /**
      * @param string|null $privacyRouteFallback Config `privacy_route`: used when the profile translation is empty
+     * @param UrlGeneratorInterface|null $urlGenerator 1.36: builds the privacy link ({@see privacyUrl()}); null: no link
+     * @param LoggerInterface|null $logger 1.36: warns about a privacy route that cannot be generated
      */
     public function __construct(
         private readonly RequestStack $requestStack,
         private readonly TranslatorInterface $translator,
         private readonly ?string $privacyRouteFallback = null,
+        private readonly ?UrlGeneratorInterface $urlGenerator = null,
+        private readonly ?LoggerInterface $logger = null,
     ) {
     }
 
@@ -42,6 +51,7 @@ final class CookieConsentTranslationTwigExtension extends AbstractExtension
         return [
             new TwigFunction('nowo_cookie_consent_trans', $this->trans(...)),
             new TwigFunction('nowo_cookie_consent_privacy_route', $this->privacyRoute(...)),
+            new TwigFunction('nowo_cookie_consent_privacy_url', $this->privacyUrl(...)),
         ];
     }
 
@@ -81,6 +91,34 @@ final class CookieConsentTranslationTwigExtension extends AbstractExtension
         }
 
         return $this->privacyRouteFallback !== null && $this->privacyRouteFallback !== '' ? $this->privacyRouteFallback : null;
+    }
+
+    /**
+     * URL of the privacy link of the modal (1.36, audit ZAH-1), or null for no link.
+     *
+     * The route of {@see privacyRoute()} is generated here instead of with `path()` in the template: a route that does
+     * not exist or needs parameters (a typo, a URL stored as the route, a route of another application) logs a warning
+     * and renders the modal without the link, instead of failing every page that shows the banner.
+     *
+     * @param mixed $displayConfig The resolved config passed to the template; defaults to the one stored on the request
+     */
+    public function privacyUrl(mixed $displayConfig = null): ?string
+    {
+        $route = $this->privacyRoute($displayConfig);
+        if ($route === null || !$this->urlGenerator instanceof UrlGeneratorInterface) {
+            return null;
+        }
+
+        try {
+            return $this->urlGenerator->generate($route);
+        } catch (RouteNotFoundException|MissingMandatoryParametersException|InvalidParameterException $exception) {
+            $this->logger?->warning('The cookie consent privacy route "{route}" cannot be generated; the modal is rendered without the privacy link.', [
+                'route'     => $route,
+                'exception' => $exception::class,
+            ]);
+
+            return null;
+        }
     }
 
     private function getRequestResolvedConfig(): ?ResolvedCookieConsentConfig

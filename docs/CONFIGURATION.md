@@ -303,6 +303,9 @@ nowo_cookie_consent:
 - Entities you get from the bundle's repositories belong to the private manager: read them through
   `CookieConsentConfigReaderInterface` (view objects) or reference them by id; never persist or flush them with your
   own manager.
+- Seeding and provisioning (1.36): `CookieConsentProvisionerInterface` writes the default profile and its cookies
+  through a private manager of its own in every mode (true, false or unset), never through yours. See
+  [USAGE.md "Seeding and provisioning (1.36)"](USAGE.md#seeding-and-provisioning-136).
 - Unset (`null`, the default) or `false` keeps the 1.x behaviour. Since 1.35 both trigger a deprecation notice when the
   entities are on your default manager, and the admin saves run transaction-doctrine's host-flush probe, which lists
   the changes of yours they flush ("Your pending changes to App\X were flushed by NowoCookieConsentBundle; 2.0 no longer

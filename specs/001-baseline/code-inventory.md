@@ -218,6 +218,24 @@ Co-located Vitest sources under `src/` (compiled/tested in CI; not shipped to Pa
 | `EventSubscriber/CookieConsentPrivateManagerBoundarySubscriber.php` | 1.34 (`doctrine.private_entity_manager: true`): drops the bundle's private entity manager, and clears the memos that hold its entities, at every outermost unit- | FR-DDD-003 |
 | `Form/RowVersionField.php` | The hidden base token of an admin edit form (REQ-RUNTIME-003 rule 4): the row version of the page, unmapped. | FR-CONC-004 |
 
+## Sources added 1.36 (provisioning port)
+
+| Source file | Spec section | Requirement IDs |
+| --- | --- | --- |
+| `DependencyInjection/Compiler/CookieConsentProvisionerPass.php` | 1.36: resolves the source manager of the provisioning port's private manager (`doctrine.entity_manager`, else the default manager). | FR-PROV-002 |
+| `Provisioning/CookieConsentProvisionerInterface.php` | Host write port for seeding and provisioning (1.36, REQ-ARCH-001 rules 1 and 3). | FR-PROV-001 |
+| `Provisioning/CookieConsentProvisioner.php` | Default provisioner: own private manager, runner transaction, lock, retries, row version. | FR-PROV-001, FR-PROV-002, FR-PROV-003 |
+| `Provisioning/DefaultProfileSpec.php` | Value object: the managed settings and copies of the default profile. | FR-PROV-001 |
+| `Provisioning/ProfileTranslationSpec.php` | Value object: the profile copy of one locale. | FR-PROV-001 |
+| `Provisioning/CookieDefinitionSpec.php` | Value object: one cookie of the default profile (natural key: its name). | FR-PROV-001 |
+| `Provisioning/CookieDefinitionTranslationSpec.php` | Value object: provider and purpose of a cookie in one locale. | FR-PROV-001 |
+| `Provisioning/CookieDefinitionSpecs.php` | Value object: the cookie list of `upsertCookieDefinitions()` (one per name). | FR-PROV-001 |
+| `Provisioning/ProvisioningResult.php` | Value object: created / updated / unchanged counts and the profile id. | FR-PROV-001 |
+| `Provisioning/ProvisioningLock.php` | Provisioning lock (internal): MySQL / MariaDB `GET_LOCK()`, PostgreSQL `pg_advisory_xact_lock()`. | FR-PROV-003 |
+| `Provisioning/SpecAssert.php` | Validation shared by the value objects (internal). | FR-PROV-001 |
+| `Provisioning/InvalidProvisioningSpecException.php` | A value object built with a value the bundle cannot store. | FR-PROV-001 |
+| `Provisioning/CookieConsentProvisioningException.php` | No default profile, or a unique key that still refused the write after every attempt. | FR-PROV-002, FR-PROV-003 |
+
 ## Coverage summary
 
 | Category | Files | Mapped |

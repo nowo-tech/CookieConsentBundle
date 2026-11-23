@@ -3,6 +3,10 @@
 ## Table of contents
 
 - [Unreleased](#unreleased)
+- [To 1.36.0](#to-1360)
+  - [Privacy link of the modal](#privacy-link-of-the-modal)
+  - [Seeding through the provisioning port](#seeding-through-the-provisioning-port)
+  - [2.0: the port, not your entity manager](#20-the-port-not-your-entity-manager)
 - [To 1.35.0](#to-1350)
   - [The private entity manager notices](#the-private-entity-manager-notices)
   - [Reading the host-flush probe](#reading-the-host-flush-probe)
@@ -152,6 +156,68 @@
 - [Getting help](#getting-help)
 
 ## Unreleased
+
+## To 1.36.0
+
+From **1.35.0**:
+
+```bash
+composer update nowo-tech/cookie-consent-bundle
+```
+
+No configuration or schema change: 1.36.0 adds a host write port. Nothing to do unless your code writes the bundle's
+entities itself (a seeder, fixtures, an installer), or your overridden modal template links the privacy route.
+
+### Privacy link of the modal
+
+The bundle templates now render the privacy link with `nowo_cookie_consent_privacy_url(display_config ?? null)`, which
+answers null (no link, a warning in the log) when the route cannot be generated, instead of `path(privacy_route)`,
+which failed every page showing the banner. If you override `cookie_consent.html.twig` (or the Tailwind one), switch
+your copy the same way:
+
+```twig
+{% set privacy_url = nowo_cookie_consent_privacy_url(display_config ?? null) %}
+{% if privacy_url %}<a href="{{ privacy_url }}">…</a>{% endif %}
+```
+
+### Seeding through the provisioning port
+
+If your code creates or changes `CookieConsentConfig`, `CookieConsentConfigTranslation`, `CookieDefinition` or
+`CookieDefinitionTranslation` with your own entity manager (typically a demo or platform seeder that reads
+`CookieConsentConfigRepository::findDefaultEnabled()`, creates the profile when missing, calls its setters and
+flushes), move it to `Nowo\CookieConsentBundle\Provisioning\CookieConsentProvisionerInterface`:
+
+```php
+// Before: the bundle entities written with the application's manager.
+$config = $configRepository->findDefaultEnabled() ?? (new CookieConsentConfig())->setEnabled(true)->setDefault(true);
+$config->setColorTheme('dark')->setGranularCookieSelection(true);
+$entityManager->persist($config);
+$entityManager->flush();
+
+// After: value objects; the bundle writes them with its own manager, idempotently, under its lock.
+$result = $provisioner->ensureDefaultProfile(DefaultProfileSpec::create()
+    ->withColorTheme('dark')
+    ->withGranularCookieSelection(true));
+$provisioner->upsertCookieDefinitions(CookieDefinitionSpecs::fromArray($decodedCookieFixture));
+```
+
+- Give only the settings your seeder owns: the others keep their stored value. The same holds for the optional copy
+  texts (null or a missing key keeps the stored text, `""` clears it) and the cookie fields (an omitted `category`
+  keeps the stored one); other locales and cookies the list does not name are kept.
+- `privacyRoute` is a route name (no URL, no path); a `required` cookie is always pre-ticked; `create()` of a bar layout
+  must also give `inline`, `bottom` and a null horizontal position (the entity defaults are for a box).
+- Call it outside your own transaction on MySQL / MariaDB (a call inside one is refused), and under READ COMMITTED
+  on PostgreSQL if you call it inside one.
+- Read what you need through `CookieConsentConfigReaderInterface` (view objects), not the repositories.
+- It works with `doctrine.private_entity_manager` true, false or unset, and with a dedicated `doctrine.entity_manager`.
+
+See [USAGE.md "Seeding and provisioning (1.36)"](USAGE.md#seeding-and-provisioning-136).
+
+### 2.0: the port, not your entity manager
+
+In 2.0 `doctrine.private_entity_manager: true` is the only mode: the bundle entities always belong to the bundle's
+private manager, so a seeder that writes them with your entity manager no longer works (your flush does not save them,
+or inserts them again). Use `CookieConsentProvisionerInterface` before upgrading; it keeps the same signatures in 2.0.
 
 ## To 1.35.0
 

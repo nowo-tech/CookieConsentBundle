@@ -17,6 +17,7 @@ use Nowo\CookieConsentBundle\Cookie\CookieLogger;
 use Nowo\CookieConsentBundle\DependencyInjection\Compiler\CookieConsentCommitTrackingPass;
 use Nowo\CookieConsentBundle\DependencyInjection\Compiler\CookieConsentHostFlushNoticePass;
 use Nowo\CookieConsentBundle\DependencyInjection\Compiler\CookieConsentPrivateEntityManagerPass;
+use Nowo\CookieConsentBundle\DependencyInjection\Compiler\CookieConsentProvisionerPass;
 use Nowo\CookieConsentBundle\Doctrine\ConsentLogCollationListener;
 use Nowo\CookieConsentBundle\Doctrine\CookieConsentManagerRegistry;
 use Nowo\CookieConsentBundle\Entity\CookieConsentConfig;
@@ -33,6 +34,8 @@ use Nowo\CookieConsentBundle\PersonalData\CookieConsentPersonalDataSubjectResolv
 use Nowo\CookieConsentBundle\PersonalData\IpWindowSubjectResolver;
 use Nowo\CookieConsentBundle\PersonalData\UserKit\CookieConsentLogsPersonalDataEraser;
 use Nowo\CookieConsentBundle\PersonalData\UserKit\CookieConsentsPersonalDataExportProvider;
+use Nowo\CookieConsentBundle\Provisioning\CookieConsentProvisioner;
+use Nowo\CookieConsentBundle\Provisioning\CookieConsentProvisionerInterface;
 use Nowo\CookieConsentBundle\Repository\CookieConsentConfigRepository;
 use Nowo\CookieConsentBundle\Repository\CookieConsentConfigTranslationRepository;
 use Nowo\CookieConsentBundle\Repository\CookieDefinitionRepository;
@@ -129,6 +132,15 @@ class NowoCookieConsentExtension extends Extension implements PrependExtensionIn
 
     /** 1.34: the bundle named in the private manager's log messages. */
     public const BUNDLE_NAME = 'NowoCookieConsentBundle';
+
+    /** 1.36: the private entity manager of the provisioning port (its own, whatever `doctrine.private_entity_manager` says). */
+    public const PROVISIONER_ENTITY_MANAGER_SERVICE = 'nowo_cookie_consent.provisioner_entity_manager';
+
+    /**
+     * 1.36: container parameter holding the application's manager the provisioning manager is created on: `doctrine.entity_manager`,
+     * else "" until {@see CookieConsentProvisionerPass} resolves the application's default manager.
+     */
+    public const PROVISIONER_SOURCE_MANAGER_PARAMETER = 'nowo_cookie_consent.provisioner.source_manager';
 
     /** 1.34: the bundle's entity namespace (resolved to the private manager). */
     public const ENTITY_NAMESPACE = 'Nowo\\CookieConsentBundle\\Entity';
@@ -264,6 +276,9 @@ class NowoCookieConsentExtension extends Extension implements PrependExtensionIn
             $this->registerPrivateEntityManager($container, $entityManagerName);
         }
         $this->registerConflictAnswer($container, $config['conflict_response'], $entityManagerName, $private);
+        if ($this->hasDoctrineBundle($container)) {
+            $this->registerProvisioner($container, $entityManagerName);
+        }
 
         if ($tablePrefix !== '') {
             $container->setDefinition(
@@ -361,6 +376,39 @@ class NowoCookieConsentExtension extends Extension implements PrependExtensionIn
         ]))
             ->addTag('kernel.event_listener', ['event' => KernelEvents::REQUEST, 'method' => 'onRequest', 'priority' => CookieConsentConflictListener::REQUEST_PRIORITY])
             ->addTag('kernel.event_listener', ['event' => KernelEvents::EXCEPTION, 'method' => 'onException', 'priority' => CookieConsentConflictListener::PRIORITY]));
+    }
+
+    /**
+     * 1.36 (REQ-ARCH-001 rules 1 and 3): the host write port for seeding and provisioning
+     * ({@see CookieConsentProvisionerInterface}). It always writes through a private entity manager of its own on the
+     * connection of the bundle's manager (`doctrine.entity_manager`, else the application's default manager, resolved by
+     * {@see CookieConsentProvisionerPass}), in every `doctrine.private_entity_manager` mode: the application's managers
+     * are never flushed, cleared or reset. The provisioner drops that manager after every call; it is also reset at
+     * every unit-of-work boundary (transaction-doctrine's tag) and at `kernel.reset`.
+     */
+    private function registerProvisioner(ContainerBuilder $container, ?string $entityManagerName): void
+    {
+        $container->setParameter(self::PROVISIONER_SOURCE_MANAGER_PARAMETER, $entityManagerName ?? '');
+        $container->register(self::PROVISIONER_ENTITY_MANAGER_SERVICE, PrivateEntityManager::class)
+            ->setAutowired(false)
+            ->setAutoconfigured(false)
+            ->setArguments([
+                new Reference('doctrine'),
+                '%' . self::PROVISIONER_SOURCE_MANAGER_PARAMETER . '%',
+                CookieConsentConfig::class,
+                self::BUNDLE_NAME . ' provisioning',
+                new Reference('logger', ContainerInterface::NULL_ON_INVALID_REFERENCE),
+            ])
+            ->addTag(PrivateEntityManager::TAG)
+            ->addTag('kernel.reset', ['method' => 'reset']);
+        $container->register(CookieConsentProvisioner::class, CookieConsentProvisioner::class)
+            ->setAutowired(false)
+            ->setAutoconfigured(false)
+            ->setArguments([
+                new Reference(self::PROVISIONER_ENTITY_MANAGER_SERVICE),
+                new Reference('logger', ContainerInterface::NULL_ON_INVALID_REFERENCE),
+            ]);
+        $container->setAlias(CookieConsentProvisionerInterface::class, CookieConsentProvisioner::class);
     }
 
     /**
