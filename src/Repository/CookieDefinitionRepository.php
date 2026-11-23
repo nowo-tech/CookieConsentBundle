@@ -10,6 +10,7 @@ use Doctrine\ORM\Tools\Pagination\Paginator;
 use Doctrine\Persistence\ManagerRegistry;
 use Nowo\CookieConsentBundle\Concurrency\RowVersionGuard;
 use Nowo\CookieConsentBundle\Concurrency\StaleVersionException;
+use Nowo\CookieConsentBundle\Doctrine\CookieConsentHostFlushReporter;
 use Nowo\CookieConsentBundle\Entity\CookieConsentConfig;
 use Nowo\CookieConsentBundle\Entity\CookieDefinition;
 use Nowo\TransactionDoctrine\DoctrineTransactionRunner;
@@ -29,8 +30,9 @@ class CookieDefinitionRepository extends ServiceEntityRepository
      * Creates a new cookie definition repository.
      *
      * @param ManagerRegistry $registry The Doctrine manager registry
+     * @param CookieConsentHostFlushReporter|null $hostFlushReporter 1.35: reports the application's pending changes a save flushes (host mode only)
      */
-    public function __construct(ManagerRegistry $registry)
+    public function __construct(ManagerRegistry $registry, private readonly ?CookieConsentHostFlushReporter $hostFlushReporter = null)
     {
         parent::__construct($registry, CookieDefinition::class);
     }
@@ -51,8 +53,10 @@ class CookieDefinitionRepository extends ServiceEntityRepository
      */
     public function saveEdit(CookieDefinition $definition, EntityManagerInterface $entityManager, int $expectedVersion): void
     {
-        DoctrineTransactionRunner::forConnection($entityManager->getConnection())->run(static function () use ($definition, $entityManager, $expectedVersion): void {
+        DoctrineTransactionRunner::forConnection($entityManager->getConnection())->run(function () use ($definition, $entityManager, $expectedVersion): void {
             RowVersionGuard::advance($entityManager, $definition, $expectedVersion);
+            // 1.35: lists the application's pending changes this flush writes (2.0 no longer does); read-only.
+            $this->hostFlushReporter?->beforeFlush($entityManager);
             $entityManager->flush();
         });
     }

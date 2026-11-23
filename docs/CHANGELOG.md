@@ -291,6 +291,38 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Deprecated
+
+- REQ-ARCH-001 rule 6 notice minor (the last 1.x minor before 2.0): leaving `doctrine.private_entity_manager` unset, or
+  setting it to `false`, is deprecated when the bundle entities are on the application's default manager
+  (`doctrine.entity_manager` unset or naming the default manager, DoctrineBundle registered). The container build then
+  triggers one notice (`Since nowo-tech/cookie-consent-bundle 1.35: Not setting
+  "nowo_cookie_consent.doctrine.private_entity_manager" is deprecated …`, or the `false` variant): 2.0 always writes
+  profiles and cookie definitions through the private entity manager and removes `false`. Opt in with
+  `private_entity_manager: true`. No notice with `true`, with a dedicated `doctrine.entity_manager` (the DDD option, kept
+  in 2.0) or without DoctrineBundle. The option's default is now `null` (same behaviour as `false`).
+- Root `table_prefix`: the 1.3 notice now says it is removed in 2.0.
+- `Form\CookieConsentConfigSettingsType` (deprecated since 1.5.0): building it now triggers a runtime notice; removed
+  in 2.0.
+- `Doctrine\ConsentLogCollationListener::postGenerateSchemaTable()` (`@internal`, a no-op since 1.33.1): calling it now
+  triggers a runtime notice; removed in 2.0.
+
+### Added
+
+- Host-flush probe (REQ-ARCH-001 rule 6 deprecation layer): in the configurations that trigger the notice above, every
+  admin write (`CookieConsentConfigRepository::saveSettings()`, `CookieDefinitionRepository::saveEdit()`, the cookie
+  definition create and delete actions) calls `nowo-tech/transaction-doctrine`'s `HostFlushProbe` right before it
+  flushes the application's manager. Each entity class outside `Nowo\CookieConsentBundle\Entity` with pending changes
+  triggers one deprecation per request, message or command: "Your pending changes to App\X were flushed by
+  NowoCookieConsentBundle; 2.0 no longer does." It only logs (never throws) and changes nothing: the flush writes what
+  1.34 wrote. The probe is reset at every request, Messenger message and console command boundary (FrankenPHP worker
+  mode with the kernel reset off) and at `kernel.reset`. Not registered with `private_entity_manager: true` or a
+  dedicated manager. A write-path service the host replaced with a class whose constructor has no
+  `$hostFlushReporter` parameter (a 1.34-style repository subclass) is left as configured, without the probe: the
+  build never fails on it.
+- UPGRADING "Preparing for 2.0": what 2.0 changes and removes, separating what was already announced with a removal
+  version from what is announced only since 1.35.
+
 ### Changed
 
 - CI: new `release-gates` job in `.github/workflows/ci.yml` runs the `make release-check` gates (`rector-dry`, `validate-phpdoc`, `validate-translations`, `check-twig-extra`) on every full-mode push and PR, so they no longer fail only at release time. CI only, no bundle change.

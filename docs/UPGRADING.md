@@ -3,6 +3,10 @@
 ## Table of contents
 
 - [Unreleased](#unreleased)
+  - [The private entity manager notices](#the-private-entity-manager-notices)
+  - [Reading the host-flush probe](#reading-the-host-flush-probe)
+  - [Other notices added in 1.35](#other-notices-added-in-135)
+  - [Preparing for 2.0](#preparing-for-20)
 - [To 1.34.2](#to-1342)
 - [To 1.34.1](#to-1341)
 - [To 1.34.0](#to-1340)
@@ -147,6 +151,150 @@
 - [Getting help](#getting-help)
 
 ## Unreleased
+
+1.35.0 is the last 1.x minor before 2.0. Without configuration it behaves exactly as 1.34. It adds a deprecation
+notice for the setting 2.0 changes, a host-flush probe that lists what that change would mean for your application,
+and the notices still missing for what 2.0 removes. Nothing else changes.
+
+### The private entity manager notices
+
+With DoctrineBundle registered, `doctrine.entity_manager` unset and `doctrine.private_entity_manager` unset, building
+the container now logs:
+
+> Not setting "nowo_cookie_consent.doctrine.private_entity_manager" is deprecated: profile and cookie definition saves
+> flush the application's entity manager, including its own pending changes. 2.0 always writes them through a private
+> entity manager on the same connection and tables that never flushes them. Opt in now with "nowo_cookie_consent: {
+> doctrine: { private_entity_manager: true } }", or set "doctrine.entity_manager" to a manager of the bundle's own (see
+> UPGRADING.md "To 1.35.0").
+
+With `doctrine.private_entity_manager: false` (and `doctrine.entity_manager` unset):
+
+> "nowo_cookie_consent.doctrine.private_entity_manager: false" is deprecated and removed in 2.0: profile and cookie
+> definition saves flush the application's entity manager, including its own pending changes, and 2.0 always writes
+> them through a private entity manager on the same connection and tables that never flushes them. Set it to true now,
+> or set "doctrine.entity_manager" to a manager of the bundle's own (see UPGRADING.md "To 1.35.0").
+
+The same notices are triggered when `doctrine.entity_manager` names your default entity manager (for example
+`entity_manager: default`): the bundle then writes through that manager exactly as when the option is unset.
+
+No notice:
+
+- with `private_entity_manager: true`;
+- with `doctrine.entity_manager` naming a dedicated manager other than your default one (the DDD option, kept in 2.0:
+  that manager is the bundle's own and your default manager is never flushed);
+- without DoctrineBundle (YAML-only hosts have no bundle tables).
+
+What they mean: today the admin saves (profile settings, cookie definition create, edit and delete) flush the manager
+that maps the bundle entities, which is your default manager. Any change your own code left pending in it (an entity
+persisted or changed and not flushed yet, a Doctrine listener of yours reacting to the bundle's entities) is written by
+that flush. In 2.0 the bundle always writes through a private manager and never flushes your manager;
+`private_entity_manager: false` no longer exists. The consent log, the GDPR ports and the schema probe are not concerned:
+they use DBAL and never flush a manager.
+
+To opt in now (the tables, the connection and the mapping do not change; no migration):
+
+```yaml
+nowo_cookie_consent:
+    doctrine:
+        private_entity_manager: true
+```
+
+See "To 1.34.0" ([Optional: private entity manager](#optional-private-entity-manager-req-arch-001-rule-6)) and
+[CONFIGURATION.md "Private entity manager"](CONFIGURATION.md#private-entity-manager) for what changes when you opt in.
+
+### Reading the host-flush probe
+
+In the configurations that trigger the notice, every admin write calls the host-flush probe of
+nowo-tech/transaction-doctrine right before it flushes your manager:
+
+- `CookieConsentConfigRepository::saveSettings()` (every profile settings section, and your own calls of it);
+- `CookieDefinitionRepository::saveEdit()` (cookie definition edit, and your own calls of it);
+- `CookieDefinitionAdminController` create and delete.
+
+If you replaced one of these services with a class of your own whose constructor has no `$hostFlushReporter` parameter
+(for example a repository subclass written for 1.34), that service is left as you configured it and runs without the
+probe; add the optional `?CookieConsentHostFlushReporter $hostFlushReporter = null` parameter (and pass it to the parent
+constructor) to have its saves probed too.
+
+Every entity class outside `Nowo\CookieConsentBundle\Entity` with pending work in that manager (a scheduled insert or
+delete, an orphan removal, a changed field, association or collection) triggers one deprecation per request, message
+or command:
+
+> Your pending changes to App\Entity\AuditEntry were flushed by NowoCookieConsentBundle; 2.0 no longer does.
+
+The probe only logs: it never throws, and the flush that follows writes exactly what 1.34 wrote. The bundle never
+changes your entities itself, so every class listed is your application's own work that relies on a bundle save to
+reach the database. Read the collected messages as your migration list:
+
+1. Run your usual traffic and test suite on 1.35 with deprecations logged (the Symfony profiler, the `deprecation`
+   log channel, or PHPUnit's deprecation report), then search the logs for `were flushed by NowoCookieConsentBundle`.
+2. For each class listed, find the code that changes it without flushing: typically a Doctrine listener of yours that
+   reacts to `CookieConsentConfig` / `CookieDefinition` changes, or code that changes an entity and then calls a
+   repository save. Make it flush its own changes (or run it in your own transaction).
+3. When no message is left, set `private_entity_manager: true`. The probe does not run in that mode.
+
+The probe is read-only: it flushes, clears, closes or resets nothing. It is NowoTransactionDoctrineBundle's shared
+`nowo_transaction_doctrine.host_flush_probe` when you register that bundle, otherwise one of the bundle's own; both are
+reset at every request, message and command boundary (FrankenPHP worker mode with the kernel reset off included) and at
+`kernel.reset`.
+
+The reverse, which the probe cannot see: once you opt in, code of yours that loads a profile or cookie definition
+through the bundle's repositories (now on the private manager), changes it and flushes **your** manager saves nothing.
+Change bundle rows through the admin or the repository saves (`saveSettings()` / `saveEdit()` with the manager that
+loaded them).
+
+### Other notices added in 1.35
+
+- **Root `table_prefix`.** Deprecated since 1.3; its notice now says it is removed in 2.0. Use `doctrine.table_prefix`.
+- **`Form\CookieConsentConfigSettingsType`.** Deprecated since 1.5.0 (docblock only); building it now triggers a
+  runtime notice, and it is removed in 2.0. Use `Form\Settings\CookieConsentConfigFullSettingsType` (same fields) or
+  the per-section types of `CookieConsentConfigSettingsSection::formType()`.
+- **`ConsentLogCollationListener::postGenerateSchemaTable()`.** A no-op since 1.33.1 (the listener is `@internal`
+  and no longer subscribed to that event); calling it now triggers a runtime notice, and it is removed in 2.0.
+
+### Preparing for 2.0
+
+2.0 contains only the deprecations announced in 1.x. Running 1.35 without deprecation notices from this bundle clears
+most of the list, but not all of it: `CookieHandler::save()` and its helpers, `Admin\AdminChrome` and the three
+deprecated Twig globals trigger **no** runtime notice (the bundle still uses them itself in 1.x, so a notice would fire
+for every application). Check by hand that your code does not call them directly and that your templates do not read
+the globals (search for `->save(` on the cookie handler, `AdminChrome`, `nowo_cookie_consent_layout_template`,
+`nowo_cookie_consent_css_framework` and `nowo_cookie_consent_icon_set`). The `@final` classes are reported by Symfony's
+debug class loader (debug mode only) when you extend them.
+
+**Changed in 2.0 (announced in 1.35):**
+
+- The private entity manager is the only host mode: profiles and cookie definitions are always written through it.
+  `doctrine.private_entity_manager: true` becomes a deprecated no-op, `false` is refused at build time.
+  `doctrine.entity_manager: <name>` stays as the DDD option. The host-flush probe is removed with the host mode.
+
+**Removed in 2.0, already announced with that version:**
+
+| Removed | Deprecated since | Replacement |
+|---|---|---|
+| `doctrine.connection` | 1.15 (ignored) | `doctrine.entity_manager` |
+| `web_ui.path_prefix` | 1.15 (ignored) | the `prefix` of the bundle routes import |
+| `web_ui.css_framework`, `web_ui.icon_set` | 1.16 | `nowo_ui_kit.css_framework`, `nowo_ui_kit.icon_set` |
+| `web_ui.chrome` (all keys) | 1.16 | `nowo_ui_kit.theme.bundles.NowoCookieConsentBundle` (UiKit page scaffolds and theme slots) |
+| `Admin\AdminChrome` | 1.16 | the UiKit theme (`AdminChrome::toUiKitTheme()` already bridges it) |
+| Twig globals `nowo_cookie_consent_layout_template`, `nowo_cookie_consent_css_framework`, `nowo_cookie_consent_icon_set` | 1.16 | `nowo_ui_layout.admin` / `web_ui.layout_template`, `nowo_ui_kit_css_framework`, `nowo_ui_kit_icon_set` |
+| `Cookie\CookieHandlerInterface` (and the runtime notice of a host service implementing it) | 1.30 | `Cookie\ConsentCookieWriterInterface` |
+| `CookieHandler::save()` and its helpers (`CookieHandler.php` lines 50, 134, 195) | 1.30 | `consentCookies()` / `expiredConsentCookies()` |
+| The 14 `@final` classes become `final`: `NowoCookieConsentExtension`, `Configuration`, `TablePrefixListener`, `CookieConsentController`, `CookieConsentType`, `CookieDefinitionType`, `CookieDefinitionTranslationType`, `CookieConsentConfigSettingsType` (removed, below), `CookieChecker`, `CookieHandler`, `CookieLogger`, `CookieConsentTwigExtension`, `CookieConsentFormSubscriber`, `CookieConsentOutdatedConsentSubscriber` | 1.19 (1.25 for the outdated-consent subscriber) | decorate (`#[AsDecorator]`) or replace the services |
+
+**Removed in 2.0, announced with that version only since 1.35** (they were deprecated without a removal version):
+
+| Removed | Deprecated since | Replacement |
+|---|---|---|
+| root `table_prefix` | 1.3 | `doctrine.table_prefix` |
+| `Form\CookieConsentConfigSettingsType` | 1.5.0 | `Form\Settings\CookieConsentConfigFullSettingsType` |
+| `Doctrine\ConsentLogCollationListener::postGenerateSchemaTable()` (`@internal`) | 1.33.1 | none needed (the collation is applied on `postGenerateSchema`) |
+
+Not changed by 2.0: the consent log columns and their exact-key collation (REQ-SEC-006), the tables, the routes and
+the conflict answers (409 + `CONFLICT_001` / `CONFLICT_002`).
+
+After 2.0.0 is tagged, the 1.x line gets security fixes for 6 months: Moderate and higher are backported to the last
+1.x minor; Low ones are fixed in 2.x only, with the advice to upgrade.
 
 ## To 1.34.2
 

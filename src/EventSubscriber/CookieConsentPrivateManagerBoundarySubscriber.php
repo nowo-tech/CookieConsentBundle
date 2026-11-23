@@ -37,7 +37,11 @@ use Symfony\Contracts\Service\ResetInterface;
  * When the host also registers transaction-doctrine's Symfony bundle, its boundary listener resets the same manager
  * through the {@see PrivateEntityManager::TAG} tag; a second reset is a no-op.
  *
- * @internal registered by the bundle in private mode; not an extension point
+ * 1.35: the same class also resets the host-flush reporter (service
+ * `nowo_cookie_consent.host_flush_reporter.boundary_subscriber`, registered by CookieConsentHostFlushNoticePass when
+ * the bundle writes through the application's default manager): its resettables are then only that reporter.
+ *
+ * @internal registered by the bundle (private mode; host mode for the host-flush reporter); not an extension point
  */
 final class CookieConsentPrivateManagerBoundarySubscriber implements EventSubscriberInterface
 {
@@ -54,7 +58,7 @@ final class CookieConsentPrivateManagerBoundarySubscriber implements EventSubscr
     private int $commandDepth = 0;
 
     /**
-     * @param iterable<ResetInterface> $resettables the private manager and the memos holding its entities
+     * @param iterable<ResetInterface> $resettables the private manager and the memos holding its entities (host mode: the host-flush reporter)
      * @param RequestStack|null $requestStack the HTTP kernel's request stack (read only): tells a nested main request
      */
     public function __construct(
