@@ -8,6 +8,7 @@ use Doctrine\Bundle\DoctrineBundle\DependencyInjection\Compiler\DoctrineOrmMappi
 use Nowo\CookieConsentBundle\DependencyInjection\Compiler\ConsentCookieWriterPass;
 use Nowo\CookieConsentBundle\DependencyInjection\Compiler\CookieConsentCommitTrackingPass;
 use Nowo\CookieConsentBundle\DependencyInjection\Compiler\CookieConsentEntityManagerPass;
+use Nowo\CookieConsentBundle\DependencyInjection\Compiler\CookieConsentHostFlushNoticePass;
 use Nowo\CookieConsentBundle\DependencyInjection\Compiler\CookieConsentPrivateEntityManagerPass;
 use Nowo\CookieConsentBundle\DependencyInjection\Compiler\CookieConsentSecurityPass;
 use Nowo\CookieConsentBundle\DependencyInjection\Compiler\CookieConsentWithoutDoctrinePass;
@@ -56,6 +57,10 @@ class NowoCookieConsentBundle extends Bundle
         // 1.34 (doctrine.private_entity_manager: true): the private manager's source and its DBAL middleware, before
         // DoctrineBundle's MiddlewaresPass (priority 0).
         $container->addCompilerPass(new CookieConsentPrivateEntityManagerPass(), PassConfig::TYPE_BEFORE_OPTIMIZATION, 5);
+
+        // 1.35 (REQ-ARCH-001 rule 6 deprecation layer): the private_entity_manager notice and the host-flush probe when
+        // the bundle writes through the application's default manager.
+        $container->addCompilerPass(new CookieConsentHostFlushNoticePass(), PassConfig::TYPE_BEFORE_OPTIMIZATION);
 
         // 1.30: after decoration and alias resolution, pick the consent cookie port once (REQ-ARCH-001 rule 3).
         $container->addCompilerPass(new ConsentCookieWriterPass(), PassConfig::TYPE_BEFORE_REMOVING);

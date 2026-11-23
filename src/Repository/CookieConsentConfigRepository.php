@@ -10,6 +10,7 @@ use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\Persistence\ManagerRegistry;
 use Nowo\CookieConsentBundle\Concurrency\RowVersionGuard;
 use Nowo\CookieConsentBundle\Concurrency\StaleVersionException;
+use Nowo\CookieConsentBundle\Doctrine\CookieConsentHostFlushReporter;
 use Nowo\CookieConsentBundle\Entity\CookieConsentConfig;
 use Nowo\TransactionContract\TransientStorageFailure;
 use Nowo\TransactionDoctrine\DoctrineTransactionRunner;
@@ -40,8 +41,9 @@ class CookieConsentConfigRepository extends ServiceEntityRepository implements R
      * Creates a new consent configuration repository.
      *
      * @param ManagerRegistry $registry The Doctrine manager registry
+     * @param CookieConsentHostFlushReporter|null $hostFlushReporter 1.35: reports the application's pending changes a save flushes (host mode only)
      */
-    public function __construct(ManagerRegistry $registry)
+    public function __construct(ManagerRegistry $registry, private readonly ?CookieConsentHostFlushReporter $hostFlushReporter = null)
     {
         parent::__construct($registry, CookieConsentConfig::class);
     }
@@ -99,6 +101,8 @@ class CookieConsentConfigRepository extends ServiceEntityRepository implements R
             // With no token (host code) the version still advances, unchecked: pages opened before are stale.
             RowVersionGuard::advance($entityManager, $config, $expectedVersion);
 
+            // 1.35: lists the application's pending changes this flush writes (2.0 no longer does); read-only.
+            $this->hostFlushReporter?->beforeFlush($entityManager);
             $entityManager->flush();
 
             if ($default) {

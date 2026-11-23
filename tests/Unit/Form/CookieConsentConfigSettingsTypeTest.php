@@ -16,7 +16,11 @@ use Nowo\CookieConsentBundle\Tests\Support\FormKitTestSupport;
 use Symfony\Component\Form\Test\TypeTestCase;
 
 use function count;
+use function restore_error_handler;
+use function set_error_handler;
 use function sprintf;
+
+use const E_USER_DEPRECATED;
 
 final class CookieConsentConfigSettingsTypeTest extends TypeTestCase
 {
@@ -38,8 +42,23 @@ final class CookieConsentConfigSettingsTypeTest extends TypeTestCase
 
     public function testDeprecatedAliasBuildsFullSettingsForm(): void
     {
-        $form = $this->factory->create(CookieConsentConfigSettingsType::class);
+        $deprecations = [];
+        // @phpstan-ignore frankenphp.worker.noSetErrorExceptionHandler (test only; restored below)
+        set_error_handler(static function (int $level, string $message) use (&$deprecations): bool {
+            $deprecations[] = $message;
+
+            return true;
+        }, E_USER_DEPRECATED);
+
+        try {
+            $form = $this->factory->create(CookieConsentConfigSettingsType::class);
+        } finally {
+            restore_error_handler();
+        }
         $view = $form->createView();
+
+        // 1.35: the deprecated alias announces its removal in 2.0 when it is built.
+        self::assertSame(['Since nowo-tech/cookie-consent-bundle 1.35: ' . CookieConsentConfigSettingsType::DEPRECATION], $deprecations);
 
         self::assertTrue($form->has('enabled'));
         self::assertTrue($form->has('autoShow'));

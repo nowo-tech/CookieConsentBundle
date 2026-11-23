@@ -15,6 +15,7 @@ use Nowo\CookieConsentBundle\Controller\CookieConsentConfigSettingsAdminControll
 use Nowo\CookieConsentBundle\Controller\CookieDefinitionAdminController;
 use Nowo\CookieConsentBundle\Cookie\CookieLogger;
 use Nowo\CookieConsentBundle\DependencyInjection\Compiler\CookieConsentCommitTrackingPass;
+use Nowo\CookieConsentBundle\DependencyInjection\Compiler\CookieConsentHostFlushNoticePass;
 use Nowo\CookieConsentBundle\DependencyInjection\Compiler\CookieConsentPrivateEntityManagerPass;
 use Nowo\CookieConsentBundle\Doctrine\ConsentLogCollationListener;
 use Nowo\CookieConsentBundle\Doctrine\CookieConsentManagerRegistry;
@@ -113,6 +114,18 @@ class NowoCookieConsentExtension extends Extension implements PrependExtensionIn
 
     /** 1.34: tells the private manager how the connection's transactions end (tagged by {@see CookieConsentPrivateEntityManagerPass}). */
     public const PRIVATE_MIDDLEWARE_SERVICE = 'nowo_cookie_consent.private_entity_manager_middleware';
+
+    /**
+     * 1.35: container parameter holding `doctrine.private_entity_manager` as configured (null: unset), defined only with
+     * DoctrineBundle; read by {@see CookieConsentHostFlushNoticePass}.
+     */
+    public const PRIVATE_ENTITY_MANAGER_SETTING_PARAMETER = 'nowo_cookie_consent.doctrine.private_entity_manager_setting';
+
+    /** 1.35: the notice of a host that leaves `doctrine.private_entity_manager` unset while its entities are on the default manager. */
+    public const PRIVATE_ENTITY_MANAGER_UNSET_DEPRECATION = 'Not setting "nowo_cookie_consent.doctrine.private_entity_manager" is deprecated: profile and cookie definition saves flush the application\'s entity manager, including its own pending changes. 2.0 always writes them through a private entity manager on the same connection and tables that never flushes them. Opt in now with "nowo_cookie_consent: { doctrine: { private_entity_manager: true } }", or set "doctrine.entity_manager" to a manager of the bundle\'s own (see UPGRADING.md "To 1.35.0").';
+
+    /** 1.35: the notice of a host that sets `doctrine.private_entity_manager: false` while its entities are on the default manager. */
+    public const PRIVATE_ENTITY_MANAGER_FALSE_DEPRECATION = '"nowo_cookie_consent.doctrine.private_entity_manager: false" is deprecated and removed in 2.0: profile and cookie definition saves flush the application\'s entity manager, including its own pending changes, and 2.0 always writes them through a private entity manager on the same connection and tables that never flushes them. Set it to true now, or set "doctrine.entity_manager" to a manager of the bundle\'s own (see UPGRADING.md "To 1.35.0").';
 
     /** 1.34: the bundle named in the private manager's log messages. */
     public const BUNDLE_NAME = 'NowoCookieConsentBundle';
@@ -242,6 +255,11 @@ class NowoCookieConsentExtension extends Extension implements PrependExtensionIn
         // 1.34 (REQ-ARCH-001 rule 6, opt-in): only with DoctrineBundle (a host without it has no bundle tables).
         $private = $config['doctrine']['private_entity_manager'] === true && $this->hasDoctrineBundle($container);
         $container->setParameter(self::PRIVATE_ENTITY_MANAGER_PARAMETER, $private);
+        if ($this->hasDoctrineBundle($container)) {
+            // 1.35: the deprecation notice and the host-flush probe are decided by CookieConsentHostFlushNoticePass,
+            // which knows the application's default manager.
+            $container->setParameter(self::PRIVATE_ENTITY_MANAGER_SETTING_PARAMETER, $config['doctrine']['private_entity_manager']);
+        }
         if ($private) {
             $this->registerPrivateEntityManager($container, $entityManagerName);
         }
@@ -502,6 +520,19 @@ class NowoCookieConsentExtension extends Extension implements PrependExtensionIn
                 new Reference('request_stack', ContainerInterface::NULL_ON_INVALID_REFERENCE),
             ])
             ->addTag('kernel.event_subscriber');
+    }
+
+    /**
+     * 1.35: the deprecation notice of `doctrine.private_entity_manager` (null: unset, false) for a host whose bundle
+     * entities are on its default manager; null for `true`.
+     */
+    public static function privateEntityManagerNotice(?bool $private): ?string
+    {
+        return match ($private) {
+            null    => self::PRIVATE_ENTITY_MANAGER_UNSET_DEPRECATION,
+            false   => self::PRIVATE_ENTITY_MANAGER_FALSE_DEPRECATION,
+            default => null,
+        };
     }
 
     /**
