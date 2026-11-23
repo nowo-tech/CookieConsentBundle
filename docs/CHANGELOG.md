@@ -106,6 +106,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- Dev: `igor-php/igor-php` require-dev widened to `^0.11.0` (lock updated for that package only); the Igor audit is clean (135 service files OK, 0 KO, 0 WARN).
 - Igor 0.11: `reset()` of `CookieConsentConfigResolver`, `CookieInventoryProvider` and `CookieConsentConfigRepository` now holds the assignments that clear the memo (`clearRuntimeCache()` calls `reset()`, it was the other way round), so Igor sees the properties cleared. Same caches cleared at the same moments; no behaviour change.
 
 ## [1.36.1] - 2026-11-23
