@@ -405,7 +405,10 @@ final class CookieConsentProvisionerTest extends TestCase
             $em = $args->getObjectManager();
             foreach ($em->getUnitOfWork()->getScheduledEntityInsertions() as $entity) {
                 if ($entity instanceof CookieDefinition && $flush <= $times) {
-                    $em->getConnection()->insert('dashboard_cookie_definition', [
+                    $connection = $em->getConnection();
+                    $connection->insert('dashboard_cookie_definition', [
+                        // An explicit id: on DBAL 3 PostgreSQL the column has no default (the ORM uses a sequence).
+                        'id'                 => 1000 + (int) $connection->fetchOne('SELECT COALESCE(MAX(id), 0) FROM dashboard_cookie_definition'),
                         'name'               => $entity->getName(),
                         'duration'           => '',
                         'category'           => 'required',
