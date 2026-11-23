@@ -48,6 +48,7 @@ half stored, or confirmed to the visitor without its log rows.
 | Admin cookie definition edit (`CookieDefinitionAdminController::edit`, `CookieDefinitionRepository::saveEdit()`) | One runner transaction: version check, flush (definition and translations) | Optimistic `row_version` (compare-and-swap, below); unique `(config_id, name)`; unique `(definition_id, locale)` translation | Lock conflict: 409 `CONFLICT_001` / `CONFLICT_002`. Stale page: 409 `COOKIE_CONSENT_STALE_VERSION` (domain). Unique key: 409 `COOKIE_CONSENT_DUPLICATE_KEY` (domain) |
 | Admin cookie definition create / delete (`CookieDefinitionAdminController`) | One flush | Create: unique `(config_id, name)`. Delete by id, idempotent: deleting a definition another admin just edited removes it, which is what the admin asked for | Lock conflict: 409 `CONFLICT_001` / `CONFLICT_002`. Unique key: 409 `COOKIE_CONSENT_DUPLICATE_KEY` (domain) |
 | GDPR erasure (`CookieConsentPersonalDataEraser::erase()`, UserKit eraser) | One transaction per batch of 500 ids, or the caller's transaction | Delete by id; idempotent (a second run deletes nothing) | Rethrown to the caller (UserKit, your command) |
+| Host provisioning (`CookieConsentProvisionerInterface::ensureDefaultProfile()` / `upsertCookieDefinitions()`, 1.36) | One runner transaction per call (a savepoint inside yours), through the port's own private manager | Provisioning lock: MySQL / MariaDB `GET_LOCK()` around the transaction, PostgreSQL `pg_advisory_xact_lock()` inside it; natural keys compared with `===`; unique `(config_id, name)` / `(…, locale)`; changed rows advance `row_version` | Unique key or lock conflict: retried (3 attempts outside a transaction, 1 inside yours), then `CookieConsentProvisioningException` / `TransientStorageFailure` to the caller |
 | Profile and cookie definition translations | Written by the settings / definition saves above (cascade), in their transaction | Unique `(config_id, locale)` / `(definition_id, locale)` | As the save that writes them; a unique key on the definition page answers the domain 409 |
 
 `flush()` in `src/`: the settings save and the definition edit (each inside its repository's runner) and the cookie
@@ -80,7 +81,7 @@ template that lists the fields one by one must render `form.rowVersion`; `form_r
 The version advances on every admin save, also when only a translation changed (the translation rows belong to the
 definition's save). Making a profile the default also advances the version of the profiles it demotes, so a page of the
 old default opened before cannot write the old flag back. `saveSettings($config, $em)` without the third argument (host
-code) saves without the check but still advances the version, so a page opened before the host's write is refused. The bundle has no Messenger handlers and no console command that writes.
+code) saves without the check but still advances the version, so a page opened before the host's write is refused. The bundle has no Messenger handlers and no console command that writes; the provisioning port (1.36) is the host's write entry point for seeding.
 
 ## Conflict answers and codes
 
@@ -178,6 +179,11 @@ nowo_cookie_consent:
     the loser waits, then is refused as stale, and the stored row is the winner's whole (no lost update); past the lock
     timeout the loser gets `CONFLICT_001` material (`TransientStorageFailure`), not a stale answer;
   - making a profile the default makes an open page of the demoted profile stale: never two defaults.
+- `tests/Integration/Database/ProvisionerConcurrencyDatabaseTest.php` (1.36): two seeders started together on an empty
+  database leave one default profile, one row per cookie and one copy per locale (one reports created, the other
+  unchanged); a seeder that finds the provisioning lock held waits, then updates the holder's profile instead of
+  creating a second default. `tests/Integration/Provisioning` runs on the same three servers (exact keys, retries,
+  the application's manager left alone).
 - `tests/Integration/Database/RowVersionDatabaseTest.php` (SQLite, and the three servers in the same job): the guard
   advances once and refuses the same token twice, a missing token and a deleted row are stale, the settings save and the
   definition edit check and advance the version (a translation-only change too), a stale save writes nothing, the manager

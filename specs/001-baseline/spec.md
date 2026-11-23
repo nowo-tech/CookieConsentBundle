@@ -141,6 +141,12 @@ GDPR **cookie consent** for Symfony: modal with category toggles, granular per-c
 
 - **FR-CFG-005**: `CookieConsentConfigReaderInterface` (default `CookieConsentConfigReader`) is the read port over the enabled consent profiles, answering `ConsentProfileView` value objects (REQ-ARCH-001 rules 1 and 3).
 - **FR-DDD-003**: `doctrine.private_entity_manager: true` (opt-in, REQ-ARCH-001 rule 6): `CookieConsentPrivateEntityManagerPass` wires the bundle's own entity manager and `CookieConsentPrivateManagerBoundarySubscriber` drops it, and clears the memos holding its entities, at every outermost unit-of-work boundary.
+
+### Provisioning port (1.36)
+
+- **FR-PROV-001**: `CookieConsentProvisionerInterface` (default `CookieConsentProvisioner`, DoctrineBundle hosts only) is the host write port for seeding: `ensureDefaultProfile(DefaultProfileSpec)` and `upsertCookieDefinitions(CookieDefinitionSpecs)` answer a `ProvisioningResult` (created / updated / unchanged, profile id). The ports take bundle value objects only (REQ-ARCH-001 rule 3), validated when built; `fromArray()` helpers refuse unknown keys and wrong types.
+- **FR-PROV-002**: Idempotent by natural keys compared byte for byte (REQ-SEC-006); only the settings given are written; nothing is deleted; a changed row advances its `row_version`. Writes go through the port's own `PrivateEntityManager` (`nowo_cookie_consent.provisioner_entity_manager`, source resolved by `CookieConsentProvisionerPass`) in one runner transaction, dropped after every call: the application's managers are never flushed, cleared or reset (REQ-RUNTIME-002).
+- **FR-PROV-003**: `ProvisioningLock` serializes provisioning calls (MySQL / MariaDB `GET_LOCK()`, PostgreSQL `pg_advisory_xact_lock()`); unique-key and lock conflicts are retried outside a transaction (REQ-RUNTIME-003).
 ---
 
 ## Success Criteria

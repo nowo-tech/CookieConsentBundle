@@ -6,6 +6,7 @@ namespace Nowo\CookieConsentBundle\Tests\Integration\Ddd;
 
 use Nowo\CookieConsentBundle\Cookie\CookieLoggerInterface;
 use Nowo\CookieConsentBundle\Cookie\NullCookieLogger;
+use Nowo\CookieConsentBundle\Provisioning\CookieConsentProvisionerInterface;
 use Nowo\CookieConsentBundle\Tests\Support\Host\HostConsentStore;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Config\Definition\Exception\InvalidConfigurationException;
@@ -52,6 +53,7 @@ final class HostWithoutDoctrineKernelTest extends TestCase
     {
         $container = $this->boot(self::CONFIG);
         self::assertFalse($container->has('doctrine'));
+        self::assertFalse($container->has(CookieConsentProvisionerInterface::class), 'no profile tables: no provisioning port (1.36)');
         $store = $container->get(CookieLoggerInterface::class);
         self::assertInstanceOf(HostConsentStore::class, $store);
 

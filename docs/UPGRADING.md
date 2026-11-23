@@ -3,6 +3,9 @@
 ## Table of contents
 
 - [Unreleased](#unreleased)
+- [To 1.36.0](#to-1360)
+  - [Seeding through the provisioning port](#seeding-through-the-provisioning-port)
+  - [2.0: the port, not your entity manager](#20-the-port-not-your-entity-manager)
 - [To 1.35.0](#to-1350)
   - [The private entity manager notices](#the-private-entity-manager-notices)
   - [Reading the host-flush probe](#reading-the-host-flush-probe)
@@ -152,6 +155,52 @@
 - [Getting help](#getting-help)
 
 ## Unreleased
+
+## To 1.36.0
+
+From **1.35.0**:
+
+```bash
+composer update nowo-tech/cookie-consent-bundle
+```
+
+No configuration, schema or behaviour change: 1.36.0 adds a host write port. Nothing to do unless your code writes the
+bundle's entities itself (a seeder, fixtures, an installer).
+
+### Seeding through the provisioning port
+
+If your code creates or changes `CookieConsentConfig`, `CookieConsentConfigTranslation`, `CookieDefinition` or
+`CookieDefinitionTranslation` with your own entity manager (typically a demo or platform seeder that reads
+`CookieConsentConfigRepository::findDefaultEnabled()`, creates the profile when missing, calls its setters and
+flushes), move it to `Nowo\CookieConsentBundle\Provisioning\CookieConsentProvisionerInterface`:
+
+```php
+// Before: the bundle entities written with the application's manager.
+$config = $configRepository->findDefaultEnabled() ?? (new CookieConsentConfig())->setEnabled(true)->setDefault(true);
+$config->setColorTheme('dark')->setGranularCookieSelection(true);
+$entityManager->persist($config);
+$entityManager->flush();
+
+// After: value objects; the bundle writes them with its own manager, idempotently, under its lock.
+$result = $provisioner->ensureDefaultProfile(DefaultProfileSpec::create()
+    ->withColorTheme('dark')
+    ->withGranularCookieSelection(true));
+$provisioner->upsertCookieDefinitions(CookieDefinitionSpecs::fromArray($decodedCookieFixture));
+```
+
+- Give only the settings your seeder owns: the others keep their stored value.
+- The profile copies (`ProfileTranslationSpec`) and the cookie copies (`CookieDefinitionTranslationSpec`) are complete
+  values per locale; other locales and cookies the list does not name are kept.
+- Read what you need through `CookieConsentConfigReaderInterface` (view objects), not the repositories.
+- It works with `doctrine.private_entity_manager` true, false or unset, and with a dedicated `doctrine.entity_manager`.
+
+See [USAGE.md "Seeding and provisioning (1.36)"](USAGE.md#seeding-and-provisioning-136).
+
+### 2.0: the port, not your entity manager
+
+In 2.0 `doctrine.private_entity_manager: true` is the only mode: the bundle entities always belong to the bundle's
+private manager, so a seeder that writes them with your entity manager no longer works (your flush does not save them,
+or inserts them again). Use `CookieConsentProvisionerInterface` before upgrading; it keeps the same signatures in 2.0.
 
 ## To 1.35.0
 
