@@ -21,7 +21,22 @@ export function collectClientDiagnostics(modalElement: HTMLElement | null): Reco
   };
 }
 
-export function publishClientDiagnostics(modalElement: HTMLElement | null): void {
+/**
+ * True when the console diagnostics are wanted: `data-nowo-debug="true"` on the modal element, or
+ * `<html data-nowo-console="debug">` (the page-wide switch of the "script loaded" console line).
+ */
+export function isDiagnosticsDebug(modalElement: HTMLElement | null): boolean {
+  return modalElement?.dataset.nowoDebug === 'true' || document.documentElement.dataset.nowoConsole === 'debug';
+}
+
+/**
+ * Stores the diagnostic report on `window.__NOWO_COOKIE_CONSENT_DIAGNOSTIC__` and prints it to the console only when
+ * the debug flag is on (see {@link isDiagnosticsDebug}); production pages stay quiet by default.
+ */
+export function publishClientDiagnostics(
+  modalElement: HTMLElement | null,
+  debug: boolean = isDiagnosticsDebug(modalElement),
+): void {
   const existing = window.__NOWO_COOKIE_CONSENT_DIAGNOSTIC__ ?? {};
   const report = {
     ...existing,
@@ -29,6 +44,10 @@ export function publishClientDiagnostics(modalElement: HTMLElement | null): void
   };
 
   window.__NOWO_COOKIE_CONSENT_DIAGNOSTIC__ = report;
+
+  if (!debug) {
+    return;
+  }
 
   console.group('[nowo-cookie-consent] Diagnostic report (after init)');
   console.log(report);

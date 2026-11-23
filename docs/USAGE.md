@@ -48,6 +48,7 @@ Regenerate with `make -C demo/symfony8 demo-screenshots` (REQ-DEMO-013).
 - [Demo](#demo)
   - [Forms (REQ-TWIG-005)](#forms-req-twig-005)
 - [Scrollbars](#scrollbars)
+- [Browser console](#browser-console)
 
 ## Embed the modal
 
@@ -790,3 +791,7 @@ Scrollable areas of this bundle (the consent modal, its body, the preferences li
 `--nowo-ui-scrollbar-track`; each has a fallback, so nothing is needed without UiKit. Do not set `scrollbar-width` or
 `scrollbar-color` on these elements: on Chromium 121+ they disable the `::-webkit-scrollbar` rules (the standard
 properties are only applied by the bundle where `::-webkit-scrollbar` is unsupported).
+
+## Browser console
+
+The bundle's script logs one line when it loads (`📦 [cookie-consent] script loaded, build: 2026-11-23 14:05 UTC`) so a developer can tell which build a page runs. To silence it, set `<html data-nowo-console="quiet">` or `globalThis.NOWO_CONSOLE = 'quiet'` before the script loads; nothing is printed then. The default is unchanged.
