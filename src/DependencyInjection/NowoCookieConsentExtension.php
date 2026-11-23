@@ -6,8 +6,6 @@ namespace Nowo\CookieConsentBundle\DependencyInjection;
 
 use Doctrine\DBAL\Connection;
 use Doctrine\ORM\EntityManagerInterface;
-use Nowo\CookieConsentBundle\Admin\AdminChrome;
-use Nowo\CookieConsentBundle\Admin\AdminPageFactory;
 use Nowo\CookieConsentBundle\Config\CookieConsentConfigResolver;
 use Nowo\CookieConsentBundle\Config\CookieInventoryNormalizer;
 use Nowo\CookieConsentBundle\Config\CookieInventoryProvider;
@@ -15,7 +13,6 @@ use Nowo\CookieConsentBundle\Controller\CookieConsentConfigSettingsAdminControll
 use Nowo\CookieConsentBundle\Controller\CookieDefinitionAdminController;
 use Nowo\CookieConsentBundle\Cookie\CookieLogger;
 use Nowo\CookieConsentBundle\DependencyInjection\Compiler\CookieConsentCommitTrackingPass;
-use Nowo\CookieConsentBundle\DependencyInjection\Compiler\CookieConsentHostFlushNoticePass;
 use Nowo\CookieConsentBundle\DependencyInjection\Compiler\CookieConsentPrivateEntityManagerPass;
 use Nowo\CookieConsentBundle\DependencyInjection\Compiler\CookieConsentProvisionerPass;
 use Nowo\CookieConsentBundle\Doctrine\ConsentLogCollationListener;
@@ -43,7 +40,6 @@ use Nowo\CookieConsentBundle\Repository\CookieDefinitionTranslationRepository;
 use Nowo\CookieConsentBundle\Security\AllowAllCookieConsentAccessChecker;
 use Nowo\CookieConsentBundle\Security\ConfigurableCookieConsentAccessChecker;
 use Nowo\CookieConsentBundle\Security\CookieConsentAccessCheckerInterface;
-use Nowo\CookieConsentBundle\Twig\CookieConsentAdminTwigExtension;
 use Nowo\TransactionDoctrine\PrivateManager\PrivateEntityManager;
 use Nowo\TransactionDoctrine\PrivateManager\PrivateEntityManagerMiddleware;
 use Nowo\TransactionDoctrine\PrivateManager\PrivateManagerRegistry;
@@ -74,10 +70,8 @@ use function sprintf;
 
 /**
  * Loads bundle configuration and registers services in the container.
- *
- * @final since 1.19, will be final in 2.0 (not an extension point; decorate or replace the service instead)
  */
-class NowoCookieConsentExtension extends Extension implements PrependExtensionInterface
+final class NowoCookieConsentExtension extends Extension implements PrependExtensionInterface
 {
     /** Container parameter holding `doctrine.entity_manager` (null: the default entity manager). */
     public const ENTITY_MANAGER_PARAMETER = 'nowo_cookie_consent.doctrine.entity_manager';
@@ -100,7 +94,11 @@ class NowoCookieConsentExtension extends Extension implements PrependExtensionIn
     /** 1.31: container parameter holding `conflict_response.commit_tracking` (bundle, all or off). */
     public const COMMIT_TRACKING_PARAMETER = 'nowo_cookie_consent.conflict_response.commit_tracking';
 
-    /** 1.34: container parameter holding whether the private entity manager is on (`doctrine.private_entity_manager`). */
+    /**
+     * 1.34: container parameter holding whether the private entity manager is on. Since 2.0 it is on whenever DoctrineBundle
+     * is registered, except with a dedicated `doctrine.entity_manager` (the DDD option) and `private_entity_manager`
+     * unset ({@see CookieConsentPrivateEntityManagerPass} turns it off then).
+     */
     public const PRIVATE_ENTITY_MANAGER_PARAMETER = 'nowo_cookie_consent.doctrine.private_entity_manager';
 
     /**
@@ -109,7 +107,7 @@ class NowoCookieConsentExtension extends Extension implements PrependExtensionIn
      */
     public const PRIVATE_SOURCE_MANAGER_PARAMETER = 'nowo_cookie_consent.private_entity_manager.source_manager';
 
-    /** 1.34: the bundle's private entity manager (`doctrine.private_entity_manager: true`). */
+    /** 1.34: the bundle's private entity manager (the only mode on the application's default manager since 2.0). */
     public const PRIVATE_ENTITY_MANAGER_SERVICE = 'nowo_cookie_consent.private_entity_manager';
 
     /** 1.34: the registry the bundle's repositories and conflict listener get in private mode (bundle entities → the private manager). */
@@ -119,16 +117,13 @@ class NowoCookieConsentExtension extends Extension implements PrependExtensionIn
     public const PRIVATE_MIDDLEWARE_SERVICE = 'nowo_cookie_consent.private_entity_manager_middleware';
 
     /**
-     * 1.35: container parameter holding `doctrine.private_entity_manager` as configured (null: unset), defined only with
-     * DoctrineBundle; read by {@see CookieConsentHostFlushNoticePass}.
+     * 1.35: container parameter holding `doctrine.private_entity_manager` as configured (null: unset, true), defined only
+     * with DoctrineBundle; read by {@see CookieConsentPrivateEntityManagerPass}.
      */
     public const PRIVATE_ENTITY_MANAGER_SETTING_PARAMETER = 'nowo_cookie_consent.doctrine.private_entity_manager_setting';
 
-    /** 1.35: the notice of a host that leaves `doctrine.private_entity_manager` unset while its entities are on the default manager. */
-    public const PRIVATE_ENTITY_MANAGER_UNSET_DEPRECATION = 'Not setting "nowo_cookie_consent.doctrine.private_entity_manager" is deprecated: profile and cookie definition saves flush the application\'s entity manager, including its own pending changes. 2.0 always writes them through a private entity manager on the same connection and tables that never flushes them. Opt in now with "nowo_cookie_consent: { doctrine: { private_entity_manager: true } }", or set "doctrine.entity_manager" to a manager of the bundle\'s own (see UPGRADING.md "To 1.35.0").';
-
-    /** 1.35: the notice of a host that sets `doctrine.private_entity_manager: false` while its entities are on the default manager. */
-    public const PRIVATE_ENTITY_MANAGER_FALSE_DEPRECATION = '"nowo_cookie_consent.doctrine.private_entity_manager: false" is deprecated and removed in 2.0: profile and cookie definition saves flush the application\'s entity manager, including its own pending changes, and 2.0 always writes them through a private entity manager on the same connection and tables that never flushes them. Set it to true now, or set "doctrine.entity_manager" to a manager of the bundle\'s own (see UPGRADING.md "To 1.35.0").';
+    /** 2.0: the notice of `doctrine.private_entity_manager: true` when it has no effect (the entities are on the default manager). */
+    public const PRIVATE_ENTITY_MANAGER_TRUE_DEPRECATION = 'The "nowo_cookie_consent.doctrine.private_entity_manager" option has no effect since 2.0 (the private entity manager is the only mode on your default entity manager); remove it. It is removed in 3.0.';
 
     /** 1.34: the bundle named in the private manager's log messages. */
     public const BUNDLE_NAME = 'NowoCookieConsentBundle';
@@ -157,11 +152,7 @@ class NowoCookieConsentExtension extends Extension implements PrependExtensionIn
         $config        = $this->processConfiguration($configuration, $configs);
 
         $tablePrefix = trim((string) ($config['doctrine']['table_prefix'] ?? ''));
-        if ($tablePrefix === '' && isset($config['table_prefix'])) {
-            $tablePrefix = trim((string) $config['table_prefix']);
-        }
 
-        $container->setParameter('nowo_cookie_consent.doctrine.connection', $config['doctrine']['connection'] ?? 'default');
         $container->setParameter('nowo_cookie_consent.doctrine.table_prefix', $tablePrefix);
         $entityManagerName = $config['doctrine']['entity_manager'] ?? null;
         $entityManagerName = is_string($entityManagerName) && trim($entityManagerName) !== '' ? trim($entityManagerName) : null;
@@ -216,13 +207,8 @@ class NowoCookieConsentExtension extends Extension implements PrependExtensionIn
 
         $webUi = $config['web_ui'];
         $container->setParameter('nowo_cookie_consent.web_ui.enabled', $webUi['enabled']);
-        $container->setParameter('nowo_cookie_consent.web_ui.path_prefix', $webUi['path_prefix']);
-        $chrome = AdminChrome::resolve($webUi['chrome'] ?? []);
         $container->setParameter('nowo_cookie_consent.web_ui.layout_template', $webUi['layout_template']);
         $container->setParameter('nowo_cookie_consent.web_ui.templates', $webUi['templates'] + Configuration::PAGE_TEMPLATES);
-        $container->setParameter('nowo_cookie_consent.web_ui.row_actions_display', $chrome['row_actions_display']);
-        $container->setParameter('nowo_cookie_consent.web_ui.css_framework', $webUi['css_framework']);
-        $container->setParameter('nowo_cookie_consent.web_ui.icon_set', $webUi['icon_set']);
         $container->setParameter('nowo_cookie_consent.web_ui.list_page_size', $webUi['list_page_size']);
 
         $security = $config['security'];
@@ -239,22 +225,6 @@ class NowoCookieConsentExtension extends Extension implements PrependExtensionIn
 
         $this->registerPersonalData($container, $personalData);
 
-        if ($container->hasDefinition(CookieConsentAdminTwigExtension::class)) {
-            // Deprecated globals (1.x); the admin pages read the UiKit layout / theme instead.
-            $container->getDefinition(CookieConsentAdminTwigExtension::class)
-                ->setArgument('$layoutTemplate', $webUi['layout_template'] ?? CookieConsentAdminTwigExtension::UI_KIT_ADMIN_LAYOUT)
-                ->setArgument('$cssFramework', $webUi['css_framework'] ?? 'bootstrap5')
-                ->setArgument('$iconSet', $webUi['icon_set'] ?? 'bootstrap-icons')
-                ->setArgument('$chrome', $chrome);
-        }
-
-        if ($container->hasDefinition(AdminPageFactory::class)) {
-            // Deprecated web_ui.chrome.templates.form_theme: applied through FormPage / SettingsSection::$formThemes.
-            $formTheme = $chrome['templates']['form_theme'];
-            $container->getDefinition(AdminPageFactory::class)
-                ->setArgument('$formThemes', $formTheme !== null ? [$formTheme] : []);
-        }
-
         if ($runtimeLocales) {
             // Env var locales are only known at runtime: normalized by a factory when the resolver is created.
             $container->getDefinition(LocaleResolver::class)->setArgument('$enabledLocales', (new Definition('array'))
@@ -264,15 +234,14 @@ class NowoCookieConsentExtension extends Extension implements PrependExtensionIn
 
         $this->registerAccessChecker($container, $security);
         $this->wireEntityManager($container, $entityManagerName);
-        // 1.34 (REQ-ARCH-001 rule 6, opt-in): only with DoctrineBundle (a host without it has no bundle tables).
-        $private = $config['doctrine']['private_entity_manager'] === true && $this->hasDoctrineBundle($container);
+        // 2.0 (REQ-ARCH-001 rule 6): the private entity manager is the only mode on the application's default manager,
+        // with DoctrineBundle (a host without it has no bundle tables). A dedicated doctrine.entity_manager (the DDD
+        // option) is only known once the application's default manager is: CookieConsentPrivateEntityManagerPass
+        // keeps that manager as is (without the private one) unless private_entity_manager is true.
+        $private = $this->hasDoctrineBundle($container);
         $container->setParameter(self::PRIVATE_ENTITY_MANAGER_PARAMETER, $private);
-        if ($this->hasDoctrineBundle($container)) {
-            // 1.35: the deprecation notice and the host-flush probe are decided by CookieConsentHostFlushNoticePass,
-            // which knows the application's default manager.
-            $container->setParameter(self::PRIVATE_ENTITY_MANAGER_SETTING_PARAMETER, $config['doctrine']['private_entity_manager']);
-        }
         if ($private) {
+            $container->setParameter(self::PRIVATE_ENTITY_MANAGER_SETTING_PARAMETER, $config['doctrine']['private_entity_manager']);
             $this->registerPrivateEntityManager($container, $entityManagerName);
         }
         $this->registerConflictAnswer($container, $config['conflict_response'], $entityManagerName, $private);
@@ -486,7 +455,7 @@ class NowoCookieConsentExtension extends Extension implements PrependExtensionIn
     }
 
     /**
-     * 1.34 (REQ-ARCH-001 rule 6, opt-in): `doctrine.private_entity_manager: true`.
+     * 1.34 (REQ-ARCH-001 rule 6), the only mode on the application's default manager since 2.0.
      *
      * The repositories (through a {@see PrivateManagerRegistry}), the admin controllers (their `$entityManager`
      * argument) and the conflict listener work through transaction-doctrine's {@see PrivateEntityManager}, created on
@@ -571,16 +540,46 @@ class NowoCookieConsentExtension extends Extension implements PrependExtensionIn
     }
 
     /**
-     * 1.35: the deprecation notice of `doctrine.private_entity_manager` (null: unset, false) for a host whose bundle
-     * entities are on its default manager; null for `true`.
+     * 2.0: a dedicated `doctrine.entity_manager` (the DDD option) with `doctrine.private_entity_manager` unset: the bundle
+     * reads and writes its entities through that manager, exactly as in 1.x. Drops the private manager registered by
+     * {@see self::load()} and points the repositories, the admin controllers and the conflict listener back at the
+     * dedicated manager ({@see self::wireEntityManager()}). Called by {@see CookieConsentPrivateEntityManagerPass}, which
+     * knows the application's default manager.
+     *
+     * @internal
      */
-    public static function privateEntityManagerNotice(?bool $private): ?string
+    public static function useDedicatedEntityManager(ContainerBuilder $container, string $entityManagerName): void
     {
-        return match ($private) {
-            null    => self::PRIVATE_ENTITY_MANAGER_UNSET_DEPRECATION,
-            false   => self::PRIVATE_ENTITY_MANAGER_FALSE_DEPRECATION,
-            default => null,
-        };
+        foreach ([self::PRIVATE_ENTITY_MANAGER_SERVICE, self::PRIVATE_REGISTRY_SERVICE, self::PRIVATE_MIDDLEWARE_SERVICE, CookieConsentPrivateManagerBoundarySubscriber::class] as $id) {
+            $container->removeDefinition($id);
+        }
+        $container->setParameter(self::PRIVATE_ENTITY_MANAGER_PARAMETER, false);
+
+        $registry = new Reference(self::MANAGER_REGISTRY_SERVICE);
+        foreach ([
+            CookieConsentConfigRepository::class,
+            CookieConsentConfigTranslationRepository::class,
+            CookieDefinitionRepository::class,
+            CookieDefinitionTranslationRepository::class,
+        ] as $repository) {
+            if ($container->hasDefinition($repository)) {
+                $container->getDefinition($repository)->setArgument('$registry', $registry);
+            }
+        }
+
+        $entityManager = new Reference(sprintf('doctrine.orm.%s_entity_manager', $entityManagerName));
+        foreach ([CookieConsentConfigSettingsAdminController::class, CookieDefinitionAdminController::class] as $controller) {
+            if ($container->hasDefinition($controller)) {
+                $definition = $container->getDefinition($controller);
+                $definition->setBindings([EntityManagerInterface::class . ' $entityManager' => $entityManager] + $definition->getBindings());
+            }
+        }
+
+        if ($container->hasDefinition(CookieConsentConflictListener::class)) {
+            $container->getDefinition(CookieConsentConflictListener::class)
+                ->replaceArgument(3, $registry)
+                ->replaceArgument(4, $entityManagerName);
+        }
     }
 
     /**
@@ -630,8 +629,8 @@ class NowoCookieConsentExtension extends Extension implements PrependExtensionIn
     }
 
     /**
-     * Registers the bundle asset package before the FrameworkExtension processes assets (only when symfony/asset is
-     * installed; the package is local, the host's default `base_urls` are not inherited), and seeds UiKit defaults from web_ui when the host has not set nowo_ui_kit (REQ-UI-001-kit).
+     * Registers the FormKit profile and the bundle asset package before the FrameworkExtension processes assets (only
+     * when symfony/asset is installed; the package is local, the host's default `base_urls` are not inherited).
      */
     public function prepend(ContainerBuilder $container): void
     {
@@ -646,64 +645,6 @@ class NowoCookieConsentExtension extends Extension implements PrependExtensionIn
                     ],
                 ],
             ]);
-        }
-
-        $this->prependUiKitDefaults($container);
-    }
-
-    /**
-     * Seeds UiKit from the bundle config when UiKit is installed: the deprecated `web_ui.css_framework` /
-     * `web_ui.icon_set` overrides (when the host has not set nowo_ui_kit's own keys) and the deprecated
-     * `web_ui.chrome` map, bridged into `nowo_ui_kit.theme.bundles.NowoCookieConsentBundle` (REQ-UI-003). Prepended,
-     * so a host's own nowo_ui_kit config still wins.
-     */
-    private function prependUiKitDefaults(ContainerBuilder $container): void
-    {
-        if (!$container->hasExtension('nowo_ui_kit')) {
-            return;
-        }
-
-        // Only the web_ui node is processed here: prepend() sees the raw host config, where other keys may still be
-        // "%parameter%" / env placeholders (e.g. enabled_locales: '%kernel.enabled_locales%', defined by
-        // FrameworkExtension::load() after prepend).
-        $webUiConfigs = [];
-        foreach ($container->getExtensionConfig(Configuration::ALIAS) as $cfg) {
-            if (is_array($cfg['web_ui'] ?? null)) {
-                $webUiConfigs[] = ['web_ui' => $cfg['web_ui']];
-            }
-        }
-        $config = $this->processConfiguration(new Configuration(), $webUiConfigs);
-        $webUi  = is_array($config['web_ui'] ?? null) ? $config['web_ui'] : [];
-
-        $hostHasCssFramework = false;
-        $hostHasIconSet      = false;
-        foreach ($container->getExtensionConfig('nowo_ui_kit') as $cfg) {
-            if (array_key_exists('css_framework', $cfg)) {
-                $hostHasCssFramework = true;
-            }
-            if (array_key_exists('icon_set', $cfg)) {
-                $hostHasIconSet = true;
-            }
-        }
-
-        $defaults = [];
-        $fw       = $webUi['css_framework'] ?? null;
-        if (!$hostHasCssFramework && is_string($fw)) {
-            $defaults['css_framework'] = $fw === 'bootstrap' ? 'bootstrap5' : $fw;
-        }
-        $iconSet = $webUi['icon_set'] ?? null;
-        if (!$hostHasIconSet && is_string($iconSet)) {
-            $defaults['icon_set'] = $iconSet;
-        }
-
-        $chrome = is_array($webUi['chrome'] ?? null) ? $webUi['chrome'] : [];
-        $theme  = AdminChrome::toUiKitTheme($chrome);
-        if ($theme !== []) {
-            $defaults['theme'] = ['bundles' => [AdminChrome::BUNDLE => $theme]];
-        }
-
-        if ($defaults !== []) {
-            $container->prependExtensionConfig('nowo_ui_kit', $defaults);
         }
     }
 

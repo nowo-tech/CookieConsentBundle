@@ -1012,10 +1012,8 @@ use Symfony\Component\Config\Loader\ParamConfigurator as Param;
  * }
  * @psalm-type NowoCookieConsentConfig = array{
  *     doctrine?: array{ // Doctrine DBAL connection and table prefix for cookie consent entities.
- *         connection?: scalar|Param|null, // Deprecated: The "nowo_cookie_consent.doctrine.connection.connection" option is ignored (the bundle always uses the default Doctrine entity manager and connection) and will be removed in 2.0. // Deprecated since 1.15 and ignored: entities are always mapped on the default entity manager/connection. // Default: "default"
  *         table_prefix?: scalar|Param|null, // Prefix prepended to table names (dashboard_cookie_log, dashboard_cookie_config, …). Empty = no prefix. // Default: ""
  *     },
- *     table_prefix?: scalar|Param|null, // Deprecated: Use doctrine.table_prefix instead. // Deprecated. Use doctrine.table_prefix (e.g. "app_" yields app_dashboard_cookie_log). // Default: ""
  *     categories?: list<scalar|Param|null>,
  *     use_logger?: bool|Param, // Persist consent choices to the database when true. // Default: true
  *     use_database_config?: bool|Param, // Load modal copy and display settings from CookieConsentConfig entities when true. // Default: false
@@ -1069,19 +1067,9 @@ use Symfony\Component\Config\Loader\ParamConfigurator as Param;
  *     }>,
  *     web_ui?: array{
  *         enabled?: bool|Param, // When false, admin access subscriber is not registered (routes still load; prefer security firewall). // Default: true
- *         path_prefix?: scalar|Param|null, // Deprecated: The "nowo_cookie_consent.web_ui.path_prefix.path_prefix" option is ignored (admin routes are always /cookie-consent-config/...; use the "prefix" of the routes import to move them) and will be removed in 2.0. // Deprecated since 1.15 and ignored: admin routes are always mounted under /cookie-consent-config (use the import prefix of the bundle routes to move them). // Default: "/cookie-consent-config"
  *         layout_template?: scalar|Param|null, // Per-bundle layout override of the admin pages (REQ-UI-003). Null (default) = the UiKit admin layout (nowo_ui_kit.layouts.admin). The layout must render the UiKit canonical blocks (nowo_ui_content, nowo_ui_page_header, …). // Default: null
  *         templates?: array<string, scalar|Param|null>,
- *         css_framework?: "bootstrap"|"bootstrap4"|"bootstrap5"|"tailwind"|"foundation"|"custom"|"tabler"|"none"|Param|null, // Deprecated: The "nowo_cookie_consent.web_ui.css_framework.css_framework" option is deprecated: the admin pages inherit nowo_ui_kit.css_framework. It will be removed in 2.0. // Deprecated since 1.16: set nowo_ui_kit.css_framework. When set (and nowo_ui_kit.css_framework is not), seeds the UiKit stack. // Default: null
- *         icon_set?: "bootstrap-icons"|"tabler-icons"|"ux_icon"|"svg_inline"|"none"|Param|null, // Deprecated: The "nowo_cookie_consent.web_ui.icon_set.icon_set" option is deprecated: the admin pages inherit nowo_ui_kit.icon_set. It will be removed in 2.0. // Deprecated since 1.16: set nowo_ui_kit.icon_set. When set (and nowo_ui_kit.icon_set is not), seeds the UiKit icon set. // Default: null
  *         list_page_size?: int|Param, // Default page size for admin cookie definition lists. // Default: 20
- *         chrome?: array{ // Deprecated: The "nowo_cookie_consent.web_ui.chrome.chrome" option is deprecated: the admin pages use the UiKit page scaffolds and theme slots; configure nowo_ui_kit.theme.bundles.NowoCookieConsentBundle (see UPGRADING "Template contract"). It will be removed in 2.0. // Deprecated since 1.16 (1.13 admin chrome hooks): bridged into nowo_ui_kit.theme.bundles.NowoCookieConsentBundle; see docs/UPGRADING.md "Template contract".
- *             page_title_tag?: "h1"|"h2"|"h3"|"h4"|"h5"|"h6"|"none"|Param, // Ignored since 1.16: the heading comes from the UiKit page_header partial (override it through theme.partials.page_header). // Default: "h1"
- *             row_actions_display?: "text"|"icon"|"icon_text"|"inherit"|Param, // Row actions display of the cookie list: text | icon | icon_text | inherit (default: nowo_ui_kit.row_actions_display). // Default: "inherit"
- *             classes?: array<string, scalar|Param|null>,
- *             attributes?: array<string, array<string, scalar|Param|null>>,
- *             templates?: array<string, scalar|Param|null>,
- *         },
  *     },
  *     security?: array{
  *         access_checker?: scalar|Param|null, // Optional service id implementing CookieConsentAccessCheckerInterface. // Default: null

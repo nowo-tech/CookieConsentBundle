@@ -41,6 +41,9 @@ final class AdminPageFactory
 {
     public const DOMAIN = 'NowoCookieConsentBundle';
 
+    /** UiKit theme exception key of this bundle (`nowo_ui_kit.theme.bundles.<key>`). */
+    public const BUNDLE = 'NowoCookieConsentBundle';
+
     public const AREA_SETTINGS = 'settings';
 
     public const AREA_COOKIES = 'cookies';
@@ -52,10 +55,12 @@ final class AdminPageFactory
 
     /**
      * @param string|null $layoutTemplate `web_ui.layout_template` (null = UiKit admin layout)
-     * @param string|null $rowActionsDisplay `web_ui.chrome.row_actions_display` (deprecated; null = nowo_ui_kit.row_actions_display)
+     * @param string|null $rowActionsDisplay row actions display of the list (null = nowo_ui_kit.row_actions_display; the
+     *                                       container passes null since 2.0 removed `web_ui.chrome.row_actions_display`)
      * @param array<string, string> $templates `web_ui.templates` (page => template; missing pages use the shipped template)
      * @param list<string> $formThemes form themes of the admin forms (`FormPage` / `SettingsSection::$formThemes`):
-     *                                 the deprecated `web_ui.chrome.templates.form_theme`, else none (host `twig.form_themes`)
+     *                                 none in the container since 2.0 removed `web_ui.chrome.templates.form_theme`
+     *                                 (the host's `twig.form_themes` apply)
      * @param AreaNavRegistry|null $areaNavRegistry UiKit area-nav registry: the page tabs come from the first provider
      *                                              of area `cookie_consent` (a host provider with a higher priority can
      *                                              replace them, or drop them with an empty `AreaNav`); null = {@see self::areaNav()}
@@ -191,7 +196,7 @@ final class AdminPageFactory
                 message: $this->label('cookie_definition.empty'),
                 action: Action::create($newUrl, $this->label('cookie_definition.new')),
             ),
-            bundle: AdminChrome::BUNDLE,
+            bundle: self::BUNDLE,
             layout: $this->layoutTemplate,
             attributes: ['data-testid' => 'cookie-consent-definitions'],
             actionsLabel: $this->label('cookie_definition.table.actions'),
@@ -214,7 +219,7 @@ final class AdminPageFactory
             submitLabel: $this->label('cookie_definition.save'),
             cancelHref: $this->urlGenerator->generate('nowo_cookie_consent_cookie_definitions_index', ['configId' => (int) $config->getId()]),
             cancelLabel: $this->label('cookie_definition.cancel'),
-            bundle: AdminChrome::BUNDLE,
+            bundle: self::BUNDLE,
             layout: $this->layoutTemplate,
             attributes: ['data-testid' => 'cookie-consent-definition-form'],
             formThemes: $this->formThemes,
@@ -250,7 +255,7 @@ final class AdminPageFactory
             ))->withTabs($this->pageTabs($config, self::AREA_SETTINGS)),
             $sections,
             $current->value,
-            bundle: AdminChrome::BUNDLE,
+            bundle: self::BUNDLE,
             layout: $this->layoutTemplate,
             attributes: ['data-testid' => 'cookie-consent-settings'],
         );

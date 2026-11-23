@@ -78,12 +78,9 @@ services:
   Nowo\CookieConsentBundle\Cookie\CookieCheckerInterface:
     alias: Nowo\CookieConsentBundle\Cookie\CookieChecker
 
-  Nowo\CookieConsentBundle\Cookie\CookieHandlerInterface:
-    alias: Nowo\CookieConsentBundle\Cookie\CookieHandler
-
-  # Framework-free twin of CookieHandlerInterface (1.30, REQ-ARCH-001 rule 3): alias it to your own writer.
-  # A separate definition, so decorating or replacing CookieHandler never lands on this port (audit MR-C-M1);
-  # ConsentCookieWriterPass picks the port the listeners call once, at container build.
+  # The consent cookie port (1.30, REQ-ARCH-001 rule 3; the only one since 2.0): alias it to your own writer, or
+  # decorate nowo_cookie_consent.cookie_writer. A separate definition from CookieHandler (audit MR-C-M1);
+  # ConsentCookieWriterPass refuses the removed CookieHandlerInterface and a decorated or replaced CookieHandler.
   nowo_cookie_consent.cookie_writer:
     class: Nowo\CookieConsentBundle\Cookie\CookieHandler
     arguments:
@@ -225,5 +222,4 @@ services:
   Nowo\CookieConsentBundle\Admin\AdminPageFactory:
     arguments:
       $layoutTemplate: '%nowo_cookie_consent.web_ui.layout_template%'
-      $rowActionsDisplay: '%nowo_cookie_consent.web_ui.row_actions_display%'
       $templates: '%nowo_cookie_consent.web_ui.templates%'

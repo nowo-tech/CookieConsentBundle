@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Nowo\CookieConsentBundle\Tests\Integration\Database;
 
+use LogicException;
 use Nowo\CookieConsentBundle\Entity\CookieConsentConfig;
 use Nowo\CookieConsentBundle\Repository\CookieConsentConfigRepository;
 use Nowo\CookieConsentBundle\Tests\Support\PersonalData\ConsentLogDatabase;
@@ -30,13 +31,15 @@ use function trim;
 use const PHP_BINARY;
 
 /**
- * 1.34 `doctrine.private_entity_manager: true` against real servers (REQ-ARCH-001 rule 6 with REQ-RUNTIME-003; CI job
+ * The private entity manager (1.34 opt-in, the only mode on the default manager since 2.0) against real servers (REQ-ARCH-001 rule 6 with REQ-RUNTIME-003; CI job
  * "Real databases", group "database"): the private manager shares the application's connection, so.
  *
  * - a profile save flushes only the private manager: the application's pending change is not written;
  * - a save inside an open application transaction is part of it (savepoint): the application's rollback undoes it;
  * - the "only one default" lock still works: a private save that meets another admin's save waits for it, and exactly
- *   one default profile is left.
+ *   one default profile is left;
+ * - 2.0 (W1-2): a save given the application's manager, or a profile the application's manager loaded, fails before
+ *   anything is written, and the application's pending change stays its own.
  */
 #[Group('database')]
 final class PrivateEntityManagerDatabaseTest extends TestCase
@@ -79,6 +82,36 @@ final class PrivateEntityManagerDatabaseTest extends TestCase
 
         $this->db->entityManager->flush();
         self::assertSame(['saved privately', 'host pending'], $this->names([$first, $second]));
+    }
+
+    public function testASaveOutsideTheBundlesManagerFailsAndWritesNothing(): void
+    {
+        [$first, $second]       = $this->profiles();
+        [$private, $repository] = $this->privateSide($this->db);
+        $host                   = $this->db->entityManager;
+
+        $hostPending = $host->find(CookieConsentConfig::class, $second);
+        self::assertInstanceOf(CookieConsentConfig::class, $hostPending);
+        $hostPending->setName('host pending');
+        $hostLoaded = $host->find(CookieConsentConfig::class, $first);
+        self::assertInstanceOf(CookieConsentConfig::class, $hostLoaded);
+        $hostLoaded->setName('through the application');
+
+        foreach ([$host, $private] as $manager) {
+            try {
+                $repository->saveSettings($hostLoaded, $manager);
+                self::fail('A save outside the bundle\'s manager must fail.');
+            } catch (LogicException $e) {
+                self::assertStringContainsString('Nothing was written', $e->getMessage());
+            }
+        }
+
+        self::assertSame(['first', 'second'], $this->names([$first, $second]), 'nothing written, the application\'s manager not flushed');
+        self::assertSame(0, $host->getConnection()->getTransactionNestingLevel());
+        self::assertTrue($host->contains($hostPending));
+
+        $host->flush();
+        self::assertSame(['through the application', 'host pending'], $this->names([$first, $second]), 'the application commits its own changes');
     }
 
     public function testASaveInsideAnOpenApplicationTransactionIsRolledBackWithIt(): void

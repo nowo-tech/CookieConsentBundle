@@ -6,12 +6,14 @@ namespace Nowo\CookieConsentBundle\Tests\Integration\Kernel;
 
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\Tools\SchemaTool;
+use Nowo\CookieConsentBundle\DependencyInjection\NowoCookieConsentExtension;
 use Nowo\CookieConsentBundle\Entity\CookieConsentConfig;
 use Nowo\CookieConsentBundle\Entity\CookieDefinition;
 use Nowo\CookieConsentBundle\Entity\CookieDefinitionTranslation;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use Symfony\Bundle\FrameworkBundle\KernelBrowser;
+use Symfony\Component\Config\Definition\Exception\InvalidConfigurationException;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -24,8 +26,8 @@ use function sprintf;
 
 /**
  * The admin pages through a real kernel (FrameworkBundle, Twig, Doctrine on SQLite, UiKit, FormKit): UiKit layout by
- * default (no CDN asset, canonical page markers), the web_ui.layout_template / web_ui.templates overrides and the
- * deprecated web_ui.chrome map bridged into the UiKit theme (REQ-UI-003).
+ * default (no CDN asset, canonical page markers), the web_ui.layout_template / web_ui.templates overrides (REQ-UI-003);
+ * the web_ui.chrome map removed in 2.0 fails the build.
  */
 final class AdminPagesKernelTest extends TestCase
 {
@@ -323,11 +325,15 @@ final class AdminPagesKernelTest extends TestCase
         return $out;
     }
 
+    /**
+     * 2.0: the bundle's own (private) manager. Its repositories (also through the application manager's
+     * getRepository()) hand out entities of that manager, so a test that changes them writes through it too.
+     */
     private function entityManager(): EntityManagerInterface
     {
         $container = $this->kernel()->getContainer()->get('test.service_container');
         self::assertInstanceOf(ContainerInterface::class, $container);
-        $em = $container->get('doctrine.orm.entity_manager');
+        $em = $container->get(NowoCookieConsentExtension::PRIVATE_ENTITY_MANAGER_SERVICE);
         self::assertInstanceOf(EntityManagerInterface::class, $em);
 
         return $em;
@@ -376,18 +382,12 @@ final class AdminPagesKernelTest extends TestCase
         self::assertStringNotContainsString('data-nowo-ui-page="settings"', $settings);
     }
 
-    public function testDeprecatedChromeMapIsBridgedIntoTheUiKitTheme(): void
+    public function testTheRemovedChromeMapFailsTheBuild(): void
     {
-        [$configId] = $this->boot(['chrome' => [
-            'classes'    => ['table' => 'host-table', 'button_primary' => 'host-btn'],
-            'attributes' => ['table_panel' => ['data-testid' => 'cookie-consent-definitions-table']],
-        ]]);
+        $this->expectException(InvalidConfigurationException::class);
+        $this->expectExceptionMessage('The "nowo_cookie_consent.web_ui.chrome" option was removed in 2.0');
 
-        $html = (string) $this->get(sprintf('/cookie-consent-config/%d/cookies', $configId))->getContent();
-
-        self::assertMatchesRegularExpression('/<table class="nowo-ui-table nowo-ui-table--striped host-table[ "]/', $html, 'host classes replace the framework defaults');
-        self::assertStringContainsString('data-testid="cookie-consent-definitions-table"', $html);
-        self::assertStringContainsString('host-btn', $html);
+        $this->boot(['chrome' => ['classes' => ['table' => 'host-table']]]);
     }
 
     /**
@@ -442,10 +442,7 @@ final class AdminPagesKernelTest extends TestCase
 
     private function addDefinition(string $name): void
     {
-        $container = $this->kernel()->getContainer()->get('test.service_container');
-        self::assertInstanceOf(ContainerInterface::class, $container);
-        $em = $container->get('doctrine.orm.entity_manager');
-        self::assertInstanceOf(EntityManagerInterface::class, $em);
+        $em     = $this->entityManager();
         $config = $em->getRepository(CookieConsentConfig::class)->findOneBy([]);
         self::assertInstanceOf(CookieConsentConfig::class, $config);
         $definition = (new CookieDefinition())->setName($name)->setCategory('analytics')->setConfig($config);

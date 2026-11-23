@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Nowo\CookieConsentBundle\Tests\Integration;
 
-use Nowo\CookieConsentBundle\Admin\AdminChrome;
 use Nowo\CookieConsentBundle\Admin\AdminPageFactory;
 use Nowo\CookieConsentBundle\Admin\CookieConsentConfigSettingsSection;
 use Nowo\CookieConsentBundle\Tests\Support\AdminPageFixtures;
@@ -26,16 +25,13 @@ use function substr_count;
 
 /**
  * Bundle-specific behaviour of the admin pages on top of the shared page contract: area navigation, cells, row
- * actions behind the UiKit confirm dialog, pagination / empty state, and the deprecated 1.x chrome hooks that have
- * no theme slot (`web_ui.chrome.templates.styles_after|form_theme|form_fields`, `row_actions_display`). The contract
- * assertions also run on the legacy-hook fixtures.
+ * actions behind the UiKit confirm dialog, pagination / empty state, the factory's form themes and row actions display.
+ * 2.0 removed the `web_ui.chrome` hooks (`styles_after`, `form_fields`): the pages never render them. The contract
+ * assertions also run on the fixtures with a factory override.
  */
 final class AdminPagesTemplateTest extends PageContractTestCase
 {
     private const VIEWS = '@NowoCookieConsentBundle/admin/';
-
-    /** @var array<string, mixed> */
-    private array $chrome = [];
 
     public static function pageFixtures(): iterable
     {
@@ -73,7 +69,7 @@ final class AdminPagesTemplateTest extends PageContractTestCase
     protected function configureTwig(Environment $twig): void
     {
         $twig->addExtension(new LocaleTabsTwigExtension());
-        $twig->addExtension(new CookieConsentAdminTwigExtension(chrome: AdminChrome::resolve($this->chrome)));
+        $twig->addExtension(new CookieConsentAdminTwigExtension());
     }
 
     public function testListHeaderCarriesTheAreaNavWithTheCookiesTabActive(): void
@@ -228,14 +224,8 @@ final class AdminPagesTemplateTest extends PageContractTestCase
         self::assertStringNotContainsString('other-translations', $content);
     }
 
-    public function testDeprecatedStylesAfterFormThemeAndFormFieldsStillApply(): void
+    public function testFactoryFormThemesApplyAndTheRemovedChromeHooksNeverRender(): void
     {
-        $this->chrome = ['templates' => [
-            'styles_after' => '@Host/styles.html.twig',
-            'form_theme'   => '@Host/form_theme.html.twig',
-            'form_fields'  => '@Host/fields.html.twig',
-        ]];
-        // web_ui.chrome.templates.form_theme reaches the factory as $formThemes (NowoCookieConsentExtension).
         $factory = AdminPageFixtures::factory(formThemes: ['@Host/form_theme.html.twig']);
 
         foreach ([
@@ -245,14 +235,13 @@ final class AdminPagesTemplateTest extends PageContractTestCase
             $page    = $this->render($template, $context);
             $content = $page->blockHtml('nowo_ui_content');
 
-            self::assertStringContainsString('data-host-styles', $page->blockHtml('nowo_ui_styles'), $template);
-            self::assertStringContainsString('data-host-fields', $content, $template);
+            self::assertStringNotContainsString('data-host-styles', $page->blockHtml('nowo_ui_styles'), $template);
+            self::assertStringNotContainsString('data-host-fields', $content, $template);
             self::assertStringContainsString('data-host-row', $content, $template);
             self::assertSame(1, substr_count($content, '<form'), $template);
         }
 
-        $this->chrome = [];
-        $content      = $this->render(self::VIEWS . 'config/settings.html.twig', AdminPageFixtures::settings())->blockHtml('nowo_ui_content');
+        $content = $this->render(self::VIEWS . 'config/settings.html.twig', AdminPageFixtures::settings())->blockHtml('nowo_ui_content');
         self::assertStringNotContainsString('data-host-', $content);
     }
 
@@ -261,7 +250,7 @@ final class AdminPagesTemplateTest extends PageContractTestCase
      */
     private function renderUiKitPageHeader(PageHeader $header): string
     {
-        return $this->createTwig()->render('@NowoUiKitBundle/partials/_page_header.html.twig', ['header' => $header, 'bundle' => AdminChrome::BUNDLE]);
+        return $this->createTwig()->render('@NowoUiKitBundle/partials/_page_header.html.twig', ['header' => $header, 'bundle' => AdminPageFactory::BUNDLE]);
     }
 
     /**

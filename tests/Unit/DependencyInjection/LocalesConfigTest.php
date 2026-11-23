@@ -76,11 +76,12 @@ final class LocalesConfigTest extends TestCase
         $container->loadFromExtension('nowo_cookie_consent', [
             'enabled_locales' => '%kernel.enabled_locales%',
             'target_routes'   => '%app.consent_routes%',
-            'web_ui'          => ['icon_set' => 'none'],
+            'web_ui'          => ['layout_template' => 'admin/layout.html.twig'],
         ]);
 
         $extension->prepend($container);
 
-        self::assertSame([['icon_set' => 'none']], $container->getExtensionConfig('nowo_ui_kit'));
+        // 2.0: nothing is seeded into UiKit any more (web_ui.css_framework / icon_set / chrome were removed).
+        self::assertSame([], $container->getExtensionConfig('nowo_ui_kit'));
     }
 }

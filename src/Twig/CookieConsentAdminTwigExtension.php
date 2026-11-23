@@ -4,60 +4,47 @@ declare(strict_types=1);
 
 namespace Nowo\CookieConsentBundle\Twig;
 
-use Nowo\CookieConsentBundle\Admin\AdminChrome;
 use Twig\Extension\AbstractExtension;
 use Twig\Extension\GlobalsInterface;
 
 /**
- * Admin Web UI Twig globals.
+ * Admin Web UI Twig global `nowo_cookie_consent_admin_chrome`.
  *
- * Since 1.16 the admin pages extend the UiKit page scaffolds (REQ-UI-003) and only read
- * `nowo_cookie_consent_admin_chrome.templates` (`form_fields`, `styles_after`: deprecated 1.x hooks that have no theme
- * slot; `form_theme` reaches the scaffolds as `FormPage` / `SettingsSection::$formThemes` since UiKit 2.1). The
- * layout / css framework / icon set globals are deprecated and kept for host templates written for 1.x; they are
- * removed in 2.0 together with `web_ui.chrome`.
+ * Since 1.16 the admin pages extend the UiKit page scaffolds (REQ-UI-003) and read the UiKit theme slots. 2.0 removed
+ * `web_ui.chrome` and the deprecated `nowo_cookie_consent_layout_template`, `nowo_cookie_consent_css_framework` and
+ * `nowo_cookie_consent_icon_set` globals; this global keeps the shape it had without `web_ui.chrome` (no classes, no
+ * attributes, no partials) for host templates that still read it.
  */
 final class CookieConsentAdminTwigExtension extends AbstractExtension implements GlobalsInterface
 {
-    /** @deprecated since 1.16, the admin pages use the UiKit layout (`nowo_ui_layout.admin` or `web_ui.layout_template`) */
-    public const GLOBAL_LAYOUT_TEMPLATE = 'nowo_cookie_consent_layout_template';
-
-    /** @deprecated since 1.16, read `nowo_ui_kit_css_framework` */
-    public const GLOBAL_CSS_FRAMEWORK = 'nowo_cookie_consent_css_framework';
-
-    /** @deprecated since 1.16, read `nowo_ui_kit_icon_set` */
-    public const GLOBAL_ICON_SET = 'nowo_cookie_consent_icon_set';
-
     public const GLOBAL_ADMIN_CHROME = 'nowo_cookie_consent_admin_chrome';
 
-    /** Value of the deprecated layout global when `web_ui.layout_template` is null. */
-    public const UI_KIT_ADMIN_LAYOUT = '@NowoUiKit/layout/admin.html.twig';
-
-    /** @var array<string, mixed> */
-    private readonly array $chrome;
-
     /**
-     * @param array<string, mixed> $chrome Resolved admin chrome hooks ({@see AdminChrome::resolve()}); empty = defaults
+     * The value of {@see self::GLOBAL_ADMIN_CHROME}: what 1.x resolved when `web_ui.chrome` was not set.
+     *
+     * @var array{classes: array<string, string|null>, attributes: array<string, array<string, string>>, templates: array<string, string|null>, page_title_tag: string, row_actions_display: string|null}
      */
-    public function __construct(
-        private readonly string $layoutTemplate = self::UI_KIT_ADMIN_LAYOUT,
-        private readonly string $cssFramework = 'bootstrap5',
-        private readonly string $iconSet = 'bootstrap-icons',
-        array $chrome = [],
-    ) {
-        $this->chrome = $chrome === [] ? AdminChrome::resolve() : $chrome;
-    }
+    public const ADMIN_CHROME = [
+        'classes'    => [],
+        'attributes' => [],
+        'templates'  => [
+            'tabs'         => null,
+            'pagination'   => null,
+            'form_theme'   => null,
+            'form_fields'  => null,
+            'styles_after' => null,
+        ],
+        'page_title_tag'      => 'h1',
+        'row_actions_display' => null,
+    ];
 
     /**
+     * Returns the admin Twig globals.
+     *
      * @return array<string, mixed>
      */
     public function getGlobals(): array
     {
-        return [
-            self::GLOBAL_LAYOUT_TEMPLATE => $this->layoutTemplate,
-            self::GLOBAL_CSS_FRAMEWORK   => $this->cssFramework,
-            self::GLOBAL_ICON_SET        => $this->iconSet,
-            self::GLOBAL_ADMIN_CHROME    => $this->chrome,
-        ];
+        return [self::GLOBAL_ADMIN_CHROME => self::ADMIN_CHROME];
     }
 }

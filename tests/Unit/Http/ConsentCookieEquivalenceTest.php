@@ -4,9 +4,11 @@ declare(strict_types=1);
 
 namespace Nowo\CookieConsentBundle\Tests\Unit\Http;
 
+use DateInterval;
 use DateTimeImmutable;
 use DateTimeZone;
 use Nowo\CookieConsentBundle\Clock\SystemClock;
+use Nowo\CookieConsentBundle\Cookie\ConsentCookieJar;
 use Nowo\CookieConsentBundle\Cookie\CookieHandler;
 use Nowo\CookieConsentBundle\Enum\CookieNameEnum;
 use Nowo\CookieConsentBundle\Http\ConsentCookieJarApplier;
@@ -20,8 +22,10 @@ use Symfony\Component\HttpFoundation\Response;
 use function preg_replace;
 
 /**
- * 1.30 (REQ-ARCH-001 rule 3): the framework-free port writes byte-identical `Set-Cookie` headers to the deprecated
- * `CookieHandlerInterface` methods (Secure, HttpOnly, SameSite, path, domain, expiry, raw, order).
+ * 1.30 (REQ-ARCH-001 rule 3): the framework-free port writes byte-identical `Set-Cookie` headers to the 1.x
+ * `CookieHandler::saveCookie()` / `clear()` calls (Secure, HttpOnly, SameSite, path, domain, expiry, raw, order). 2.0
+ * removed those methods; {@see self::legacySave()} / {@see self::legacyClear()} keep their exact Symfony calls as the
+ * reference.
  */
 final class ConsentCookieEquivalenceTest extends TestCase
 {
@@ -45,11 +49,12 @@ final class ConsentCookieEquivalenceTest extends TestCase
     {
         $handler = new CookieHandler($httpOnly, $this->fixedClock());
 
+        $jar    = $handler->consentCookies($categories, 'consent-key-1', $granular);
         $legacy = new Response();
-        $handler->save($categories, 'consent-key-1', $legacy, $granular);
+        $this->legacySave($jar, $httpOnly, $legacy);
 
         $twin = new Response();
-        ConsentCookieJarApplier::apply($handler->consentCookies($categories, 'consent-key-1', $granular), $twin);
+        ConsentCookieJarApplier::apply($jar, $twin);
 
         self::assertSame($this->headers($legacy), $this->headers($twin));
         self::assertSame($this->attributes($legacy), $this->attributes($twin));
@@ -80,11 +85,12 @@ final class ConsentCookieEquivalenceTest extends TestCase
         $handler = new CookieHandler($httpOnly, new SystemClock());
         $request = Request::create('/', 'GET', [], $cookies);
 
+        $jar    = $handler->expiredConsentCookies(ConsentCookieJarApplier::requestCookies($request));
         $legacy = new Response();
-        $handler->clear($request, $legacy);
+        $this->legacyClear($jar, $httpOnly, $legacy);
 
         $twin = new Response();
-        ConsentCookieJarApplier::apply($handler->expiredConsentCookies(ConsentCookieJarApplier::requestCookies($request)), $twin);
+        ConsentCookieJarApplier::apply($jar, $twin);
 
         self::assertSame($this->headers($legacy), $this->headers($twin));
         self::assertSame($this->attributes($legacy), $this->attributes($twin));
@@ -118,6 +124,27 @@ final class ConsentCookieEquivalenceTest extends TestCase
             '/^Cookie_Consent=deleted; expires=[A-Z][a-z]{2}, \d{2} [A-Z][a-z]{2} \d{4} \d{2}:\d{2}:\d{2} GMT; Max-Age=X; path=\/; secure; httponly; samesite=lax$/',
             $lines[0],
         );
+    }
+
+    /**
+     * 1.x `CookieHandler::saveCookie()`: the cookie each value was written with.
+     */
+    private function legacySave(ConsentCookieJar $jar, bool $httpOnly, Response $response): void
+    {
+        $expires = $this->fixedClock()->now()->add(new DateInterval('P1Y'));
+        foreach ($jar->cookies() as $cookie) {
+            $response->headers->setCookie(new Cookie($cookie->name, $cookie->value, $expires, '/', null, true, $httpOnly, false, Cookie::SAMESITE_LAX));
+        }
+    }
+
+    /**
+     * 1.x `CookieHandler::clear()`: the call each expired name was cleared with.
+     */
+    private function legacyClear(ConsentCookieJar $jar, bool $httpOnly, Response $response): void
+    {
+        foreach ($jar->cookies() as $cookie) {
+            $response->headers->clearCookie($cookie->name, '/', null, true, $httpOnly, Cookie::SAMESITE_LAX);
+        }
     }
 
     private function fixedClock(): ClockInterface

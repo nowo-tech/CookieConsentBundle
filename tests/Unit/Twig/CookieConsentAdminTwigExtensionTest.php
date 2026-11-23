@@ -4,45 +4,25 @@ declare(strict_types=1);
 
 namespace Nowo\CookieConsentBundle\Tests\Unit\Twig;
 
-use Nowo\CookieConsentBundle\Admin\AdminChrome;
 use Nowo\CookieConsentBundle\Twig\CookieConsentAdminTwigExtension;
 use PHPUnit\Framework\TestCase;
 
 final class CookieConsentAdminTwigExtensionTest extends TestCase
 {
-    public function testExposesLayoutGlobals(): void
-    {
-        $extension = new CookieConsentAdminTwigExtension(
-            'base.html.twig',
-            'tailwind',
-            'svg_inline',
-        );
-
-        $globals = $extension->getGlobals();
-
-        self::assertSame('base.html.twig', $globals[CookieConsentAdminTwigExtension::GLOBAL_LAYOUT_TEMPLATE]);
-        self::assertSame('tailwind', $globals[CookieConsentAdminTwigExtension::GLOBAL_CSS_FRAMEWORK]);
-        self::assertSame('svg_inline', $globals[CookieConsentAdminTwigExtension::GLOBAL_ICON_SET]);
-    }
-
-    public function testDefaultGlobalsPointAtTheUiKitLayout(): void
+    /**
+     * 2.0: only `nowo_cookie_consent_admin_chrome` is left, with the 1.x value of a host without `web_ui.chrome`; the
+     * deprecated layout / css framework / icon set globals are gone.
+     */
+    public function testOnlyTheAdminChromeGlobalIsLeft(): void
     {
         $globals = (new CookieConsentAdminTwigExtension())->getGlobals();
 
-        self::assertSame(
-            '@NowoUiKit/layout/admin.html.twig',
-            $globals[CookieConsentAdminTwigExtension::GLOBAL_LAYOUT_TEMPLATE],
-        );
-        self::assertSame('bootstrap5', $globals[CookieConsentAdminTwigExtension::GLOBAL_CSS_FRAMEWORK]);
-        self::assertSame('bootstrap-icons', $globals[CookieConsentAdminTwigExtension::GLOBAL_ICON_SET]);
-        self::assertSame(AdminChrome::resolve(), $globals[CookieConsentAdminTwigExtension::GLOBAL_ADMIN_CHROME]);
-    }
-
-    public function testExposesResolvedChrome(): void
-    {
-        $chrome  = AdminChrome::resolve(['page_title_tag' => 'h2']);
-        $globals = (new CookieConsentAdminTwigExtension('base.html.twig', 'tailwind', 'ux_icon', $chrome))->getGlobals();
-
-        self::assertSame($chrome, $globals[CookieConsentAdminTwigExtension::GLOBAL_ADMIN_CHROME]);
+        self::assertSame([CookieConsentAdminTwigExtension::GLOBAL_ADMIN_CHROME => [
+            'classes'             => [],
+            'attributes'          => [],
+            'templates'           => ['tabs' => null, 'pagination' => null, 'form_theme' => null, 'form_fields' => null, 'styles_after' => null],
+            'page_title_tag'      => 'h1',
+            'row_actions_display' => null,
+        ]], $globals);
     }
 }

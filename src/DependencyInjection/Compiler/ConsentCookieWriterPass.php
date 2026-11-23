@@ -7,103 +7,45 @@ namespace Nowo\CookieConsentBundle\DependencyInjection\Compiler;
 use LogicException;
 use Nowo\CookieConsentBundle\Cookie\ConsentCookieWriterInterface;
 use Nowo\CookieConsentBundle\Cookie\CookieHandler;
-use Nowo\CookieConsentBundle\Cookie\CookieHandlerInterface;
-use Nowo\CookieConsentBundle\EventSubscriber\CookieConsentFormSubscriber;
-use Nowo\CookieConsentBundle\EventSubscriber\CookieConsentOutdatedConsentSubscriber;
-use ReflectionMethod;
 use Symfony\Component\DependencyInjection\Compiler\CompilerPassInterface;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
-use Symfony\Component\DependencyInjection\Reference;
 
-use function class_exists;
-use function is_a;
 use function is_string;
 use function sprintf;
-use function trigger_error;
-
-use const E_USER_DEPRECATED;
 
 /**
- * Chooses, once at container build, which consent cookie port the `kernel.response` listeners call (1.30,
- * REQ-ARCH-001 rule 3).
+ * The consent cookie port of the `kernel.response` listeners (1.30, REQ-ARCH-001 rule 3; the only one since 2.0).
  *
- * Runs after decoration and alias resolution (`TYPE_BEFORE_REMOVING`), so it sees the class that really serves each
- * port:
- *
- * 1. `ConsentCookieWriterInterface` points at a host service (or the bundle writer is decorated): that writer.
- * 2. Otherwise the `CookieHandlerInterface` service is the bundle's own `CookieHandler`: the bundle writer.
- * 3. Otherwise the handler is a host service (alias, replaced class, `#[AsDecorator]`): when its class implements
- *    the new port and is not a `CookieHandler` subclass, that service; else no writer, so the listeners call the
- *    deprecated `save()` / `clear()` exactly as in 1.29 (an overridden `saveCookie()` still runs) and one deprecation
- *    is reported here, not on every request.
+ * Since 2.0 the listeners always call `ConsentCookieWriterInterface` (by default `nowo_cookie_consent.cookie_writer`).
+ * In 1.x a host that decorated or replaced the `CookieHandler` service had its class called through the removed
+ * `CookieHandlerInterface`; after 2.0 it would silently stop being called. Runs after decoration and alias resolution
+ * (`TYPE_BEFORE_REMOVING`): when the port is still the bundle's own writer and the `CookieHandler` service is no
+ * longer the bundle's class, the build fails with what to do instead.
  */
 final class ConsentCookieWriterPass implements CompilerPassInterface
 {
     public const WRITER_SERVICE_ID = 'nowo_cookie_consent.cookie_writer';
 
-    private const LISTENERS = [
-        CookieConsentFormSubscriber::class,
-        CookieConsentOutdatedConsentSubscriber::class,
-    ];
-
     /**
-     * Adjusts the container definitions of this bundle during compilation.
+     * Fails the build when a host customisation of the `CookieHandler` service would no longer be called.
      */
     public function process(ContainerBuilder $container): void
     {
-        if (!$container->has(ConsentCookieWriterInterface::class) || !$container->has(CookieHandlerInterface::class)) {
+        if (!$container->has(ConsentCookieWriterInterface::class) || !$container->has(CookieHandler::class)) {
             return;
         }
 
-        $writer = $this->chooseWriter($container);
-
-        foreach (self::LISTENERS as $listenerId) {
-            if (!$container->hasDefinition($listenerId)) {
-                continue;
-            }
-
-            $definition = $container->getDefinition($listenerId);
-            $class      = $this->classOf($container, $listenerId);
-
-            if ($class === null || !is_a($class, $listenerId, true)) {
-                continue; // replaced by the host with an unrelated class
-            }
-
-            $definition->setArgument($this->writerArgumentIndex($listenerId), $writer);
-        }
-    }
-
-    private function chooseWriter(ContainerBuilder $container): ?Reference
-    {
-        $writerId    = $this->resolveId($container, ConsentCookieWriterInterface::class);
-        $writerClass = $this->classOf($container, $writerId);
-
-        if ($writerId !== self::WRITER_SERVICE_ID || $writerClass !== CookieHandler::class) {
-            return new Reference($writerId);
+        if ($this->resolveId($container, ConsentCookieWriterInterface::class) !== self::WRITER_SERVICE_ID) {
+            return; // the host aliased the port to its own writer: CookieHandler is not on the consent path
         }
 
-        $handlerId    = $this->resolveId($container, CookieHandlerInterface::class);
-        $handlerClass = $this->classOf($container, $handlerId);
-
-        if ($handlerClass === CookieHandler::class) {
-            return new Reference(self::WRITER_SERVICE_ID);
+        $handlerId = $this->resolveId($container, CookieHandler::class);
+        $class     = $container->getParameterBag()->resolveValue($container->findDefinition($handlerId)->getClass() ?? $handlerId);
+        if ($handlerId === CookieHandler::class && $class === CookieHandler::class) {
+            return;
         }
 
-        if ($handlerClass !== null
-            && is_a($handlerClass, ConsentCookieWriterInterface::class, true)
-            && !is_a($handlerClass, CookieHandler::class, true)) {
-            return new Reference($handlerId);
-        }
-
-        @trigger_error(sprintf(
-            'Since nowo-tech/cookie-consent-bundle 1.30: the consent cookies are written through the deprecated "%s" (service "%s", class "%s"); implement "%s" instead (removed in 2.0).',
-            CookieHandlerInterface::class,
-            $handlerId,
-            $handlerClass ?? 'unknown',
-            ConsentCookieWriterInterface::class,
-        ), E_USER_DEPRECATED);
-
-        return null;
+        throw new LogicException(sprintf('The "%s" service is decorated or replaced (service "%s", class "%s"). Since 2.0 the consent cookies are written only through "%s" ("%s" was removed): implement that interface and alias it to your service, or decorate "%s". See UPGRADING.md "To 2.0.0".', CookieHandler::class, $handlerId, is_string($class) ? $class : 'unknown', ConsentCookieWriterInterface::class, 'Nowo\\CookieConsentBundle\\Cookie\\CookieHandlerInterface', self::WRITER_SERVICE_ID));
     }
 
     private function resolveId(ContainerBuilder $container, string $id): string
@@ -113,30 +55,5 @@ final class ConsentCookieWriterPass implements CompilerPassInterface
         }
 
         return $id;
-    }
-
-    /**
-     * @return class-string|null
-     */
-    private function classOf(ContainerBuilder $container, string $id): ?string
-    {
-        if (!$container->has($id)) {
-            return null;
-        }
-
-        $class = $container->getParameterBag()->resolveValue($container->findDefinition($id)->getClass() ?? $id);
-
-        return is_string($class) && class_exists($class) ? $class : null;
-    }
-
-    private function writerArgumentIndex(string $listenerClass): int
-    {
-        foreach ((new ReflectionMethod($listenerClass, '__construct'))->getParameters() as $parameter) {
-            if ($parameter->getName() === 'cookieWriter') {
-                return $parameter->getPosition();
-            }
-        }
-
-        throw new LogicException(sprintf('"%s" has no $cookieWriter argument.', $listenerClass)); // @codeCoverageIgnore
     }
 }

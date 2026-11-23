@@ -11,7 +11,6 @@
 {% block nowo_ui_styles %}
     {{ parent() }}
     <link rel="stylesheet" href="{{ asset('nowo-cookie-consent-admin.css', 'nowo_cookie_consent') }}">
-    {%- if nowo_cookie_consent_admin_chrome.templates.styles_after|default(null) %}{{ include(nowo_cookie_consent_admin_chrome.templates.styles_after) }}{% endif -%}
 {% endblock %}
 
 {% block nowo_ui_list_row %}

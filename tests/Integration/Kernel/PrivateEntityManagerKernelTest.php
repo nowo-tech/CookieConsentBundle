@@ -6,6 +6,7 @@ namespace Nowo\CookieConsentBundle\Tests\Integration\Kernel;
 
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\Tools\SchemaTool;
+use LogicException;
 use Nowo\CookieConsentBundle\Config\ConsentProfileView;
 use Nowo\CookieConsentBundle\Config\CookieConsentConfigReaderInterface;
 use Nowo\CookieConsentBundle\DependencyInjection\NowoCookieConsentExtension;
@@ -13,10 +14,13 @@ use Nowo\CookieConsentBundle\Entity\CookieConsentConfig;
 use Nowo\CookieConsentBundle\Entity\CookieDefinition;
 use Nowo\CookieConsentBundle\Repository\CookieConsentConfigRepository;
 use Nowo\CookieConsentBundle\Tests\Integration\Kernel\HostEntity\HostNote;
+use Nowo\CookieConsentBundle\Tests\Integration\Kernel\HostRelation\HostProfileLink;
 use Nowo\TransactionDoctrine\PrivateManager\PrivateEntityManager;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use ReflectionProperty;
 use Symfony\Bundle\FrameworkBundle\KernelBrowser;
+use Symfony\Component\Config\Definition\Exception\InvalidConfigurationException;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -29,10 +33,12 @@ use function memory_get_usage;
 use function sprintf;
 
 /**
- * 1.34 `doctrine.private_entity_manager: true` through a real kernel (Doctrine on one SQLite database, the host entity
- * mapped on the same default manager): the admin saves write the bundle's rows through the private manager and never
- * flush the application's pending changes; the private manager is dropped at the request boundary (worker mode with
- * the kernel kept alive: the browser never reboots it); the config read port answers view objects.
+ * The private entity manager, the only mode on the application's default manager since 2.0, through a real kernel
+ * (Doctrine on one SQLite database, the host entities mapped on the same default manager): the admin saves write the
+ * bundle's rows through the private manager and never flush the application's pending changes; the private manager is
+ * dropped at the request boundary (worker mode with the kernel kept alive: the browser never reboots it); the config
+ * read port answers view objects. Also the 2.0 setting table (unset, `true`, `false`, `entity_manager` naming the
+ * default manager) and the cross-manager rules of lesson W1-2.
  */
 final class PrivateEntityManagerKernelTest extends TestCase
 {
@@ -46,12 +52,17 @@ final class PrivateEntityManagerKernelTest extends TestCase
 
     public function testAdminSavesNeverFlushTheApplicationsPendingChanges(): void
     {
-        $configId = $this->boot(true);
+        $configId = $this->boot();
         $host     = $this->hostManager();
         $private  = $this->privateManager();
 
-        // The application left a change pending in its own manager (its handler has not committed yet).
-        $note = new HostNote();
+        // An existing host row, then pending changes in the application's manager (its handler has not committed yet):
+        // a changed field and a new row.
+        $edited = new HostNote();
+        $host->persist($edited);
+        $host->flush();
+        $edited->title = 'Changed, not flushed';
+        $note          = new HostNote();
         $host->persist($note);
 
         $browser = $this->browser();
@@ -74,18 +85,22 @@ final class PrivateEntityManagerKernelTest extends TestCase
         $connection = $host->getConnection();
         self::assertSame(['_ga', '_gid'], $connection->fetchFirstColumn('SELECT name FROM dashboard_cookie_definition ORDER BY name'));
         self::assertSame('Saved privately', $connection->fetchOne('SELECT name FROM dashboard_cookie_config WHERE id = ?', [$configId]));
-        self::assertSame(0, (int) $connection->fetchOne('SELECT COUNT(*) FROM host_note'), 'the application\'s pending insert was not flushed by the bundle');
+        self::assertSame(1, (int) $connection->fetchOne('SELECT COUNT(*) FROM host_note'), 'the application\'s pending insert was not flushed by the bundle');
+        self::assertNull($connection->fetchOne('SELECT title FROM host_note WHERE id = ?', [$edited->id]), 'nor its changed field');
         self::assertTrue($host->getUnitOfWork()->isScheduledForInsert($note), 'and it is still the application\'s to commit');
+        self::assertTrue($host->contains($edited), 'the bundle never clears or detaches the application\'s manager');
+        self::assertSame('Changed, not flushed', $edited->title);
         self::assertFalse($private->isCreated(), 'the private manager was dropped at the end of the request (kernel.terminate)');
 
         // The application commits its own work whenever it decides to.
         $host->flush();
-        self::assertSame(1, (int) $connection->fetchOne('SELECT COUNT(*) FROM host_note'));
+        self::assertSame(2, (int) $connection->fetchOne('SELECT COUNT(*) FROM host_note'));
+        self::assertSame('Changed, not flushed', $connection->fetchOne('SELECT title FROM host_note WHERE id = ?', [$edited->id]));
     }
 
     public function testRepositoriesAndReadPortUseThePrivateManager(): void
     {
-        $configId = $this->boot(true);
+        $configId = $this->boot();
         $host     = $this->hostManager();
         $private  = $this->privateManager();
         $host->clear();
@@ -120,7 +135,7 @@ final class PrivateEntityManagerKernelTest extends TestCase
      */
     public function testAKeptAliveKernelDropsThePrivateManagerAtEveryRequestWithFlatMemory(): void
     {
-        $configId = $this->boot(true, ['use_logger' => true, 'csrf_protection' => false, 'categories' => ['analytics']]);
+        $configId = $this->boot(null, ['use_logger' => true, 'csrf_protection' => false, 'categories' => ['analytics']]);
         $host     = $this->hostManager();
         $host->clear();
         $private = $this->privateManager();
@@ -156,9 +171,95 @@ final class PrivateEntityManagerKernelTest extends TestCase
         self::assertLessThan(4 * 1024 * 1024, memory_get_usage() - $baseline, 'Memory must stay flat after warm-up.');
     }
 
-    public function testDefaultModeKeepsTheApplicationsManager(): void
+    /**
+     * W1-2: a profile the application's manager holds (loaded through it), or the application's manager itself, never
+     * reaches a bundle save: the save fails before anything is written, and the application's manager is untouched.
+     */
+    public function testASaveWithTheApplicationsManagerOrItsEntityFailsAndWritesNothing(): void
     {
-        $this->boot(false);
+        $configId   = $this->boot();
+        $host       = $this->hostManager();
+        $private    = $this->privateManager();
+        $repository = $this->service(CookieConsentConfigRepository::class);
+        self::assertInstanceOf(CookieConsentConfigRepository::class, $repository);
+        $host->clear();
+
+        $hostHeld = $host->find(CookieConsentConfig::class, $configId);
+        self::assertInstanceOf(CookieConsentConfig::class, $hostHeld);
+        $hostHeld->setName('Through the application');
+        $note = new HostNote();
+        $host->persist($note);
+
+        foreach ([[$hostHeld, $host], [$hostHeld, $private]] as [$config, $manager]) {
+            try {
+                $repository->saveSettings($config, $manager);
+                self::fail('A save outside the bundle\'s manager must fail.');
+            } catch (LogicException $e) {
+                self::assertStringContainsString('saveSettings() needs the bundle\'s entity manager and an entity it holds', $e->getMessage());
+                self::assertStringContainsString('Nothing was written', $e->getMessage());
+            }
+        }
+
+        $connection = $host->getConnection();
+        self::assertSame('Public site', $connection->fetchOne('SELECT name FROM dashboard_cookie_config WHERE id = ?', [$configId]));
+        self::assertSame(0, (int) $connection->fetchOne('SELECT COUNT(*) FROM host_note'), 'the application\'s manager was not flushed');
+        self::assertTrue($host->getUnitOfWork()->isScheduledForInsert($note));
+        self::assertSame(1, (int) $connection->fetchOne('SELECT row_version FROM dashboard_cookie_config WHERE id = ?', [$configId]), 'no version advanced');
+
+        // Loaded through the bundle's repository and saved with the bundle's manager: written, once.
+        $own = $repository->find($configId);
+        self::assertInstanceOf(CookieConsentConfig::class, $own);
+        $repository->saveSettings($own->setName('Through the bundle'), $private);
+        self::assertSame('Through the bundle', $connection->fetchOne('SELECT name FROM dashboard_cookie_config WHERE id = ?', [$configId]));
+        self::assertSame(1, (int) $connection->fetchOne('SELECT COUNT(*) FROM dashboard_cookie_config'), 'no duplicate row');
+    }
+
+    /**
+     * W1-2: a host entity related to a bundle entity is written by the application's manager through
+     * `getReference()`; the bundle's later saves do not touch it.
+     */
+    public function testAHostEntityReferencingABundleEntityIsWrittenByTheApplication(): void
+    {
+        $configId = $this->boot();
+        $host     = $this->hostManager();
+        $host->clear();
+
+        $link          = new HostProfileLink();
+        $link->profile = $host->getReference(CookieConsentConfig::class, $configId);
+        $host->persist($link);
+        $host->flush();
+
+        self::assertSame($configId, (int) $host->getConnection()->fetchOne('SELECT profile_id FROM host_profile_link WHERE id = ?', [$link->id]));
+
+        $repository = $this->service(CookieConsentConfigRepository::class);
+        self::assertInstanceOf(CookieConsentConfigRepository::class, $repository);
+        $own = $repository->find($configId);
+        self::assertInstanceOf(CookieConsentConfig::class, $own);
+        self::assertNotSame($link->profile, $own, 'two managers, two instances: compare by id');
+        $repository->saveSettings($own->setName('Renamed'), $this->privateManager());
+        self::assertSame(1, (int) $host->getConnection()->fetchOne('SELECT COUNT(*) FROM host_profile_link'));
+    }
+
+    /**
+     * @return iterable<string, array{array<string, mixed>}>
+     */
+    public static function privateSettings(): iterable
+    {
+        yield 'unset' => [[]];
+        yield 'true (deprecated no-op)' => [['private_entity_manager' => true]];
+        yield 'entity_manager naming the default manager' => [['entity_manager' => 'default']];
+    }
+
+    /**
+     * The 2.0 setting table on the default manager: the bundle's repositories always answer entities of the private
+     * manager, never of the application's.
+     *
+     * @param array<string, mixed> $doctrine
+     */
+    #[DataProvider('privateSettings')]
+    public function testEverySettingOnTheDefaultManagerUsesThePrivateManager(array $doctrine): void
+    {
+        $this->boot(null, ['doctrine' => $doctrine]);
         $host = $this->hostManager();
         $host->clear();
 
@@ -166,28 +267,45 @@ final class PrivateEntityManagerKernelTest extends TestCase
         self::assertInstanceOf(CookieConsentConfigRepository::class, $repository);
         $config = $repository->findDefaultEnabled();
         self::assertInstanceOf(CookieConsentConfig::class, $config);
-        self::assertTrue($host->contains($config), '1.x behaviour unchanged');
-        self::assertFalse($this->container()->has(NowoCookieConsentExtension::PRIVATE_ENTITY_MANAGER_SERVICE));
+        self::assertTrue($this->privateManager()->contains($config));
+        self::assertFalse($host->contains($config));
+    }
+
+    public function testFalseFailsTheBuild(): void
+    {
+        $this->expectException(InvalidConfigurationException::class);
+        $this->expectExceptionMessage('"nowo_cookie_consent.doctrine.private_entity_manager: false" was removed in 2.0');
+
+        $this->boot(false);
     }
 
     /**
      * @param array<string, mixed> $bundleConfig
      */
-    private function boot(bool $private, array $bundleConfig = []): int
+    private function boot(?bool $private = null, array $bundleConfig = []): int
     {
         $this->kernel = new CookieConsentTestKernel(false, $bundleConfig + [
             'use_database_config' => true,
             'web_ui'              => ['enabled' => true],
             'security'            => ['allow_unauthenticated' => true],
-            'doctrine'            => ['private_entity_manager' => $private],
+            'doctrine'            => $private === null ? [] : ['private_entity_manager' => $private],
         ], doctrineConfig: [
             'dbal' => ['url' => 'sqlite:///:memory:'],
-            'orm'  => ['mappings' => ['Host' => [
-                'type'      => 'attribute',
-                'is_bundle' => false,
-                'dir'       => __DIR__ . '/HostEntity',
-                'prefix'    => 'Nowo\\CookieConsentBundle\\Tests\\Integration\\Kernel\\HostEntity',
-            ]]],
+            'orm'  => ['mappings' => [
+                'Host' => [
+                    'type'      => 'attribute',
+                    'is_bundle' => false,
+                    'dir'       => __DIR__ . '/HostEntity',
+                    'prefix'    => 'Nowo\\CookieConsentBundle\\Tests\\Integration\\Kernel\\HostEntity',
+                ],
+                // W1-2: a host entity with a ManyToOne to a bundle entity (same default manager).
+                'HostRelation' => [
+                    'type'      => 'attribute',
+                    'is_bundle' => false,
+                    'dir'       => __DIR__ . '/HostRelation',
+                    'prefix'    => 'Nowo\\CookieConsentBundle\\Tests\\Integration\\Kernel\\HostRelation',
+                ],
+            ]],
         ], publicIds: [CookieConsentConfigReaderInterface::class]);
         $this->kernel->boot();
 
