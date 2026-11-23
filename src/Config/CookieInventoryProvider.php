@@ -79,10 +79,7 @@ final class CookieInventoryProvider implements ResetInterface
      */
     public function clearRuntimeCache(): void
     {
-        $this->normalizedYamlInventory     = null;
-        $this->definitionsByConfigKey      = [];
-        $this->localeListCache             = [];
-        $this->hasDatabaseDefinitionsCache = [];
+        $this->reset();
     }
 
     /**
@@ -90,7 +87,10 @@ final class CookieInventoryProvider implements ResetInterface
      */
     public function reset(): void
     {
-        $this->clearRuntimeCache();
+        $this->normalizedYamlInventory     = null;
+        $this->definitionsByConfigKey      = [];
+        $this->localeListCache             = [];
+        $this->hasDatabaseDefinitionsCache = [];
     }
 
     /**

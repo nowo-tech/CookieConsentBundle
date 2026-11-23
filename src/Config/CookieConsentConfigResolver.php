@@ -43,7 +43,7 @@ final class CookieConsentConfigResolver implements ResetInterface
      */
     public function clearRuntimeCache(): void
     {
-        $this->resolvedByLocaleAndRoute = [];
+        $this->reset();
     }
 
     /**
@@ -51,7 +51,7 @@ final class CookieConsentConfigResolver implements ResetInterface
      */
     public function reset(): void
     {
-        $this->clearRuntimeCache();
+        $this->resolvedByLocaleAndRoute = [];
     }
 
     /**
