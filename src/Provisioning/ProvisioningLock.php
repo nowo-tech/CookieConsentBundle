@@ -25,18 +25,23 @@ use function usleep;
  * seeders never both find "no default profile" and both create one. Stateless. Every wait is bounded by
  * {@see WAIT_SECONDS}, then {@see TransientStorageFailure} (retried by the provisioner).
  *
- * Outside a transaction (the normal case: a console seeder) the lock is a SESSION lock taken before the call's
- * transaction begins and released after its commit or rollback, so the transaction's snapshot is always taken after
- * the lock (correct under READ COMMITTED, REPEATABLE READ and SERIALIZABLE):
+ * Outside a transaction (the normal case: a console seeder):
  *
- * - MySQL / MariaDB: `GET_LOCK()` (per database);
- * - PostgreSQL: `pg_try_advisory_lock()`, polled (never an unbounded wait, whatever the server's `lock_timeout`).
+ * - MySQL / MariaDB: a SESSION lock, `GET_LOCK()` (per database), taken before the call's transaction begins and
+ *   released after its commit or rollback, so the transaction's snapshot is always taken after the lock. A session
+ *   lock needs the transaction's own session: session pooling (or a direct connection), and no persistent
+ *   connections, which could keep the lock of a process that died mid-call;
+ * - PostgreSQL (1.36.1, audit ZAH-11): a TRANSACTION lock, so it works behind a transaction-pooling PgBouncer and is
+ *   released by the COMMIT or ROLLBACK, even when the process dies. The call's own transaction first sets READ
+ *   COMMITTED (`SET TRANSACTION ISOLATION LEVEL READ COMMITTED`, before any query), then takes
+ *   `pg_try_advisory_xact_lock()`, polled (never an unbounded wait, whatever the server's `lock_timeout`): every
+ *   statement after the lock sees the other seeder's commit, whatever the server's default isolation level.
  *
  * Inside a transaction of the caller:
  *
- * - PostgreSQL: a transaction-level lock (`pg_try_advisory_xact_lock()`, polled), held until the caller's commit;
- *   only under READ COMMITTED (a REPEATABLE READ / SERIALIZABLE snapshot may predate the other seeder's commit), any
- *   other isolation level is refused with {@see LogicException};
+ * - PostgreSQL: the same transaction-level lock, held until the caller's commit; only under READ COMMITTED (a
+ *   REPEATABLE READ / SERIALIZABLE snapshot may predate the other seeder's commit, and the caller's isolation cannot
+ *   be changed any more), any other isolation level is refused with {@see LogicException};
  * - MySQL / MariaDB: refused with {@see LogicException} (a session lock would be released before the caller's commit);
  * - other platforms (SQLite: one writer at a time): no lock.
  *
@@ -75,7 +80,7 @@ final class ProvisioningLock
         }
 
         if ($platform instanceof AbstractMySQLPlatform) {
-            $name = self::NAME . ':' . substr(hash('sha256', (string) $connection->getDatabase()), 0, 16);
+            $name = self::mysqlLockName($connection);
             if ((int) $connection->fetchOne('SELECT GET_LOCK(?, ?)', [$name, $waitSeconds]) !== 1) {
                 throw self::busy();
             }
@@ -83,24 +88,19 @@ final class ProvisioningLock
             return $name;
         }
 
-        if ($platform instanceof PostgreSQLPlatform) {
-            self::poll($connection, 'SELECT pg_try_advisory_lock(?)', $waitSeconds);
-
-            return 'pgsql';
-        }
-
         return null;
     }
 
     /**
-     * Inside a transaction of the caller on PostgreSQL: the transaction-level lock (the first statement of the call's
-     * savepoint). Nothing in every other case (the session lock is held, or the platform needs none).
+     * PostgreSQL: the transaction-level lock, the first statements of the call's transaction (outermost: READ COMMITTED
+     * set first) or of its savepoint (inside a transaction of the caller, which must be READ COMMITTED). Nothing on
+     * the other platforms (the session lock is held, or the platform needs none).
      *
      * @param string|null $sessionLock What {@see acquireSession()} answered
      * @param float $waitSeconds Longest wait (tests shorten it)
      *
      * @throws TransientStorageFailure When another provisioning call held the lock for the whole wait
-     * @throws LogicException Under REPEATABLE READ or SERIALIZABLE
+     * @throws LogicException Inside a transaction of the caller that is not READ COMMITTED
      */
     public static function acquireTransaction(Connection $connection, ?string $sessionLock, float $waitSeconds = self::WAIT_SECONDS): void
     {
@@ -108,8 +108,10 @@ final class ProvisioningLock
             return;
         }
 
-        $isolation = strtolower(trim((string) $connection->fetchOne('SHOW transaction_isolation')));
-        if ($isolation !== 'read committed') {
+        if ($connection->getTransactionNestingLevel() <= 1) {
+            // The call's own transaction: no query ran in it yet, so its isolation level can still be set.
+            $connection->executeStatement('SET TRANSACTION ISOLATION LEVEL READ COMMITTED');
+        } elseif (($isolation = strtolower(trim((string) $connection->fetchOne('SHOW transaction_isolation')))) !== 'read committed') {
             throw new LogicException('Cookie consent provisioning inside a transaction on PostgreSQL needs READ COMMITTED (got "' . $isolation . '"): an older snapshot cannot see another seeder\'s default profile. Call it outside your transaction.');
         }
 
@@ -117,7 +119,7 @@ final class ProvisioningLock
     }
 
     /**
-     * Releases the session lock. A failure is ignored: a lost connection released it already.
+     * Releases the MySQL / MariaDB session lock. A failure is ignored: a lost connection released it already.
      */
     public static function release(Connection $connection, ?string $sessionLock): void
     {
@@ -126,16 +128,18 @@ final class ProvisioningLock
         }
 
         try {
-            if ($sessionLock === 'pgsql') {
-                $connection->fetchOne('SELECT pg_advisory_unlock(?)', [self::postgresKey()]);
-
-                return;
-            }
-
             $connection->fetchOne('SELECT RELEASE_LOCK(?)', [$sessionLock]);
         } catch (Throwable) {
             // The server releases a session lock when the session ends.
         }
+    }
+
+    /**
+     * The MySQL / MariaDB lock name: per database (lock names are per server), 49 characters.
+     */
+    public static function mysqlLockName(Connection $connection): string
+    {
+        return self::NAME . ':' . substr(hash('sha256', (string) $connection->getDatabase()), 0, 16);
     }
 
     /**

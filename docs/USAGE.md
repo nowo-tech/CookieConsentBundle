@@ -588,7 +588,8 @@ What it does:
   (or the entity default when the profile is created), so the admin pages own the rest. The re-consent state
   (`revision`, `reconsent_required_at`) is not provisioned. The same goes for copies and cookies: a
   `ProfileTranslationSpec` always writes its four required texts, and an optional text only when it is given (null,
-  or a key missing from `fromArray()`, keeps the stored text an admin may have edited; `""` clears it). A
+  or a key missing from `fromArray()`, keeps the stored text an admin may have edited; `""` clears it: stored as null,
+  as the admin form stores a blank field, so the modal shows the bundle's default text again). A
   `CookieDefinitionSpec` writes only the fields given (a cookie whose `category` is omitted keeps its category, it is
   never reclassified); a new cookie takes the entity defaults for the rest (category `required`). As on the admin
   page, a `required` cookie is always pre-ticked: `allowedByDefault: false` with an effective `required` category is
@@ -617,16 +618,23 @@ What it does:
   rule, several are). A disabled default does not count: the port then creates a new, enabled default profile, which
   turns the banner on again (the disabled row keeps its flag). Creating one clears the default flag of any other
   enabled profile, as the admin save does.
-- **Two seeders at once** (REQ-RUNTIME-003): every call holds the bundle's provisioning lock, a session lock taken
-  before its transaction begins (MySQL / MariaDB `GET_LOCK()`, PostgreSQL `pg_try_advisory_lock()` polled; SQLite has
-  one writer at a time), so the second seeder waits, then finds the first one's rows under any isolation level: never
-  two default profiles or the same cookie twice. The enabled profiles are then read with `SELECT ... FOR UPDATE`, as
+- **Two seeders at once** (REQ-RUNTIME-003): every call holds the bundle's provisioning lock, so the second seeder
+  waits, then finds the first one's rows under any server isolation level: never two default profiles or the same
+  cookie twice.
+  - MySQL / MariaDB: a session lock, `GET_LOCK()`, taken before the call's transaction begins. It needs the
+    transaction's own session: a direct connection or session pooling (not ProxySQL multiplexing or another
+    transaction pool), and no persistent connections (a process that dies mid-call would leave the lock on a reused
+    session).
+  - PostgreSQL (1.36.1): a transaction lock, `pg_try_advisory_xact_lock()` polled, the first statement of the call's
+    own transaction after `SET TRANSACTION ISOLATION LEVEL READ COMMITTED`. The COMMIT or ROLLBACK releases it, so it
+    works behind a transaction-pooling PgBouncer and never outlives a failed call.
+  - SQLite has one writer at a time. The enabled profiles are then read with `SELECT ... FOR UPDATE`, as
   the admin "make default" save does, so a seeder and an admin making a profile the default at the same moment also
   leave one default. Every wait for the provisioning lock is bounded (10 seconds), then `TransientStorageFailure`. A
   unique key refusing a write (an admin adding the same cookie at that moment) and a lock conflict are retried (3
   attempts outside a transaction, then `CookieConsentProvisioningException` / `TransientStorageFailure`).
-- **Inside a transaction of yours** there is one attempt and your commit decides. On PostgreSQL the lock is then a
-  transaction-level one held until your commit, under READ COMMITTED only (REPEATABLE READ / SERIALIZABLE are refused
+- **Inside a transaction of yours** there is one attempt and your commit decides. On PostgreSQL the lock is then held
+  until your commit, and your transaction must be READ COMMITTED (its isolation can no longer be changed) (REPEATABLE READ / SERIALIZABLE are refused
   with a `LogicException`: an older snapshot cannot see another seeder's profile). On MySQL / MariaDB the call is
   refused with a `LogicException` (a session lock would be released before your commit): call the port outside your
   transaction, as a console seeder does.

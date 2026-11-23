@@ -373,7 +373,7 @@ final class CookieConsentProvisionerTest extends TestCase
 
         $cleared = $this->provisioner->ensureDefaultProfile(DefaultProfileSpec::create()->withTranslation(new ProfileTranslationSpec('en', 'Cookies', 'We use cookies.', 'Accept all', 'Only necessary', consentModalFooter: '')));
         self::assertSame(1, $cleared->updated);
-        self::assertContains($this->connection()->fetchOne("SELECT consent_modal_footer FROM dashboard_cookie_config_translation WHERE locale = 'en'"), ['', null]);
+        self::assertNull($this->connection()->fetchOne("SELECT consent_modal_footer FROM dashboard_cookie_config_translation WHERE locale = 'en'"), 'ZAH-12: stored null, as the admin form: the bundle default shows again');
     }
 
     public function testTheEffectiveLayoutCombinationMustBeOneTheAdminFormOffers(): void

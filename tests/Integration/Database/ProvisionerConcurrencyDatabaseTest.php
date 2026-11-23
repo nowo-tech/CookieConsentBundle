@@ -6,6 +6,8 @@ namespace Nowo\CookieConsentBundle\Tests\Integration\Database;
 
 use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\Platforms\PostgreSQLPlatform;
+use Doctrine\ORM\Events;
+use LogicException;
 use Nowo\CookieConsentBundle\Entity\CookieConsentConfig;
 use Nowo\CookieConsentBundle\Entity\CookieDefinition;
 use Nowo\CookieConsentBundle\Provisioning\CookieConsentProvisioner;
@@ -16,6 +18,7 @@ use Nowo\CookieConsentBundle\Provisioning\DefaultProfileSpec;
 use Nowo\CookieConsentBundle\Provisioning\ProfileTranslationSpec;
 use Nowo\CookieConsentBundle\Provisioning\ProvisioningLock;
 use Nowo\CookieConsentBundle\Tests\Support\PersonalData\ConsentLogDatabase;
+use Nowo\CookieConsentBundle\Tests\Support\Provisioning\FlushProbe;
 use Nowo\TransactionDoctrine\PrivateManager\PrivateEntityManager;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Group;
@@ -190,6 +193,41 @@ final class ProvisionerConcurrencyDatabaseTest extends TestCase
         self::assertGreaterThan(0.5, $waited, 'the seeder waited for the admin\'s row locks');
         self::assertSame([0, 1, 0], $result['profile'], 'it updated the admin\'s default');
         self::assertSame([(string) $id], $this->column('SELECT id FROM dashboard_cookie_config WHERE is_default = ? AND enabled = ?', [true, true], ['boolean', 'boolean']));
+    }
+
+    /**
+     * Audit ZAH-14: a failed provisioning call leaves no lock behind on its (still open, reused) connection: the
+     * PostgreSQL transaction lock ends with the rollback, the MySQL / MariaDB session lock is released in `finally`.
+     * Another seeder then gets the lock at once.
+     */
+    public function testAFailedCallReleasesTheLock(): void
+    {
+        $connection = $this->connection();
+        $probe      = new FlushProbe(static function (): never {
+            throw new LogicException('Host listener failure');
+        });
+        $this->db->entityManager->getEventManager()->addEventListener([Events::onFlush], $probe);
+
+        try {
+            self::seed($this->provisioner());
+            self::fail('Expected the host listener failure.');
+        } catch (LogicException $exception) {
+            self::assertSame('Host listener failure', $exception->getMessage());
+        } finally {
+            $this->db->entityManager->getEventManager()->removeEventListener([Events::onFlush], $probe);
+        }
+
+        self::assertSame(0, $connection->getTransactionNestingLevel());
+        if ($connection->getDatabasePlatform() instanceof PostgreSQLPlatform) {
+            self::assertSame(0, (int) $connection->fetchOne("SELECT COUNT(*) FROM pg_locks WHERE locktype = 'advisory' AND pid = pg_backend_pid()"), 'no advisory lock left on this session');
+        } else {
+            self::assertSame(1, (int) $connection->fetchOne('SELECT IS_FREE_LOCK(?)', [ProvisioningLock::mysqlLockName($connection)]), 'no GET_LOCK() left on any session');
+        }
+
+        $started = hrtime(true);
+        $theirs  = $this->finish($this->start(microtime(true)));
+        self::assertLessThan(5.0, (hrtime(true) - $started) / 1e9, 'the other seeder did not wait for a leftover lock');
+        self::assertSame([1, 0, 0], $theirs['profile']);
     }
 
     public static function setIsolation(Connection $connection, string $isolation): void
