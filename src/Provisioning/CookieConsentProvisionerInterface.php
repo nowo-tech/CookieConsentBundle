@@ -26,7 +26,8 @@ use Nowo\TransactionContract\TransientStorageFailure;
  * - **Only what is given.** Settings, optional texts and cookie fields the specification does not give keep their
  *   stored values.
  * - **Concurrency-safe** (REQ-RUNTIME-003). Every call holds the bundle's provisioning lock ({@see ProvisioningLock}:
- *   a session lock taken before the transaction, bounded wait) and reads the enabled profiles `FOR UPDATE`, so two
+ *   MySQL / MariaDB `GET_LOCK()` before the transaction, PostgreSQL a transaction lock in the call's own READ COMMITTED
+ *   transaction; bounded wait) and reads the enabled profiles `FOR UPDATE`, so two
  *   seeders, or a seeder and an admin "make default" save, never leave two default profiles or the same cookie twice.
  *   A unique key refusing a write and a lock conflict are retried (3 attempts outside a transaction; one inside yours,
  *   which MySQL / MariaDB refuse and PostgreSQL allows under READ COMMITTED only). An item whose stored values change

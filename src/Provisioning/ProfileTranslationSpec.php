@@ -7,6 +7,7 @@ namespace Nowo\CookieConsentBundle\Provisioning;
 use function array_filter;
 use function array_key_exists;
 use function array_keys;
+use function in_array;
 use function preg_match;
 use function sprintf;
 
@@ -15,7 +16,7 @@ use function sprintf;
  *
  * The four required texts are always written. An optional text is written only when it is given: null (or a key
  * missing from {@see fromArray()}) keeps the stored value, so a text an admin edited is never cleared by a seeder that
- * does not manage it; an empty string clears it. The grouped preference sections of the translation are not managed
+ * does not manage it; an empty string clears it (stored as null, as the admin form does: back to the bundle's default text). The grouped preference sections of the translation are not managed
  * and keep their stored value. Natural key: the locale, compared byte for byte (`===`, REQ-SEC-006).
  *
  * Every text is checked against its column length when the object is built; the privacy route must be a route name
@@ -56,7 +57,7 @@ final readonly class ProfileTranslationSpec
      * @param string $consentModalDescription Text of the consent modal
      * @param string $consentModalAcceptAllBtn "Accept all" button (max 30)
      * @param string $consentModalAcceptNecessaryBtn "Only necessary" button (max 30)
-     * @param string|null $consentModalLabel Accessible label of the consent modal (max 100). Every optional text: null keeps the stored value, "" clears it
+     * @param string|null $consentModalLabel Accessible label of the consent modal (max 100). Every optional text: null keeps the stored value, "" clears it (stored null: the bundle default shows)
      * @param string|null $consentModalShowPreferencesBtn "Preferences" button (max 30)
      * @param string|null $consentModalFooter Footer of the consent modal
      * @param string|null $preferencesModalTitle Title of the preferences modal (max 100)
@@ -137,13 +138,15 @@ final readonly class ProfileTranslationSpec
 
     /**
      * The texts provisioning writes, by field name (keys of {@see FIELDS}): the required ones and the optional ones that
-     * were given (not null).
+     * were given (not null). An optional text given as "" is written as null (1.36.1, audit ZAH-12), as the admin form
+     * stores a blank field: the modal then shows the bundle's default text again (the configured `privacy_route` for
+     * the privacy link).
      *
-     * @return array<string, string>
+     * @return array<string, string|null>
      */
     public function texts(): array
     {
-        return array_filter([
+        $given = array_filter([
             'consentModalTitle'                  => $this->consentModalTitle,
             'consentModalDescription'            => $this->consentModalDescription,
             'consentModalAcceptAllBtn'           => $this->consentModalAcceptAllBtn,
@@ -158,5 +161,13 @@ final readonly class ProfileTranslationSpec
             'preferencesModalCloseIconLabel'     => $this->preferencesModalCloseIconLabel,
             'privacyRoute'                       => $this->privacyRoute,
         ], static fn (?string $text): bool => $text !== null);
+
+        foreach ($given as $field => $text) {
+            if ($text === '' && !in_array($field, self::REQUIRED_FIELDS, true)) {
+                $given[$field] = null;
+            }
+        }
+
+        return $given;
     }
 }

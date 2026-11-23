@@ -72,35 +72,45 @@ final class ProvisioningLockTest extends TestCase
         $connection->method('fetchOne')->willThrowException(new RuntimeException('gone away'));
 
         ProvisioningLock::release($connection, 'name');
-        ProvisioningLock::release($connection, 'pgsql');
         ProvisioningLock::release($connection, null);
         $this->addToAssertionCount(1);
     }
 
-    public function testPostgreSqlPollsASessionLockAndReleasesIt(): void
+    /**
+     * 1.36.1 (audit ZAH-11): no session lock on PostgreSQL. The call's own transaction is set to READ COMMITTED before
+     * any query, then the transaction-level lock is polled (released by the COMMIT / ROLLBACK, pooler-safe).
+     */
+    public function testPostgreSqlPollsATransactionLockInTheCallsOwnReadCommittedTransaction(): void
     {
-        $connection = $this->connection(new PostgreSQLPlatform());
-        $answers    = [false, 'f', true, true];
-        $calls      = [];
-        $connection->method('fetchOne')->willReturnCallback(static function (string $sql, array $params = []) use (&$calls, &$answers): mixed {
+        $connection = $this->connection(new PostgreSQLPlatform(), 1);
+        $statements = [];
+        $connection->method('executeStatement')->willReturnCallback(static function (string $sql) use (&$statements): int {
+            $statements[] = $sql;
+
+            return 0;
+        });
+        $answers = [false, 'f', true];
+        $calls   = [];
+        $connection->method('fetchOne')->willReturnCallback(static function (string $sql) use (&$calls, &$answers): mixed {
             $calls[] = $sql;
 
             return array_shift($answers);
         });
 
-        $lock = ProvisioningLock::acquireSession($connection);
-        self::assertSame('pgsql', $lock);
-        ProvisioningLock::acquireTransaction($connection, $lock);
-        ProvisioningLock::release($connection, $lock);
+        self::assertNull(ProvisioningLock::acquireSession($connection));
+        ProvisioningLock::acquireTransaction($connection, null);
+        ProvisioningLock::release($connection, null);
 
-        self::assertSame(['SELECT pg_try_advisory_lock(?)', 'SELECT pg_try_advisory_lock(?)', 'SELECT pg_try_advisory_lock(?)', 'SELECT pg_advisory_unlock(?)'], $calls);
+        self::assertSame(['SET TRANSACTION ISOLATION LEVEL READ COMMITTED'], $statements);
+        self::assertSame(['SELECT pg_try_advisory_xact_lock(?)', 'SELECT pg_try_advisory_xact_lock(?)', 'SELECT pg_try_advisory_xact_lock(?)'], $calls);
         self::assertGreaterThan(0, ProvisioningLock::postgresKey());
     }
 
     public function testPostgreSqlInsideAReadCommittedTransactionTakesATransactionLock(): void
     {
-        $connection = $this->connection(new PostgreSQLPlatform(), 1);
-        $answers    = ['read committed', 1];
+        $connection = $this->connection(new PostgreSQLPlatform(), 2);
+        $connection->expects(self::never())->method('executeStatement');
+        $answers = ['read committed', 1];
         $connection->method('fetchOne')->willReturnCallback(static function () use (&$answers): mixed {
             return array_shift($answers);
         });
@@ -112,7 +122,7 @@ final class ProvisioningLockTest extends TestCase
 
     public function testPostgreSqlInsideARepeatableReadTransactionIsRefused(): void
     {
-        $connection = $this->connection(new PostgreSQLPlatform(), 1);
+        $connection = $this->connection(new PostgreSQLPlatform(), 2);
         $connection->method('fetchOne')->willReturn('repeatable read');
 
         $this->expectException(LogicException::class);
@@ -122,11 +132,11 @@ final class ProvisioningLockTest extends TestCase
 
     public function testPostgreSqlGivesUpAfterTheWait(): void
     {
-        $connection = $this->connection(new PostgreSQLPlatform());
+        $connection = $this->connection(new PostgreSQLPlatform(), 1);
         $connection->method('fetchOne')->willReturn('0');
 
         $this->expectException(TransientStorageFailure::class);
-        ProvisioningLock::acquireSession($connection, 0.25);
+        ProvisioningLock::acquireTransaction($connection, null, 0.25);
     }
 
     public function testSqliteTakesNoLock(): void
