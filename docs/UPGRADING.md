@@ -3,6 +3,7 @@
 ## Table of contents
 
 - [Unreleased](#unreleased)
+- [To 1.35.0](#to-1350)
   - [The private entity manager notices](#the-private-entity-manager-notices)
   - [Reading the host-flush probe](#reading-the-host-flush-probe)
   - [Other notices added in 1.35](#other-notices-added-in-135)
@@ -151,6 +152,14 @@
 - [Getting help](#getting-help)
 
 ## Unreleased
+
+## To 1.35.0
+
+From **1.34.2**:
+
+```bash
+composer update nowo-tech/cookie-consent-bundle
+```
 
 1.35.0 is the last 1.x minor before 2.0. Without configuration it behaves exactly as 1.34. It adds a deprecation
 notice for the setting 2.0 changes, a host-flush probe that lists what that change would mean for your application,
