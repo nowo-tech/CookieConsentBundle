@@ -2,7 +2,7 @@
 
 **Baseline spec**: [`spec.md`](spec.md)  
 **Package**: `nowo-tech/cookie-consent-bundle`  
-**Last audited**: 2026-11-22
+**Last audited**: 2026-11-23
 
 ## TypeScript production (`src/Resources/assets/src/`)
 
@@ -39,6 +39,8 @@ Co-located Vitest sources under `src/` (compiled/tested in CI; not shipped to Pa
 | `Resources/assets/src/apply-visual-config.test.ts` | Vitest: visual config | FR-TEST-TS-001 |
 | `Resources/assets/src/category-toggles.test.ts` | Vitest: category toggles | FR-TEST-TS-001 |
 | `Resources/assets/src/cookie-consent.test.ts` | Vitest: modal core | FR-TEST-TS-001 |
+| `Resources/assets/src/diagnostics.test.ts` | Vitest: diagnostics hooks | FR-TEST-TS-001 |
+| `Resources/assets/src/logger-quiet.test.ts` | Vitest: quiet switch of the script-loaded banner | FR-TEST-TS-001 |
 | `Resources/assets/src/custom-event-polyfill.test.ts` | Vitest: polyfill | FR-TEST-TS-001 |
 | `Resources/assets/src/form-serializer.test.ts` | Vitest: form serializer | FR-TEST-TS-001 |
 | `Resources/assets/src/granular-cookie-toggles.test.ts` | Vitest: granular toggles | FR-TEST-TS-001 |
@@ -93,7 +95,6 @@ Co-located Vitest sources under `src/` (compiled/tested in CI; not shipped to Pa
 | `Resources/views/_intro_more.html.twig` | "Show more" intro toggle partial (1.23) | FR-TWIG-003, FR-UI-014 |
 
 ## PHP classes
-| `Admin/AdminChrome.php` | Admin chrome hooks (class/attribute map, partial paths) | 002 FR-CHROME-001 |
 | `Config/CmpUxOptionsResolver.php` | Config helper | FR-CFG-003 |
 | `Config/CookieConsentConfigPayloadFactory.php` | Config helper | FR-CFG-003 |
 | `Config/CookieConsentConfigResolver.php` | Config helper | FR-CFG-003 |
@@ -133,7 +134,6 @@ Co-located Vitest sources under `src/` (compiled/tested in CI; not shipped to Pa
 | `EventListener/CookieConsentConfigRuntimeCacheListener.php` | Doctrine cache invalidation | FR-WORKER-002 |
 | `EventListener/CookieConsentConflictListener.php` | Conflict answers (409 + CONFLICT codes), closed manager replacement | FR-CONC-002 |
 | `DependencyInjection/Compiler/CookieConsentCommitTrackingPass.php` | Commit-tracking scope (bundle connection / transaction-doctrine ledger) | FR-CONC-002 |
-| `Form/CookieConsentConfigSettingsType.php` | Form type | FR-FORM-001 |
 | `Form/CookieConsentType.php` | Form type | FR-FORM-001 |
 | `Form/CookieDefinitionTranslationType.php` | Form type | FR-FORM-001 |
 | `Form/CookieDefinitionType.php` | Form type | FR-FORM-001 |
@@ -171,14 +171,15 @@ Co-located Vitest sources under `src/` (compiled/tested in CI; not shipped to Pa
 | `Cookie/ConsentCookie.php` | Cookie value object of the writer port (1.30) | FR-PORT-001 |
 | `Cookie/ConsentCookieJar.php` | Immutable jar of consent cookies to set / clear (1.30) | FR-PORT-001 |
 | `Cookie/ConsentCookieWriterInterface.php` | Framework-free cookie writer port (1.30) | FR-PORT-001 |
-| `Cookie/CookieHandlerInterface.php` | Request / Response cookie handler port, deprecated since 1.30 | FR-COOKIE-001, FR-PORT-001 |
 | `Cookie/CookieCheckerInterface.php` | Consent checker port | FR-COOKIE-001 |
 | `Cookie/CookieLoggerInterface.php` | Consent logger port (scalars) | FR-COOKIE-001 |
 | `Cookie/NullCookieLogger.php` | No-op logger for hosts without Doctrine | FR-COOKIE-001, FR-DDD-001 |
 | `Cookie/ConsentRequestCookies.php` | Consent cookies read from the request as scalars | FR-COOKIE-001 |
 | `Cookie/ConsentIpAnonymizer.php` | IP anonymisation before logging | FR-COOKIE-002 |
 | `Cookie/ConsentKey.php` | Strict consent key format, new random key otherwise (1.30.2) | FR-COOKIE-002, FR-EXACT-001 |
-| `DependencyInjection/Compiler/ConsentCookieWriterPass.php` | Writer port wiring, decorators and BC with the deprecated handler | FR-PORT-001 |
+| `DependencyInjection/Compiler/ConsentCookieWriterPass.php` | 2.0: refuses a decorated / replaced `CookieHandler` while the writer port is the bundle's | FR-PORT-001 |
+| `DependencyInjection/Compiler/CookieConsentRemovedPortsPass.php` | 2.0: build error for services still using a removed type (W1-1 loader-error check) | FR-PORT-001 |
+| `Doctrine/BundleManagerGuard.php` | 2.0: repository saves only through the bundle's manager and an entity it holds (W1-2) | FR-DDD-003 |
 | `DependencyInjection/Compiler/CookieConsentEntityManagerPass.php` | Mapping only on the dedicated entity manager (1.27, 1.30.1) | FR-DDD-002 |
 | `DependencyInjection/Compiler/CookieConsentWithoutDoctrinePass.php` | Host without Doctrine: null logger, no ORM services | FR-DDD-001 |
 | `Doctrine/CookieConsentManagerRegistry.php` | Registry resolving bundle entities to the dedicated manager | FR-DDD-002 |
@@ -214,8 +215,8 @@ Co-located Vitest sources under `src/` (compiled/tested in CI; not shipped to Pa
 | `Concurrency/VersionedRowInterface.php` | An entity whose admin edits are checked against a row version (REQ-RUNTIME-003 rule 4). | FR-CONC-004 |
 | `Config/CookieConsentConfigReader.php` | Default `CookieConsentConfigReaderInterface` (1.34): maps the repository's enabled profiles to `ConsentProfileView` value objects. | FR-CFG-005 |
 | `Config/CookieConsentConfigReaderInterface.php` | Read port over the consent profiles (1.34, REQ-ARCH-001 rules 1 and 3): host code (a DDD application layer, an admin entry point, a bootstrap check) reads the p | FR-CFG-005 |
-| `DependencyInjection/Compiler/CookieConsentPrivateEntityManagerPass.php` | 1.34 (`doctrine.private_entity_manager: true`, REQ-ARCH-001 rule 6). | FR-DDD-003 |
-| `EventSubscriber/CookieConsentPrivateManagerBoundarySubscriber.php` | 1.34 (`doctrine.private_entity_manager: true`): drops the bundle's private entity manager, and clears the memos that hold its entities, at every outermost unit- | FR-DDD-003 |
+| `DependencyInjection/Compiler/CookieConsentPrivateEntityManagerPass.php` | 2.0: private manager mode on the default manager (dedicated manager kept), source and DBAL middleware (REQ-ARCH-001 rule 6) | FR-DDD-003 |
+| `EventSubscriber/CookieConsentPrivateManagerBoundarySubscriber.php` | 1.34 (the only mode on the default manager since 2.0): drops the bundle's private entity manager, and clears the memos that hold its entities, at every outermost unit- | FR-DDD-003 |
 | `Form/RowVersionField.php` | The hidden base token of an admin edit form (REQ-RUNTIME-003 rule 4): the row version of the page, unmapped. | FR-CONC-004 |
 
 ## Sources added 1.36 (provisioning port)
@@ -245,6 +246,6 @@ Co-located Vitest sources under `src/` (compiled/tested in CI; not shipped to Pa
 | Resources (YAML/CSS/JS/i18n/Twig) | 33 | 33 |
 | PHP classes | 109 | 109 |
 | Sources added 1.33–1.34 (sweep 2026-11-22) | 8 | 8 |
-| **Total production sources** | **190** | **190** |
+| **Total production sources** | **204** | **204** |
 
-Audit command: `git ls-files src | wc -l` → **190** (2026-11-22, 1.34.2; co-located Vitest files included as `FR-TEST-TS-001`). The category rows above summed to 182 before this audit and are not re-split; the total is the verified file count and every tracked file under `src/` is named in this inventory.
+Audit command: `git ls-files src | wc -l` → **204** (2026-11-23, 2.0.0 branch: 1.35–1.36 added files, 2.0 removed `AdminChrome`, `CookieHandlerInterface`, `CookieConsentConfigSettingsType`, `CookieConsentHostFlushNoticePass`, `CookieConsentHostFlushReporter` and added `CookieConsentRemovedPortsPass`, `BundleManagerGuard`; co-located Vitest files included as `FR-TEST-TS-001`). The category rows above are not re-split; the total is the verified file count and every tracked file under `src/` is named in this inventory (checked file by file).

@@ -50,10 +50,8 @@ nowo_cookie_consent:
     doctrine:
         table_prefix: ''
         # entity_manager: cookie_consent   # optional dedicated entity manager (default: the default one)
-        # private_entity_manager: true     # 1.34: saves never flush your entity manager; unset/false deprecated since 1.35
-
-    # Deprecated: use doctrine.table_prefix instead
-    # table_prefix: ''
+        # Since 2.0 the bundle always writes through a private entity manager on your default manager (never flushes
+        # yours); private_entity_manager is no longer needed (true: deprecated no-op; false: build error).
 
     # Categories shown in the modal (required is always shown)
     categories:
@@ -145,9 +143,7 @@ Every key accepted under `nowo_cookie_consent` (run `php bin/console config:dump
 |-----|---------|-------------|
 | `doctrine.table_prefix` | `''` | Prefix for every bundle table (see [Table prefix](#table-prefix)) |
 | `doctrine.entity_manager` | `null` | Since 1.27. Name of the entity manager the bundle entities are mapped on; null = the default one. The mapping is registered on that manager **only** (removed from the others, even a default manager with `auto_mapping: true` or a default metadata driver such as DoctrineBundle 3.4 `auto_discover_entities`; fixed in Unreleased); the logger, repositories, schema probe and admin controllers all use it. The build fails if the manager does not exist. Consents are written with DBAL inserts (no flush of any entity manager) |
-| `doctrine.private_entity_manager` | `null` (= `false`) | Since 1.34 (REQ-ARCH-001 rule 6, opt-in). Since 1.35, unset (`null`) and `false` trigger a deprecation notice when the bundle entities are on your default manager (`doctrine.entity_manager` unset or naming it): 2.0 always uses the private manager and removes `false`. `true`: the repositories, the admin controllers and the conflict listener use a private entity manager of the bundle (transaction-doctrine's `PrivateEntityManager`), created on the connection, mapping and event manager of `doctrine.entity_manager` (else the default manager). Same tables; a profile or definition save never flushes your manager. Dropped at every request / message / command boundary and at `kernel.reset`. Ignored without DoctrineBundle. See [Private entity manager](#private-entity-manager) |
-| `doctrine.connection` | `default` | **Deprecated since 1.15, ignored.** Use `doctrine.entity_manager`; the option will be removed in 2.0 |
-| `table_prefix` | `''` | **Deprecated since 1.3.** Use `doctrine.table_prefix` |
+| `doctrine.private_entity_manager` | `null` | Since 2.0 the private entity manager is the only mode on your default manager (REQ-ARCH-001 rule 6): unset, the repositories, the admin controllers and the conflict listener use the bundle's private manager (transaction-doctrine's `PrivateEntityManager`) on your default manager's connection, mapping and event manager. `true`: no effect there (deprecated, removed in 3.0); with a dedicated `doctrine.entity_manager` it creates the private manager on that manager (1.34). `false`: build error (removed in 2.0). Ignored without DoctrineBundle. See [Private entity manager](#private-entity-manager) |
 | `use_logger` | `true` | Persist consent choices to `CookieConsentLog` |
 | `use_database_config` | `false` | Load modal copy and display settings from `CookieConsentConfig` profiles (see [Database configuration](#database-configuration)) |
 | `schema_ready_cache_ttl` | `60` | Seconds a positive "config table exists" probe is memoized per worker; `0` probes every main request |
@@ -226,13 +222,9 @@ nowo_cookie_consent:
 | Key | Default | Description |
 |-----|---------|-------------|
 | `web_ui.enabled` | `true` | Admin UI on/off (admin routes answer 404 when `false`) |
-| `web_ui.path_prefix` | `/cookie-consent-config` | **Deprecated since 1.15, ignored.** Admin routes are always `/cookie-consent-config/…`; move them with the `prefix` of the routes import |
 | `web_ui.layout_template` | `null` | Per-bundle layout override; `null` = UiKit `nowo_ui_kit.layouts.admin` (REQ-UI-003) |
 | `web_ui.templates.<page>` | `{}` | Per-page template override: `cookie_definition_index`, `cookie_definition_form`, `settings` |
 | `web_ui.list_page_size` | `20` | Page size of admin lists |
-| `web_ui.css_framework` | `null` | **Deprecated since 1.16** — set `nowo_ui_kit.css_framework` |
-| `web_ui.icon_set` | `null` | **Deprecated since 1.16** — set `nowo_ui_kit.icon_set` |
-| `web_ui.chrome.*` | — | **Deprecated since 1.16** — bridged into `nowo_ui_kit.theme.bundles.NowoCookieConsentBundle` (see [Admin Web UI](#admin-web-ui)) |
 | `security.access_checker` | `null` | Service id implementing `CookieConsentAccessCheckerInterface` |
 | `security.access_roles` | `[ROLE_ADMIN]` | Roles allowed in the admin (empty = deny) |
 | `security.allow_unauthenticated` | `false` | Demo/dev only |
@@ -283,39 +275,34 @@ The bundle tables then exist only on `cookie_consent` (run its schema tool or mi
 
 ## Private entity manager
 
-Since 1.34 (opt-in, REQ-ARCH-001 rule 6; the only mode in 2.0, see [UPGRADING "Preparing for 2.0"](UPGRADING.md#preparing-for-20)).
-Keeps the bundle's writes out of your unit of work without a second connection or database:
-
-```yaml
-nowo_cookie_consent:
-    doctrine:
-        private_entity_manager: true
-```
+Since 2.0 the only mode on your default entity manager (REQ-ARCH-001 rule 6; opt-in since 1.34, see
+[UPGRADING "Private manager only"](UPGRADING.md#private-manager-only)). Nothing to configure: the bundle keeps its
+writes out of your unit of work without a second connection or database.
 
 - The private manager is created on your default manager's connection, mapping and event manager (or on
-  `doctrine.entity_manager`'s when set): the tables, migrations and connection stay the same.
+  `doctrine.entity_manager`'s when it names your default manager): the tables, migrations and connection stay the same.
 - Admin saves (profile settings, cookie definitions) flush only the private manager, inside the bundle's own
   transaction; your pending changes are never written by them. A transaction you opened around a bundle call still
   includes the bundle's rows (same connection, savepoints).
 - A failed save closes only the private manager; the next use creates a fresh one. It is also dropped at the start and
   end of every main request, Messenger message and outermost console command (FrankenPHP worker mode with the kernel
   reset off included) and at `kernel.reset`, so no entity loaded by the bundle survives a unit of work.
-- Entities you get from the bundle's repositories belong to the private manager: read them through
-  `CookieConsentConfigReaderInterface` (view objects) or reference them by id; never persist or flush them with your
-  own manager.
-- Seeding and provisioning (1.36): `CookieConsentProvisionerInterface` writes the default profile and its cookies
-  through a private manager of its own in every mode (true, false or unset), never through yours. See
-  [USAGE.md "Seeding and provisioning (1.36)"](USAGE.md#seeding-and-provisioning-136).
-- Unset (`null`, the default) or `false` keeps the 1.x behaviour. Since 1.35 both trigger a deprecation notice when the
-  entities are on your default manager, and the admin saves run transaction-doctrine's host-flush probe, which lists
-  the changes of yours they flush ("Your pending changes to App\X were flushed by NowoCookieConsentBundle; 2.0 no longer
-  does."). A dedicated `doctrine.entity_manager` gets neither. See [UPGRADING](UPGRADING.md) "To 1.35.0".
+- Entities you get from the bundle's repositories (also through your manager's `getRepository()`) belong to the private
+  manager: read them through `CookieConsentConfigReaderInterface` (view objects) or reference them by id; never
+  persist or flush them with your own manager. `CookieConsentConfigRepository::saveSettings()` and
+  `CookieDefinitionRepository::saveEdit()` refuse another manager, or an entity the bundle's manager does not hold,
+  before writing anything.
+- Seeding and provisioning: `CookieConsentProvisionerInterface` writes the default profile and its cookies through a
+  private manager of its own, never through yours. See [USAGE.md "Seeding and provisioning (1.36)"](USAGE.md#seeding-and-provisioning-136).
+- `doctrine.private_entity_manager: true` has no effect (deprecated, removed in 3.0) and `false` fails the build. A
+  dedicated `doctrine.entity_manager` (previous section) keeps that manager as is; with `private_entity_manager: true`
+  it gets the private manager on top of it (1.34 behaviour).
 
 ## Table prefix
 
 When `doctrine.table_prefix` is set to e.g. `app_`, the log table becomes `app_dashboard_cookie_log`. Useful when multiple apps share a database or when your project uses a global table prefix convention (same pattern as [DashboardMenuBundle](https://github.com/nowo-tech/DashboardMenuBundle)).
 
-Root `table_prefix` is deprecated but still supported as a fallback.
+The root `table_prefix` (deprecated since 1.3) was removed in 2.0: use `doctrine.table_prefix`.
 
 ## Locale detection
 
@@ -746,16 +733,14 @@ blocks and view-model fields: [TEMPLATES.md](TEMPLATES.md).
 | Option | Default | Description |
 | --- | --- | --- |
 | `web_ui.enabled` | `true` | Enables the admin UI (access enforced by `CookieConsentAdminAccessSubscriber`). When `false`, admin routes answer 404 |
-| `web_ui.path_prefix` | `/cookie-consent-config` | **Deprecated since 1.15 and ignored** (setting it triggers a deprecation). Admin routes are always mounted under `/cookie-consent-config`; to move them use the `prefix` option when importing `@NowoCookieConsentBundle/Resources/config/routing.yaml`, and protect the final path with `access_control` |
 | `web_ui.layout_template` | `null` | Per-bundle layout override. `null` = `nowo_ui_kit.layouts.admin` (default `@NowoUiKit/layout/admin.html.twig`). The layout must render the UiKit canonical blocks (`nowo_ui_content`, `nowo_ui_page_header`, `nowo_ui_flashes`, …). The 1.x value `@NowoCookieConsentBundle/admin/layout.html.twig` is treated as `null` |
 | `web_ui.templates.<page>` | `{}` | Per-page template (`cookie_definition_index`, `cookie_definition_form`, `settings`): a thin template extending `@!NowoCookieConsentBundle/…` that overrides a data block. Unknown pages fail at compile time |
 | `web_ui.list_page_size` | `20` | Page size for cookie definition admin lists |
-| `web_ui.css_framework` | `null` | **Deprecated since 1.16.** When set and `nowo_ui_kit.css_framework` is not, seeds it (as before) |
-| `web_ui.icon_set` | `null` | **Deprecated since 1.16.** When set and `nowo_ui_kit.icon_set` is not, seeds it |
-| `web_ui.chrome.classes` / `.attributes` / `.templates.tabs` / `.templates.pagination` | `{}` | **Deprecated since 1.16.** Bridged into `nowo_ui_kit.theme.bundles.NowoCookieConsentBundle` (classes → slots with `framework_defaults: false`, attributes → slot attributes, partials → UiKit partials; one-page keys → `pages.<type>`); mapping in [UPGRADING — Template contract](UPGRADING.md#template-contract-116) |
-| `web_ui.chrome.templates.form_theme` / `.form_fields` / `.styles_after` | `~` | **Deprecated since 1.16**, still applied by the admin pages (no theme slot equivalent; `form_theme` as the UiKit `formThemes` of the admin forms) |
-| `web_ui.chrome.row_actions_display` | `inherit` | **Deprecated since 1.16.** `text` / `icon` / `icon_text` forces the display of the list row actions; `inherit` = `nowo_ui_kit.row_actions_display` |
-| `web_ui.chrome.page_title_tag` | `h1` | **Deprecated since 1.16 and ignored** — the heading comes from the UiKit `page_header` partial |
+
+Admin routes are always mounted under `/cookie-consent-config`: move them with the `prefix` option when importing
+`@NowoCookieConsentBundle/Resources/config/routing.yaml`, and protect the final path with `access_control`. The keys
+`web_ui.path_prefix`, `web_ui.css_framework`, `web_ui.icon_set` and `web_ui.chrome` were removed in 2.0 (a host config
+that still sets one fails the build with its replacement; see [UPGRADING](UPGRADING.md#removed)).
 
 > **`ui_theme` vs the admin stack**
 >

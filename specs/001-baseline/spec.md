@@ -140,7 +140,7 @@ GDPR **cookie consent** for Symfony: modal with category toggles, granular per-c
 ### Config read port and private entity manager (1.34)
 
 - **FR-CFG-005**: `CookieConsentConfigReaderInterface` (default `CookieConsentConfigReader`) is the read port over the enabled consent profiles, answering `ConsentProfileView` value objects (REQ-ARCH-001 rules 1 and 3).
-- **FR-DDD-003**: `doctrine.private_entity_manager: true` (opt-in, REQ-ARCH-001 rule 6): `CookieConsentPrivateEntityManagerPass` wires the bundle's own entity manager and `CookieConsentPrivateManagerBoundarySubscriber` drops it, and clears the memos holding its entities, at every outermost unit-of-work boundary.
+- **FR-DDD-003**: the private entity manager (REQ-ARCH-001 rule 6; opt-in since 1.34, the only mode on the application's default manager since 2.0; a dedicated `doctrine.entity_manager` is kept as is): `CookieConsentPrivateEntityManagerPass` wires the bundle's own entity manager and `CookieConsentPrivateManagerBoundarySubscriber` drops it, and clears the memos holding its entities, at every outermost unit-of-work boundary. The repository saves refuse another manager or an entity it does not hold (`BundleManagerGuard`).
 
 ### Provisioning port (1.36)
 
