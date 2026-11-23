@@ -3,6 +3,7 @@
 ## Table of contents
 
 - [Unreleased](#unreleased)
+- [To 1.36.1](#to-1361)
 - [To 1.36.0](#to-1360)
   - [Privacy link of the modal](#privacy-link-of-the-modal)
   - [Seeding through the provisioning port](#seeding-through-the-provisioning-port)
@@ -156,6 +157,14 @@
 - [Getting help](#getting-help)
 
 ## Unreleased
+
+## To 1.36.1
+
+From **1.36.0**:
+
+```bash
+composer update nowo-tech/cookie-consent-bundle
+```
 
 No configuration or API change. If you seed through `CookieConsentProvisionerInterface`:
 
