@@ -6,12 +6,18 @@ namespace Nowo\CookieConsentBundle\Tests\Integration\Kernel;
 
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\Tools\SchemaTool;
+use Nowo\CookieConsentBundle\Controller\CookieDefinitionAdminController;
 use Nowo\CookieConsentBundle\DependencyInjection\Compiler\CookieConsentHostFlushNoticePass;
 use Nowo\CookieConsentBundle\DependencyInjection\NowoCookieConsentExtension;
 use Nowo\CookieConsentBundle\Doctrine\CookieConsentHostFlushReporter;
 use Nowo\CookieConsentBundle\Entity\CookieConsentConfig;
 use Nowo\CookieConsentBundle\Entity\CookieDefinition;
+use Nowo\CookieConsentBundle\Repository\CookieConsentConfigRepository;
+use Nowo\CookieConsentBundle\Repository\CookieDefinitionRepository;
 use Nowo\CookieConsentBundle\Tests\Integration\Kernel\HostEntity\HostNote;
+use Nowo\CookieConsentBundle\Tests\Integration\Kernel\HostOverride\HostCookieDefinitionAdminController;
+use Nowo\CookieConsentBundle\Tests\Integration\Kernel\HostOverride\LegacyConfigRepository;
+use Nowo\CookieConsentBundle\Tests\Integration\Kernel\HostOverride\LegacyDefinitionRepository;
 use PHPUnit\Framework\TestCase;
 use ReflectionProperty;
 use Symfony\Bundle\FrameworkBundle\KernelBrowser;
@@ -182,9 +188,46 @@ final class HostFlushNoticeKernelTest extends TestCase
     }
 
     /**
-     * @param array<string, mixed> $doctrine the bundle's `doctrine` options
+     * Audit M1: a host that replaced the write-path services with classes whose constructor has no `$hostFlushReporter`
+     * (a 1.34-style repository subclass, a controller of its own) still boots with the option unset; its classes are
+     * used as configured and run without the probe, as in 1.34.
      */
-    private function boot(array $doctrine): int
+    public function testHostReplacementsWithoutTheReporterArgumentStillBoot(): void
+    {
+        $configId = $this->boot([], [
+            CookieConsentConfigRepository::class   => LegacyConfigRepository::class,
+            CookieDefinitionRepository::class      => LegacyDefinitionRepository::class,
+            CookieDefinitionAdminController::class => HostCookieDefinitionAdminController::class,
+        ]);
+        self::assertCount(1, $this->bundleNotices(), 'the notice is still triggered');
+
+        $configs = $this->container()->get(CookieConsentConfigRepository::class);
+        self::assertInstanceOf(LegacyConfigRepository::class, $configs, 'the host class is used');
+        self::assertInstanceOf(LegacyDefinitionRepository::class, $this->container()->get(CookieDefinitionRepository::class));
+        $controller = $this->container()->get(CookieDefinitionAdminController::class);
+        self::assertInstanceOf(HostCookieDefinitionAdminController::class, $controller);
+        self::assertInstanceOf(LegacyDefinitionRepository::class, $controller->definitionRepository);
+
+        // The override saves as in 1.34: the application's pending change is flushed, and nothing is probed.
+        $host   = $this->hostManager();
+        $config = $configs->find($configId);
+        self::assertInstanceOf(CookieConsentConfig::class, $config);
+        $config->setName('Saved by the host repository');
+        $host->persist(new HostNote());
+        $lines = $this->capture(static function () use ($configs, $config, $host): void {
+            $configs->saveSettings($config, $host);
+        });
+
+        self::assertSame([], $lines);
+        self::assertSame(1, (int) $host->getConnection()->fetchOne('SELECT COUNT(*) FROM host_note'));
+        self::assertSame('Saved by the host repository', $host->getConnection()->fetchOne('SELECT name FROM dashboard_cookie_config WHERE id = ?', [$configId]));
+    }
+
+    /**
+     * @param array<string, mixed> $doctrine the bundle's `doctrine` options
+     * @param array<string, class-string> $hostServiceClasses bundle services the host redefines with its own class
+     */
+    private function boot(array $doctrine, array $hostServiceClasses = []): int
     {
         $this->kernel = new CookieConsentTestKernel(false, [
             'use_database_config' => true,
@@ -199,7 +242,7 @@ final class HostFlushNoticeKernelTest extends TestCase
                 'dir'       => __DIR__ . '/HostEntity',
                 'prefix'    => 'Nowo\\CookieConsentBundle\\Tests\\Integration\\Kernel\\HostEntity',
             ]]],
-        ]);
+        ], hostServiceClasses: $hostServiceClasses);
         $this->bootCapturing();
 
         $em = $this->hostManager();

@@ -11,6 +11,8 @@ use Nowo\CookieConsentBundle\Doctrine\CookieConsentHostFlushReporter;
 use Nowo\CookieConsentBundle\EventSubscriber\CookieConsentPrivateManagerBoundarySubscriber;
 use Nowo\CookieConsentBundle\Repository\CookieConsentConfigRepository;
 use Nowo\CookieConsentBundle\Repository\CookieDefinitionRepository;
+use Nowo\CookieConsentBundle\Tests\Integration\Kernel\HostOverride\HostCookieDefinitionAdminController;
+use Nowo\CookieConsentBundle\Tests\Integration\Kernel\HostOverride\LegacyConfigRepository;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
@@ -102,6 +104,21 @@ final class CookieConsentHostFlushNoticePassTest extends TestCase
 
         self::assertCount(1, $this->process($container));
         self::assertTrue($container->hasDefinition(CookieConsentHostFlushReporter::class));
+    }
+
+    /** Audit M1: a host class whose constructor has no `$hostFlushReporter` (or an unknown class) is left as configured. */
+    public function testAHostReplacementWithoutTheArgumentIsLeftAlone(): void
+    {
+        $container = $this->container(null, null, null);
+        $container->getDefinition(CookieConsentConfigRepository::class)->setClass(LegacyConfigRepository::class);
+        $container->getDefinition(CookieDefinitionRepository::class)->setClass('App\\Missing\\Repository');
+        $container->getDefinition(CookieDefinitionAdminController::class)->setClass(HostCookieDefinitionAdminController::class);
+
+        self::assertCount(1, $this->process($container), 'the notice is still triggered');
+        self::assertTrue($container->hasDefinition(CookieConsentHostFlushReporter::class));
+        foreach ([CookieConsentConfigRepository::class, CookieDefinitionRepository::class, CookieDefinitionAdminController::class] as $id) {
+            self::assertSame([], $container->getDefinition($id)->getArguments(), $id);
+        }
     }
 
     public function testTheReporterIsWiredOnlyIntoTheServicesThatExist(): void

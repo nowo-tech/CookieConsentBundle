@@ -317,7 +317,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   NowoCookieConsentBundle; 2.0 no longer does." It only logs (never throws) and changes nothing: the flush writes what
   1.34 wrote. The probe is reset at every request, Messenger message and console command boundary (FrankenPHP worker
   mode with the kernel reset off) and at `kernel.reset`. Not registered with `private_entity_manager: true` or a
-  dedicated manager.
+  dedicated manager. A write-path service the host replaced with a class whose constructor has no
+  `$hostFlushReporter` parameter (a 1.34-style repository subclass) is left as configured, without the probe: the
+  build never fails on it.
 - UPGRADING "Preparing for 2.0": what 2.0 changes and removes, separating what was already announced with a removal
   version from what is announced only since 1.35.
 

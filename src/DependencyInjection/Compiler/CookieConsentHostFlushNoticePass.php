@@ -37,6 +37,9 @@ use function trigger_deprecation;
  * message and command (FrankenPHP worker mode with the kernel reset off). Nothing else changes: the writes run exactly
  * as in 1.34.
  *
+ * A write-path service whose class the host replaced with one whose constructor has no `$hostFlushReporter` parameter
+ * (a subclass written for 1.34, a class of its own) is left as configured: it runs as in 1.34, without the probe.
+ *
  * No notice and no reporter with `private_entity_manager: true`, with a dedicated `doctrine.entity_manager` (the DDD
  * option, kept in 2.0), or without DoctrineBundle.
  */
@@ -44,6 +47,9 @@ final class CookieConsentHostFlushNoticePass implements CompilerPassInterface
 {
     /** 1.35: the subscriber that resets the reporter at every unit-of-work boundary (host mode only). */
     public const BOUNDARY_SUBSCRIBER_SERVICE = 'nowo_cookie_consent.host_flush_reporter.boundary_subscriber';
+
+    /** The constructor parameter of the write paths that takes the reporter. */
+    private const ARGUMENT = 'hostFlushReporter';
 
     /**
      * Triggers the notice and wires the host-flush probe in host mode; does nothing otherwise.
@@ -70,8 +76,8 @@ final class CookieConsentHostFlushNoticePass implements CompilerPassInterface
 
         $reporter = new Reference(CookieConsentHostFlushReporter::class);
         foreach ([CookieConsentConfigRepository::class, CookieDefinitionRepository::class, CookieDefinitionAdminController::class] as $id) {
-            if ($container->hasDefinition($id)) {
-                $container->getDefinition($id)->setArgument('$hostFlushReporter', $reporter);
+            if ($container->hasDefinition($id) && $this->acceptsTheReporter($container, $id)) {
+                $container->getDefinition($id)->setArgument('$' . self::ARGUMENT, $reporter);
             }
         }
 
@@ -84,6 +90,24 @@ final class CookieConsentHostFlushNoticePass implements CompilerPassInterface
                 new Reference('request_stack', ContainerInterface::NULL_ON_INVALID_REFERENCE),
             ])
             ->addTag('kernel.event_subscriber');
+    }
+
+    /**
+     * Whether the service's constructor takes the reporter (audit M1): a host that replaced the class with a 1.34-style
+     * subclass or a class of its own (constructor without `$hostFlushReporter`) keeps it unchanged, without the probe,
+     * instead of failing the build. An unknown class is left alone too.
+     */
+    private function acceptsTheReporter(ContainerBuilder $container, string $id): bool
+    {
+        $class      = $container->getDefinition($id)->getClass() ?? $id;
+        $parameters = $container->getReflectionClass($class, false)?->getConstructor()?->getParameters() ?? [];
+        foreach ($parameters as $parameter) {
+            if ($parameter->getName() === self::ARGUMENT) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /**

@@ -211,6 +211,11 @@ nowo-tech/transaction-doctrine right before it flushes your manager:
 - `CookieDefinitionRepository::saveEdit()` (cookie definition edit, and your own calls of it);
 - `CookieDefinitionAdminController` create and delete.
 
+If you replaced one of these services with a class of your own whose constructor has no `$hostFlushReporter` parameter
+(for example a repository subclass written for 1.34), that service is left as you configured it and runs without the
+probe; add the optional `?CookieConsentHostFlushReporter $hostFlushReporter = null` parameter (and pass it to the parent
+constructor) to have its saves probed too.
+
 Every entity class outside `Nowo\CookieConsentBundle\Entity` with pending work in that manager (a scheduled insert or
 delete, an orphan removal, a changed field, association or collection) triggers one deprecation per request, message
 or command:
@@ -249,8 +254,13 @@ loaded them).
 
 ### Preparing for 2.0
 
-2.0 contains only the deprecations announced in 1.x: an application that runs 1.35 without deprecation notices from
-this bundle upgrades without code changes.
+2.0 contains only the deprecations announced in 1.x. Running 1.35 without deprecation notices from this bundle clears
+most of the list, but not all of it: `CookieHandler::save()` and its helpers, `Admin\AdminChrome` and the three
+deprecated Twig globals trigger **no** runtime notice (the bundle still uses them itself in 1.x, so a notice would fire
+for every application). Check by hand that your code does not call them directly and that your templates do not read
+the globals (search for `->save(` on the cookie handler, `AdminChrome`, `nowo_cookie_consent_layout_template`,
+`nowo_cookie_consent_css_framework` and `nowo_cookie_consent_icon_set`). The `@final` classes are reported by Symfony's
+debug class loader (debug mode only) when you extend them.
 
 **Changed in 2.0 (announced in 1.35):**
 

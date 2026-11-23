@@ -59,6 +59,8 @@ final class CookieConsentTestKernel extends Kernel
      * @param list<string> $publicIds services / aliases made public for the test (kept even when nothing uses them)
      * @param bool $hostDefaultDriver the host gives its default manager's chain a catch-all default driver (what
      *                                DoctrineBundle 3.4 `auto_discover_entities` does)
+     * @param array<string, class-string> $hostServiceClasses bundle service ids the host redefines with a class of its
+     *                                                        own (`Id: { class: App\X }` in its services.yaml), autowired
      */
     public function __construct(
         private readonly bool $withSecurity,
@@ -70,8 +72,9 @@ final class CookieConsentTestKernel extends Kernel
         private readonly ?string $routeNamePrefix = null,
         private readonly array $publicIds = [],
         private readonly bool $hostDefaultDriver = false,
+        private readonly array $hostServiceClasses = [],
     ) {
-        $this->cacheKey = hash('xxh128', serialize([$withSecurity, $bundleConfig, $hostParameters, $frameworkConfig, $importBundleRoutes, $doctrineConfig, $routeNamePrefix, $publicIds, $hostDefaultDriver]));
+        $this->cacheKey = hash('xxh128', serialize([$withSecurity, $bundleConfig, $hostParameters, $frameworkConfig, $importBundleRoutes, $doctrineConfig, $routeNamePrefix, $publicIds, $hostDefaultDriver, $hostServiceClasses]));
         parent::__construct('test', false);
     }
 
@@ -142,6 +145,9 @@ final class CookieConsentTestKernel extends Kernel
             ]);
         }
         $container->loadFromExtension('nowo_cookie_consent', $this->bundleConfig);
+        foreach ($this->hostServiceClasses as $id => $class) {
+            $container->register($id, $class)->setAutowired(true)->setAutoconfigured(true)->setPublic(true);
+        }
         if ($this->publicIds !== []) {
             $container->addCompilerPass(new PublicForTestsPass($this->publicIds));
         }
