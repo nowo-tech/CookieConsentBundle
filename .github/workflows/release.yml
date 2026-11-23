@@ -1,5 +1,7 @@
 name: Create Release
 
+# 1.x maintenance branch: every release created or updated here is never marked "Latest" (make_latest: 'false').
+
 on:
   push:
     tags:
@@ -137,7 +139,9 @@ jobs:
                 repo: context.repo.repo,
                 release_id: releaseId,
                 body: releaseBody,
-                prerelease: isPrerelease
+                prerelease: isPrerelease,
+                // 1.x maintenance line: a 1.x patch released after 2.0 must never become the "Latest" release.
+                make_latest: 'false'
               });
               console.log('✅ Updated release ' + tagName + ' with changelog');
             } catch (error) {
@@ -180,7 +184,9 @@ jobs:
                 draft: false,
                 prerelease: isPrerelease,
                 // Avoid racing sync-releases.yml notes; we ship docs/CHANGELOG.md ourselves.
-                generate_release_notes: false
+                generate_release_notes: false,
+                // 1.x maintenance line: a 1.x patch released after 2.0 must never become the "Latest" release.
+                make_latest: 'false'
               });
               console.log('✅ Created release ' + tagName + ' with changelog');
             } catch (error) {
@@ -205,7 +211,8 @@ jobs:
                   repo: context.repo.repo,
                   release_id: existing.id,
                   body: releaseBody,
-                  prerelease: isPrerelease
+                  prerelease: isPrerelease,
+                  make_latest: 'false'
                 });
                 console.log('✅ Updated existing release ' + tagName + ' with changelog');
               } else {
