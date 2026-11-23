@@ -129,7 +129,7 @@ final class ProvisioningValueObjectsTest extends TestCase
         self::assertSame('Statistics', $translation->purpose);
 
         $copy = new ProfileTranslationSpec('en', 'T', 'D', 'A', 'N', consentModalFooter: '');
-        self::assertSame(['consentModalTitle' => 'T', 'consentModalDescription' => 'D', 'consentModalAcceptAllBtn' => 'A', 'consentModalAcceptNecessaryBtn' => 'N', 'consentModalFooter' => ''], $copy->texts(), 'null keeps, "" clears');
+        self::assertSame(['consentModalTitle' => 'T', 'consentModalDescription' => 'D', 'consentModalAcceptAllBtn' => 'A', 'consentModalAcceptNecessaryBtn' => 'N', 'consentModalFooter' => null], $copy->texts(), 'null keeps, "" clears (stored null, as the admin form: ZAH-12)');
     }
 
     public function testCookieDefinitionsFromTheCookieInventoryShape(): void

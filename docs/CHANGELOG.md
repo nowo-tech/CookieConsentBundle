@@ -103,6 +103,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- Provisioning port on PostgreSQL (audit ZAH-11): the provisioning lock is now a transaction lock
+  (`pg_try_advisory_xact_lock()`, polled with the same 10-second bound), taken in the call's own transaction after
+  `SET TRANSACTION ISOLATION LEVEL READ COMMITTED`, instead of a session lock taken before it. It works behind a
+  transaction-pooling PgBouncer and is released by the COMMIT or ROLLBACK, so a process that dies mid-call on a
+  persistent connection no longer leaves it held; seeders stay serialized whatever the server's default isolation
+  level. Inside a caller transaction nothing changes (READ COMMITTED only). The MySQL / MariaDB `GET_LOCK()` session
+  lock is unchanged and now documented as needing session pooling and no persistent connections.
+- Provisioning port: an optional profile copy text given as `""` is stored as null, as the admin form stores a blank
+  field (audit ZAH-12), so the modal shows the bundle's default text again instead of an empty string.
+
+- The `[nowo-cookie-consent] Diagnostic report (after init)` console group and its "Copy JSON" dump no longer print in production with the default configuration. They print only when the debug flag is on: `data-nowo-debug="true"` on the consent modal element, or `<html data-nowo-console="debug">`. The report is still stored on `window.__NOWO_COOKIE_CONSENT_DIAGNOSTIC__`.
+
 ### Changed
 
 - **Console**: the script-loaded line of `nowo-consent-modal.js` now reads `📦 [cookie-consent] script loaded, build: 2026-11-23 14:05 UTC`: a readable UTC build time instead of the opaque source hash. The time comes from the committed `build-info.json` (`{sourceHash, builtAt}`): the source hash stays the change detector, `builtAt` is reused while the sources are unchanged and renewed only when they change, so rebuilding unchanged sources never rewrites the committed assets (no wall-clock stamp, no git date).
@@ -110,10 +124,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - **Console**: quiet switch for the script-loaded line: `<html data-nowo-console="quiet">` or `globalThis.NOWO_CONSOLE = 'quiet'` prints nothing. The default is unchanged.
-
-### Fixed
-
-- The `[nowo-cookie-consent] Diagnostic report (after init)` console group and its "Copy JSON" dump no longer print in production with the default configuration. They print only when the debug flag is on: `data-nowo-debug="true"` on the consent modal element, or `<html data-nowo-console="debug">`. The report is still stored on `window.__NOWO_COOKIE_CONSENT_DIAGNOSTIC__`.
 
 ## [1.36.0] - 2026-11-23
 

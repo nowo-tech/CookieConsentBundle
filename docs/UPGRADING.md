@@ -157,6 +157,15 @@
 
 ## Unreleased
 
+No configuration or API change. If you seed through `CookieConsentProvisionerInterface`:
+
+- PostgreSQL: the provisioning lock is now a transaction lock in the call's own READ COMMITTED transaction, so it works
+  behind a transaction-pooling PgBouncer. Nothing to do.
+- MySQL / MariaDB: the `GET_LOCK()` session lock needs the transaction's own session (a direct connection or session
+  pooling) and no persistent connections; that was already the case in 1.36.0.
+- An optional profile copy text given as `""` is now stored as null (the bundle's default text shows), as the admin
+  form does.
+
 ## To 1.36.0
 
 From **1.35.0**:
