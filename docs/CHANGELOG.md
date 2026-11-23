@@ -104,6 +104,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- Igor 0.11: `reset()` of `CookieConsentConfigResolver`, `CookieInventoryProvider` and `CookieConsentConfigRepository` now holds the assignments that clear the memo (`clearRuntimeCache()` calls `reset()`, it was the other way round), so Igor sees the properties cleared. Same caches cleared at the same moments; no behaviour change.
+
 ## [1.36.1] - 2026-11-23
 
 ### Fixed

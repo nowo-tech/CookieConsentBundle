@@ -55,10 +55,7 @@ class CookieConsentConfigRepository extends ServiceEntityRepository implements R
      */
     public function clearRuntimeCache(): void
     {
-        $this->defaultEnabledLoaded = false;
-        $this->defaultEnabled       = null;
-        $this->allEnabled           = null;
-        $this->allEnabledNonDefault = null;
+        $this->reset();
     }
 
     /**
@@ -66,7 +63,10 @@ class CookieConsentConfigRepository extends ServiceEntityRepository implements R
      */
     public function reset(): void
     {
-        $this->clearRuntimeCache();
+        $this->defaultEnabledLoaded = false;
+        $this->defaultEnabled       = null;
+        $this->allEnabled           = null;
+        $this->allEnabledNonDefault = null;
     }
 
     /**
