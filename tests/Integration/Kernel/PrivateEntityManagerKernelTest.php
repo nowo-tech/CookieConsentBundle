@@ -13,6 +13,7 @@ use Nowo\CookieConsentBundle\DependencyInjection\NowoCookieConsentExtension;
 use Nowo\CookieConsentBundle\Entity\CookieConsentConfig;
 use Nowo\CookieConsentBundle\Entity\CookieDefinition;
 use Nowo\CookieConsentBundle\Repository\CookieConsentConfigRepository;
+use Nowo\CookieConsentBundle\Repository\CookieDefinitionRepository;
 use Nowo\CookieConsentBundle\Tests\Integration\Kernel\HostEntity\HostNote;
 use Nowo\CookieConsentBundle\Tests\Integration\Kernel\HostRelation\HostProfileLink;
 use Nowo\TransactionDoctrine\PrivateManager\PrivateEntityManager;
@@ -212,6 +213,51 @@ final class PrivateEntityManagerKernelTest extends TestCase
         $repository->saveSettings($own->setName('Through the bundle'), $private);
         self::assertSame('Through the bundle', $connection->fetchOne('SELECT name FROM dashboard_cookie_config WHERE id = ?', [$configId]));
         self::assertSame(1, (int) $connection->fetchOne('SELECT COUNT(*) FROM dashboard_cookie_config'), 'no duplicate row');
+    }
+
+    /**
+     * ZAO-4: an entity the bundle's manager holds, passed with the application's manager, fails too (for both saves):
+     * the application's pending insert is not flushed and nothing of the bundle is written.
+     */
+    public function testABundleHeldEntityWithTheApplicationsManagerFailsForBothSaves(): void
+    {
+        $configId    = $this->boot();
+        $host        = $this->hostManager();
+        $configs     = $this->service(CookieConsentConfigRepository::class);
+        $definitions = $this->service(CookieDefinitionRepository::class);
+        self::assertInstanceOf(CookieConsentConfigRepository::class, $configs);
+        self::assertInstanceOf(CookieDefinitionRepository::class, $definitions);
+        $host->clear();
+
+        $note = new HostNote();
+        $host->persist($note);
+
+        $config = $configs->find($configId);
+        self::assertInstanceOf(CookieConsentConfig::class, $config);
+        $definition = $definitions->findOneBy(['name' => '_ga']);
+        self::assertInstanceOf(CookieDefinition::class, $definition);
+        self::assertTrue($this->privateManager()->contains($config));
+        $config->setName('Through the application');
+        $definition->setDuration('forever');
+
+        foreach ([
+            'saveSettings' => static fn () => $configs->saveSettings($config, $host),
+            'saveEdit'     => static fn () => $definitions->saveEdit($definition, $host, 1),
+        ] as $method => $save) {
+            try {
+                $save();
+                self::fail($method . ' with the application\'s manager must fail.');
+            } catch (LogicException $e) {
+                self::assertStringContainsString($method . '() needs the bundle\'s entity manager', $e->getMessage());
+            }
+        }
+
+        $connection = $host->getConnection();
+        self::assertSame(0, (int) $connection->fetchOne('SELECT COUNT(*) FROM host_note'), 'the application\'s pending insert stays unwritten');
+        self::assertTrue($host->getUnitOfWork()->isScheduledForInsert($note));
+        self::assertSame('Public site', $connection->fetchOne('SELECT name FROM dashboard_cookie_config WHERE id = ?', [$configId]));
+        self::assertSame('', $connection->fetchOne('SELECT duration FROM dashboard_cookie_definition WHERE name = ?', ['_ga']));
+        self::assertSame(1, (int) $connection->fetchOne('SELECT row_version FROM dashboard_cookie_definition WHERE name = ?', ['_ga']), 'no version advanced');
     }
 
     /**

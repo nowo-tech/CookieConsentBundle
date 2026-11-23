@@ -20,6 +20,14 @@ final class CookieConsentAdminTwigExtension extends AbstractExtension implements
     public const GLOBAL_ADMIN_CHROME = 'nowo_cookie_consent_admin_chrome';
 
     /**
+     * The UiKit admin layout (the 1.x value of the removed `nowo_cookie_consent_layout_template` global when
+     * `web_ui.layout_template` is null).
+     *
+     * @deprecated since 2.0, read `nowo_ui_layout.admin`; removed in 3.0
+     */
+    public const UI_KIT_ADMIN_LAYOUT = '@NowoUiKit/layout/admin.html.twig';
+
+    /**
      * The value of {@see self::GLOBAL_ADMIN_CHROME}: what 1.x resolved when `web_ui.chrome` was not set.
      *
      * @var array{classes: array<string, string|null>, attributes: array<string, array<string, string>>, templates: array<string, string|null>, page_title_tag: string, row_actions_display: string|null}

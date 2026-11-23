@@ -6,6 +6,7 @@ namespace Nowo\CookieConsentBundle\Tests\Unit\Twig;
 
 use Nowo\CookieConsentBundle\Twig\CookieConsentAdminTwigExtension;
 use PHPUnit\Framework\TestCase;
+use ReflectionClassConstant;
 
 final class CookieConsentAdminTwigExtensionTest extends TestCase
 {
@@ -24,5 +25,9 @@ final class CookieConsentAdminTwigExtensionTest extends TestCase
             'page_title_tag'      => 'h1',
             'row_actions_display' => null,
         ]], $globals);
+        // Kept (deprecated, removed in 3.0): the UiKit admin layout of the removed layout global.
+        $constant = new ReflectionClassConstant(CookieConsentAdminTwigExtension::class, 'UI_KIT_ADMIN_LAYOUT');
+        self::assertSame('@NowoUiKit/layout/admin.html.twig', $constant->getValue());
+        self::assertStringContainsString('@deprecated since 2.0', (string) $constant->getDocComment());
     }
 }

@@ -296,7 +296,8 @@ writes out of your unit of work without a second connection or database.
   private manager of its own, never through yours. See [USAGE.md "Seeding and provisioning (1.36)"](USAGE.md#seeding-and-provisioning-136).
 - `doctrine.private_entity_manager: true` has no effect (deprecated, removed in 3.0) and `false` fails the build. A
   dedicated `doctrine.entity_manager` (previous section) keeps that manager as is; with `private_entity_manager: true`
-  it gets the private manager on top of it (1.34 behaviour).
+  it gets the private manager on top of it (1.34 behaviour): with a dedicated manager the key keeps that meaning in 2.x
+  and triggers no deprecation.
 
 ## Table prefix
 

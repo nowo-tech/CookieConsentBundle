@@ -649,7 +649,8 @@ objects ([Read-only views](#read-only-views-128)).
 ### Known limitations
 
 - With DoctrineBundle registered, the entity mapping is registered even when `use_logger` and `use_database_config`
-  are both `false` (BC: unmapping it would show the tables as a DROP in schema diffs); 2.0 maps them only when used.
+  are both `false`. 2.0 keeps them mapped: unmapping them would make schema diffs (`doctrine:migrations:diff`,
+  `doctrine:schema:update`) propose dropping the bundle tables, the consent log included.
 - The admin saves flush the bundle's own manager: since 2.0 the private one on your default manager (never yours), or
   a dedicated `doctrine.entity_manager` when you set one.
 - `ResolvedCookieConsentConfig::getConfig()` / `getTranslation()` and `CookieInventoryProvider::listForLocale()` still

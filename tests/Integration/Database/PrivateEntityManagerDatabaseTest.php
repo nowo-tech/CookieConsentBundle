@@ -6,7 +6,9 @@ namespace Nowo\CookieConsentBundle\Tests\Integration\Database;
 
 use LogicException;
 use Nowo\CookieConsentBundle\Entity\CookieConsentConfig;
+use Nowo\CookieConsentBundle\Entity\CookieDefinition;
 use Nowo\CookieConsentBundle\Repository\CookieConsentConfigRepository;
+use Nowo\CookieConsentBundle\Repository\CookieDefinitionRepository;
 use Nowo\CookieConsentBundle\Tests\Support\PersonalData\ConsentLogDatabase;
 use Nowo\TransactionDoctrine\PrivateManager\PrivateEntityManager;
 use Nowo\TransactionDoctrine\PrivateManager\PrivateManagerRegistry;
@@ -112,6 +114,58 @@ final class PrivateEntityManagerDatabaseTest extends TestCase
 
         $host->flush();
         self::assertSame(['through the application', 'host pending'], $this->names([$first, $second]), 'the application commits its own changes');
+    }
+
+    /**
+     * ZAO-4: an entity the private manager holds, passed with the application's manager, fails for both saves; the
+     * application's pending change stays unwritten.
+     */
+    public function testABundleHeldEntityWithTheApplicationsManagerFailsForBothSaves(): void
+    {
+        [$first, $second]       = $this->profiles();
+        [$private, $repository] = $this->privateSide($this->db);
+        $host                   = $this->db->entityManager;
+
+        $definition = (new CookieDefinition())->setName('_ga')->setCategory('analytics')->setDuration('2 years');
+        $owner      = $host->find(CookieConsentConfig::class, $first);
+        self::assertInstanceOf(CookieConsentConfig::class, $owner);
+        $owner->addCookieDefinition($definition);
+        $host->persist($definition);
+        $host->flush();
+        $definitionId = (int) $definition->getId();
+        $host->clear();
+
+        $hostPending = $host->find(CookieConsentConfig::class, $second);
+        self::assertInstanceOf(CookieConsentConfig::class, $hostPending);
+        $hostPending->setName('host pending');
+
+        $definitions = new CookieDefinitionRepository(new PrivateManagerRegistry($this->db, $private, ['Nowo\\CookieConsentBundle\\Entity'], 'default'));
+        $config      = $repository->find($first);
+        $held        = $definitions->find($definitionId);
+        self::assertInstanceOf(CookieConsentConfig::class, $config);
+        self::assertInstanceOf(CookieDefinition::class, $held);
+        self::assertTrue($private->contains($config));
+        self::assertTrue($private->contains($held));
+        $config->setName('through the application');
+        $held->setDuration('forever');
+
+        foreach ([
+            'saveSettings' => static fn () => $repository->saveSettings($config, $host),
+            'saveEdit'     => static fn () => $definitions->saveEdit($held, $host, 1),
+        ] as $method => $save) {
+            try {
+                $save();
+                self::fail($method . ' with the application\'s manager must fail.');
+            } catch (LogicException $e) {
+                self::assertStringContainsString('Nothing was written', $e->getMessage());
+            }
+        }
+
+        $connection = $host->getConnection();
+        self::assertSame(['first', 'second'], $this->names([$first, $second]), 'nothing written, the application\'s change not flushed');
+        self::assertSame('2 years', $connection->fetchOne('SELECT duration FROM dashboard_cookie_definition WHERE id = ?', [$definitionId]));
+        self::assertSame(0, $connection->getTransactionNestingLevel());
+        self::assertTrue($host->contains($hostPending));
     }
 
     public function testASaveInsideAnOpenApplicationTransactionIsRolledBackWithIt(): void

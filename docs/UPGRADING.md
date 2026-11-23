@@ -196,7 +196,9 @@ Run your traffic and test suite on 1.36 with deprecations logged and clear every
    does." Each class listed is a change of yours that is only stored because an admin save flushed your manager: make
    that code flush its own changes (see [Private manager only](#private-manager-only)).
 3. Set `doctrine.private_entity_manager: true` on 1.x and run again: that is the 2.0 behaviour. Then fix what the probe
-   cannot see (the reverse pattern below).
+   cannot see (the reverse pattern below). When you bump to `^2.0`, **remove that key again** (unless you use a
+   dedicated `doctrine.entity_manager`, below): on your default manager 2.0 triggers a build-time deprecation for it,
+   which fails a strict deprecation check (PHPUnit `failOnDeprecation`, a deprecations baseline).
 4. The other notices: the root `table_prefix` (since 1.3), `doctrine.connection` and `web_ui.path_prefix` (ignored
    since 1.15), `web_ui.css_framework`, `web_ui.icon_set` and `web_ui.chrome` (since 1.16), building
    `CookieConsentConfigSettingsType` (1.35), a host `CookieHandlerInterface` service ("the consent cookies are written
@@ -217,7 +219,7 @@ Run your traffic and test suite on 1.36 with deprecations logged and clear every
 | `private_entity_manager: false` | the admin saves flush your default manager (notice since 1.35) | **build error**: remove the key |
 | `doctrine.entity_manager: <your default manager's name>` | same as unset | same as unset: the private manager on it |
 | `doctrine.entity_manager: <a dedicated manager>` | the bundle writes through that manager, no notice | unchanged (the DDD option) |
-| a dedicated `doctrine.entity_manager` + `private_entity_manager: true` | the private manager on the dedicated manager (1.34) | unchanged, no deprecation |
+| a dedicated `doctrine.entity_manager` + `private_entity_manager: true` | the private manager on the dedicated manager (1.34) | unchanged, no deprecation: with a dedicated manager the key keeps its meaning in 2.x (keep it if you want the private manager on top of that manager) |
 | no DoctrineBundle (YAML-only host) | no bundle tables | unchanged |
 
 There is no option to keep the 1.x behaviour on your default manager. To keep the bundle's rows in a unit of work of
@@ -268,7 +270,7 @@ not concerned: they never used your manager):
 | `web_ui.css_framework`, `web_ui.icon_set` | 1.16 | `nowo_ui_kit.css_framework`, `nowo_ui_kit.icon_set` (the bundle no longer seeds them) |
 | `web_ui.chrome` (all keys: `classes`, `attributes`, `templates.*`, `row_actions_display`, `page_title_tag`) | 1.16 | `nowo_ui_kit.theme.bundles.NowoCookieConsentBundle` (classes, attributes, partials, `pages.<type>`); `nowo_ui_kit.row_actions_display`; `twig.form_themes`; a `web_ui.templates.<page>` override of `nowo_ui_form_body` / `nowo_ui_settings_section` for `form_fields`; your layout's `nowo_ui_styles` for `styles_after` |
 | `Admin\AdminChrome` | 1.16 | the UiKit theme |
-| Twig globals `nowo_cookie_consent_layout_template`, `nowo_cookie_consent_css_framework`, `nowo_cookie_consent_icon_set` (and the `CookieConsentAdminTwigExtension` constants `GLOBAL_LAYOUT_TEMPLATE`, `GLOBAL_CSS_FRAMEWORK`, `GLOBAL_ICON_SET`, `UI_KIT_ADMIN_LAYOUT` and constructor arguments) | 1.16 | `nowo_ui_layout.admin` / `web_ui.layout_template`, `nowo_ui_kit_css_framework`, `nowo_ui_kit_icon_set` |
+| Twig globals `nowo_cookie_consent_layout_template`, `nowo_cookie_consent_css_framework`, `nowo_cookie_consent_icon_set` (and the `CookieConsentAdminTwigExtension` constants `GLOBAL_LAYOUT_TEMPLATE`, `GLOBAL_CSS_FRAMEWORK`, `GLOBAL_ICON_SET` and constructor arguments; `UI_KIT_ADMIN_LAYOUT` is kept, deprecated, until 3.0) | 1.16 | `nowo_ui_layout.admin` / `web_ui.layout_template`, `nowo_ui_kit_css_framework`, `nowo_ui_kit_icon_set` |
 | Container parameters `nowo_cookie_consent.doctrine.connection`, `.web_ui.path_prefix`, `.web_ui.css_framework`, `.web_ui.icon_set`, `.web_ui.row_actions_display` | with their keys | none |
 | `Cookie\CookieHandlerInterface` and its service alias | 1.30 | `Cookie\ConsentCookieWriterInterface` |
 | `CookieHandler::save()`, `clear()`, `saveCookie()` | 1.30 | `consentCookies()` / `expiredConsentCookies()`, then `Http\ConsentCookieJarApplier::apply($jar, $response)` |
@@ -303,6 +305,8 @@ The third constructor argument of `CookieConsentFormSubscriber` and the second o
 - The `nowo_cookie_consent_admin_chrome` global is kept with the 1.x value of a host without `web_ui.chrome` (no
   classes, attributes or partials).
 - `admin/_admin_area_nav.html.twig` is kept (deprecated, no removal version announced).
+- `CookieConsentAdminTwigExtension::UI_KIT_ADMIN_LAYOUT` is kept, deprecated since 2.0 and removed in 3.0 (read
+  `nowo_ui_layout.admin`).
 
 ### Unchanged
 

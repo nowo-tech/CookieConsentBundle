@@ -142,6 +142,8 @@ without code changes. See UPGRADING "To 2.0.0".
 - The admin templates no longer render the removed `web_ui.chrome.templates.form_fields` / `styles_after` partials;
   `admin/config/settings.html.twig` only extends the UiKit settings scaffold. The `nowo_cookie_consent_admin_chrome`
   Twig global keeps its 1.x shape with the values of a host without `web_ui.chrome`.
+- `CookieConsentAdminTwigExtension::UI_KIT_ADMIN_LAYOUT` is kept and deprecated (removed in 3.0; read
+  `nowo_ui_layout.admin`).
 - The constructor argument `$hostFlushReporter` of `CookieConsentConfigRepository`, `CookieDefinitionRepository` and
   `CookieDefinitionAdminController` is now `?object`, ignored and deprecated (removed in 3.0).
 - CI: the `1.x` maintenance branch runs the workflow on push and pull request.
@@ -168,7 +170,7 @@ without code changes. See UPGRADING "To 2.0.0".
   `nowo_cookie_consent.web_ui.row_actions_display`.
 - **BREAKING:** the Twig globals `nowo_cookie_consent_layout_template`, `nowo_cookie_consent_css_framework`,
   `nowo_cookie_consent_icon_set` (deprecated since 1.16), with the `CookieConsentAdminTwigExtension` constants
-  `GLOBAL_LAYOUT_TEMPLATE`, `GLOBAL_CSS_FRAMEWORK`, `GLOBAL_ICON_SET`, `UI_KIT_ADMIN_LAYOUT` and its constructor
+  `GLOBAL_LAYOUT_TEMPLATE`, `GLOBAL_CSS_FRAMEWORK`, `GLOBAL_ICON_SET` and its constructor
   arguments. Read `nowo_ui_layout.admin` (or `web_ui.layout_template`), `nowo_ui_kit_css_framework`,
   `nowo_ui_kit_icon_set`.
 - `Doctrine\ConsentLogCollationListener::postGenerateSchemaTable()` (`@internal`, a no-op since 1.33.1).
