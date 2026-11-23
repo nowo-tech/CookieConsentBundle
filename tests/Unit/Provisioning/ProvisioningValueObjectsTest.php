@@ -40,6 +40,8 @@ final class ProvisioningValueObjectsTest extends TestCase
 
     public function testProfileTranslationFromArray(): void
     {
+        self::assertSame('app_privacy.v2-legal', (new ProfileTranslationSpec('en', 'T', 'D', 'A', 'N', privacyRoute: 'app_privacy.v2-legal'))->privacyRoute, 'a route name');
+
         $translation = ProfileTranslationSpec::fromArray('es', [
             'consentModalTitle'              => 'Cookies',
             'consentModalDescription'        => 'Texto',
@@ -97,18 +99,37 @@ final class ProvisioningValueObjectsTest extends TestCase
         yield 'definition sort order coerced' => [static fn (): CookieDefinitionSpec => CookieDefinitionSpec::fromArray(['name' => '_ga', 'sort_order' => '1']), 'must be an integer'];
         yield 'definition allowed_by_default coerced' => [static fn (): CookieDefinitionSpec => CookieDefinitionSpec::fromArray(['name' => '_ga', 'allowed_by_default' => 'yes']), 'must be a boolean'];
         yield 'definition translation unknown key' => [static fn (): CookieDefinitionTranslationSpec => CookieDefinitionTranslationSpec::fromArray('en', ['provider' => 'G', 'vendor' => 'G']), 'Unknown key "vendor"'];
+        yield 'privacy route URL' => [static fn (): ProfileTranslationSpec => new ProfileTranslationSpec('en', 'T', 'D', 'A', 'N', privacyRoute: 'https://example.com/privacy'), 'must be a Symfony route name'];
+        yield 'privacy route path' => [static fn (): ProfileTranslationSpec => new ProfileTranslationSpec('en', 'T', 'D', 'A', 'N', privacyRoute: '/privacy'), 'must be a Symfony route name'];
+        yield 'privacy route with space' => [static fn (): ProfileTranslationSpec => ProfileTranslationSpec::fromArray('en', ['consentModalTitle' => 'T', 'consentModalDescription' => 'D', 'consentModalAcceptAllBtn' => 'A', 'consentModalAcceptNecessaryBtn' => 'N', 'privacyRoute' => 'app privacy']), 'must be a Symfony route name'];
+        yield 'required not pre-ticked' => [static fn (): CookieDefinitionSpec => new CookieDefinitionSpec('session', 'required', allowedByDefault: false), 'always pre-ticked'];
+        yield 'required not pre-ticked from array' => [static fn (): CookieDefinitionSpec => CookieDefinitionSpec::fromArray(['name' => 'session', 'category' => 'required', 'allowed_by_default' => false]), 'always pre-ticked'];
+        yield 'sort order above 32 bits' => [static fn (): CookieDefinitionSpec => new CookieDefinitionSpec('_ga', sortOrder: 2147483648), 'must be between -2147483648 and 2147483647'];
+        yield 'sort order below 32 bits' => [static fn (): CookieDefinitionSpec => new CookieDefinitionSpec('_ga', sortOrder: -2147483649), 'must be between'];
         yield 'definition translations not a map' => [static fn (): CookieDefinitionSpec => CookieDefinitionSpec::fromArray(['name' => '_ga', 'translations' => ['x']]), 'string keys'];
     }
 
-    public function testCookieDefinitionDefaults(): void
+    public function testCookieDefinitionFieldsAreOnlyTheGivenOnes(): void
     {
-        $required  = new CookieDefinitionSpec('session');
-        $analytics = new CookieDefinitionSpec('_ga', 'analytics');
+        $bare = new CookieDefinitionSpec('session');
+        $full = new CookieDefinitionSpec('_ga', 'analytics', '2 years', CookieDefinition::TYPE_THIRD_PARTY, 3, false);
 
-        self::assertSame(['session', 'required', '', CookieDefinition::TYPE_FIRST_PARTY, 0, true], [$required->name, $required->category, $required->duration, $required->type, $required->sortOrder, $required->allowedByDefault]);
-        self::assertFalse($analytics->allowedByDefault, 'JD-L6: only the required category is pre-ticked by default');
-        self::assertTrue((new CookieDefinitionSpec('_ga', 'analytics', allowedByDefault: true))->allowedByDefault);
-        self::assertSame([], $analytics->translations());
+        self::assertSame([], $bare->fields(), 'ZAH-3: nothing given, nothing written (the stored values are kept)');
+        self::assertNull($bare->category);
+        self::assertSame(['category' => 'analytics', 'duration' => '2 years', 'type' => 'third_party', 'sortOrder' => 3, 'allowedByDefault' => false], $full->fields());
+        self::assertSame(['allowedByDefault' => true], (new CookieDefinitionSpec('_ga', allowedByDefault: true))->fields());
+        self::assertSame([], $full->translations());
+        self::assertSame(['category' => 'required', 'allowedByDefault' => true], (new CookieDefinitionSpec('session', 'required', allowedByDefault: true))->fields());
+    }
+
+    public function testOptionalTextsAreOnlyWrittenWhenGiven(): void
+    {
+        $translation = new CookieDefinitionTranslationSpec('en', purpose: 'Statistics');
+        self::assertNull($translation->provider);
+        self::assertSame('Statistics', $translation->purpose);
+
+        $copy = new ProfileTranslationSpec('en', 'T', 'D', 'A', 'N', consentModalFooter: '');
+        self::assertSame(['consentModalTitle' => 'T', 'consentModalDescription' => 'D', 'consentModalAcceptAllBtn' => 'A', 'consentModalAcceptNecessaryBtn' => 'N', 'consentModalFooter' => ''], $copy->texts(), 'null keeps, "" clears');
     }
 
     public function testCookieDefinitionsFromTheCookieInventoryShape(): void
@@ -118,7 +139,7 @@ final class ProvisioningValueObjectsTest extends TestCase
                 'en' => ['provider' => 'Google', 'purpose' => 'Statistics'],
                 'es' => ['purpose' => 'Estadísticas'],
             ]],
-            ['name' => 'session', 'sortOrder' => 1, 'allowedByDefault' => false],
+            ['name' => 'session', 'sortOrder' => 1, 'allowedByDefault' => true],
             ['name' => '123'],
         ]);
 
@@ -128,11 +149,12 @@ final class ProvisioningValueObjectsTest extends TestCase
         self::assertEquals(
             (new CookieDefinitionSpec('_ga', 'analytics', '2 years', 'third_party', 2, false))
                 ->withTranslation(new CookieDefinitionTranslationSpec('en', 'Google', 'Statistics'))
-                ->withTranslation(new CookieDefinitionTranslationSpec('es', '', 'Estadísticas')),
+                ->withTranslation(new CookieDefinitionTranslationSpec('es', null, 'Estadísticas')),
             $all[0],
         );
-        self::assertSame([1, false], [$all[1]->sortOrder, $all[1]->allowedByDefault]);
+        self::assertSame([1, true, null], [$all[1]->sortOrder, $all[1]->allowedByDefault, $all[1]->category]);
         self::assertSame('123', $all[2]->name, 'a numeric-looking name stays a string key');
+        self::assertSame([], $all[2]->fields(), 'ZAH-3: omitted keys keep the stored values');
     }
 
     public function testResultAndExceptions(): void

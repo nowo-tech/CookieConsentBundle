@@ -19,6 +19,7 @@ use Nowo\CookieConsentBundle\Provisioning\CookieDefinitionSpec;
 use Nowo\CookieConsentBundle\Provisioning\CookieDefinitionSpecs;
 use Nowo\CookieConsentBundle\Provisioning\CookieDefinitionTranslationSpec;
 use Nowo\CookieConsentBundle\Provisioning\DefaultProfileSpec;
+use Nowo\CookieConsentBundle\Provisioning\InvalidProvisioningSpecException;
 use Nowo\CookieConsentBundle\Provisioning\ProfileTranslationSpec;
 use Nowo\CookieConsentBundle\Tests\Support\PersonalData\ConsentLogDatabase;
 use Nowo\CookieConsentBundle\Tests\Support\Provisioning\FlushProbe;
@@ -28,6 +29,7 @@ use PHPUnit\Framework\TestCase;
 use Throwable;
 
 use function array_map;
+use function array_values;
 use function is_bool;
 use function json_decode;
 use function sort;
@@ -107,7 +109,7 @@ final class CookieConsentProvisionerTest extends TestCase
         self::assertSame(7, (int) $row['priority']);
         self::assertSame(2, (int) $row['row_version'], 'an admin page opened before is now stale');
         self::assertSame('New title', $this->connection()->fetchOne('SELECT consent_modal_title FROM dashboard_cookie_config_translation WHERE locale = ?', ['en']));
-        self::assertNull($this->connection()->fetchOne('SELECT consent_modal_label FROM dashboard_cookie_config_translation WHERE locale = ?', ['en']), 'a complete copy: optional texts not given are cleared');
+        self::assertSame('Cookie banner', $this->connection()->fetchOne('SELECT consent_modal_label FROM dashboard_cookie_config_translation WHERE locale = ?', ['en']), 'ZAH-3: an optional text not given keeps its stored value');
         self::assertSame('Cookies ES', $this->connection()->fetchOne('SELECT consent_modal_title FROM dashboard_cookie_config_translation WHERE locale = ?', ['es']), 'other locales are kept');
     }
 
@@ -286,9 +288,15 @@ final class CookieConsentProvisionerTest extends TestCase
         try {
             $this->provisioner->upsertCookieDefinitions(new CookieDefinitionSpecs(new CookieDefinitionSpec('_ga', 'analytics')));
             self::fail('Expected a provisioning exception.');
-        } catch (CookieConsentProvisioningException) {
-            self::assertSame(1, $rogue->flushes);
-            self::assertSame(1, $connection->getTransactionNestingLevel(), 'only the savepoint was rolled back');
+        } catch (CookieConsentProvisioningException|LogicException $exception) {
+            if ($this->isMySql()) {
+                self::assertInstanceOf(LogicException::class, $exception, 'ZAH-4: refused inside a transaction on MySQL / MariaDB');
+                self::assertSame(0, $rogue->flushes, 'nothing was attempted');
+            } else {
+                self::assertInstanceOf(CookieConsentProvisioningException::class, $exception);
+                self::assertSame(1, $rogue->flushes);
+            }
+            self::assertSame(1, $connection->getTransactionNestingLevel(), 'the caller\'s transaction is left open');
         } finally {
             $connection->rollBack();
         }
@@ -298,11 +306,99 @@ final class CookieConsentProvisionerTest extends TestCase
     {
         $connection = $this->connection();
         $connection->beginTransaction();
-        $result = $this->provisioner->ensureDefaultProfile(DefaultProfileSpec::create()->withName('In the caller'));
-        self::assertSame(1, $result->created);
-        $connection->rollBack();
+        try {
+            $result = $this->provisioner->ensureDefaultProfile(DefaultProfileSpec::create()->withName('In the caller'));
+            self::assertFalse($this->isMySql(), 'refused on MySQL / MariaDB');
+            self::assertSame(1, $result->created);
+        } catch (LogicException $exception) {
+            self::assertTrue($this->isMySql(), $exception->getMessage());
+            self::assertStringContainsString('outside your transaction', $exception->getMessage());
+        } finally {
+            $connection->rollBack();
+        }
 
         self::assertSame(0, (int) $connection->fetchOne('SELECT COUNT(*) FROM dashboard_cookie_config'));
+    }
+
+    public function testAnOmittedCookieFieldKeepsTheStoredValue(): void
+    {
+        $this->seedProfile();
+        $this->provisioner->upsertCookieDefinitions(new CookieDefinitionSpecs(
+            (new CookieDefinitionSpec('_m', 'marketing', '6 months', CookieDefinition::TYPE_THIRD_PARTY, 4, false))->withTranslation(new CookieDefinitionTranslationSpec('en', 'Ads Inc', 'Ads')),
+        ));
+
+        $bare = $this->provisioner->upsertCookieDefinitions(CookieDefinitionSpecs::fromArray([['name' => '_m', 'translations' => ['en' => ['purpose' => 'Advertising']]]]));
+
+        self::assertSame([0, 1, 0], [$bare->created, $bare->updated, $bare->unchanged]);
+        $row = $this->fetch("SELECT * FROM dashboard_cookie_definition WHERE name = '_m'");
+        self::assertSame(['marketing', '6 months', 'third_party', 4], [$row['category'], $row['duration'], $row['type'], (int) $row['sort_order']], 'ZAH-3: never reclassified as required');
+        self::assertFalse((bool) $row['allowed_by_default'], 'never pre-ticked by an omitted key');
+        self::assertSame(['Ads Inc', 'Advertising'], array_values((array) $this->connection()->fetchAssociative('SELECT provider, purpose FROM dashboard_cookie_definition_translation')), 'the provider not given is kept');
+
+        $again = $this->provisioner->upsertCookieDefinitions(new CookieDefinitionSpecs(new CookieDefinitionSpec('_m')));
+        self::assertSame(1, $again->unchanged);
+    }
+
+    public function testARequiredCookieIsAlwaysPreTicked(): void
+    {
+        $this->seedProfile();
+
+        $created = $this->provisioner->upsertCookieDefinitions(new CookieDefinitionSpecs(new CookieDefinitionSpec('session'), new CookieDefinitionSpec('_m', 'marketing')));
+        self::assertSame(2, $created->created);
+        self::assertSame(['required', 1], [$this->connection()->fetchOne("SELECT category FROM dashboard_cookie_definition WHERE name = 'session'"), (int) $this->connection()->fetchOne("SELECT allowed_by_default FROM dashboard_cookie_definition WHERE name = 'session'")], 'a new cookie without a category is required, pre-ticked');
+
+        // The stored category is required: false is refused, as on the admin page, and nothing is written.
+        try {
+            $this->provisioner->upsertCookieDefinitions(new CookieDefinitionSpecs(new CookieDefinitionSpec('session', duration: '1 day', allowedByDefault: false)));
+            self::fail('Expected the refusal.');
+        } catch (InvalidProvisioningSpecException $exception) {
+            self::assertStringContainsString('always pre-ticked', $exception->getMessage());
+        }
+        self::assertSame('', $this->connection()->fetchOne("SELECT duration FROM dashboard_cookie_definition WHERE name = 'session'"));
+
+        // Moving a cookie to the required category pre-ticks it.
+        $moved = $this->provisioner->upsertCookieDefinitions(new CookieDefinitionSpecs(new CookieDefinitionSpec('_m', 'required')));
+        self::assertSame(1, $moved->updated);
+        self::assertTrue((bool) $this->connection()->fetchOne("SELECT allowed_by_default FROM dashboard_cookie_definition WHERE name = '_m'"));
+    }
+
+    public function testAnOmittedOptionalTextKeepsTheAdminsEditAndAnEmptyOneClearsIt(): void
+    {
+        $this->seedProfile();
+        $this->connection()->executeStatement("UPDATE dashboard_cookie_config_translation SET consent_modal_footer = 'Edited by an admin', privacy_route = 'app_privacy' WHERE locale = 'en'");
+
+        $again = $this->provisioner->ensureDefaultProfile($this->profileSpec());
+        self::assertSame(1, $again->unchanged);
+        self::assertSame(['Edited by an admin', 'app_privacy'], array_values((array) $this->connection()->fetchAssociative("SELECT consent_modal_footer, privacy_route FROM dashboard_cookie_config_translation WHERE locale = 'en'")));
+
+        $cleared = $this->provisioner->ensureDefaultProfile(DefaultProfileSpec::create()->withTranslation(new ProfileTranslationSpec('en', 'Cookies', 'We use cookies.', 'Accept all', 'Only necessary', consentModalFooter: '')));
+        self::assertSame(1, $cleared->updated);
+        self::assertContains($this->connection()->fetchOne("SELECT consent_modal_footer FROM dashboard_cookie_config_translation WHERE locale = 'en'"), ['', null]);
+    }
+
+    public function testTheEffectiveLayoutCombinationMustBeOneTheAdminFormOffers(): void
+    {
+        // A new profile keeps the entity defaults it is not given: "bar" with the default "wide" / "left" is refused.
+        try {
+            $this->provisioner->ensureDefaultProfile(DefaultProfileSpec::create()->withConsentModalLayout('bar'));
+            self::fail('Expected the refusal.');
+        } catch (InvalidProvisioningSpecException $exception) {
+            self::assertStringContainsString('"bar" layout does not offer', $exception->getMessage());
+        }
+        self::assertSame(0, (int) $this->connection()->fetchOne('SELECT COUNT(*) FROM dashboard_cookie_config'), 'nothing created');
+
+        // A position checked against the stored layout (the seeded profile is a bar).
+        $this->seedProfile();
+        try {
+            $this->provisioner->ensureDefaultProfile(DefaultProfileSpec::create()->withConsentModalPositionY('top'));
+            self::fail('Expected the refusal.');
+        } catch (InvalidProvisioningSpecException $exception) {
+            self::assertStringContainsString('consentModalPositionY', $exception->getMessage());
+        }
+        self::assertSame('bottom', $this->connection()->fetchOne('SELECT consent_modal_position_y FROM dashboard_cookie_config'));
+
+        // A setting of the other modal, or none, does not check this one.
+        self::assertSame(1, $this->provisioner->ensureDefaultProfile(DefaultProfileSpec::create()->withPreferencesModalPositionX('right'))->updated);
     }
 
     public function testALockConflictIsRetriedThenRethrown(): void
@@ -445,6 +541,11 @@ final class CookieConsentProvisionerTest extends TestCase
         $this->db->entityManager->getEventManager()->addEventListener([Events::onFlush], $probe);
 
         return $probe;
+    }
+
+    private function isMySql(): bool
+    {
+        return $this->connection()->getDatabasePlatform() instanceof AbstractMySQLPlatform;
     }
 
     private function connection(): Connection

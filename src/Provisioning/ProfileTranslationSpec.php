@@ -4,18 +4,22 @@ declare(strict_types=1);
 
 namespace Nowo\CookieConsentBundle\Provisioning;
 
+use function array_filter;
 use function array_key_exists;
 use function array_keys;
+use function preg_match;
 use function sprintf;
 
 /**
  * The copy of the default profile's modals in one locale (1.36), for {@see DefaultProfileSpec::withTranslation()}.
  *
- * A complete value: provisioning writes every text below (a null optional text clears it), so the stored copy of
- * that locale equals the specification afterwards. The grouped preference sections of the translation are not
- * managed and keep their stored value. Natural key: the locale, compared byte for byte (`===`, REQ-SEC-006).
+ * The four required texts are always written. An optional text is written only when it is given: null (or a key
+ * missing from {@see fromArray()}) keeps the stored value, so a text an admin edited is never cleared by a seeder that
+ * does not manage it; an empty string clears it. The grouped preference sections of the translation are not managed
+ * and keep their stored value. Natural key: the locale, compared byte for byte (`===`, REQ-SEC-006).
  *
- * Every text is checked against its column length when the object is built.
+ * Every text is checked against its column length when the object is built; the privacy route must be a route name
+ * (the modal renders it with `path()`).
  */
 final readonly class ProfileTranslationSpec
 {
@@ -40,6 +44,9 @@ final readonly class ProfileTranslationSpec
         'privacyRoute'                       => 255,
     ];
 
+    /** A route name: the modal renders the privacy link with `path()`, so a URL or a path would fail every page. */
+    public const PRIVACY_ROUTE_PATTERN = '/^[A-Za-z0-9_.\-]+$/D';
+
     /** Texts the entity stores as NOT NULL (the others are optional). */
     public const REQUIRED_FIELDS = ['consentModalTitle', 'consentModalDescription', 'consentModalAcceptAllBtn', 'consentModalAcceptNecessaryBtn'];
 
@@ -49,7 +56,7 @@ final readonly class ProfileTranslationSpec
      * @param string $consentModalDescription Text of the consent modal
      * @param string $consentModalAcceptAllBtn "Accept all" button (max 30)
      * @param string $consentModalAcceptNecessaryBtn "Only necessary" button (max 30)
-     * @param string|null $consentModalLabel Accessible label of the consent modal (max 100)
+     * @param string|null $consentModalLabel Accessible label of the consent modal (max 100). Every optional text: null keeps the stored value, "" clears it
      * @param string|null $consentModalShowPreferencesBtn "Preferences" button (max 30)
      * @param string|null $consentModalFooter Footer of the consent modal
      * @param string|null $preferencesModalTitle Title of the preferences modal (max 100)
@@ -57,7 +64,7 @@ final readonly class ProfileTranslationSpec
      * @param string|null $preferencesModalAcceptNecessaryBtn "Only necessary" button of the preferences modal (max 30)
      * @param string|null $preferencesModalSavePreferencesBtn "Save" button of the preferences modal (max 30)
      * @param string|null $preferencesModalCloseIconLabel Label of the close icon (max 30)
-     * @param string|null $privacyRoute Route name or URL of the privacy policy (max 255)
+     * @param string|null $privacyRoute Symfony route name of the privacy policy, without required parameters (max 255; letters, digits, `_`, `.`, `-`; never a URL or a path)
      *
      * @throws InvalidProvisioningSpecException When the locale is malformed or a text is longer than its column
      */
@@ -79,15 +86,18 @@ final readonly class ProfileTranslationSpec
     ) {
         SpecAssert::locale('Profile translation locale', $locale);
         foreach ($this->texts() as $field => $value) {
-            if ($value !== null) {
-                SpecAssert::length(sprintf('Profile translation "%s" %s', $locale, $field), $value, self::FIELDS[$field]);
-            }
+            SpecAssert::length(sprintf('Profile translation "%s" %s', $locale, $field), (string) $value, self::FIELDS[$field]);
+        }
+
+        if ($privacyRoute !== null && $privacyRoute !== '' && preg_match(self::PRIVACY_ROUTE_PATTERN, $privacyRoute) !== 1) {
+            throw new InvalidProvisioningSpecException(sprintf('Profile translation "%s" privacyRoute must be a Symfony route name (letters, digits, "_", "." and "-"; not a URL or a path), got "%s".', $locale, $privacyRoute));
         }
     }
 
     /**
      * Builds the copy from a decoded fixture (JSON / YAML): the keys are the constructor's parameter names except the
-     * locale, which is given separately (the fixtures key their copies by locale). Unknown keys and values of the wrong
+     * locale, which is given separately (the fixtures key their copies by locale). The four required texts must be
+     * given; an optional key that is missing (or null) keeps the stored value. Unknown keys and values of the wrong
      * type are refused.
      *
      * @param array<mixed> $texts
@@ -126,13 +136,14 @@ final readonly class ProfileTranslationSpec
     }
 
     /**
-     * The managed texts by field name (the keys of {@see FIELDS}).
+     * The texts provisioning writes, by field name (keys of {@see FIELDS}): the required ones and the optional ones that
+     * were given (not null).
      *
-     * @return array<string, string|null>
+     * @return array<string, string>
      */
     public function texts(): array
     {
-        return [
+        return array_filter([
             'consentModalTitle'                  => $this->consentModalTitle,
             'consentModalDescription'            => $this->consentModalDescription,
             'consentModalAcceptAllBtn'           => $this->consentModalAcceptAllBtn,
@@ -146,6 +157,6 @@ final readonly class ProfileTranslationSpec
             'preferencesModalSavePreferencesBtn' => $this->preferencesModalSavePreferencesBtn,
             'preferencesModalCloseIconLabel'     => $this->preferencesModalCloseIconLabel,
             'privacyRoute'                       => $this->privacyRoute,
-        ];
+        ], static fn (?string $text): bool => $text !== null);
     }
 }

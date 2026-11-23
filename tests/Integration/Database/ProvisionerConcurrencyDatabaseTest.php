@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Nowo\CookieConsentBundle\Tests\Integration\Database;
 
 use Doctrine\DBAL\Connection;
+use Doctrine\DBAL\Platforms\PostgreSQLPlatform;
 use Nowo\CookieConsentBundle\Entity\CookieConsentConfig;
 use Nowo\CookieConsentBundle\Entity\CookieDefinition;
 use Nowo\CookieConsentBundle\Provisioning\CookieConsentProvisioner;
@@ -16,6 +17,7 @@ use Nowo\CookieConsentBundle\Provisioning\ProfileTranslationSpec;
 use Nowo\CookieConsentBundle\Provisioning\ProvisioningLock;
 use Nowo\CookieConsentBundle\Tests\Support\PersonalData\ConsentLogDatabase;
 use Nowo\TransactionDoctrine\PrivateManager\PrivateEntityManager;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\TestCase;
 use RuntimeException;
@@ -94,15 +96,30 @@ final class ProvisionerConcurrencyDatabaseTest extends TestCase
         ];
     }
 
-    public function testTwoSeedersAtOnceLeaveOneDefaultProfileAndNoDuplicateCookie(): void
+    /**
+     * @return iterable<string, array{0: string|null}>
+     */
+    public static function isolationLevels(): iterable
     {
+        yield 'server default' => [null];
+        yield 'REPEATABLE READ (audit ZAH-4)' => ['REPEATABLE READ'];
+        yield 'SERIALIZABLE' => ['SERIALIZABLE'];
+    }
+
+    #[DataProvider('isolationLevels')]
+    public function testTwoSeedersAtOnceLeaveOneDefaultProfileAndNoDuplicateCookie(?string $isolation): void
+    {
+        if ($isolation !== null) {
+            self::setIsolation($this->connection(), $isolation);
+        }
+
         for ($round = 0; $round < 3; ++$round) {
             if ($round > 0) {
                 $this->connection()->executeStatement('DELETE FROM dashboard_cookie_config');
             }
 
             $startAt = microtime(true) + 1.0;
-            $child   = $this->start($startAt);
+            $child   = $this->start($startAt, $isolation);
             $wait    = $startAt - microtime(true);
             if ($wait > 0) {
                 usleep((int) ($wait * 1e6));
@@ -130,7 +147,7 @@ final class ProvisionerConcurrencyDatabaseTest extends TestCase
         $connection = $this->connection();
         $lock       = ProvisioningLock::acquireSession($connection);
         $connection->beginTransaction();
-        ProvisioningLock::acquireTransaction($connection);
+        ProvisioningLock::acquireTransaction($connection, $lock);
         // The holder has not created the default profile yet when the other seeder starts.
         $child   = $this->start(microtime(true));
         $started = hrtime(true);
@@ -149,6 +166,72 @@ final class ProvisionerConcurrencyDatabaseTest extends TestCase
         self::assertSame([0, 1, 0], $theirs['profile'], 'it updated the holder\'s profile instead of creating a second default');
         self::assertSame([3, 0, 0], $theirs['cookies']);
         self::assertSame(['Race'], $this->column('SELECT name FROM dashboard_cookie_config WHERE is_default = ? AND enabled = ?', [true, true], ['boolean', 'boolean']));
+    }
+
+    /**
+     * Audit ZAH-4: an admin making a profile the default (the repository's save, a second PHP process holding its row
+     * locks) while no default exists. The seeder's locking read waits for the admin's commit, then finds that default
+     * and updates it: never a second enabled default.
+     */
+    public function testASeederAndAnAdminMakingAProfileTheDefaultLeaveOneDefault(): void
+    {
+        $em      = $this->db->entityManager;
+        $profile = (new CookieConsentConfig())->setName('Admin profile')->setEnabled(true)->setDefault(false);
+        $em->persist($profile);
+        $em->flush();
+        $id = (int) $profile->getId();
+
+        $child   = $this->startSaveDefault($id, 1500);
+        $started = hrtime(true);
+        $result  = self::seed($this->provisioner());
+        $waited  = (hrtime(true) - $started) / 1e9;
+        $this->finishSaveDefault($child);
+
+        self::assertGreaterThan(0.5, $waited, 'the seeder waited for the admin\'s row locks');
+        self::assertSame([0, 1, 0], $result['profile'], 'it updated the admin\'s default');
+        self::assertSame([(string) $id], $this->column('SELECT id FROM dashboard_cookie_config WHERE is_default = ? AND enabled = ?', [true, true], ['boolean', 'boolean']));
+    }
+
+    public static function setIsolation(Connection $connection, string $isolation): void
+    {
+        $connection->executeStatement($connection->getDatabasePlatform() instanceof PostgreSQLPlatform
+            ? 'SET SESSION CHARACTERISTICS AS TRANSACTION ISOLATION LEVEL ' . $isolation
+            : 'SET SESSION TRANSACTION ISOLATION LEVEL ' . $isolation);
+    }
+
+    /**
+     * @return array{0: resource, 1: array<int, resource>}
+     */
+    private function startSaveDefault(int $id, int $holdMs): array
+    {
+        // @phpstan-ignore frankenphp.classic.noUnlimitedIoTimeout (test-only child process; pipes read with stream_set_timeout)
+        $process = proc_open(
+            [PHP_BINARY, dirname(__DIR__, 2) . '/Fixtures/concurrency/save-default.php', (string) $id, (string) $holdMs],
+            [1 => ['pipe', 'w'], 2 => ['pipe', 'w']],
+            $pipes,
+            null,
+            [ConsentLogDatabase::URL_ENV => (string) getenv(ConsentLogDatabase::URL_ENV), 'PATH' => (string) getenv('PATH')],
+        );
+        self::assertTrue(is_resource($process));
+        stream_set_timeout($pipes[1], 30);
+        stream_set_timeout($pipes[2], 30);
+        if (fgets($pipes[1]) !== "LOCKED\n") {
+            throw new RuntimeException('The admin process did not take its locks: ' . stream_get_contents($pipes[2]));
+        }
+
+        return [$process, $pipes];
+    }
+
+    /**
+     * @param array{0: resource, 1: array<int, resource>} $child
+     */
+    private function finishSaveDefault(array $child): void
+    {
+        [$process, $pipes] = $child;
+        $out               = (string) stream_get_contents($pipes[1]);
+        $err               = (string) stream_get_contents($pipes[2]);
+        self::assertSame(0, proc_close($process), $err);
+        self::assertSame("DONE\n", $out);
     }
 
     private function provisioner(): CookieConsentProvisioner
@@ -179,11 +262,11 @@ final class ProvisionerConcurrencyDatabaseTest extends TestCase
     /**
      * @return array{0: resource, 1: array<int, resource>}
      */
-    private function start(float $startAt): array
+    private function start(float $startAt, ?string $isolation = null): array
     {
         // @phpstan-ignore frankenphp.classic.noUnlimitedIoTimeout (test-only child process; pipes read with stream_set_timeout)
         $process = proc_open(
-            [PHP_BINARY, dirname(__DIR__, 2) . '/Fixtures/concurrency/provision.php', sprintf('%.6F', $startAt)],
+            [PHP_BINARY, dirname(__DIR__, 2) . '/Fixtures/concurrency/provision.php', sprintf('%.6F', $startAt), $isolation ?? ''],
             [1 => ['pipe', 'w'], 2 => ['pipe', 'w']],
             $pipes,
             null,

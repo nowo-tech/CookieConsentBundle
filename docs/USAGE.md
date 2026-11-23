@@ -586,12 +586,24 @@ What it does:
   lazy HTML, both modals' layout / variant / positions / buttons, theme, dark mode, transitions, two-step, preferences
   first, iframe placeholders, granular selection, preferences bubble). Settings you never give keep their stored value
   (or the entity default when the profile is created), so the admin pages own the rest. The re-consent state
-  (`revision`, `reconsent_required_at`) is not provisioned. A `ProfileTranslationSpec` / `CookieDefinitionSpec` is a
-  complete value: its texts and fields are all written (a null optional text clears it); the grouped preference
-  sections of a copy are kept.
+  (`revision`, `reconsent_required_at`) is not provisioned. The same goes for copies and cookies: a
+  `ProfileTranslationSpec` always writes its four required texts, and an optional text only when it is given (null,
+  or a key missing from `fromArray()`, keeps the stored text an admin may have edited; `""` clears it). A
+  `CookieDefinitionSpec` writes only the fields given (a cookie whose `category` is omitted keeps its category, it is
+  never reclassified); a new cookie takes the entity defaults for the rest (category `required`). As on the admin
+  page, a `required` cookie is always pre-ticked: `allowedByDefault: false` with an effective `required` category is
+  refused. The grouped preference sections of a copy are kept.
+- **Privacy link.** `privacyRoute` is a Symfony route name without required parameters (letters, digits, `_`, `.`,
+  `-`), never a URL or a path: the value object refuses anything else. Since 1.36 the modal also renders a route that
+  cannot be generated (unknown, or needing parameters) without the link and logs a warning, instead of failing the
+  page.
 - **Validated first.** Every value object refuses what the bundle cannot store (unknown choices, a variant or position
-  the layout does not offer, texts longer than their column, malformed locales or names, a key given twice) with
-  `InvalidProvisioningSpecException`, before anything is written. `DefaultProfileSpec::fromArray()`,
+  the layout does not offer, texts longer than their column, malformed locales, names or privacy routes, a priority or
+  sort order outside a signed 32-bit integer, a key given twice) with `InvalidProvisioningSpecException`, before
+  anything is written. The layout combination is checked again against the profile's effective values (the ones you
+  give merged with the stored ones, or the entity defaults for a new profile) when you give the layout, variant or a
+  position of a modal: `create()->withConsentModalLayout('bar')` alone is refused, because a new profile's default
+  variant `wide` and position `left` do not exist for a bar (give `inline`, `bottom` and a null horizontal position). `DefaultProfileSpec::fromArray()`,
   `ProfileTranslationSpec::fromArray()`, `CookieDefinitionSpec::fromArray()` and `CookieDefinitionSpecs::fromArray()`
   build them from decoded JSON / YAML, refusing unknown keys and values of the wrong type (no coercion).
 - **One transaction per call**, through transaction-doctrine's runner (a savepoint inside a transaction of yours,
@@ -601,15 +613,28 @@ What it does:
   connection of the bundle's manager (`doctrine.entity_manager`, else your default one), in every
   `doctrine.private_entity_manager` mode, including the deprecated `false`: your managers are never flushed, cleared or
   reset, and your pending changes are never written. That manager is dropped when every call returns.
-- **Two seeders at once** (REQ-RUNTIME-003): every call holds the bundle's provisioning lock (MySQL / MariaDB
-  `GET_LOCK()`, PostgreSQL `pg_advisory_xact_lock()`; SQLite has one writer at a time), so the second seeder waits,
-  then finds the first one's rows: never two default profiles or the same cookie twice. A unique key refusing a write
-  (an admin adding the same cookie at that moment) and a lock conflict are retried (3 attempts outside a transaction;
-  one inside yours, then `CookieConsentProvisioningException` / `TransientStorageFailure`). On MySQL / MariaDB call it
-  outside a transaction of yours for that guarantee: the session lock is released when the call returns, before your
-  commit (PostgreSQL keeps the lock until your commit).
+- **The default profile.** "The default profile" is the enabled one flagged default (the lowest id if, against the
+  rule, several are). A disabled default does not count: the port then creates a new, enabled default profile, which
+  turns the banner on again (the disabled row keeps its flag). Creating one clears the default flag of any other
+  enabled profile, as the admin save does.
+- **Two seeders at once** (REQ-RUNTIME-003): every call holds the bundle's provisioning lock, a session lock taken
+  before its transaction begins (MySQL / MariaDB `GET_LOCK()`, PostgreSQL `pg_try_advisory_lock()` polled; SQLite has
+  one writer at a time), so the second seeder waits, then finds the first one's rows under any isolation level: never
+  two default profiles or the same cookie twice. The enabled profiles are then read with `SELECT ... FOR UPDATE`, as
+  the admin "make default" save does, so a seeder and an admin making a profile the default at the same moment also
+  leave one default. Every wait for the provisioning lock is bounded (10 seconds), then `TransientStorageFailure`. A
+  unique key refusing a write (an admin adding the same cookie at that moment) and a lock conflict are retried (3
+  attempts outside a transaction, then `CookieConsentProvisioningException` / `TransientStorageFailure`).
+- **Inside a transaction of yours** there is one attempt and your commit decides. On PostgreSQL the lock is then a
+  transaction-level one held until your commit, under READ COMMITTED only (REPEATABLE READ / SERIALIZABLE are refused
+  with a `LogicException`: an older snapshot cannot see another seeder's profile). On MySQL / MariaDB the call is
+  refused with a `LogicException` (a session lock would be released before your commit): call the port outside your
+  transaction, as a console seeder does.
 - **Worker-safe** (REQ-RUNTIME-002): stateless services; no entity survives a call (FrankenPHP worker mode with the
-  kernel reset off, long console commands, Messenger handlers).
+  kernel reset off, long console commands, Messenger handlers). The port's manager shares your manager's event
+  manager, so your Doctrine listeners see its flushes; entities other managers loaded earlier in the same unit (the
+  bundle's reader, your manager in the deprecated mode) are not refreshed: read again after provisioning if the same
+  command needs the new values.
 - Registered only with DoctrineBundle (a host on the YAML path has no profile tables). Alias the interface to your own
   service to replace it.
 

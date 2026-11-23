@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Nowo\CookieConsentBundle\Provisioning;
 
+use LogicException;
 use Nowo\CookieConsentBundle\Config\CookieConsentConfigReaderInterface;
 use Nowo\TransactionContract\TransientStorageFailure;
 
@@ -22,12 +23,15 @@ use Nowo\TransactionContract\TransientStorageFailure;
  * - **Idempotent.** Natural keys, compared byte for byte (`===`, REQ-SEC-006): the enabled default profile, a profile
  *   copy's locale, a cookie's name in the default profile, a cookie copy's locale. A second call with the same
  *   specification writes nothing and reports every item unchanged. Nothing is ever deleted.
- * - **Concurrency-safe** (REQ-RUNTIME-003). Every call holds the bundle's provisioning lock (MySQL / MariaDB
- *   `GET_LOCK()`, PostgreSQL `pg_advisory_xact_lock()`; SQLite serializes writers), so two seeders at once never create
- *   two default profiles or the same cookie twice: the second waits, then finds the first one's rows. A unique key
- *   refusing a write (an admin adding the same cookie at that moment) and a lock conflict are retried (3 attempts
- *   outside a transaction; one inside yours). An item whose stored values change advances its `row_version`, so an
- *   admin page opened before is refused as stale instead of writing the old values back.
+ * - **Only what is given.** Settings, optional texts and cookie fields the specification does not give keep their
+ *   stored values.
+ * - **Concurrency-safe** (REQ-RUNTIME-003). Every call holds the bundle's provisioning lock ({@see ProvisioningLock}:
+ *   a session lock taken before the transaction, bounded wait) and reads the enabled profiles `FOR UPDATE`, so two
+ *   seeders, or a seeder and an admin "make default" save, never leave two default profiles or the same cookie twice.
+ *   A unique key refusing a write and a lock conflict are retried (3 attempts outside a transaction; one inside yours,
+ *   which MySQL / MariaDB refuse and PostgreSQL allows under READ COMMITTED only). An item whose stored values change
+ *   advances its `row_version`, so an admin page opened before is refused as stale instead of writing the old values
+ *   back.
  *
  * Read access: {@see CookieConsentConfigReaderInterface} (profiles as view objects).
  *
@@ -41,6 +45,8 @@ interface CookieConsentProvisionerInterface
      *
      * @throws TransientStorageFailure When a lock conflict outlasted every attempt (retry later)
      * @throws CookieConsentProvisioningException When a unique key still refused a copy after every attempt
+     * @throws InvalidProvisioningSpecException When the effective layout combination is not one the admin form offers
+     * @throws LogicException Inside a transaction of the caller on MySQL / MariaDB, or not READ COMMITTED on PostgreSQL
      *
      * @return ProvisioningResult One item: the profile (created, updated or unchanged) and its id
      */
@@ -53,6 +59,8 @@ interface CookieConsentProvisionerInterface
      * @throws CookieConsentProvisioningException When there is no enabled default profile, or a unique key still
      *                                            refused a definition after every attempt (a look-alike name)
      * @throws TransientStorageFailure When a lock conflict outlasted every attempt (retry later)
+     * @throws InvalidProvisioningSpecException When `allowedByDefault: false` meets an effective `required` category
+     * @throws LogicException Inside a transaction of the caller on MySQL / MariaDB, or not READ COMMITTED on PostgreSQL
      *
      * @return ProvisioningResult One item per definition of `$definitions`, and the default profile's id
      */

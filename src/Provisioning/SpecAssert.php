@@ -27,6 +27,11 @@ final class SpecAssert
     /** Largest text a TEXT column stores on every supported server (MySQL / MariaDB TEXT: 65,535 bytes). */
     public const TEXT_MAX_BYTES = 65535;
 
+    /** Bounds of a signed 32-bit INTEGER column (priority, sort order). */
+    public const INT32_MIN = -2147483648;
+
+    public const INT32_MAX = 2147483647;
+
     /**
      * A natural key (cookie name, locale): exact-key semantics (REQ-SEC-006), so no leading or trailing whitespace and
      * no control character (a PAD SPACE collation would treat "nid " as "nid").
@@ -67,6 +72,18 @@ final class SpecAssert
 
         if (mb_strlen($value, 'UTF-8') > $maxLength) {
             throw new InvalidProvisioningSpecException(sprintf('%s is longer than %d characters.', $field, $maxLength));
+        }
+
+        return $value;
+    }
+
+    /**
+     * A value that fits a signed 32-bit INTEGER column.
+     */
+    public static function int32(string $field, int $value): int
+    {
+        if ($value < self::INT32_MIN || $value > self::INT32_MAX) {
+            throw new InvalidProvisioningSpecException(sprintf('%s must be between %d and %d, got %d.', $field, self::INT32_MIN, self::INT32_MAX, $value));
         }
 
         return $value;

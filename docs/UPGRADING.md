@@ -4,6 +4,7 @@
 
 - [Unreleased](#unreleased)
 - [To 1.36.0](#to-1360)
+  - [Privacy link of the modal](#privacy-link-of-the-modal)
   - [Seeding through the provisioning port](#seeding-through-the-provisioning-port)
   - [2.0: the port, not your entity manager](#20-the-port-not-your-entity-manager)
 - [To 1.35.0](#to-1350)
@@ -164,8 +165,20 @@ From **1.35.0**:
 composer update nowo-tech/cookie-consent-bundle
 ```
 
-No configuration, schema or behaviour change: 1.36.0 adds a host write port. Nothing to do unless your code writes the
-bundle's entities itself (a seeder, fixtures, an installer).
+No configuration or schema change: 1.36.0 adds a host write port. Nothing to do unless your code writes the bundle's
+entities itself (a seeder, fixtures, an installer), or your overridden modal template links the privacy route.
+
+### Privacy link of the modal
+
+The bundle templates now render the privacy link with `nowo_cookie_consent_privacy_url(display_config ?? null)`, which
+answers null (no link, a warning in the log) when the route cannot be generated, instead of `path(privacy_route)`,
+which failed every page showing the banner. If you override `cookie_consent.html.twig` (or the Tailwind one), switch
+your copy the same way:
+
+```twig
+{% set privacy_url = nowo_cookie_consent_privacy_url(display_config ?? null) %}
+{% if privacy_url %}<a href="{{ privacy_url }}">…</a>{% endif %}
+```
 
 ### Seeding through the provisioning port
 
@@ -188,9 +201,13 @@ $result = $provisioner->ensureDefaultProfile(DefaultProfileSpec::create()
 $provisioner->upsertCookieDefinitions(CookieDefinitionSpecs::fromArray($decodedCookieFixture));
 ```
 
-- Give only the settings your seeder owns: the others keep their stored value.
-- The profile copies (`ProfileTranslationSpec`) and the cookie copies (`CookieDefinitionTranslationSpec`) are complete
-  values per locale; other locales and cookies the list does not name are kept.
+- Give only the settings your seeder owns: the others keep their stored value. The same holds for the optional copy
+  texts (null or a missing key keeps the stored text, `""` clears it) and the cookie fields (an omitted `category`
+  keeps the stored one); other locales and cookies the list does not name are kept.
+- `privacyRoute` is a route name (no URL, no path); a `required` cookie is always pre-ticked; `create()` of a bar layout
+  must also give `inline`, `bottom` and a null horizontal position (the entity defaults are for a box).
+- Call it outside your own transaction on MySQL / MariaDB (a call inside one is refused), and under READ COMMITTED
+  on PostgreSQL if you call it inside one.
 - Read what you need through `CookieConsentConfigReaderInterface` (view objects), not the repositories.
 - It works with `doctrine.private_entity_manager` true, false or unset, and with a dedicated `doctrine.entity_manager`.
 

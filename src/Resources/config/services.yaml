@@ -164,6 +164,8 @@ services:
   Nowo\CookieConsentBundle\Twig\CookieConsentTranslationTwigExtension:
     arguments:
       $privacyRouteFallback: '%nowo_cookie_consent.privacy_route%'
+      $urlGenerator: '@?router'
+      $logger: '@?logger'
 
   Nowo\CookieConsentBundle\Twig\CookieConsentTwigExtension:
     arguments:

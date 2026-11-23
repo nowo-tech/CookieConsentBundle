@@ -10,12 +10,14 @@ use Doctrine\DBAL\Platforms\MariaDBPlatform;
 use Doctrine\DBAL\Platforms\MySQL80Platform;
 use Doctrine\DBAL\Platforms\PostgreSQLPlatform;
 use Doctrine\DBAL\Platforms\SQLitePlatform;
+use LogicException;
 use Nowo\CookieConsentBundle\Provisioning\ProvisioningLock;
 use Nowo\TransactionContract\TransientStorageFailure;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use RuntimeException;
 
+use function array_shift;
 use function str_starts_with;
 use function strlen;
 
@@ -26,7 +28,7 @@ final class ProvisioningLockTest extends TestCase
         $connection = $this->connection(new MySQL80Platform());
         $connection->method('getDatabase')->willReturn('app');
         $calls = [];
-        $connection->method('fetchOne')->willReturnCallback(static function (string $sql, array $params) use (&$calls): int {
+        $connection->method('fetchOne')->willReturnCallback(static function (string $sql, array $params = []) use (&$calls): int {
             $calls[] = [$sql, $params];
 
             return 1;
@@ -36,11 +38,11 @@ final class ProvisioningLockTest extends TestCase
         self::assertIsString($name);
         self::assertTrue(str_starts_with($name, ProvisioningLock::NAME . ':'));
         self::assertLessThanOrEqual(64, strlen($name), 'MySQL lock names are 64 characters at most');
-        ProvisioningLock::acquireTransaction($connection);
+        ProvisioningLock::acquireTransaction($connection, $name);
         ProvisioningLock::release($connection, $name);
 
         self::assertSame([
-            ['SELECT GET_LOCK(?, ?)', [$name, ProvisioningLock::MYSQL_WAIT_SECONDS]],
+            ['SELECT GET_LOCK(?, ?)', [$name, (float) ProvisioningLock::WAIT_SECONDS]],
             ['SELECT RELEASE_LOCK(?)', [$name]],
         ], $calls);
     }
@@ -54,24 +56,77 @@ final class ProvisioningLockTest extends TestCase
         ProvisioningLock::acquireSession($connection);
     }
 
+    public function testMySqlRefusesToRunInsideATransactionOfTheCaller(): void
+    {
+        $connection = $this->connection(new MySQL80Platform(), 1);
+        $connection->expects(self::never())->method('fetchOne');
+
+        $this->expectException(LogicException::class);
+        $this->expectExceptionMessage('outside your transaction');
+        ProvisioningLock::acquireSession($connection);
+    }
+
     public function testAFailedReleaseIsIgnored(): void
     {
         $connection = $this->connection(new MySQL80Platform());
         $connection->method('fetchOne')->willThrowException(new RuntimeException('gone away'));
 
         ProvisioningLock::release($connection, 'name');
+        ProvisioningLock::release($connection, 'pgsql');
         ProvisioningLock::release($connection, null);
         $this->addToAssertionCount(1);
     }
 
-    public function testPostgreSqlTakesATransactionLock(): void
+    public function testPostgreSqlPollsASessionLockAndReleasesIt(): void
     {
         $connection = $this->connection(new PostgreSQLPlatform());
-        $connection->expects(self::once())->method('fetchOne')->with('SELECT pg_advisory_xact_lock(?)', [ProvisioningLock::postgresKey()]);
+        $answers    = [false, 'f', true, true];
+        $calls      = [];
+        $connection->method('fetchOne')->willReturnCallback(static function (string $sql, array $params = []) use (&$calls, &$answers): mixed {
+            $calls[] = $sql;
+
+            return array_shift($answers);
+        });
+
+        $lock = ProvisioningLock::acquireSession($connection);
+        self::assertSame('pgsql', $lock);
+        ProvisioningLock::acquireTransaction($connection, $lock);
+        ProvisioningLock::release($connection, $lock);
+
+        self::assertSame(['SELECT pg_try_advisory_lock(?)', 'SELECT pg_try_advisory_lock(?)', 'SELECT pg_try_advisory_lock(?)', 'SELECT pg_advisory_unlock(?)'], $calls);
+        self::assertGreaterThan(0, ProvisioningLock::postgresKey());
+    }
+
+    public function testPostgreSqlInsideAReadCommittedTransactionTakesATransactionLock(): void
+    {
+        $connection = $this->connection(new PostgreSQLPlatform(), 1);
+        $answers    = ['read committed', 1];
+        $connection->method('fetchOne')->willReturnCallback(static function () use (&$answers): mixed {
+            return array_shift($answers);
+        });
 
         self::assertNull(ProvisioningLock::acquireSession($connection));
-        ProvisioningLock::acquireTransaction($connection);
-        self::assertGreaterThan(0, ProvisioningLock::postgresKey());
+        ProvisioningLock::acquireTransaction($connection, null);
+        self::assertSame([], $answers);
+    }
+
+    public function testPostgreSqlInsideARepeatableReadTransactionIsRefused(): void
+    {
+        $connection = $this->connection(new PostgreSQLPlatform(), 1);
+        $connection->method('fetchOne')->willReturn('repeatable read');
+
+        $this->expectException(LogicException::class);
+        $this->expectExceptionMessage('READ COMMITTED');
+        ProvisioningLock::acquireTransaction($connection, null);
+    }
+
+    public function testPostgreSqlGivesUpAfterTheWait(): void
+    {
+        $connection = $this->connection(new PostgreSQLPlatform());
+        $connection->method('fetchOne')->willReturn('0');
+
+        $this->expectException(TransientStorageFailure::class);
+        ProvisioningLock::acquireSession($connection, 0.25);
     }
 
     public function testSqliteTakesNoLock(): void
@@ -80,16 +135,17 @@ final class ProvisioningLockTest extends TestCase
         $connection->expects(self::never())->method('fetchOne');
 
         self::assertNull(ProvisioningLock::acquireSession($connection));
-        ProvisioningLock::acquireTransaction($connection);
+        ProvisioningLock::acquireTransaction($connection, null);
     }
 
     /**
      * @return Connection&MockObject
      */
-    private function connection(AbstractPlatform $platform): Connection
+    private function connection(AbstractPlatform $platform, int $level = 0): Connection
     {
         $connection = $this->createMock(Connection::class);
         $connection->method('getDatabasePlatform')->willReturn($platform);
+        $connection->method('getTransactionNestingLevel')->willReturn($level);
 
         return $connection;
     }

@@ -173,6 +173,22 @@ final class DefaultProfileSpec
     }
 
     /**
+     * Whether the specification gives the layout, variant or a position of a modal.
+     *
+     * @param 'consentModal'|'preferencesModal' $modal
+     */
+    public function managesModalLayout(string $modal): bool
+    {
+        foreach (['Layout', 'Variant', 'PositionY', 'PositionX'] as $suffix) {
+            if (array_key_exists($modal . $suffix, $this->settings)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
      * The managed copies, in the order given.
      *
      * @return list<ProfileTranslationSpec>
@@ -206,10 +222,10 @@ final class DefaultProfileSpec
         return $this->with('name', $name === null ? null : SpecAssert::length(self::field('name'), $name, self::NAME_MAX_LENGTH));
     }
 
-    /** Priority among the enabled profiles (highest first). */
+    /** Priority among the enabled profiles (highest first; signed 32-bit). */
     public function withPriority(int $priority): self
     {
-        return $this->with('priority', $priority);
+        return $this->with('priority', SpecAssert::int32(self::field('priority'), $priority));
     }
 
     /** Route patterns the profile applies to (each trimmed; blanks and duplicates dropped). */

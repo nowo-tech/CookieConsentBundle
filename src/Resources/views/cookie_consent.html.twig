@@ -106,9 +106,9 @@
                 <div class="modal-body">
                     <p id="nowoCookieConsentIntro" class="nowo-cookie-consent__intro" data-nowo-intro>{{ nowo_cookie_consent_trans('nowo_cookie_consent.intro', display_config ?? null) }}</p>
                     {{ include('@NowoCookieConsentBundle/_intro_more.html.twig') }}
-                    {% set privacy_route = nowo_cookie_consent_privacy_route(display_config ?? null) %}
-                    {% if privacy_route %}
-                        <a class="btn btn-link text-decoration-none nowo-cookie-consent__read-more" href="{{ path(privacy_route) }}">
+                    {% set privacy_url = nowo_cookie_consent_privacy_url(display_config ?? null) %}
+                    {% if privacy_url %}
+                        <a class="btn btn-link text-decoration-none nowo-cookie-consent__read-more" href="{{ privacy_url }}">
                             {{ nowo_cookie_consent_trans('nowo_cookie_consent.read_more', display_config ?? null) }}
                         </a>
                     {% endif %}

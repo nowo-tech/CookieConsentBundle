@@ -134,7 +134,17 @@ final class DefaultProfileSpecTest extends TestCase
         yield 'bar has no wide variant' => [static fn (DefaultProfileSpec $s): DefaultProfileSpec => $s->withConsentModalLayout('bar')->withConsentModalVariant('wide'), 'not available with the "bar" layout'];
         yield 'bar has no top position (layout last)' => [static fn (DefaultProfileSpec $s): DefaultProfileSpec => $s->withPreferencesModalPositionY('top')->withPreferencesModalLayout('bar'), 'not available with the "bar" layout'];
         yield 'bar has no horizontal position' => [static fn (DefaultProfileSpec $s): DefaultProfileSpec => $s->withConsentModalLayout('bar')->withConsentModalPositionX('left'), 'not available with the "bar" layout'];
+        yield 'priority above 32 bits' => [static fn (DefaultProfileSpec $s): DefaultProfileSpec => $s->withPriority(2147483648), 'must be between'];
         yield 'locale twice' => [static fn (DefaultProfileSpec $s): DefaultProfileSpec => $s->withTranslation(self::translation())->withTranslation(self::translation()), 'given twice'];
+    }
+
+    public function testManagesModalLayout(): void
+    {
+        $spec = DefaultProfileSpec::create()->withPreferencesModalPositionX(null)->withColorTheme('dark');
+
+        self::assertTrue($spec->managesModalLayout('preferencesModal'));
+        self::assertFalse($spec->managesModalLayout('consentModal'));
+        self::assertSame(2147483647, DefaultProfileSpec::create()->withPriority(2147483647)->settings()['priority']);
     }
 
     public function testAValidLayoutCombinationIsAccepted(): void

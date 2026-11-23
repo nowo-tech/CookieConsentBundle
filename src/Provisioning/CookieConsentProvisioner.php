@@ -6,19 +6,23 @@ namespace Nowo\CookieConsentBundle\Provisioning;
 
 use Closure;
 use Doctrine\DBAL\Exception\UniqueConstraintViolationException;
+use Doctrine\DBAL\LockMode;
 use Doctrine\ORM\EntityManagerInterface;
 use Nowo\CookieConsentBundle\Concurrency\RowVersionGuard;
 use Nowo\CookieConsentBundle\Entity\CookieConsentConfig;
 use Nowo\CookieConsentBundle\Entity\CookieConsentConfigTranslation;
 use Nowo\CookieConsentBundle\Entity\CookieDefinition;
 use Nowo\CookieConsentBundle\Entity\CookieDefinitionTranslation;
+use Nowo\CookieConsentBundle\Repository\CookieConsentConfigRepository;
 use Nowo\TransactionContract\TransientStorageFailure;
 use Nowo\TransactionDoctrine\DoctrineTransactionRunner;
 use Psr\Log\LoggerInterface;
 use Symfony\Contracts\Service\ResetInterface;
 use Throwable;
 
+use function in_array;
 use function method_exists;
+use function sprintf;
 use function ucfirst;
 
 /**
@@ -105,8 +109,8 @@ final readonly class CookieConsentProvisioner implements CookieConsentProvisione
 
         try {
             /** @var Closure(): ProvisioningResult $result */
-            $result = DoctrineTransactionRunner::forEntityManager($em, null, null, 1, $this->logger)->run(static function () use ($em, $connection, $operation): Closure {
-                ProvisioningLock::acquireTransaction($connection);
+            $result = DoctrineTransactionRunner::forEntityManager($em, null, null, 1, $this->logger)->run(static function () use ($em, $connection, $operation, $lock): Closure {
+                ProvisioningLock::acquireTransaction($connection, $lock);
 
                 return $operation($em);
             });
@@ -134,6 +138,13 @@ final readonly class CookieConsentProvisioner implements CookieConsentProvisione
             $changed = $this->set($config, $setting, $value) || $changed;
         }
 
+        // ZAH-2: the stored (or default) values the specification does not give must still fit its layout.
+        foreach (['consentModal', 'preferencesModal'] as $modal) {
+            if ($created || $spec->managesModalLayout($modal)) {
+                $this->assertEffectiveLayout($config, $modal);
+            }
+        }
+
         foreach ($spec->translations() as $translationSpec) {
             $translation = $config->findTranslation($translationSpec->locale);
             if (!$translation instanceof CookieConsentConfigTranslation) {
@@ -146,6 +157,12 @@ final readonly class CookieConsentProvisioner implements CookieConsentProvisione
             foreach ($translationSpec->texts() as $field => $text) {
                 $changed = $this->set($translation, $field, $text) || $changed;
             }
+        }
+
+        if ($created) {
+            // "Only one default profile", as the admin save: the new row exists before the other defaults are cleared.
+            $em->flush();
+            $this->clearOtherDefaults($em, $config);
         }
 
         if (!$created && $changed) {
@@ -187,11 +204,19 @@ final readonly class CookieConsentProvisioner implements CookieConsentProvisione
                 $em->persist($definition);
             }
 
-            $changed = $this->set($definition, 'category', $spec->category);
-            $changed = $this->set($definition, 'duration', $spec->duration) || $changed;
-            $changed = $this->set($definition, 'type', $spec->type) || $changed;
-            $changed = $this->set($definition, 'sortOrder', $spec->sortOrder) || $changed;
-            $changed = $this->set($definition, 'allowedByDefault', $spec->allowedByDefault) || $changed;
+            $changed = false;
+            foreach ($spec->fields() as $field => $value) {
+                $changed = $this->set($definition, $field, $value) || $changed;
+            }
+
+            // As the admin page: a cookie of the required category is always pre-ticked.
+            if ($definition->getCategory() === CookieDefinitionSpec::REQUIRED_CATEGORY) {
+                if ($spec->allowedByDefault === false) {
+                    throw CookieDefinitionSpec::requiredNotPreTicked($spec->name);
+                }
+
+                $changed = $this->set($definition, 'allowedByDefault', true) || $changed;
+            }
 
             foreach ($spec->translations() as $translationSpec) {
                 $translation = $definition->findTranslation($translationSpec->locale);
@@ -202,8 +227,12 @@ final readonly class CookieConsentProvisioner implements CookieConsentProvisione
                     $changed = true;
                 }
 
-                $changed = $this->set($translation, 'provider', $translationSpec->provider) || $changed;
-                $changed = $this->set($translation, 'purpose', $translationSpec->purpose) || $changed;
+                if ($translationSpec->provider !== null) {
+                    $changed = $this->set($translation, 'provider', $translationSpec->provider) || $changed;
+                }
+                if ($translationSpec->purpose !== null) {
+                    $changed = $this->set($translation, 'purpose', $translationSpec->purpose) || $changed;
+                }
             }
 
             if ($isNew) {
@@ -221,22 +250,70 @@ final readonly class CookieConsentProvisioner implements CookieConsentProvisione
 
     /**
      * The enabled default profile (the lowest id if, against the rule, several are), read from the database.
+     *
+     * Every enabled profile is locked in id order (`SELECT ... FOR UPDATE`, as the admin "make default" save does), so a
+     * concurrent admin save waits for this unit (or this unit for it) and the read sees the latest committed rows, also
+     * under REPEATABLE READ on MySQL / MariaDB (a locking read).
      */
     private function findDefaultProfile(EntityManagerInterface $em): ?CookieConsentConfig
     {
-        $config = $em->createQueryBuilder()
+        /** @var list<CookieConsentConfig> $enabled */
+        $enabled = $em->createQueryBuilder()
             ->select('config')
             ->from(CookieConsentConfig::class, 'config')
             ->andWhere('config.enabled = :enabled')
-            ->andWhere('config.default = :default')
             ->setParameter('enabled', true)
-            ->setParameter('default', true)
             ->orderBy('config.id', 'ASC')
-            ->setMaxResults(1)
             ->getQuery()
-            ->getOneOrNullResult();
+            ->setLockMode(LockMode::PESSIMISTIC_WRITE)
+            ->getResult();
 
-        return $config instanceof CookieConsentConfig ? $config : null;
+        foreach ($enabled as $config) {
+            if ($config->isDefault()) {
+                return $config;
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * Clears the default flag of every other enabled profile with one atomic UPDATE that advances their row version
+     * (the admin save's rule, {@see CookieConsentConfigRepository::saveSettings()}).
+     */
+    private function clearOtherDefaults(EntityManagerInterface $em, CookieConsentConfig $keep): void
+    {
+        $em->createQuery('UPDATE ' . CookieConsentConfig::class . ' config SET config.default = :off, config.rowVersion = config.rowVersion + 1 WHERE config.default = :on AND config.enabled = :enabled AND config.id <> :keep')
+            ->setParameter('off', false)
+            ->setParameter('on', true)
+            ->setParameter('enabled', true)
+            ->setParameter('keep', $keep->getId())
+            ->execute();
+    }
+
+    /**
+     * The effective layout, variant and positions of a modal (given, stored or default) must be a combination the
+     * admin form offers.
+     *
+     * @param 'consentModal'|'preferencesModal' $modal
+     *
+     * @throws InvalidProvisioningSpecException
+     */
+    private function assertEffectiveLayout(CookieConsentConfig $config, string $modal): void
+    {
+        $consent = $modal === 'consentModal';
+        $layout  = $consent ? $config->getConsentModalLayout() : $config->getPreferencesModalLayout();
+        $values  = [
+            'Variant'   => [$consent ? $config->getConsentModalVariant() : $config->getPreferencesModalVariant(), CookieConsentConfig::CONSENT_MODAL_VARIANT_TYPES],
+            'PositionY' => [$consent ? $config->getConsentModalPositionY() : $config->getPreferencesModalPositionY(), CookieConsentConfig::CONSENT_MODAL_POSITION_Y_TYPES],
+            'PositionX' => [$consent ? $config->getConsentModalPositionX() : $config->getPreferencesModalPositionX(), CookieConsentConfig::CONSENT_MODAL_POSITION_X_TYPES],
+        ];
+
+        foreach ($values as $suffix => [$value, $choices]) {
+            if ($value !== null && !in_array($value, $choices[$layout] ?? [], true)) {
+                throw new InvalidProvisioningSpecException(sprintf('Default profile setting "%s%s" is "%s", which the "%s" layout does not offer (stored or default value): give a %s%s the layout offers%s.', $modal, $suffix, $value, $layout, $modal, $suffix, $suffix === 'PositionX' ? ' (or null)' : ''));
+            }
+        }
     }
 
     /**

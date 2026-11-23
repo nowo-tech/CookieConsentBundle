@@ -166,6 +166,8 @@ class CookieConsentConfigRepository extends ServiceEntityRepository implements R
             ->andWhere('config.default = :default')
             ->setParameter('enabled', true)
             ->setParameter('default', true)
+            // 1.36 (audit ZAH-4): the lowest id if, against the rule, several are (the provisioning port picks the same).
+            ->orderBy('config.id', SortDirection::Ascending)
             ->setMaxResults(1)
             ->getQuery()
             ->getOneOrNullResult();
