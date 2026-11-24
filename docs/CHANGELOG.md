@@ -106,6 +106,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- CI (not shipped): the Dependabot asset rebuild (`.github/workflows/dependabot-assets.yml`, was `dependabot.yml`) is split into a read-only build job (no persisted credentials, `pnpm install --frozen-lockfile --ignore-scripts`) and a commit job, the only one with write access, that never installs or builds: it accepts only regular files under the asset paths from the build artifact, commits them and dispatches `ci.yml` (now `workflow_dispatch`-able) so the required checks run on the rebuilt head (audits ZAWD-M1, ZAWD-L2). It now runs on Dependabot npm branches only.
 - Dev: `igor-php/igor-php` require-dev widened to `^0.11.0` (lock updated for that package only); the Igor audit is clean (135 service files OK, 0 KO, 0 WARN).
 - Igor 0.11: `reset()` of `CookieConsentConfigResolver`, `CookieInventoryProvider` and `CookieConsentConfigRepository` now holds the assignments that clear the memo (`clearRuntimeCache()` calls `reset()`, it was the other way round), so Igor sees the properties cleared. Same caches cleared at the same moments; no behaviour change.
 
