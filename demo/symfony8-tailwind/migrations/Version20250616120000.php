@@ -4,9 +4,11 @@ declare(strict_types=1);
 
 namespace DoctrineMigrations;
 
-use Nowo\CookieConsentBundle\Config\PreferencesBubbleIconSanitizer;
 use Doctrine\DBAL\Schema\Schema;
 use Doctrine\Migrations\AbstractMigration;
+use Nowo\CookieConsentBundle\Config\PreferencesBubbleIconSanitizer;
+
+use function sprintf;
 
 final class Version20250616120000 extends AbstractMigration
 {

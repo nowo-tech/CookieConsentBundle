@@ -5,7 +5,11 @@ declare(strict_types=1);
 namespace App\Tests\Controller;
 
 use Doctrine\ORM\Tools\SchemaTool;
+use Nowo\CookieConsentBundle\Entity\CookieConsentConfig;
+use Symfony\Bundle\FrameworkBundle\KernelBrowser;
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
+
+use const JSON_THROW_ON_ERROR;
 
 final class CookieConsentConfigApiControllerTest extends WebTestCase
 {
@@ -26,15 +30,15 @@ final class CookieConsentConfigApiControllerTest extends WebTestCase
         self::assertArrayHasKey('categories', $payload['data']);
     }
 
-    private function ensureDatabaseSchema(\Symfony\Bundle\FrameworkBundle\KernelBrowser $client): void
+    private function ensureDatabaseSchema(KernelBrowser $client): void
     {
         $entityManager = $client->getContainer()->get('doctrine')->getManager();
-        $metadata = $entityManager->getMetadataFactory()->getAllMetadata();
-        $schemaTool = new SchemaTool($entityManager);
+        $metadata      = $entityManager->getMetadataFactory()->getAllMetadata();
+        $schemaTool    = new SchemaTool($entityManager);
         $schemaTool->dropSchema($metadata);
         $schemaTool->createSchema($metadata);
 
-        $default = (new \Nowo\CookieConsentBundle\Entity\CookieConsentConfig())
+        $default = (new CookieConsentConfig())
             ->setDefault(true)
             ->setEnabled(true)
             ->setName('Default');

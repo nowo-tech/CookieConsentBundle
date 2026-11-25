@@ -18,6 +18,8 @@ use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
 
+use function sprintf;
+
 #[AsCommand(
     name: 'demo:seed-cookie-consent-config',
     description: 'Seed default cookie consent configuration and translations for the demo locales.',

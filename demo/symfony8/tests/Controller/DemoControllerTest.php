@@ -7,6 +7,8 @@ namespace App\Tests\Controller;
 use PHPUnit\Framework\Attributes\DataProvider;
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
 
+use function sprintf;
+
 final class DemoControllerTest extends WebTestCase
 {
     public function testHomePageIsAccessible(): void

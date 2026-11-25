@@ -27,45 +27,45 @@ final class CookieConsentConfigTranslationType extends AbstractType
     {
         $this->addWithDefaults($builder, 'locale', TextType::class, [
             'label' => 'demo.config.form.fields.locale',
-            'help' => 'demo.config.form.fields.locale_help',
-            'attr' => ['placeholder' => 'en'],
+            'help'  => 'demo.config.form.fields.locale_help',
+            'attr'  => ['placeholder' => 'en'],
         ]);
         $this->addWithDefaults($builder, 'consentModalTitle', TextType::class, [
-            'label' => 'demo.config.form.fields.modal_title',
-            'help' => 'demo.config.form.fields.modal_title_help',
+            'label'       => 'demo.config.form.fields.modal_title',
+            'help'        => 'demo.config.form.fields.modal_title_help',
             'placeholder' => false,
         ]);
         $this->addWithDefaults($builder, 'consentModalDescription', TextareaType::class, [
             'label' => 'demo.config.form.fields.intro',
-            'help' => 'demo.config.form.fields.intro_help',
-            'attr' => ['rows' => 4],
+            'help'  => 'demo.config.form.fields.intro_help',
+            'attr'  => ['rows' => 4],
         ]);
         $this->addWithDefaults($builder, 'consentModalFooter', TextType::class, [
-            'label' => 'demo.config.form.fields.read_more',
-            'help' => 'demo.config.form.fields.read_more_help',
-            'required' => false,
+            'label'       => 'demo.config.form.fields.read_more',
+            'help'        => 'demo.config.form.fields.read_more_help',
+            'required'    => false,
             'placeholder' => false,
         ]);
         $this->addWithDefaults($builder, 'consentModalAcceptAllBtn', TextType::class, [
-            'label' => 'demo.config.form.fields.accept_all',
-            'help' => 'demo.config.form.fields.accept_all_help',
+            'label'       => 'demo.config.form.fields.accept_all',
+            'help'        => 'demo.config.form.fields.accept_all_help',
             'placeholder' => false,
         ]);
         $this->addWithDefaults($builder, 'consentModalAcceptNecessaryBtn', TextType::class, [
-            'label' => 'demo.config.form.fields.accept_necessary',
-            'help' => 'demo.config.form.fields.accept_necessary_help',
+            'label'       => 'demo.config.form.fields.accept_necessary',
+            'help'        => 'demo.config.form.fields.accept_necessary_help',
             'placeholder' => false,
         ]);
         $this->addWithDefaults($builder, 'preferencesModalSavePreferencesBtn', TextType::class, [
-            'label' => 'demo.config.form.fields.save',
-            'help' => 'demo.config.form.fields.save_help',
-            'required' => false,
+            'label'       => 'demo.config.form.fields.save',
+            'help'        => 'demo.config.form.fields.save_help',
+            'required'    => false,
             'placeholder' => false,
         ]);
         $this->addWithDefaults($builder, 'privacyRoute', TextType::class, [
-            'label' => 'demo.config.form.fields.privacy_route',
-            'help' => 'demo.config.form.fields.privacy_route_help',
-            'required' => false,
+            'label'       => 'demo.config.form.fields.privacy_route',
+            'help'        => 'demo.config.form.fields.privacy_route_help',
+            'required'    => false,
             'placeholder' => false,
         ]);
     }
@@ -73,7 +73,7 @@ final class CookieConsentConfigTranslationType extends AbstractType
     public function configureOptions(OptionsResolver $resolver): void
     {
         $resolver->setDefaults([
-            'data_class' => CookieConsentConfigTranslation::class,
+            'data_class'         => CookieConsentConfigTranslation::class,
             'translation_domain' => 'messages',
         ]);
     }

@@ -18,6 +18,10 @@ use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
 
+use function count;
+use function is_array;
+use function sprintf;
+
 #[AsCommand(
     name: 'demo:seed-cookie-definitions',
     description: 'Seed multilingual sample cookie inventory for the default demo consent profile.',

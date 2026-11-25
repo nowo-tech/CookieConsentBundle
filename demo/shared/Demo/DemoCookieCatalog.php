@@ -567,7 +567,7 @@ final class DemoCookieCatalog
         $translations = [];
 
         foreach (self::LOCALES as $locale) {
-            $entry = $rawTranslations[$locale] ?? $rawTranslations[DemoLocale::DEFAULT];
+            $entry                 = $rawTranslations[$locale] ?? $rawTranslations[DemoLocale::DEFAULT];
             $translations[$locale] = [
                 'provider' => $entry[0],
                 'purpose'  => $entry[1],

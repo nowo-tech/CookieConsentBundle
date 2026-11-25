@@ -128,10 +128,10 @@ class CookieDefinitionController extends AbstractController
         }
 
         return $this->render('demo/cookies/form.html.twig', [
-            'config'               => $config,
-            'definition'           => $definition,
-            'form'                 => $form,
-            'isNew'                => $isNew,
+            'config'     => $config,
+            'definition' => $definition,
+            'form'       => $form,
+            'isNew'      => $isNew,
         ]);
     }
 
