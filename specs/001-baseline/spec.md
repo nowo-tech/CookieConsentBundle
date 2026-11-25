@@ -98,7 +98,7 @@ GDPR **cookie consent** for Symfony: modal with category toggles, granular per-c
 - **FR-UI-001–015**: Modal entry, category/granular toggles, iframe manager, step wizard, theme/visual config, diagnostics, logger.
 - **FR-UI-014**: `intro-more.ts` + `_intro_more.html.twig` — "Show more" toggle of the clamped first-layer intro on phones (1.23).
 - **FR-UI-015**: `motion.ts` — close with a fade and a timer fallback; immediate close without a transition.
-- **FR-UI-012**: `logger.ts` — one "script loaded" console line with the readable build time (`build-info.json`), printed once per page and name (once-guard on `globalThis`), silenced by `<html data-nowo-console="quiet">` or `globalThis.NOWO_CONSOLE = 'quiet'` (REQ-ASSETS-005).
+- **FR-UI-012**: `logger.ts` — one "script loaded" console line with the readable build time (`build-info.json`), printed once per page and name (once-guard on `globalThis`), silenced by `<html data-nowo-console="quiet">` or `globalThis.NOWO_CONSOLE = 'quiet'` (REQ-ASSETS-005). Every other line (init, config fetch, consent saved, warnings) prints only while the debug flag is on (`data-nowo-debug="true"` on the modal or `<html data-nowo-console="debug">`, read by `cookie-consent.ts` through `isDiagnosticsDebug()` into `setDebug()`) and never in quiet mode (since 2.0.0, ZBN-L1; `alwaysLog` is no longer used by the bundle entry).
 - **FR-BUILD-001**: Vite output `nowo-consent-modal.js`.
 - **FR-SEC-002**: `csrf.ts` — SameOrigin CSRF helpers for XHR consent posts.
 - **FR-TEST-TS-001**: Co-located Vitest under `src/Resources/assets/src/*.test.ts` (16 files).
