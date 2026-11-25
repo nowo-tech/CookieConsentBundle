@@ -1,7 +1,7 @@
 # Feature Specification: Admin chrome hooks (blocks, class map, partial paths)
 
 **Feature Branch**: `002-admin-chrome-hooks`
-**Status**: Implemented (1.13.0)
+**Status**: Implemented (1.13.0); deprecated in 1.16 (UiKit theme slots); **removed in 2.0.0** (`web_ui.chrome` and `AdminChrome`, see docs/UPGRADING.md "Removed")
 **Package**: `nowo-tech/cookie-consent-bundle`
 **Upstream driver**: symfony-beacon spec 134 (kit upstream improvements) — FR-010 (CookieConsent panel)
 **Baseline**: [`001-baseline`](../001-baseline/spec.md)

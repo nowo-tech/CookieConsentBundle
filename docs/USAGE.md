@@ -162,7 +162,7 @@ $section = CookieConsentConfigSettingsSection::Appearance;
 $form = $this->createForm($section->formType(), $config);
 ```
 
-For a single-page editor (all sections at once), use `CookieConsentConfigFullSettingsType` (or the deprecated `CookieConsentConfigSettingsType` alias). The demos do that with demo-specific label prefixes and route placeholders.
+For a single-page editor (all sections at once), use `CookieConsentConfigFullSettingsType` (the 1.x alias `CookieConsentConfigSettingsType` was removed in 2.0). The demos do that with demo-specific label prefixes and route placeholders.
 
 ## Preferences bubble icon
 
@@ -335,7 +335,6 @@ it to your own service to replace one part:
 | --- | --- | --- |
 | `Nowo\CookieConsentBundle\Cookie\CookieCheckerInterface` | `CookieChecker` | Read the visitor's consent from the request cookies. |
 | `Nowo\CookieConsentBundle\Cookie\ConsentCookieWriterInterface` (1.30) | `CookieHandler` | Decide which consent cookies to write / expire; returns a `ConsentCookieJar` (no `Request` / `Response`). |
-| `Nowo\CookieConsentBundle\Cookie\CookieHandlerInterface` (deprecated 1.30, removed in 2.0) | `CookieHandler` | Write / expire the consent cookies on the response. |
 | `Nowo\CookieConsentBundle\Cookie\CookieLoggerInterface` | `CookieLogger` | Store the proof of consent (`use_logger: true`). |
 
 ```yaml
@@ -419,8 +418,8 @@ crosses the port.
 
 #### Standard host
 
-Nothing to configure. `ConsentCookieWriterInterface` is aliased to `nowo_cookie_consent.cookie_writer` and the
-deprecated `CookieHandlerInterface` to `CookieHandler` (two definitions of the same class), and the `Set-Cookie` headers are the same as in 1.29, byte for byte: path `/`, no domain, `Secure`,
+Nothing to configure. `ConsentCookieWriterInterface` is aliased to `nowo_cookie_consent.cookie_writer` (a
+`CookieHandler` definition of its own), and the `Set-Cookie` headers are the same as in 1.29, byte for byte: path `/`, no domain, `Secure`,
 `SameSite=Lax`, `HttpOnly` from `nowo_cookie_consent.http_only`, one year expiry, not raw (covered by
 `tests/Unit/Http/ConsentCookieEquivalenceTest.php`).
 
@@ -463,14 +462,11 @@ services:
 `CookieCheckerInterface`. Keep the writer stateless: in a kept-alive FrankenPHP worker the same instance serves every
 visitor (`tests/Integration/Ddd/HostCookieWriterKernelTest.php`: 400 requests for two visitors, no services resetter).
 
-Which port the bundle calls is decided once, when the container is built (`ConsentCookieWriterPass`, after decoration):
-a service aliased to `ConsentCookieWriterInterface` (or a decorator of `nowo_cookie_consent.cookie_writer`) first;
-otherwise the bundle writer when `CookieHandlerInterface` is still the bundle's `CookieHandler`; otherwise the
-`CookieHandlerInterface` service when its class also implements the new port; otherwise the deprecated
-`CookieHandlerInterface::save()` / `clear()` methods, as in 1.29. That last case covers a decorator of `CookieHandler`
-or of `CookieHandlerInterface` (`#[AsDecorator]`), a replaced class and a `CookieHandler` subclass (an overridden
-`saveCookie()` still runs); it reports one `E_USER_DEPRECATED` notice at container build, never per request. See
-[UPGRADING](UPGRADING.md#to-1303).
+The listeners always call `ConsentCookieWriterInterface`: alias it to your writer, or decorate
+`nowo_cookie_consent.cookie_writer` to wrap the bundle's. Since 2.0 the 1.x ways that went through the removed
+`CookieHandlerInterface` fail the container build with what to do instead (a service or alias with that id, a class
+still implementing it, an `#[AsAlias]` / `#[AsDecorator]` of it, a decorated or replaced `CookieHandler` service while
+the port is the bundle's writer). See [UPGRADING](UPGRADING.md#consent-cookie-port-what-fails-the-build).
 
 ### Read-only views (1.28)
 
@@ -511,16 +507,15 @@ final readonly class CookieConsentAdminEntry
 - `enabledProfiles(?string $locale = null): list<ConsentProfileView>` (priority, then id).
 
 With a locale, the view carries that locale's copy (`locale`, `translationMessages`); without one, none. Read-only,
-through the bundle's own manager (the private one with `doctrine.private_entity_manager: true`). Without Doctrine it
+through the bundle's own manager (the private one; a dedicated `doctrine.entity_manager` when you set one). Without Doctrine it
 answers no profile. Alias the interface to your own service to replace it.
 
 ### Seeding and provisioning (1.36)
 
 `Provisioning\CookieConsentProvisionerInterface` is the host **write** port for seeders, fixture loaders, installers
 and console commands: describe the default profile and its cookie inventory with value objects, and the bundle writes
-them with its own entity manager. Never write the bundle entities with your entity manager: with
-`doctrine.private_entity_manager: true` (the only mode in 2.0) they belong to the bundle's private manager, so your
-flush would not save them (or would insert them again).
+them with its own entity manager. Never write the bundle entities with your entity manager: since 2.0 they belong to
+the bundle's private manager, so your flush would not save them (or would insert them again).
 
 ```php
 interface CookieConsentProvisionerInterface
@@ -612,9 +607,8 @@ What it does:
   whose commit then decides). An item whose stored values change advances its `row_version`: an admin page opened
   before is refused as stale instead of writing the old values back.
 - **Your entity manager is never touched.** The port writes through a private entity manager of its own on the
-  connection of the bundle's manager (`doctrine.entity_manager`, else your default one), in every
-  `doctrine.private_entity_manager` mode, including the deprecated `false`: your managers are never flushed, cleared or
-  reset, and your pending changes are never written. That manager is dropped when every call returns.
+  connection of the bundle's manager (`doctrine.entity_manager`, else your default one), whatever
+  `doctrine.private_entity_manager` says: your managers are never flushed, cleared or reset, and your pending changes are never written. That manager is dropped when every call returns.
 - **The default profile.** "The default profile" is the enabled one flagged default (the lowest id if, against the
   rule, several are). A disabled default does not count: the port then creates a new, enabled default profile, which
   turns the banner on again (the disabled row keeps its flag). Creating one clears the default flag of any other
@@ -642,7 +636,7 @@ What it does:
 - **Worker-safe** (REQ-RUNTIME-002): stateless services; no entity survives a call (FrankenPHP worker mode with the
   kernel reset off, long console commands, Messenger handlers). The port's manager shares your manager's event
   manager, so your Doctrine listeners see its flushes; entities other managers loaded earlier in the same unit (the
-  bundle's reader, your manager in the deprecated mode) are not refreshed: read again after provisioning if the same
+  bundle's reader, a dedicated manager) are not refreshed: read again after provisioning if the same
   command needs the new values.
 - Registered only with DoctrineBundle (a host on the YAML path has no profile tables). Alias the interface to your own
   service to replace it.
@@ -655,10 +649,10 @@ objects ([Read-only views](#read-only-views-128)).
 ### Known limitations
 
 - With DoctrineBundle registered, the entity mapping is registered even when `use_logger` and `use_database_config`
-  are both `false` (BC: unmapping it would show the tables as a DROP in schema diffs); 2.0 maps them only when used.
-- By default the admin pages still flush the bundle's entity manager when you save a definition or a profile. Since
-  1.34, `doctrine.private_entity_manager: true` keeps that away from your own unit of work on the same connection (or
-  use a dedicated `doctrine.entity_manager`).
+  are both `false`. 2.0 keeps them mapped: unmapping them would make schema diffs (`doctrine:migrations:diff`,
+  `doctrine:schema:update`) propose dropping the bundle tables, the consent log included.
+- The admin saves flush the bundle's own manager: since 2.0 the private one on your default manager (never yours), or
+  a dedicated `doctrine.entity_manager` when you set one.
 - `ResolvedCookieConsentConfig::getConfig()` / `getTranslation()` and `CookieInventoryProvider::listForLocale()` still
   take or return the bundle entities (the bundle uses them internally); prefer the views above.
 - There is no port for the profile source itself: a host provides profiles through YAML or the bundle tables (since
@@ -696,9 +690,9 @@ nowo_ui_kit:
                 classes: { table: 'data-table data-table--dense' }
 ```
 
-The 1.13–1.15 `web_ui.chrome` map still works for one minor version: it is **deprecated** and bridged into
-`nowo_ui_kit.theme.bundles.NowoCookieConsentBundle` (mapping table in
-[UPGRADING — Template contract](UPGRADING.md#template-contract-116)).
+The 1.13–1.15 `web_ui.chrome` map was removed in 2.0 (deprecated since 1.16): configure
+`nowo_ui_kit.theme.bundles.NowoCookieConsentBundle` (the 1.16 mapping table in
+[UPGRADING — Template contract](UPGRADING.md#template-contract-116) still says which slot each key became).
 
 **Blocks.** Data blocks of the scaffolds (`nowo_ui_list_row`, `nowo_ui_form_body`, `nowo_ui_settings_section`). The
 Settings / Cookie inventory tabs are the page header's area navigation (`page.header.tabs`, UiKit `AreaNav`), also
@@ -794,4 +788,4 @@ properties are only applied by the bundle where `::-webkit-scrollbar` is unsuppo
 
 ## Browser console
 
-The bundle's script logs one line when it loads (`📦 [cookie-consent] script loaded, build: 2026-11-23 14:05 UTC`) so a developer can tell which build a page runs. To silence it, set `<html data-nowo-console="quiet">` or `globalThis.NOWO_CONSOLE = 'quiet'` before the script loads; nothing is printed then. The default is unchanged.
+The bundle's script logs one line when it loads (`📦 [cookie-consent] script loaded, build: 2026-11-23 14:05 UTC`) so a developer can tell which build a page runs. It prints once per page, even when the script is loaded twice (Turbo, a fragment, two copies of the asset). To silence it, set `<html data-nowo-console="quiet">` or `globalThis.NOWO_CONSOLE = 'quiet'` before the script loads; nothing is printed then. The default is unchanged.

@@ -98,6 +98,7 @@ GDPR **cookie consent** for Symfony: modal with category toggles, granular per-c
 - **FR-UI-001–015**: Modal entry, category/granular toggles, iframe manager, step wizard, theme/visual config, diagnostics, logger.
 - **FR-UI-014**: `intro-more.ts` + `_intro_more.html.twig` — "Show more" toggle of the clamped first-layer intro on phones (1.23).
 - **FR-UI-015**: `motion.ts` — close with a fade and a timer fallback; immediate close without a transition.
+- **FR-UI-012**: `logger.ts` — one "script loaded" console line with the readable build time (`build-info.json`), printed once per page and name (once-guard on `globalThis`), silenced by `<html data-nowo-console="quiet">` or `globalThis.NOWO_CONSOLE = 'quiet'` (REQ-ASSETS-005).
 - **FR-BUILD-001**: Vite output `nowo-consent-modal.js`.
 - **FR-SEC-002**: `csrf.ts` — SameOrigin CSRF helpers for XHR consent posts.
 - **FR-TEST-TS-001**: Co-located Vitest under `src/Resources/assets/src/*.test.ts` (16 files).
@@ -140,7 +141,7 @@ GDPR **cookie consent** for Symfony: modal with category toggles, granular per-c
 ### Config read port and private entity manager (1.34)
 
 - **FR-CFG-005**: `CookieConsentConfigReaderInterface` (default `CookieConsentConfigReader`) is the read port over the enabled consent profiles, answering `ConsentProfileView` value objects (REQ-ARCH-001 rules 1 and 3).
-- **FR-DDD-003**: `doctrine.private_entity_manager: true` (opt-in, REQ-ARCH-001 rule 6): `CookieConsentPrivateEntityManagerPass` wires the bundle's own entity manager and `CookieConsentPrivateManagerBoundarySubscriber` drops it, and clears the memos holding its entities, at every outermost unit-of-work boundary.
+- **FR-DDD-003**: the private entity manager (REQ-ARCH-001 rule 6; opt-in since 1.34, the only mode on the application's default manager since 2.0; a dedicated `doctrine.entity_manager` is kept as is): `CookieConsentPrivateEntityManagerPass` wires the bundle's own entity manager and `CookieConsentPrivateManagerBoundarySubscriber` drops it, and clears the memos holding its entities, at every outermost unit-of-work boundary. The repository saves refuse another manager or an entity it does not hold (`BundleManagerGuard`).
 
 ### Provisioning port (1.36)
 
@@ -152,7 +153,7 @@ GDPR **cookie consent** for Symfony: modal with category toggles, granular per-c
 
 ## Success Criteria
 
-- **SC-001**: **180/180** files under `src/` mapped in [`code-inventory.md`](code-inventory.md) (includes 19 co-located Vitest files; audited 2026-11-16, 1.30.2).
+- **SC-001**: **204/204** files under `src/` mapped in [`code-inventory.md`](code-inventory.md) (includes 19 co-located Vitest files; audited 2026-11-25, 2.0.0 branch).
 - **SC-002**: Config keys match `docs/CONFIGURATION.md`.
 - **SC-003**: `composer qa`, `pnpm test`, PHPUnit, PHPStan pass.
 - **SC-004**: FrankenPHP worker scenario B (`reset_kernel false`) viable per [`docs/FRANKENPHP-WORKER-AUDIT.md`](../../docs/FRANKENPHP-WORKER-AUDIT.md).
