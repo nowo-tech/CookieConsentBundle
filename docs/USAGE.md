@@ -788,4 +788,6 @@ properties are only applied by the bundle where `::-webkit-scrollbar` is unsuppo
 
 ## Browser console
 
-The bundle's script logs one line when it loads (`📦 [cookie-consent] script loaded, build: 2026-11-23 14:05 UTC`) so a developer can tell which build a page runs. It prints once per page, even when the script is loaded twice (Turbo, a fragment, two copies of the asset). To silence it, set `<html data-nowo-console="quiet">` or `globalThis.NOWO_CONSOLE = 'quiet'` before the script loads; nothing is printed then. The default is unchanged.
+The bundle's script logs one line when it loads (`📦 [cookie-consent] script loaded, build: 2026-11-23 14:05 UTC`) so a developer can tell which build a page runs. It prints once per page, even when the script is loaded twice (Turbo, a fragment, two copies of the asset). To silence it, set `<html data-nowo-console="quiet">` or `globalThis.NOWO_CONSOLE = 'quiet'` before the script loads; nothing is printed then.
+
+Every other console line of the script (init, config fetch, consent saved, warnings) and the diagnostic report print only with the debug flag: `data-nowo-debug="true"` on the consent modal element or `<html data-nowo-console="debug">`. Quiet mode wins over the debug flag. With the default configuration the "script loaded" line is the only output.

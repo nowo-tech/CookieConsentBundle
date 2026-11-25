@@ -1,5 +1,6 @@
 /**
- * Bundle logger for Cookie Consent (always-on logging, same API as Twig Inspector).
+ * Bundle logger for Cookie Consent (same API as Twig Inspector): one "script loaded" line, every other line behind the
+ * debug flag (REQ-ASSETS-005 rule 5).
  */
 
 export type BundleLoggerOptions = {
@@ -100,12 +101,12 @@ function emitLevelLog(level: ConsoleLevel, prefix: string, args: unknown[]): voi
 }
 
 function makeLevelMethod(
-  logAlways: boolean,
+  isEnabled: () => boolean,
   prefix: string,
   level: ConsoleLevel,
 ): (...args: unknown[]) => void {
   return (...args: unknown[]): void => {
-    if (!logAlways) {
+    if (!isEnabled() || isQuiet()) {
       return;
     }
     emitLevelLog(level, prefix, args);
@@ -138,10 +139,16 @@ export function getLogger(): BundleLogger {
   };
 }
 
+/**
+ * Creates the bundle logger. Only {@link BundleLogger.scriptLoaded} prints by default (REQ-ASSETS-005); debug / info /
+ * warn / error print only while the debug flag is on (`alwaysLog`, or {@link BundleLogger.setDebug}(true)) and the
+ * console is not quiet.
+ */
 export function createBundleLogger(name: string, options: BundleLoggerOptions = {}): BundleLogger {
   const prefix = `[${name}]`;
   const { buildTime, alwaysLog = false } = options;
-  const logAlways = alwaysLog === true;
+  let debugEnabled = alwaysLog === true;
+  const isEnabled = (): boolean => debugEnabled;
 
   return {
     scriptLoaded(): void {
@@ -149,13 +156,13 @@ export function createBundleLogger(name: string, options: BundleLoggerOptions = 
       logScriptLoaded(prefix, buildTime);
     },
 
-    setDebug(_enabled: boolean): void {
-      /* no-op when alwaysLog */
+    setDebug(enabled: boolean): void {
+      debugEnabled = enabled;
     },
 
-    debug: makeLevelMethod(logAlways, prefix, 'debug'),
-    info: makeLevelMethod(logAlways, prefix, 'info'),
-    warn: makeLevelMethod(logAlways, prefix, 'warn'),
-    error: makeLevelMethod(logAlways, prefix, 'error'),
+    debug: makeLevelMethod(isEnabled, prefix, 'debug'),
+    info: makeLevelMethod(isEnabled, prefix, 'info'),
+    warn: makeLevelMethod(isEnabled, prefix, 'warn'),
+    error: makeLevelMethod(isEnabled, prefix, 'error'),
   };
 }

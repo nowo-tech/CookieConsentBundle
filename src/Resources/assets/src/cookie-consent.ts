@@ -7,7 +7,7 @@ import { applyRemoteConfig, fetchRemoteConfig } from './apply-config';
 import { closeWithEffect, finishClosing } from './motion';
 import { applyThemeOptionsFromElement } from './apply-theme';
 import { applyVisualConfigFromElement, setPageInteractionBlocked } from './apply-visual-config';
-import { collectClientDiagnostics, publishClientDiagnostics } from './diagnostics';
+import { collectClientDiagnostics, isDiagnosticsDebug, publishClientDiagnostics } from './diagnostics';
 import { installCustomEventPolyfill } from './custom-event-polyfill';
 import { injectCookieConsentStyles } from './inject-styles';
 import { prepareCsrfForRequest } from './csrf';
@@ -25,7 +25,6 @@ declare const __COOKIE_CONSENT_BUILD_TIME__: string;
 const log = createBundleLogger('cookie-consent', {
   buildTime:
     typeof __COOKIE_CONSENT_BUILD_TIME__ !== 'undefined' ? __COOKIE_CONSENT_BUILD_TIME__ : undefined,
-  alwaysLog: true,
 });
 log.scriptLoaded();
 setBundleLogger(log);
@@ -61,6 +60,9 @@ export function initCookieConsent(): void {
   installCustomEventPolyfill();
 
   const modalElement = document.getElementById('cookieconsent');
+  // REQ-ASSETS-005 rule 5: the init / config / consent lines print only with the debug flag
+  // (`data-nowo-debug="true"` on the modal or `<html data-nowo-console="debug">`), never in quiet mode.
+  log.setDebug(isDiagnosticsDebug(modalElement));
   injectCookieConsentStyles(modalElement);
   applyPreferencesBubbleAccents();
 

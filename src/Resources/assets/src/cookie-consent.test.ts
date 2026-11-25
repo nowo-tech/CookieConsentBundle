@@ -17,6 +17,34 @@ describe('cookie-consent entrypoint', () => {
     delete window.bootstrap;
   });
 
+  it('prints only the script-loaded line without the debug flag (REQ-ASSETS-005 rule 5)', async () => {
+    const info = vi.spyOn(console, 'info').mockImplementation(() => undefined);
+    const debug = vi.spyOn(console, 'debug').mockImplementation(() => undefined);
+    vi.spyOn(console, 'log').mockImplementation(() => undefined);
+    document.body.innerHTML = `
+      <div id="cookieconsent" class="modal nowo-cookie-consent" data-nowo-open="false" aria-hidden="true"></div>
+    `;
+
+    await import('./cookie-consent');
+
+    expect(info).not.toHaveBeenCalled();
+    expect(debug).not.toHaveBeenCalled();
+  });
+
+  it('prints the init lines with data-nowo-debug="true" on the modal', async () => {
+    const info = vi.spyOn(console, 'info').mockImplementation(() => undefined);
+    vi.spyOn(console, 'debug').mockImplementation(() => undefined);
+    vi.spyOn(console, 'log').mockImplementation(() => undefined);
+    document.body.innerHTML = `
+      <div id="cookieconsent" class="modal nowo-cookie-consent" data-nowo-open="false" data-nowo-debug="true"
+           aria-hidden="true"></div>
+    `;
+
+    await import('./cookie-consent');
+
+    expect(info).toHaveBeenCalledWith(expect.stringContaining('[cookie-consent]'), expect.any(String), 'Cookie Consent init', expect.anything());
+  });
+
   it('applies visual config classes from data attributes on init', async () => {
     document.body.innerHTML = `
       <div id="cookieconsent"
