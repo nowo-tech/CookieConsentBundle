@@ -8,6 +8,8 @@ parameters:
         - tests
     excludePaths:
         - demo/*
+        # 2.0 W1-1 fixtures: application classes that still use types removed in 2.0 (they cannot be loaded on purpose)
+        - tests/Fixtures/RemovedPorts/*
 
 includes:
     - vendor/phpstan/phpstan-symfony/extension.neon

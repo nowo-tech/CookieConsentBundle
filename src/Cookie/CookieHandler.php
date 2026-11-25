@@ -8,11 +8,7 @@ use DateInterval;
 use DateTimeImmutable;
 use Nowo\CookieConsentBundle\Enum\CookieNameEnum;
 use Psr\Clock\ClockInterface;
-use Symfony\Component\HttpFoundation\Cookie;
-use Symfony\Component\HttpFoundation\Request;
-use Symfony\Component\HttpFoundation\Response;
 
-use function array_keys;
 use function str_starts_with;
 
 use const JSON_THROW_ON_ERROR;
@@ -20,12 +16,10 @@ use const JSON_THROW_ON_ERROR;
 /**
  * Writes cookie consent and category cookies onto the HTTP response.
  *
- * Implements the framework-free {@see ConsentCookieWriterInterface} (1.30) and the deprecated
- * {@see CookieHandlerInterface}; both produce the same cookies with the same attributes.
- *
- * @final since 1.19, will be final in 2.0 (not an extension point; decorate or replace the service instead)
+ * Implements the framework-free {@see ConsentCookieWriterInterface} (1.30; the only consent cookie port since 2.0):
+ * path `/`, no domain, `Secure`, `SameSite=Lax`, `HttpOnly` from `nowo_cookie_consent.http_only`, one year expiry.
  */
-class CookieHandler implements CookieHandlerInterface, ConsentCookieWriterInterface
+final class CookieHandler implements ConsentCookieWriterInterface
 {
     /**
      * Creates a new cookie handler.
@@ -40,24 +34,7 @@ class CookieHandler implements CookieHandlerInterface, ConsentCookieWriterInterf
     }
 
     /**
-     * Saves consent and category cookies on the response.
-     *
-     * @param array<string, bool|string> $categories The submitted category values
-     * @param string $key The anonymous consent key
-     * @param Response $response The HTTP response to modify
-     * @param array<string, bool> $granularCookies Optional per-cookie consent map
-     *
-     * @deprecated since 1.30, use {@see consentCookies()} (REQ-ARCH-001 rule 3); removed in 2.0
-     */
-    public function save(array $categories, string $key, Response $response, array $granularCookies = []): void
-    {
-        foreach ($this->consentValues($categories, $key, $granularCookies) as $name => $value) {
-            $this->saveCookie((string) $name, $value, $response);
-        }
-    }
-
-    /**
-     * Returns the consent cookies of a saved consent (1.30, framework-free twin of {@see save()}).
+     * Returns the consent cookies of a saved consent (1.30).
      *
      * @param array<string, bool|string> $categories The submitted category values
      * @param string $key The anonymous consent key
@@ -75,7 +52,7 @@ class CookieHandler implements CookieHandlerInterface, ConsentCookieWriterInterf
     }
 
     /**
-     * Returns the cookies to expire for an outdated consent (1.30, framework-free twin of {@see clear()}).
+     * Returns the cookies to expire for an outdated consent (1.30, JH-L1: an outdated consent; `Cookie_Consent_Key` is kept).
      *
      * @param ConsentRequestCookies $requestCookies The cookie names the request carries
      */
@@ -119,25 +96,6 @@ class CookieHandler implements CookieHandlerInterface, ConsentCookieWriterInterf
         }
 
         return $values;
-    }
-
-    /**
-     * Expires the consent cookies the request carries (1.25, JH-L1: an outdated consent).
-     *
-     * Removes `Cookie_Consent`, `Cookie_Consent_Granular` and every `Cookie_Category_*` cookie, so scripts that read
-     * the category cookies themselves see no consent either. `Cookie_Consent_Key` is kept: it links the visitor's
-     * next answer to the same consent log rows.
-     *
-     * @param Request $request The request whose cookies are expired
-     * @param Response $response The response that receives the expired cookies
-     *
-     * @deprecated since 1.30, use {@see expiredConsentCookies()} (REQ-ARCH-001 rule 3); removed in 2.0
-     */
-    public function clear(Request $request, Response $response): void
-    {
-        foreach ($this->clearableNames(array_keys($request->cookies->all())) as $name) {
-            $response->headers->clearCookie($name, '/', null, true, $this->httpOnly, Cookie::SAMESITE_LAX);
-        }
     }
 
     /**
@@ -189,31 +147,5 @@ class CookieHandler implements CookieHandlerInterface, ConsentCookieWriterInterf
     private function expirationDate(): DateTimeImmutable
     {
         return DateTimeImmutable::createFromInterface($this->clock->now())->add(new DateInterval('P1Y'));
-    }
-
-    /**
-     * @deprecated since 1.30, only used by the deprecated {@see save()}; removed in 2.0
-     */
-    protected function saveCookie(string $name, string $value, Response $response): void
-    {
-        $expirationDate = $this->clock->now()->add(new DateInterval('P1Y'));
-
-        // Always Secure + SameSite=Lax: TLS is usually terminated at a reverse proxy
-        // (Traefik/Caddy), so Request::isSecure() is false inside FrankenPHP/PHP-FPM and
-        // Symfony's secure=null ("auto") would emit cookies without the Secure flag.
-        // Browsers on https:// then drop them and the consent banner reappears on refresh.
-        $response->headers->setCookie(
-            new Cookie(
-                $name,
-                $value,
-                $expirationDate,
-                '/',
-                null,
-                true,
-                $this->httpOnly,
-                false,
-                Cookie::SAMESITE_LAX,
-            ),
-        );
     }
 }

@@ -10,10 +10,12 @@ use Nowo\CookieConsentBundle\Config\ResolvedCookieConsentConfig;
 use Nowo\CookieConsentBundle\Cookie\CookieChecker;
 use Nowo\CookieConsentBundle\Cookie\CookieHandler;
 use Nowo\CookieConsentBundle\Cookie\CookieLogger;
+use Nowo\CookieConsentBundle\Cookie\CookieLoggerInterface;
 use Nowo\CookieConsentBundle\Entity\CookieConsentConfig;
 use Nowo\CookieConsentBundle\Enum\CookieNameEnum;
 use Nowo\CookieConsentBundle\EventSubscriber\CookieConsentFormSubscriber;
 use Nowo\CookieConsentBundle\EventSubscriber\CookieConsentOutdatedConsentSubscriber;
+use Nowo\CookieConsentBundle\Http\ConsentCookieJarApplier;
 use Nowo\CookieConsentBundle\Tests\Support\SqliteEntityManagerFactory;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
@@ -42,7 +44,7 @@ final class ReconsentCookiesTest extends TestCase
         $request->cookies->set('PHPSESSID', 'abc');
         $response = new Response();
 
-        (new CookieHandler(true, new SystemClock()))->clear($request, $response);
+        ConsentCookieJarApplier::apply((new CookieHandler(true, new SystemClock()))->expiredConsentCookies(ConsentCookieJarApplier::requestCookies($request)), $response);
 
         $cookies = [];
         foreach ($response->headers->getCookies() as $cookie) {
@@ -195,7 +197,7 @@ final class ReconsentCookiesTest extends TestCase
         $stack = new RequestStack();
         $stack->push($request);
 
-        $formSubscriber     = new CookieConsentFormSubscriber($factory, $this->createMock(CookieLogger::class), new CookieHandler(true, new SystemClock()), false);
+        $formSubscriber     = new CookieConsentFormSubscriber($factory, $this->createMock(CookieLoggerInterface::class), new CookieHandler(true, new SystemClock()), false);
         $outdatedSubscriber = new CookieConsentOutdatedConsentSubscriber(new CookieChecker($stack), new CookieHandler(true, new SystemClock()));
 
         $dispatcher = new EventDispatcher();

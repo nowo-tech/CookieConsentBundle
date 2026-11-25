@@ -4,8 +4,9 @@ declare(strict_types=1);
 
 namespace Nowo\CookieConsentBundle\Tests\Unit\EventSubscriber;
 
-use Nowo\CookieConsentBundle\Cookie\CookieHandler;
-use Nowo\CookieConsentBundle\Cookie\CookieLogger;
+use Nowo\CookieConsentBundle\Cookie\ConsentCookieJar;
+use Nowo\CookieConsentBundle\Cookie\ConsentCookieWriterInterface;
+use Nowo\CookieConsentBundle\Cookie\CookieLoggerInterface;
 use Nowo\CookieConsentBundle\Enum\CookieNameEnum;
 use Nowo\CookieConsentBundle\EventSubscriber\CookieConsentFormSubscriber;
 use Nowo\CookieConsentBundle\Http\ColdStartRequestAttributes;
@@ -32,8 +33,8 @@ final class CookieConsentFormSubscriberTest extends TestCase
     {
         $subscriber = new CookieConsentFormSubscriber(
             $this->createMock(FormFactoryInterface::class),
-            $this->createMock(CookieLogger::class),
-            $this->createMock(CookieHandler::class),
+            $this->createMock(CookieLoggerInterface::class),
+            $this->createMock(ConsentCookieWriterInterface::class),
             true,
         );
 
@@ -50,8 +51,8 @@ final class CookieConsentFormSubscriberTest extends TestCase
 
     public function testIgnoresInvalidSubmissions(): void
     {
-        $handler = $this->createMock(CookieHandler::class);
-        $handler->expects(self::never())->method('save');
+        $handler = $this->createMock(ConsentCookieWriterInterface::class);
+        $handler->expects(self::never())->method('consentCookies')->willReturn(new ConsentCookieJar());
 
         $form = $this->createMock(FormInterface::class);
         $form->method('handleRequest');
@@ -61,7 +62,7 @@ final class CookieConsentFormSubscriberTest extends TestCase
         $formFactory = $this->createMock(FormFactoryInterface::class);
         $formFactory->method('create')->willReturn($form);
 
-        $subscriber = new CookieConsentFormSubscriber($formFactory, $this->createMock(CookieLogger::class), $handler, true);
+        $subscriber = new CookieConsentFormSubscriber($formFactory, $this->createMock(CookieLoggerInterface::class), $handler, true);
         $subscriber->onResponse(new ResponseEvent(
             $this->createMock(HttpKernelInterface::class),
             Request::create('/', 'POST'),
@@ -72,10 +73,10 @@ final class CookieConsentFormSubscriberTest extends TestCase
 
     public function testHandlesValidSubmissionWithLogger(): void
     {
-        $handler = $this->createMock(CookieHandler::class);
-        $handler->expects(self::once())->method('save');
+        $handler = $this->createMock(ConsentCookieWriterInterface::class);
+        $handler->expects(self::once())->method('consentCookies')->willReturn(new ConsentCookieJar());
 
-        $logger = $this->createMock(CookieLogger::class);
+        $logger = $this->createMock(CookieLoggerInterface::class);
         $logger->expects(self::once())->method('log');
 
         $form = $this->createMock(FormInterface::class);
@@ -105,9 +106,11 @@ final class CookieConsentFormSubscriberTest extends TestCase
     public function testNewVisitorGetsARandomConsentKey(): void
     {
         $keys    = [];
-        $handler = $this->createMock(CookieHandler::class);
-        $handler->expects(self::exactly(2))->method('save')->willReturnCallback(static function (array $categories, string $key) use (&$keys): void {
+        $handler = $this->createMock(ConsentCookieWriterInterface::class);
+        $handler->expects(self::exactly(2))->method('consentCookies')->willReturnCallback(static function (array $categories, string $key) use (&$keys): ConsentCookieJar {
             $keys[] = $key;
+
+            return new ConsentCookieJar();
         });
 
         $form = $this->createMock(FormInterface::class);
@@ -117,7 +120,7 @@ final class CookieConsentFormSubscriberTest extends TestCase
         $formFactory = $this->createMock(FormFactoryInterface::class);
         $formFactory->method('create')->willReturn($form);
 
-        $subscriber = new CookieConsentFormSubscriber($formFactory, $this->createMock(CookieLogger::class), $handler, false);
+        $subscriber = new CookieConsentFormSubscriber($formFactory, $this->createMock(CookieLoggerInterface::class), $handler, false);
         foreach ([1, 2] as $ignored) {
             $subscriber->onResponse(new ResponseEvent(
                 $this->createMock(HttpKernelInterface::class),
@@ -134,9 +137,11 @@ final class CookieConsentFormSubscriberTest extends TestCase
     public function testAMalformedKeyCookieIsReplacedByANewKey(): void
     {
         $keys    = [];
-        $handler = $this->createMock(CookieHandler::class);
-        $handler->expects(self::exactly(3))->method('save')->willReturnCallback(static function (array $categories, string $key) use (&$keys): void {
+        $handler = $this->createMock(ConsentCookieWriterInterface::class);
+        $handler->expects(self::exactly(3))->method('consentCookies')->willReturnCallback(static function (array $categories, string $key) use (&$keys): ConsentCookieJar {
             $keys[] = $key;
+
+            return new ConsentCookieJar();
         });
 
         $form = $this->createMock(FormInterface::class);
@@ -146,7 +151,7 @@ final class CookieConsentFormSubscriberTest extends TestCase
         $formFactory = $this->createMock(FormFactoryInterface::class);
         $formFactory->method('create')->willReturn($form);
 
-        $subscriber = new CookieConsentFormSubscriber($formFactory, $this->createMock(CookieLogger::class), $handler, false);
+        $subscriber = new CookieConsentFormSubscriber($formFactory, $this->createMock(CookieLoggerInterface::class), $handler, false);
         // REQ-SEC-006: a look-alike of a real key (case, trailing space) never reaches the log as that key.
         foreach (['0123456789ABCDEF0123456789ABCDEF', '0123456789abcdef0123456789abcdef ', '0123456789abcdef0123456789abcdef'] as $cookie) {
             $request = Request::create('/', 'POST');
@@ -163,10 +168,10 @@ final class CookieConsentFormSubscriberTest extends TestCase
 
     public function testSkipsLoggerWhenDisabled(): void
     {
-        $handler = $this->createMock(CookieHandler::class);
-        $handler->expects(self::once())->method('save');
+        $handler = $this->createMock(ConsentCookieWriterInterface::class);
+        $handler->expects(self::once())->method('consentCookies')->willReturn(new ConsentCookieJar());
 
-        $logger = $this->createMock(CookieLogger::class);
+        $logger = $this->createMock(CookieLoggerInterface::class);
         $logger->expects(self::never())->method('log');
 
         $form = $this->createMock(FormInterface::class);
@@ -194,13 +199,12 @@ final class CookieConsentFormSubscriberTest extends TestCase
 
     public function testHandlesGranularCookieSubmission(): void
     {
-        $handler = $this->createMock(CookieHandler::class);
-        $handler->expects(self::once())->method('save')->with(
-            self::anything(),
+        $handler = $this->createMock(ConsentCookieWriterInterface::class);
+        $handler->expects(self::once())->method('consentCookies')->with(
             self::anything(),
             self::anything(),
             ['_ga' => true],
-        );
+        )->willReturn(new ConsentCookieJar());
 
         $form = $this->createMock(FormInterface::class);
         $form->method('handleRequest');
@@ -214,7 +218,7 @@ final class CookieConsentFormSubscriberTest extends TestCase
         $formFactory = $this->createMock(FormFactoryInterface::class);
         $formFactory->method('create')->willReturn($form);
 
-        $subscriber = new CookieConsentFormSubscriber($formFactory, $this->createMock(CookieLogger::class), $handler, false);
+        $subscriber = new CookieConsentFormSubscriber($formFactory, $this->createMock(CookieLoggerInterface::class), $handler, false);
         $subscriber->onResponse(new ResponseEvent(
             $this->createMock(HttpKernelInterface::class),
             Request::create('/', 'POST'),
@@ -225,13 +229,12 @@ final class CookieConsentFormSubscriberTest extends TestCase
 
     public function testSkipsEmptyGranularCookieNames(): void
     {
-        $handler = $this->createMock(CookieHandler::class);
-        $handler->expects(self::once())->method('save')->with(
-            self::anything(),
+        $handler = $this->createMock(ConsentCookieWriterInterface::class);
+        $handler->expects(self::once())->method('consentCookies')->with(
             self::anything(),
             self::anything(),
             ['_ga' => true],
-        );
+        )->willReturn(new ConsentCookieJar());
 
         $form = $this->createMock(FormInterface::class);
         $form->method('handleRequest');
@@ -245,7 +248,7 @@ final class CookieConsentFormSubscriberTest extends TestCase
         $formFactory = $this->createMock(FormFactoryInterface::class);
         $formFactory->method('create')->willReturn($form);
 
-        $subscriber = new CookieConsentFormSubscriber($formFactory, $this->createMock(CookieLogger::class), $handler, false);
+        $subscriber = new CookieConsentFormSubscriber($formFactory, $this->createMock(CookieLoggerInterface::class), $handler, false);
         $subscriber->onResponse(new ResponseEvent(
             $this->createMock(HttpKernelInterface::class),
             Request::create('/', 'POST'),
@@ -261,8 +264,8 @@ final class CookieConsentFormSubscriberTest extends TestCase
 
         $subscriber = new CookieConsentFormSubscriber(
             $formFactory,
-            $this->createMock(CookieLogger::class),
-            $this->createMock(CookieHandler::class),
+            $this->createMock(CookieLoggerInterface::class),
+            $this->createMock(ConsentCookieWriterInterface::class),
             true,
         );
 
@@ -284,8 +287,8 @@ final class CookieConsentFormSubscriberTest extends TestCase
 
         $subscriber = new CookieConsentFormSubscriber(
             $formFactory,
-            $this->createMock(CookieLogger::class),
-            $this->createMock(CookieHandler::class),
+            $this->createMock(CookieLoggerInterface::class),
+            $this->createMock(ConsentCookieWriterInterface::class),
             true,
         );
 

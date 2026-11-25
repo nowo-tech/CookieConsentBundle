@@ -8,8 +8,6 @@ use Nowo\CookieConsentBundle\DependencyInjection\Configuration;
 use Nowo\CookieConsentBundle\Enum\CategoryEnum;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
-use Symfony\Component\Config\Definition\ArrayNode;
-use Symfony\Component\Config\Definition\BaseNode;
 use Symfony\Component\Config\Definition\Exception\InvalidConfigurationException;
 use Symfony\Component\Config\Definition\Processor;
 
@@ -20,10 +18,12 @@ final class ConfigurationTest extends TestCase
         $processor = new Processor();
         $config    = $processor->processConfiguration(new Configuration(), [[]]);
 
-        self::assertSame('', $config['table_prefix']);
         self::assertNull($config['privacy_route']);
-        self::assertSame('default', $config['doctrine']['connection']);
         self::assertSame('', $config['doctrine']['table_prefix']);
+        self::assertNull($config['doctrine']['private_entity_manager']);
+        self::assertArrayNotHasKey('table_prefix', $config, 'removed in 2.0');
+        self::assertArrayNotHasKey('connection', $config['doctrine'], 'removed in 2.0');
+        self::assertArrayNotHasKey('chrome', $config['web_ui'], 'removed in 2.0');
         self::assertSame(
             [
                 CategoryEnum::CATEGORY_ANALYTICS,
@@ -57,11 +57,8 @@ final class ConfigurationTest extends TestCase
         self::assertNull($config['preferences_bubble_icon']);
         self::assertSame([], $config['preference_sections']);
         self::assertTrue($config['web_ui']['enabled']);
-        self::assertSame('/cookie-consent-config', $config['web_ui']['path_prefix']);
         self::assertNull($config['web_ui']['layout_template'], 'null = UiKit admin layout (REQ-UI-003)');
         self::assertSame([], $config['web_ui']['templates']);
-        self::assertNull($config['web_ui']['css_framework'], 'inherited from nowo_ui_kit');
-        self::assertNull($config['web_ui']['icon_set'], 'inherited from nowo_ui_kit');
         self::assertSame(20, $config['web_ui']['list_page_size']);
         self::assertNull($config['security']['access_checker']);
         self::assertSame(['ROLE_ADMIN'], $config['security']['access_roles']);
@@ -96,80 +93,51 @@ final class ConfigurationTest extends TestCase
         self::assertSame('app_', $config['doctrine']['table_prefix']);
     }
 
-    public function testLegacyTablePrefixIsApplied(): void
-    {
-        $processor = new Processor();
-        $config    = $processor->processConfiguration(new Configuration(), [[
-            'table_prefix' => 'app_',
-        ]]);
-
-        self::assertSame('app_', $config['table_prefix']);
-    }
-
     /**
-     * @return iterable<string, array{list<string>}>
+     * @return iterable<string, array{array<string, mixed>, string, string}>
      */
-    public static function ignoredKeys(): iterable
+    public static function removedKeys(): iterable
     {
-        yield 'doctrine.connection' => [['doctrine', 'connection']];
-        yield 'web_ui.path_prefix' => [['web_ui', 'path_prefix']];
+        yield 'root table_prefix' => [['table_prefix' => 'app_'], 'table_prefix', 'doctrine.table_prefix'];
+        yield 'doctrine.connection' => [['doctrine' => ['connection' => 'default']], 'doctrine.connection', 'doctrine.entity_manager'];
+        yield 'web_ui.path_prefix' => [['web_ui' => ['path_prefix' => '/admin/cookies']], 'web_ui.path_prefix', '"prefix" of the bundle routes import'];
+        yield 'web_ui.css_framework' => [['web_ui' => ['css_framework' => 'tailwind']], 'web_ui.css_framework', 'nowo_ui_kit.css_framework'];
+        yield 'web_ui.icon_set' => [['web_ui' => ['icon_set' => 'svg_inline']], 'web_ui.icon_set', 'nowo_ui_kit.icon_set'];
+        yield 'web_ui.chrome' => [['web_ui' => ['chrome' => ['row_actions_display' => 'text']]], 'web_ui.chrome', 'nowo_ui_kit.theme.bundles.NowoCookieConsentBundle'];
+        yield 'web_ui.chrome (null)' => [['web_ui' => ['chrome' => null]], 'web_ui.chrome', 'nowo_ui_kit.theme.bundles.NowoCookieConsentBundle'];
     }
 
     /**
-     * @param list<string> $path
-     */
-    #[DataProvider('ignoredKeys')]
-    public function testIgnoredKeysAreDeprecated(array $path): void
-    {
-        $node       = (new Configuration())->getConfigTreeBuilder()->buildTree();
-        $parentPath = $node->getPath();
-        foreach ($path as $segment) {
-            self::assertInstanceOf(ArrayNode::class, $node);
-            $parentPath = $node->getPath();
-            $node       = $node->getChildren()[$segment];
-        }
-
-        self::assertInstanceOf(BaseNode::class, $node);
-        self::assertTrue($node->isDeprecated());
-        $deprecation = $node->getDeprecation($node->getName(), $parentPath);
-        self::assertSame('nowo-tech/cookie-consent-bundle', $deprecation['package']);
-        self::assertSame('1.15', $deprecation['version']);
-        self::assertStringContainsString('"nowo_cookie_consent.' . implode('.', $path) . '"', $deprecation['message']);
-        self::assertStringContainsString('ignored', $deprecation['message']);
-    }
-
-    /**
-     * @return iterable<string, array{list<string>}>
-     */
-    public static function uiContractDeprecatedKeys(): iterable
-    {
-        yield 'web_ui.css_framework' => [['web_ui', 'css_framework']];
-        yield 'web_ui.icon_set' => [['web_ui', 'icon_set']];
-        yield 'web_ui.chrome' => [['web_ui', 'chrome']];
-    }
-
-    /**
-     * REQ-UI-003: per-bundle stack / chrome keys are deprecated in favour of nowo_ui_kit.
+     * 2.0: every key removed in 2.0 fails with its replacement and UPGRADING "To 2.0.0", not a generic error.
      *
-     * @param list<string> $path
+     * @param array<string, mixed> $config
      */
-    #[DataProvider('uiContractDeprecatedKeys')]
-    public function testUiContractKeysAreDeprecated(array $path): void
+    #[DataProvider('removedKeys')]
+    public function testRemovedKeysFailWithTheirReplacement(array $config, string $path, string $replacement): void
     {
-        $node       = (new Configuration())->getConfigTreeBuilder()->buildTree();
-        $parentPath = $node->getPath();
-        foreach ($path as $segment) {
-            self::assertInstanceOf(ArrayNode::class, $node);
-            $parentPath = $node->getPath();
-            $node       = $node->getChildren()[$segment];
+        try {
+            (new Processor())->processConfiguration(new Configuration(), [$config]);
+            self::fail('The removed key ' . $path . ' must fail.');
+        } catch (InvalidConfigurationException $e) {
+            self::assertStringContainsString('"nowo_cookie_consent.' . $path . '" option was removed in 2.0', $e->getMessage());
+            self::assertStringContainsString($replacement, $e->getMessage());
+            self::assertStringContainsString('UPGRADING.md "To 2.0.0"', $e->getMessage());
         }
+    }
 
-        self::assertInstanceOf(BaseNode::class, $node);
-        self::assertTrue($node->isDeprecated());
-        $deprecation = $node->getDeprecation($node->getName(), $parentPath);
-        self::assertSame('nowo-tech/cookie-consent-bundle', $deprecation['package']);
-        self::assertSame('1.16', $deprecation['version']);
-        self::assertStringContainsString('"nowo_cookie_consent.' . implode('.', $path) . '"', $deprecation['message']);
+    public function testPrivateEntityManagerFalseFailsTheBuild(): void
+    {
+        $this->expectException(InvalidConfigurationException::class);
+        $this->expectExceptionMessage(Configuration::PRIVATE_ENTITY_MANAGER_FALSE_REMOVED);
+
+        (new Processor())->processConfiguration(new Configuration(), [['doctrine' => ['private_entity_manager' => false]]]);
+    }
+
+    public function testPrivateEntityManagerTrueIsStillAccepted(): void
+    {
+        $config = (new Processor())->processConfiguration(new Configuration(), [['doctrine' => ['private_entity_manager' => true]]]);
+
+        self::assertTrue($config['doctrine']['private_entity_manager']);
     }
 
     /**
@@ -204,13 +172,5 @@ final class ConfigurationTest extends TestCase
         $this->expectExceptionMessage('Unknown web_ui.templates page(s): dashboard');
 
         (new Processor())->processConfiguration(new Configuration(), [['web_ui' => ['templates' => ['dashboard' => 'x.html.twig']]]]);
-    }
-
-    public function testDeprecatedStackOverridesAreStillAccepted(): void
-    {
-        $config = (new Processor())->processConfiguration(new Configuration(), [['web_ui' => ['css_framework' => 'tailwind', 'icon_set' => 'svg_inline']]]);
-
-        self::assertSame('tailwind', $config['web_ui']['css_framework']);
-        self::assertSame('svg_inline', $config['web_ui']['icon_set']);
     }
 }

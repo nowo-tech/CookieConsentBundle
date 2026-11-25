@@ -4,81 +4,79 @@ declare(strict_types=1);
 
 namespace Nowo\CookieConsentBundle\Tests\Unit\DependencyInjection\Compiler;
 
+use LogicException;
 use Nowo\CookieConsentBundle\Cookie\ConsentCookieWriterInterface;
 use Nowo\CookieConsentBundle\Cookie\CookieHandler;
-use Nowo\CookieConsentBundle\Cookie\CookieHandlerInterface;
 use Nowo\CookieConsentBundle\DependencyInjection\Compiler\ConsentCookieWriterPass;
-use Nowo\CookieConsentBundle\EventSubscriber\CookieConsentFormSubscriber;
-use Nowo\CookieConsentBundle\EventSubscriber\CookieConsentOutdatedConsentSubscriber;
-use Nowo\CookieConsentBundle\Tests\Support\HostPorts\LegacyCookieHandler;
+use Nowo\CookieConsentBundle\Tests\Support\HostPorts\DecoratingConsentCookieWriter;
+use Nowo\CookieConsentBundle\Tests\Support\HostPorts\HostConsentCookieWriter;
 use PHPUnit\Framework\TestCase;
-use stdClass;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
-use Symfony\Component\DependencyInjection\Reference;
-
-use function restore_error_handler;
-use function set_error_handler;
-
-use const E_USER_DEPRECATED;
 
 /**
- * Audit MR-C-M1 / M2 / L1 (1.30): the port is chosen once at container build.
+ * 2.0: a decorated or replaced `CookieHandler` service (the 1.x deprecated way) fails the build while the port is still
+ * the bundle's writer; everything else passes.
  */
 final class ConsentCookieWriterPassTest extends TestCase
 {
-    public function testWithoutThePortsNothingChanges(): void
+    public function testWithoutThePortNothingHappens(): void
     {
         $container = new ContainerBuilder();
-        $container->register(CookieConsentOutdatedConsentSubscriber::class, CookieConsentOutdatedConsentSubscriber::class);
+        $container->register(CookieHandler::class, DecoratingConsentCookieWriter::class);
 
         (new ConsentCookieWriterPass())->process($container);
 
-        self::assertSame([], $container->getDefinition(CookieConsentOutdatedConsentSubscriber::class)->getArguments());
+        $this->addToAssertionCount(1);
     }
 
-    public function testDefaultHandlerGetsTheBundleWriterAndAReplacedListenerIsLeftAlone(): void
+    public function testTheBundleServicesPass(): void
     {
-        $container = $this->container(CookieHandler::class);
-        $container->register(CookieConsentFormSubscriber::class, stdClass::class);
+        (new ConsentCookieWriterPass())->process($this->container());
+
+        $this->addToAssertionCount(1);
+    }
+
+    public function testAHostWriterOnThePortLeavesCookieHandlerAlone(): void
+    {
+        $container = $this->container();
+        $container->register('host.writer', HostConsentCookieWriter::class);
+        $container->setAlias(ConsentCookieWriterInterface::class, 'host.writer');
+        $container->setAlias(CookieHandler::class, 'host.writer');
 
         (new ConsentCookieWriterPass())->process($container);
 
-        $writer = $container->getDefinition(CookieConsentOutdatedConsentSubscriber::class)->getArgument(2);
-        self::assertInstanceOf(Reference::class, $writer);
-        self::assertSame(ConsentCookieWriterPass::WRITER_SERVICE_ID, (string) $writer);
-        self::assertSame([], $container->getDefinition(CookieConsentFormSubscriber::class)->getArguments());
+        $this->addToAssertionCount(1);
     }
 
-    public function testLegacyHandlerGetsNoWriterAndOneDeprecation(): void
+    public function testADecoratedCookieHandlerFailsTheBuild(): void
     {
-        $container    = $this->container(LegacyCookieHandler::class);
-        $deprecations = [];
-        // @phpstan-ignore frankenphp.worker.noSetErrorExceptionHandler (test only; restored below)
-        set_error_handler(static function (int $level, string $message) use (&$deprecations): bool {
-            $deprecations[] = $message;
+        $container = $this->container();
+        $container->register('host.handler', DecoratingConsentCookieWriter::class);
+        $container->setAlias(CookieHandler::class, 'host.handler');
 
-            return true;
-        }, E_USER_DEPRECATED);
+        $this->expectException(LogicException::class);
+        $this->expectExceptionMessage('service "host.handler", class "' . DecoratingConsentCookieWriter::class . '"');
 
-        try {
-            (new ConsentCookieWriterPass())->process($container);
-        } finally {
-            restore_error_handler();
-        }
-
-        self::assertNull($container->getDefinition(CookieConsentOutdatedConsentSubscriber::class)->getArgument(2));
-        self::assertCount(1, $deprecations);
-        self::assertStringContainsString(LegacyCookieHandler::class, $deprecations[0]);
+        (new ConsentCookieWriterPass())->process($container);
     }
 
-    private function container(string $handlerClass): ContainerBuilder
+    public function testAReplacedCookieHandlerClassFailsTheBuild(): void
+    {
+        $container = $this->container();
+        $container->getDefinition(CookieHandler::class)->setClass(HostConsentCookieWriter::class);
+
+        $this->expectException(LogicException::class);
+        $this->expectExceptionMessage('decorate "nowo_cookie_consent.cookie_writer"');
+
+        (new ConsentCookieWriterPass())->process($container);
+    }
+
+    private function container(): ContainerBuilder
     {
         $container = new ContainerBuilder();
-        $container->register('host.handler', $handlerClass);
-        $container->setAlias(CookieHandlerInterface::class, 'host.handler');
+        $container->register(CookieHandler::class, CookieHandler::class);
         $container->register(ConsentCookieWriterPass::WRITER_SERVICE_ID, CookieHandler::class);
         $container->setAlias(ConsentCookieWriterInterface::class, ConsentCookieWriterPass::WRITER_SERVICE_ID);
-        $container->register(CookieConsentOutdatedConsentSubscriber::class, CookieConsentOutdatedConsentSubscriber::class);
 
         return $container;
     }

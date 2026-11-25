@@ -9,13 +9,16 @@ use Doctrine\ORM\Mapping\ClassMetadata;
 use Doctrine\ORM\Tools\SchemaTool;
 use Doctrine\Persistence\ManagerRegistry;
 use Nowo\CookieConsentBundle\Cookie\CookieLoggerInterface;
+use Nowo\CookieConsentBundle\DependencyInjection\NowoCookieConsentExtension;
 use Nowo\CookieConsentBundle\Entity\CookieConsentConfig;
 use Nowo\CookieConsentBundle\Entity\CookieConsentLog;
 use Nowo\CookieConsentBundle\EventSubscriber\CookieConsentSchemaReadySubscriber;
 use Nowo\CookieConsentBundle\Repository\CookieConsentConfigRepository;
 use Nowo\CookieConsentBundle\Tests\Integration\Kernel\HostEntity\HostNote;
+use Nowo\TransactionDoctrine\PrivateManager\PrivateEntityManager;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
+use ReflectionMethod;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\RequestStack;
@@ -72,6 +75,11 @@ final class DedicatedEntityManagerKernelTest extends TestCase
 
         self::assertSame($consentManager, $registry->getManagerForClass(CookieConsentLog::class));
         self::assertTrue($hostManager->getMetadataFactory()->isTransient(CookieConsentLog::class), 'not mapped on the host manager');
+        // 2.0: the dedicated manager (the DDD option) is kept as is, without the private one.
+        self::assertFalse($container->has(NowoCookieConsentExtension::PRIVATE_ENTITY_MANAGER_SERVICE));
+        $repository = $container->get(CookieConsentConfigRepository::class);
+        self::assertInstanceOf(CookieConsentConfigRepository::class, $repository);
+        self::assertSame($consentManager, (new ReflectionMethod($repository, 'getEntityManager'))->invoke($repository));
 
         (new SchemaTool($consentManager))->createSchema($consentManager->getMetadataFactory()->getAllMetadata());
 
@@ -99,6 +107,59 @@ final class DedicatedEntityManagerKernelTest extends TestCase
             $consentManager->getConnection()->fetchFirstColumn('SELECT name FROM dashboard_cookie_config'),
             'the logger does not flush its own manager either',
         );
+    }
+
+    /**
+     * 2.0: `private_entity_manager: true` with a dedicated manager keeps its 1.34 meaning (no deprecation there): the
+     * private manager is created on the dedicated manager, which itself is never flushed by an admin save.
+     */
+    public function testTrueWithADedicatedManagerCreatesThePrivateManagerOnIt(): void
+    {
+        $this->kernel = new CookieConsentTestKernel(false, [
+            'use_database_config' => true,
+            'doctrine'            => ['entity_manager' => 'cookie_consent', 'private_entity_manager' => true],
+            'security'            => ['allow_unauthenticated' => true],
+        ], doctrineConfig: [
+            'dbal' => [
+                'default_connection' => 'default',
+                'connections'        => [
+                    'default' => ['url' => 'sqlite:///:memory:'],
+                    'consent' => ['url' => 'sqlite:///:memory:'],
+                ],
+            ],
+            'orm' => [
+                'default_entity_manager' => 'default',
+                'entity_managers'        => [
+                    'default'        => ['connection' => 'default'],
+                    'cookie_consent' => ['connection' => 'consent'],
+                ],
+            ],
+        ]);
+        $this->kernel->boot();
+
+        $container = $this->kernel->getContainer()->get('test.service_container');
+        self::assertInstanceOf(ContainerInterface::class, $container);
+        $registry = $container->get('doctrine');
+        self::assertInstanceOf(ManagerRegistry::class, $registry);
+        $consentManager = $registry->getManager('cookie_consent');
+        self::assertInstanceOf(EntityManagerInterface::class, $consentManager);
+        (new SchemaTool($consentManager))->createSchema($consentManager->getMetadataFactory()->getAllMetadata());
+        $consentManager->persist((new CookieConsentConfig())->setName('Site')->setEnabled(true)->setDefault(true));
+        $consentManager->flush();
+
+        $private = $container->get(NowoCookieConsentExtension::PRIVATE_ENTITY_MANAGER_SERVICE);
+        self::assertInstanceOf(PrivateEntityManager::class, $private);
+        $repository = $container->get(CookieConsentConfigRepository::class);
+        self::assertInstanceOf(CookieConsentConfigRepository::class, $repository);
+        $config = $repository->findDefaultEnabled();
+        self::assertInstanceOf(CookieConsentConfig::class, $config);
+        self::assertTrue($private->contains($config));
+        self::assertFalse($consentManager->contains($config));
+        self::assertSame($consentManager->getConnection(), $private->getConnection(), 'same connection as the dedicated manager');
+
+        $consentManager->persist((new CookieConsentConfig())->setName('Pending in the dedicated manager'));
+        $repository->saveSettings($config->setName('Saved privately'), $private);
+        self::assertSame(['Saved privately'], $consentManager->getConnection()->fetchFirstColumn('SELECT name FROM dashboard_cookie_config'));
     }
 
     /**

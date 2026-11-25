@@ -8,6 +8,7 @@ use DateTimeImmutable;
 use Nowo\CookieConsentBundle\Clock\SystemClock;
 use Nowo\CookieConsentBundle\Cookie\CookieHandler;
 use Nowo\CookieConsentBundle\Enum\CookieNameEnum;
+use Nowo\CookieConsentBundle\Http\ConsentCookieJarApplier;
 use PHPUnit\Framework\TestCase;
 use Psr\Clock\ClockInterface;
 use Symfony\Component\HttpFoundation\Cookie;
@@ -20,11 +21,11 @@ final class CookieHandlerTest extends TestCase
         $handler  = new CookieHandler(true, new SystemClock());
         $response = new Response();
 
-        $handler->save([
+        ConsentCookieJarApplier::apply($handler->consentCookies([
             'required'  => true,
             'analytics' => true,
             'marketing' => false,
-        ], 'consent-key', $response);
+        ], 'consent-key'), $response);
 
         $cookies = $response->headers->getCookies();
         $names   = array_map(static fn (Cookie $cookie): string => $cookie->getName(), $cookies);
@@ -40,12 +41,11 @@ final class CookieHandlerTest extends TestCase
         $handler  = new CookieHandler(false, new SystemClock());
         $response = new Response();
 
-        $handler->save(
+        ConsentCookieJarApplier::apply($handler->consentCookies(
             ['required' => true, 'analytics' => true],
             'key',
-            $response,
             ['_ga' => true, '' => false],
-        );
+        ), $response);
 
         $cookies = $response->headers->getCookies();
         $names   = array_map(static fn (Cookie $cookie): string => $cookie->getName(), $cookies);
@@ -61,7 +61,7 @@ final class CookieHandlerTest extends TestCase
 
         $handler  = new CookieHandler(true, $clock);
         $response = new Response();
-        $handler->save(['analytics' => true], 'key', $response);
+        ConsentCookieJarApplier::apply($handler->consentCookies(['analytics' => true], 'key'), $response);
 
         $cookies = $response->headers->getCookies();
         self::assertNotEmpty($cookies);
@@ -72,7 +72,7 @@ final class CookieHandlerTest extends TestCase
     {
         $handler  = new CookieHandler(true, new SystemClock());
         $response = new Response();
-        $handler->save(['analytics' => true], 'consent-key', $response);
+        ConsentCookieJarApplier::apply($handler->consentCookies(['analytics' => true], 'consent-key'), $response);
 
         $byName = [];
         foreach ($response->headers->getCookies() as $cookie) {
@@ -91,7 +91,7 @@ final class CookieHandlerTest extends TestCase
     {
         $handler  = new CookieHandler(false, new SystemClock());
         $response = new Response();
-        $handler->save(['analytics' => true], 'key', $response);
+        ConsentCookieJarApplier::apply($handler->consentCookies(['analytics' => true], 'key'), $response);
 
         $cookies = $response->headers->getCookies();
         self::assertNotEmpty($cookies);

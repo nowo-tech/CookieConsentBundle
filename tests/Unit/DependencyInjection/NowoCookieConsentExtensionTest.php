@@ -13,10 +13,10 @@ use Nowo\CookieConsentBundle\Config\CookieConsentConfigResolver;
 use Nowo\CookieConsentBundle\Config\CookieInventoryProvider;
 use Nowo\CookieConsentBundle\Controller\CookieConsentConfigSettingsAdminController;
 use Nowo\CookieConsentBundle\Controller\CookieDefinitionAdminController;
+use Nowo\CookieConsentBundle\Cookie\ConsentCookieWriterInterface;
 use Nowo\CookieConsentBundle\Cookie\CookieChecker;
 use Nowo\CookieConsentBundle\Cookie\CookieCheckerInterface;
 use Nowo\CookieConsentBundle\Cookie\CookieHandler;
-use Nowo\CookieConsentBundle\Cookie\CookieHandlerInterface;
 use Nowo\CookieConsentBundle\Cookie\CookieLogger;
 use Nowo\CookieConsentBundle\Cookie\CookieLoggerInterface;
 use Nowo\CookieConsentBundle\DependencyInjection\Configuration;
@@ -38,12 +38,10 @@ use Nowo\CookieConsentBundle\Twig\CookieConsentAdminTwigExtension;
 use Nowo\TransactionDoctrine\PrivateManager\PrivateEntityManager;
 use Nowo\TransactionDoctrine\PrivateManager\PrivateEntityManagerMiddleware;
 use Nowo\TransactionDoctrine\PrivateManager\PrivateManagerRegistry;
-use Nowo\UiKitBundle\DependencyInjection\Configuration as UiKitConfiguration;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use ReflectionMethod;
 use Symfony\Bundle\FrameworkBundle\DependencyInjection\FrameworkExtension;
-use Symfony\Component\Config\Definition\Processor;
 use Symfony\Component\DependencyInjection\Argument\IteratorArgument;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\ContainerInterface;
@@ -57,7 +55,7 @@ final class NowoCookieConsentExtensionTest extends TestCase
     {
         $container = new ContainerBuilder();
         $extension = new NowoCookieConsentExtension();
-        $extension->load([['table_prefix' => '']], $container);
+        $extension->load([[]], $container);
 
         self::assertSame('', $container->getParameter('nowo_cookie_consent.table_prefix'));
         self::assertSame('en', $container->getParameter('nowo_cookie_consent.default_locale'));
@@ -123,19 +121,59 @@ final class NowoCookieConsentExtensionTest extends TestCase
         }
     }
 
-    public function testPrivateEntityManagerIsOffByDefault(): void
+    public function testWithoutDoctrineBundleThereIsNoPrivateEntityManager(): void
     {
         $container = new ContainerBuilder();
-        $container->setParameter('kernel.bundles', ['DoctrineBundle' => DoctrineBundle::class]);
         (new NowoCookieConsentExtension())->load([[]], $container);
 
         self::assertFalse($container->getParameter(NowoCookieConsentExtension::PRIVATE_ENTITY_MANAGER_PARAMETER));
+        self::assertFalse($container->hasParameter(NowoCookieConsentExtension::PRIVATE_ENTITY_MANAGER_SETTING_PARAMETER));
         self::assertFalse($container->hasDefinition(NowoCookieConsentExtension::PRIVATE_ENTITY_MANAGER_SERVICE));
         self::assertFalse($container->hasDefinition(NowoCookieConsentExtension::PRIVATE_REGISTRY_SERVICE));
         self::assertFalse($container->hasDefinition(NowoCookieConsentExtension::PRIVATE_MIDDLEWARE_SERVICE));
         // Excluded from the resource scan (Symfony keeps an abstract `container.excluded` placeholder only).
         self::assertFalse($container->hasDefinition(CookieConsentPrivateManagerBoundarySubscriber::class) && !$container->getDefinition(CookieConsentPrivateManagerBoundarySubscriber::class)->hasTag('container.excluded'));
         self::assertSame('doctrine', (string) $container->getDefinition(CookieConsentConflictListener::class)->getArgument(3));
+    }
+
+    /**
+     * 2.0: a dedicated doctrine.entity_manager with private_entity_manager unset keeps that manager exactly as in 1.x
+     * (the private manager registered by load() is dropped by the compiler pass, which knows the default manager).
+     */
+    public function testUseDedicatedEntityManagerRestoresTheDedicatedWiring(): void
+    {
+        $container = new ContainerBuilder();
+        $container->setParameter('kernel.bundles', ['DoctrineBundle' => DoctrineBundle::class]);
+        (new NowoCookieConsentExtension())->load([['doctrine' => ['entity_manager' => 'cookie_consent']]], $container);
+        self::assertTrue($container->hasDefinition(NowoCookieConsentExtension::PRIVATE_ENTITY_MANAGER_SERVICE));
+
+        NowoCookieConsentExtension::useDedicatedEntityManager($container, 'cookie_consent');
+
+        self::assertFalse($container->getParameter(NowoCookieConsentExtension::PRIVATE_ENTITY_MANAGER_PARAMETER));
+        foreach ([NowoCookieConsentExtension::PRIVATE_ENTITY_MANAGER_SERVICE, NowoCookieConsentExtension::PRIVATE_REGISTRY_SERVICE, NowoCookieConsentExtension::PRIVATE_MIDDLEWARE_SERVICE, CookieConsentPrivateManagerBoundarySubscriber::class] as $id) {
+            self::assertFalse($container->hasDefinition($id), $id);
+        }
+        foreach ([CookieConsentConfigRepository::class, CookieDefinitionRepository::class] as $repository) {
+            self::assertSame(NowoCookieConsentExtension::MANAGER_REGISTRY_SERVICE, (string) $container->getDefinition($repository)->getArgument('$registry'), $repository);
+        }
+        foreach ([CookieDefinitionAdminController::class, CookieConsentConfigSettingsAdminController::class] as $controller) {
+            $bindings = $container->getDefinition($controller)->getBindings();
+            self::assertSame('doctrine.orm.cookie_consent_entity_manager', (string) $bindings[EntityManagerInterface::class . ' $entityManager']->getValues()[0], $controller);
+        }
+        $listener = $container->getDefinition(CookieConsentConflictListener::class);
+        self::assertSame(NowoCookieConsentExtension::MANAGER_REGISTRY_SERVICE, (string) $listener->getArgument(3));
+        self::assertSame('cookie_consent', $listener->getArgument(4));
+    }
+
+    public function testUseDedicatedEntityManagerSkipsMissingServices(): void
+    {
+        $container = new ContainerBuilder();
+        $container->register(NowoCookieConsentExtension::PRIVATE_ENTITY_MANAGER_SERVICE);
+
+        NowoCookieConsentExtension::useDedicatedEntityManager($container, 'cookie_consent');
+
+        self::assertFalse($container->hasDefinition(NowoCookieConsentExtension::PRIVATE_ENTITY_MANAGER_SERVICE));
+        self::assertFalse($container->getParameter(NowoCookieConsentExtension::PRIVATE_ENTITY_MANAGER_PARAMETER));
     }
 
     public function testPrivateEntityManagerNeedsDoctrineBundle(): void
@@ -148,22 +186,25 @@ final class NowoCookieConsentExtensionTest extends TestCase
     }
 
     /**
-     * @return iterable<string, array{0: string|null, 1: string}>
+     * @return iterable<string, array{0: bool|null, 1: string|null, 2: string}>
      */
     public static function privateSources(): iterable
     {
-        yield 'default manager' => [null, ''];
-        yield 'doctrine.entity_manager' => ['cookie_consent', 'cookie_consent'];
+        yield 'default manager, unset (2.0 default)' => [null, null, ''];
+        yield 'default manager, true (deprecated no-op)' => [true, null, ''];
+        yield 'doctrine.entity_manager, unset (decided by the pass)' => [null, 'cookie_consent', 'cookie_consent'];
+        yield 'doctrine.entity_manager, true' => [true, 'cookie_consent', 'cookie_consent'];
     }
 
     #[DataProvider('privateSources')]
-    public function testPrivateEntityManagerWiresTheBundleServicesToThePrivateManager(?string $entityManager, string $source): void
+    public function testPrivateEntityManagerWiresTheBundleServicesToThePrivateManager(?bool $setting, ?string $entityManager, string $source): void
     {
         $container = new ContainerBuilder();
         $container->setParameter('kernel.bundles', ['DoctrineBundle' => DoctrineBundle::class]);
-        (new NowoCookieConsentExtension())->load([['doctrine' => ['private_entity_manager' => true, 'entity_manager' => $entityManager]]], $container);
+        (new NowoCookieConsentExtension())->load([['doctrine' => ['private_entity_manager' => $setting, 'entity_manager' => $entityManager]]], $container);
 
         self::assertTrue($container->getParameter(NowoCookieConsentExtension::PRIVATE_ENTITY_MANAGER_PARAMETER));
+        self::assertSame($setting, $container->getParameter(NowoCookieConsentExtension::PRIVATE_ENTITY_MANAGER_SETTING_PARAMETER));
         self::assertSame($source, $container->getParameter(NowoCookieConsentExtension::PRIVATE_SOURCE_MANAGER_PARAMETER));
         $sourceArgument = '%' . NowoCookieConsentExtension::PRIVATE_SOURCE_MANAGER_PARAMETER . '%';
 
@@ -250,6 +291,17 @@ final class NowoCookieConsentExtensionTest extends TestCase
         self::assertTrue($container->hasDefinition(CookieConsentConfigTranslationSubscriber::class));
     }
 
+    public function testPrivateEntityManagerWiringSkipsRemovedServices(): void
+    {
+        $container = new ContainerBuilder();
+        $extension = new NowoCookieConsentExtension();
+        (new ReflectionMethod($extension, 'registerPrivateEntityManager'))->invoke($extension, $container, null);
+
+        self::assertTrue($container->hasDefinition(NowoCookieConsentExtension::PRIVATE_ENTITY_MANAGER_SERVICE));
+        self::assertFalse($container->hasDefinition(CookieConsentConfigRepository::class));
+        self::assertFalse($container->hasDefinition(CookieDefinitionAdminController::class));
+    }
+
     public function testSchemaReadyCacheTtlParameter(): void
     {
         $container = new ContainerBuilder();
@@ -277,13 +329,12 @@ final class NowoCookieConsentExtensionTest extends TestCase
         $extension->load([[]], $container);
 
         self::assertTrue($container->getParameter('nowo_cookie_consent.web_ui.enabled'));
-        self::assertSame('/cookie-consent-config', $container->getParameter('nowo_cookie_consent.web_ui.path_prefix'));
         self::assertNull($container->getParameter('nowo_cookie_consent.web_ui.layout_template'));
         self::assertSame(Configuration::PAGE_TEMPLATES, $container->getParameter('nowo_cookie_consent.web_ui.templates'));
-        self::assertNull($container->getParameter('nowo_cookie_consent.web_ui.row_actions_display'));
-        self::assertNull($container->getParameter('nowo_cookie_consent.web_ui.css_framework'));
-        self::assertNull($container->getParameter('nowo_cookie_consent.web_ui.icon_set'));
         self::assertSame(20, $container->getParameter('nowo_cookie_consent.web_ui.list_page_size'));
+        foreach (['nowo_cookie_consent.web_ui.path_prefix', 'nowo_cookie_consent.web_ui.row_actions_display', 'nowo_cookie_consent.web_ui.css_framework', 'nowo_cookie_consent.web_ui.icon_set', 'nowo_cookie_consent.doctrine.connection'] as $removed) {
+            self::assertFalse($container->hasParameter($removed), $removed . ' (removed in 2.0)');
+        }
         self::assertSame(['ROLE_ADMIN'], $container->getParameter('nowo_cookie_consent.security.access_roles'));
         self::assertFalse($container->getParameter('nowo_cookie_consent.security.allow_unauthenticated'));
         self::assertTrue($container->hasAlias(CookieConsentAccessCheckerInterface::class));
@@ -346,8 +397,10 @@ final class NowoCookieConsentExtensionTest extends TestCase
         (new NowoCookieConsentExtension())->load([[]], $container);
 
         self::assertSame(CookieChecker::class, (string) $container->getAlias(CookieCheckerInterface::class));
-        self::assertSame(CookieHandler::class, (string) $container->getAlias(CookieHandlerInterface::class));
         self::assertSame(CookieLogger::class, (string) $container->getAlias(CookieLoggerInterface::class));
+        self::assertSame('nowo_cookie_consent.cookie_writer', (string) $container->getAlias(ConsentCookieWriterInterface::class));
+        self::assertSame(CookieHandler::class, $container->getDefinition('nowo_cookie_consent.cookie_writer')->getClass());
+        self::assertFalse($container->has('Nowo\\CookieConsentBundle\\Cookie\\CookieHandlerInterface'), 'removed in 2.0');
         self::assertFalse($container->hasDefinition(ConsentSavedEvent::class));
     }
 
@@ -372,203 +425,28 @@ final class NowoCookieConsentExtensionTest extends TestCase
         self::assertFalse($container->hasExtension('framework'));
     }
 
-    public function testPrependAlignsUiKitDefaultsFromWebUiWhenHostUnset(): void
-    {
-        $container = new ContainerBuilder();
-        $container->registerExtension(new class extends Extension {
-            public function getAlias(): string
-            {
-                return 'nowo_ui_kit';
-            }
-
-            public function load(array $configs, ContainerBuilder $container): void
-            {
-            }
-        });
-        $container->prependExtensionConfig('nowo_cookie_consent', [
-            'web_ui' => [
-                'css_framework' => 'tailwind',
-                'icon_set'      => 'tabler-icons',
-            ],
-        ]);
-
-        (new NowoCookieConsentExtension())->prepend($container);
-
-        $found = false;
-        foreach ($container->getExtensionConfig('nowo_ui_kit') as $cfg) {
-            if (($cfg['css_framework'] ?? null) === 'tailwind'
-                && ($cfg['icon_set'] ?? null) === 'tabler-icons'
-            ) {
-                $found = true;
-                break;
-            }
-        }
-        self::assertTrue($found, 'Expected nowo_ui_kit defaults from web_ui config.');
-    }
-
-    public function testPrependNormalizesBootstrapAliasForUiKit(): void
-    {
-        $container = new ContainerBuilder();
-        $container->registerExtension(new class extends Extension {
-            public function getAlias(): string
-            {
-                return 'nowo_ui_kit';
-            }
-
-            public function load(array $configs, ContainerBuilder $container): void
-            {
-            }
-        });
-        $container->prependExtensionConfig('nowo_cookie_consent', [
-            'web_ui' => [
-                'css_framework' => 'bootstrap',
-            ],
-        ]);
-
-        (new NowoCookieConsentExtension())->prepend($container);
-
-        $found = false;
-        foreach ($container->getExtensionConfig('nowo_ui_kit') as $cfg) {
-            if (($cfg['css_framework'] ?? null) === 'bootstrap5') {
-                $found = true;
-                break;
-            }
-        }
-        self::assertTrue($found);
-    }
-
-    public function testPrependDoesNotOverrideExplicitUiKitHostConfig(): void
-    {
-        $container = new ContainerBuilder();
-        $container->registerExtension(new class extends Extension {
-            public function getAlias(): string
-            {
-                return 'nowo_ui_kit';
-            }
-
-            public function load(array $configs, ContainerBuilder $container): void
-            {
-            }
-        });
-        $container->prependExtensionConfig('nowo_ui_kit', [
-            'css_framework' => 'custom',
-            'icon_set'      => 'ux_icon',
-        ]);
-        $container->prependExtensionConfig('nowo_cookie_consent', [
-            'web_ui' => [
-                'css_framework' => 'tailwind',
-                'icon_set'      => 'tabler-icons',
-            ],
-        ]);
-
-        (new NowoCookieConsentExtension())->prepend($container);
-
-        foreach ($container->getExtensionConfig('nowo_ui_kit') as $cfg) {
-            if (($cfg['css_framework'] ?? null) === 'tailwind'
-                || ($cfg['icon_set'] ?? null) === 'tabler-icons'
-            ) {
-                self::fail('web_ui must not prepend UiKit defaults when host set nowo_ui_kit explicitly.');
-            }
-        }
-        $uiKitConfigs = $container->getExtensionConfig('nowo_ui_kit');
-        self::assertSame('custom', $uiKitConfigs[0]['css_framework'] ?? null);
-        self::assertSame('ux_icon', $uiKitConfigs[0]['icon_set'] ?? null);
-    }
-
-    public function testLoadsPageTemplateOverridesAndLegacyRowActionsDisplay(): void
+    public function testLoadsPageTemplateOverrides(): void
     {
         $container = new ContainerBuilder();
         (new NowoCookieConsentExtension())->load([[
             'web_ui' => [
                 'layout_template' => 'layouts/admin.html.twig',
                 'templates'       => ['settings' => 'admin/settings.html.twig'],
-                'chrome'          => ['row_actions_display' => 'icon_text'],
             ],
         ]], $container);
 
         self::assertSame('layouts/admin.html.twig', $container->getParameter('nowo_cookie_consent.web_ui.layout_template'));
         self::assertSame(['settings' => 'admin/settings.html.twig'] + Configuration::PAGE_TEMPLATES, $container->getParameter('nowo_cookie_consent.web_ui.templates'));
-        self::assertSame('icon_text', $container->getParameter('nowo_cookie_consent.web_ui.row_actions_display'));
         self::assertTrue($container->hasDefinition(AdminPageFactory::class));
-        self::assertSame('layouts/admin.html.twig', $container->getDefinition(CookieConsentAdminTwigExtension::class)->getArgument('$layoutTemplate'));
+        self::assertArrayNotHasKey('$formThemes', $container->getDefinition(AdminPageFactory::class)->getArguments(), '2.0: no web_ui.chrome form theme');
+        self::assertArrayNotHasKey('$rowActionsDisplay', $container->getDefinition(AdminPageFactory::class)->getArguments(), '2.0: no web_ui.chrome row actions display');
+        self::assertSame([], $container->getDefinition(CookieConsentAdminTwigExtension::class)->getArguments());
     }
 
-    public function testDeprecatedLayoutGlobalFallsBackToTheUiKitLayout(): void
-    {
-        $container = new ContainerBuilder();
-        (new NowoCookieConsentExtension())->load([[]], $container);
-
-        $definition = $container->getDefinition(CookieConsentAdminTwigExtension::class);
-        self::assertSame(CookieConsentAdminTwigExtension::UI_KIT_ADMIN_LAYOUT, $definition->getArgument('$layoutTemplate'));
-        self::assertSame('bootstrap5', $definition->getArgument('$cssFramework'));
-        self::assertSame('bootstrap-icons', $definition->getArgument('$iconSet'));
-    }
-
-    public function testPrependBridgesTheChromeMapIntoTheUiKitBundleTheme(): void
-    {
-        $container = $this->containerWithUiKit();
-        $container->prependExtensionConfig('nowo_cookie_consent', [
-            'web_ui' => ['chrome' => [
-                'classes'    => ['table' => 'data-table', 'button_primary' => 'btn-moss'],
-                'attributes' => ['table_panel' => ['data-testid' => 'cookie-table']],
-                'templates'  => ['pagination' => 'kit/_pagination.html.twig'],
-            ]],
-        ]);
-
-        (new NowoCookieConsentExtension())->prepend($container);
-
-        $configs = $container->getExtensionConfig('nowo_ui_kit');
-        self::assertSame([
-            'theme' => ['bundles' => ['NowoCookieConsentBundle' => [
-                'classes' => [
-                    'table'       => ['value' => 'data-table', 'framework_defaults' => false],
-                    'btn_primary' => ['value' => 'btn-moss', 'framework_defaults' => false],
-                ],
-                'attributes' => ['table_wrap' => ['data-testid' => 'cookie-table']],
-                'partials'   => ['pagination' => 'kit/_pagination.html.twig'],
-            ]]],
-        ], $configs[0] ?? null);
-
-        // The bridged exception is valid UiKit theme config.
-        $processed = (new Processor())->processConfiguration(new UiKitConfiguration(), $configs);
-        self::assertSame('kit/_pagination.html.twig', $processed['theme']['bundles']['NowoCookieConsentBundle']['partials']['pagination'] ?? null);
-    }
-
-    public function testPrependBridgesPageScopedChromeKeysIntoBundlePageTypes(): void
-    {
-        $container = $this->containerWithUiKit();
-        $container->prependExtensionConfig('nowo_cookie_consent', [
-            'web_ui' => ['chrome' => [
-                'classes'    => ['page_header' => 'host-toolbar', 'page_header_form' => 'host-form-header', 'settings_actions' => 'host-actions'],
-                'attributes' => ['page_header_form' => ['data-testid' => 'form-header']],
-            ]],
-        ]);
-
-        (new NowoCookieConsentExtension())->prepend($container);
-
-        $configs   = $container->getExtensionConfig('nowo_ui_kit');
-        $processed = (new Processor())->processConfiguration(new UiKitConfiguration(), $configs);
-        $pages     = $processed['theme']['bundles']['NowoCookieConsentBundle']['pages'] ?? [];
-
-        self::assertSame('host-toolbar', $pages['list']['classes']['page_header']['value'] ?? null);
-        self::assertSame('host-form-header', $pages['form']['classes']['page_header']['value'] ?? null);
-        self::assertSame(['data-testid' => 'form-header'], $pages['form']['attributes']['page_header'] ?? null);
-        self::assertSame('host-actions', $pages['settings']['classes']['form_actions']['value'] ?? null);
-        self::assertSame([], $processed['theme']['bundles']['NowoCookieConsentBundle']['classes'] ?? [], 'nothing bundle-wide');
-    }
-
-    public function testDeprecatedChromeFormThemeBecomesTheAdminFormThemes(): void
-    {
-        $container = new ContainerBuilder();
-        (new NowoCookieConsentExtension())->load([['web_ui' => ['chrome' => ['templates' => ['form_theme' => 'admin/form_theme.html.twig']]]]], $container);
-        self::assertSame(['admin/form_theme.html.twig'], $container->getDefinition(AdminPageFactory::class)->getArgument('$formThemes'));
-
-        $container = new ContainerBuilder();
-        (new NowoCookieConsentExtension())->load([[]], $container);
-        self::assertSame([], $container->getDefinition(AdminPageFactory::class)->getArgument('$formThemes'));
-    }
-
-    public function testPrependDoesNotTouchUiKitWithoutLegacyKeys(): void
+    /**
+     * 2.0: the bundle no longer seeds UiKit (the web_ui.css_framework / icon_set / chrome keys are removed).
+     */
+    public function testPrependNeverTouchesUiKit(): void
     {
         $container = $this->containerWithUiKit();
         $container->prependExtensionConfig('nowo_cookie_consent', ['web_ui' => ['layout_template' => 'layouts/admin.html.twig']]);

@@ -24,7 +24,8 @@ use function memory_get_usage;
 /**
  * 1.36 provisioning port through a real kernel: a DDD host's application service autowired with the port (no entity,
  * no manager) seeds the default profile and the cookie inventory from decoded fixtures, in every
- * `doctrine.private_entity_manager` mode and with a dedicated `doctrine.entity_manager`. The application's pending
+ * mode (2.0: the private manager, `private_entity_manager` unset or the deprecated `true`) and with a dedicated
+ * `doctrine.entity_manager`. The application's pending
  * changes are never flushed, a second run reports everything unchanged, the read port sees the result, and a
  * kept-alive kernel (FrankenPHP worker mode, kernel reset off) keeps no state between calls.
  */
@@ -60,14 +61,14 @@ final class ProvisionerKernelTest extends TestCase
      */
     public static function modes(): iterable
     {
-        yield 'private_entity_manager: true' => [true];
-        yield 'private_entity_manager: false (deprecated)' => [false];
+        yield 'private_entity_manager unset (2.0 default)' => [null];
+        yield 'private_entity_manager: true (deprecated no-op)' => [true];
     }
 
     #[DataProvider('modes')]
     public function testADddHostSeedsThroughThePortAndItsPendingChangesStayItsOwn(?bool $private): void
     {
-        $this->boot(['doctrine' => ['private_entity_manager' => $private]]);
+        $this->boot($private === null ? [] : ['doctrine' => ['private_entity_manager' => $private]]);
         $host = $this->manager('default');
 
         // The application left a change pending in its own manager (its handler has not committed yet).

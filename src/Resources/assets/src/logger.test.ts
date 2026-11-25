@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import {
   clearBundleLoggerForTest,
+  clearScriptLoadedForTest,
   createBundleLogger,
   getLogger,
   setBundleLogger,
@@ -8,6 +9,7 @@ import {
 
 describe('logger', () => {
   beforeEach(() => {
+    clearScriptLoadedForTest();
     vi.spyOn(console, 'log').mockImplementation(() => {});
     vi.spyOn(console, 'debug').mockImplementation(() => {});
     vi.spyOn(console, 'info').mockImplementation(() => {});

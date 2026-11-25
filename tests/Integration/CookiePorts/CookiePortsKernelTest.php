@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Nowo\CookieConsentBundle\Tests\Integration\CookiePorts;
 
+use LogicException;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Filesystem\Filesystem;
@@ -14,70 +15,48 @@ use Symfony\Component\HttpKernel\HttpKernel;
 use function array_map;
 use function array_values;
 use function md5;
-use function restore_error_handler;
-use function set_error_handler;
-use function str_contains;
-
-use const E_USER_DEPRECATED;
 
 /**
- * Audit MR-C-M1 / M2 / L1 (1.30): every 1.29 way of customising the cookie handler keeps working (no TypeError, an
- * overridden `saveCookie()` still runs) and reports one deprecation at container build, not per request; the 1.30
- * ports are used without a deprecation.
+ * The consent cookie port in a real kernel (audit MR-C-M1 / M2, 2.0 lesson W1-1): the supported customisations answer
+ * with their cookies on every request; every 1.x customisation that 2.0 no longer calls fails the container build with
+ * a message naming what to do, instead of being dropped silently.
  */
 final class CookiePortsKernelTest extends TestCase
 {
     private const STANDARD = ['Cookie_Consent', 'Cookie_Consent_Key'];
 
+    private const REMOVED_PORT = 'Nowo\\CookieConsentBundle\\Cookie\\CookieHandlerInterface';
+
     private ?CookiePortsKernel $kernel = null;
-
-    /** @var list<string> */
-    private array $deprecations = [];
-
-    protected function setUp(): void
-    {
-        // @phpstan-ignore frankenphp.worker.noSetErrorExceptionHandler (test only; restored in tearDown)
-        set_error_handler(function (int $level, string $message): bool {
-            if (str_contains($message, 'cookie-consent-bundle')) {
-                $this->deprecations[] = $message;
-            }
-
-            return true;
-        }, E_USER_DEPRECATED);
-    }
 
     protected function tearDown(): void
     {
-        restore_error_handler();
         $this->kernel?->shutdown();
         $this->kernel = null;
         (new Filesystem())->remove(CookiePortsKernel::cacheRoot());
     }
 
     /**
-     * @return iterable<string, array{string, list<string>, list<string>, bool}>
+     * @return iterable<string, array{string, list<string>, list<string>}>
      */
-    public static function modes(): iterable
+    public static function supported(): iterable
     {
-        yield 'standard host' => ['default', self::STANDARD, [], false];
-        yield 'decorator on CookieHandler::class' => ['decorate_concrete', self::STANDARD, ['Decorated'], true];
-        yield 'decorator on CookieHandlerInterface' => ['decorate_interface', self::STANDARD, ['Decorated'], true];
-        yield 'CookieHandler class replaced by a subclass' => ['replace_subclass', self::STANDARD, ['Sub_Cookie_Consent_Key'], true];
-        yield 'CookieHandlerInterface aliased to a subclass' => ['alias_subclass', self::STANDARD, ['Sub_Cookie_Consent_Key'], true];
-        yield 'host handler implementing both ports' => ['dual', [], ['Dual_Key'], false];
-        yield 'host writer wins over a legacy decorator' => ['host_writer', [], ['Host_Consent_Key', 'Host_Analytics'], false];
+        yield 'standard host' => ['default', self::STANDARD, []];
+        yield 'host writer aliased to the port' => ['host_writer', [], ['Host_Consent_Key', 'Host_Analytics']];
+        yield 'decorator of nowo_cookie_consent.cookie_writer' => ['decorate_writer', self::STANDARD, ['Decorated']];
+        yield 'host writer, CookieHandler decorated too' => ['decorate_handler_with_host_writer', [], ['Host_Consent_Key', 'Host_Analytics']];
+        yield 'unrelated missing interface in an autodiscovered class' => ['discover:UnrelatedMissing', self::STANDARD, []];
     }
 
     /**
      * @param list<string> $expected cookie names that must be set
      * @param list<string> $extra host cookie names that must be set
      */
-    #[DataProvider('modes')]
-    public function testEveryCustomisationAnswersAndKeepsItsCookies(string $mode, array $expected, array $extra, bool $deprecated): void
+    #[DataProvider('supported')]
+    public function testSupportedCustomisationsAnswerWithTheirCookies(string $mode, array $expected, array $extra): void
     {
         $this->kernel = new CookiePortsKernel($mode);
         $this->kernel->boot();
-        self::assertCount($deprecated ? 1 : 0, $this->deprecations, 'one deprecation at container build, or none');
 
         $http = $this->kernel->getContainer()->get('http_kernel');
         self::assertInstanceOf(HttpKernel::class, $http);
@@ -93,7 +72,36 @@ final class CookiePortsKernelTest extends TestCase
                 self::assertContains($name, $names, $mode);
             }
         }
+    }
 
-        self::assertCount($deprecated ? 1 : 0, $this->deprecations, 'no deprecation per request');
+    /**
+     * @return iterable<string, array{string, list<string>}>
+     */
+    public static function removed(): iterable
+    {
+        yield 'decorator of CookieHandler' => ['decorate_handler', ['"Nowo\\CookieConsentBundle\\Cookie\\CookieHandler" service is decorated or replaced', 'nowo_cookie_consent.cookie_writer']];
+        yield 'alias of the removed port id' => ['alias_removed_port', [self::REMOVED_PORT, 'deprecated since nowo-tech/cookie-consent-bundle 1.30']];
+        yield 'autodiscovered class implementing the removed port' => ['discover:ImplementsRemoved', ['Tests\\Fixtures\\RemovedPorts\\ImplementsRemoved\\LegacyCookieHandler', self::REMOVED_PORT, 'Loader error']];
+        yield '#[AsAlias] of the removed port' => ['discover:AsAliasRemoved', [self::REMOVED_PORT, 'ConsentCookieWriterInterface']];
+        yield '#[AsDecorator] of the removed port (IGNORE on invalid)' => ['discover:AsDecoratorRemoved', ['RemovedPorts\\AsDecoratorRemoved\\DecoratingCookieWriter" decorates', self::REMOVED_PORT]];
+        yield 'autodiscovered form type extending the removed settings type' => ['discover:ExtendsRemovedForm', ['Nowo\\CookieConsentBundle\\Form\\CookieConsentConfigSettingsType', 'CookieConsentConfigFullSettingsType']];
+    }
+
+    /**
+     * @param list<string> $fragments parts of the build error
+     */
+    #[DataProvider('removed')]
+    public function testRemovedCustomisationsFailTheBuild(string $mode, array $fragments): void
+    {
+        $this->kernel = new CookiePortsKernel($mode);
+
+        try {
+            $this->kernel->boot();
+            self::fail('The container build must fail for ' . $mode);
+        } catch (LogicException $e) {
+            foreach ([...$fragments, 'UPGRADING.md "To 2.0.0"'] as $fragment) {
+                self::assertStringContainsString($fragment, $e->getMessage());
+            }
+        }
     }
 }

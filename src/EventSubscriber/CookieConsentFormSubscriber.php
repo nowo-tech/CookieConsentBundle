@@ -11,7 +11,6 @@ use Nowo\CookieConsentBundle\Config\CookieConsentConfigResolver;
 use Nowo\CookieConsentBundle\Config\ResolvedCookieConsentConfig;
 use Nowo\CookieConsentBundle\Cookie\ConsentCookieWriterInterface;
 use Nowo\CookieConsentBundle\Cookie\ConsentKey;
-use Nowo\CookieConsentBundle\Cookie\CookieHandlerInterface;
 use Nowo\CookieConsentBundle\Cookie\CookieLogger;
 use Nowo\CookieConsentBundle\Cookie\CookieLoggerInterface;
 use Nowo\CookieConsentBundle\Enum\CookieNameEnum;
@@ -40,10 +39,8 @@ use function strlen;
 
 /**
  * Handles cookie consent form submission on the HTTP response event.
- *
- * @final since 1.19, will be final in 2.0 (not an extension point; decorate or replace the service instead)
  */
-class CookieConsentFormSubscriber implements EventSubscriberInterface
+final class CookieConsentFormSubscriber implements EventSubscriberInterface
 {
     /** Request attribute set once the consent of the request was handled (1.31): the error response is not handled again. */
     public const HANDLED_ATTRIBUTE = '_nowo_cookie_consent_handled';
@@ -55,20 +52,20 @@ class CookieConsentFormSubscriber implements EventSubscriberInterface
      *
      * @param FormFactoryInterface $formFactory Creates consent forms
      * @param CookieLoggerInterface $cookieLogger Persists optional consent logs
-     * @param CookieHandlerInterface $cookieHandler Writes consent cookies (deprecated port, used only when it is a host
-     *                                              service that does not implement the new one)
+     * @param ConsentCookieWriterInterface $cookieHandler The consent cookie port (2.0: was the removed
+     *                                                    `CookieHandlerInterface`; same position and name)
      * @param bool $useLogger Whether consent logging is enabled
      * @param LoggerInterface|null $logger Optional debug logger
      * @param CookieConsentConfigResolver|null $configResolver Resolves the profile of the answered page (1.25)
      * @param EventDispatcherInterface|null $eventDispatcher Dispatches {@see ConsentSavedEvent} (1.26)
      * @param ClockInterface|null $clock Clock for the event time (1.26)
-     * @param ConsentCookieWriterInterface|null $cookieWriter Framework-free consent cookie port (1.30)
+     * @param ConsentCookieWriterInterface|null $cookieWriter The consent cookie port too (1.30); when given, it is used instead of `$cookieHandler`
      * @param CookieConsentConflictListener|null $conflicts Conflict answer of a failed consent write (1.31, REQ-RUNTIME-003)
      */
     public function __construct(
         private readonly FormFactoryInterface $formFactory,
         private readonly CookieLoggerInterface $cookieLogger,
-        private readonly CookieHandlerInterface $cookieHandler,
+        private readonly ConsentCookieWriterInterface $cookieHandler,
         private readonly bool $useLogger,
         private readonly ?LoggerInterface $logger = null,
         private readonly ?CookieConsentConfigResolver $configResolver = null,
@@ -180,7 +177,7 @@ class CookieConsentFormSubscriber implements EventSubscriberInterface
     /**
      * @param array<string, bool|string> $categories
      */
-    protected function handleFormSubmit(array $categories, Request $request, Response $response): void
+    private function handleFormSubmit(array $categories, Request $request, Response $response): void
     {
         $cookieConsentKey = $this->getCookieConsentKey($request);
         $granularCookies  = $this->extractGranularCookies($categories);
@@ -191,7 +188,7 @@ class CookieConsentFormSubscriber implements EventSubscriberInterface
             $this->cookieLogger->log($categories, $cookieConsentKey);
         }
 
-        (new ConsentCookieResponseWriter($this->cookieHandler, $this->cookieWriter))
+        (new ConsentCookieResponseWriter($this->cookieWriter ?? $this->cookieHandler))
             ->save($categories, $cookieConsentKey, $response, $granularCookies);
 
         // After the log rows are committed (1.26, DDD P2).
@@ -252,7 +249,7 @@ class CookieConsentFormSubscriber implements EventSubscriberInterface
         return $granular;
     }
 
-    protected function getCookieConsentKey(Request $request): string
+    private function getCookieConsentKey(Request $request): string
     {
         // The key identifies the visitor's consent log rows (proof of consent): unguessable, not time-based. A cookie
         // that is not a key the bundle writes is refused and replaced (REQ-SEC-006: no look-alike keys in the log).
@@ -262,7 +259,7 @@ class CookieConsentFormSubscriber implements EventSubscriberInterface
     /**
      * @return FormInterface<array<string, mixed>|null>
      */
-    protected function createCookieConsentForm(): FormInterface
+    private function createCookieConsentForm(): FormInterface
     {
         return $this->formFactory->create(CookieConsentType::class);
     }
