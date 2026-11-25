@@ -4,9 +4,9 @@ name: CI
 
 on:
   push:
-    branches: [main, master]
+    branches: [main, master, 1.x]
   pull_request:
-    branches: [main, master]
+    branches: [main, master, 1.x]
   # Dispatched by dependabot-assets.yml on a Dependabot branch after it pushed the rebuilt assets (a push made with
   # GITHUB_TOKEN starts no workflow), so the required checks run on the rebuilt head (audit ZAWD-L2).
   workflow_dispatch:

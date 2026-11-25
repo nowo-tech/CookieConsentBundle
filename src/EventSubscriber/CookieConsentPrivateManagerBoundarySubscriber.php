@@ -15,7 +15,7 @@ use Symfony\Component\HttpKernel\KernelEvents;
 use Symfony\Contracts\Service\ResetInterface;
 
 /**
- * 1.34 (`doctrine.private_entity_manager: true`): drops the bundle's private entity manager, and clears the memos that
+ * 1.34 (the private entity manager; the only mode on the application's default manager since 2.0): drops the bundle's private entity manager, and clears the memos that
  * hold its entities, at every outermost unit-of-work boundary, so nothing loaded or left unflushed in one request,
  * Messenger message or console command survives into the next one (FrankenPHP worker mode with the kernel reset off
  * included; REQ-RUNTIME-002). `kernel.reset` resets the same services too, but is never relied on alone.
@@ -37,11 +37,7 @@ use Symfony\Contracts\Service\ResetInterface;
  * When the host also registers transaction-doctrine's Symfony bundle, its boundary listener resets the same manager
  * through the {@see PrivateEntityManager::TAG} tag; a second reset is a no-op.
  *
- * 1.35: the same class also resets the host-flush reporter (service
- * `nowo_cookie_consent.host_flush_reporter.boundary_subscriber`, registered by CookieConsentHostFlushNoticePass when
- * the bundle writes through the application's default manager): its resettables are then only that reporter.
- *
- * @internal registered by the bundle (private mode; host mode for the host-flush reporter); not an extension point
+ * @internal registered by the bundle with the private entity manager; not an extension point
  */
 final class CookieConsentPrivateManagerBoundarySubscriber implements EventSubscriberInterface
 {

@@ -8,9 +8,10 @@ use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\DBAL\LockMode;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\Persistence\ManagerRegistry;
+use LogicException;
 use Nowo\CookieConsentBundle\Concurrency\RowVersionGuard;
 use Nowo\CookieConsentBundle\Concurrency\StaleVersionException;
-use Nowo\CookieConsentBundle\Doctrine\CookieConsentHostFlushReporter;
+use Nowo\CookieConsentBundle\Doctrine\BundleManagerGuard;
 use Nowo\CookieConsentBundle\Entity\CookieConsentConfig;
 use Nowo\TransactionContract\TransientStorageFailure;
 use Nowo\TransactionDoctrine\DoctrineTransactionRunner;
@@ -41,10 +42,11 @@ class CookieConsentConfigRepository extends ServiceEntityRepository implements R
      * Creates a new consent configuration repository.
      *
      * @param ManagerRegistry $registry The Doctrine manager registry
-     * @param CookieConsentHostFlushReporter|null $hostFlushReporter 1.35: reports the application's pending changes a save flushes (host mode only)
+     * @param object|null $hostFlushReporter @deprecated since 2.0, ignored (the 1.35 host-flush probe of the removed host mode); removed in 3.0
      */
-    public function __construct(ManagerRegistry $registry, private readonly ?CookieConsentHostFlushReporter $hostFlushReporter = null)
+    public function __construct(ManagerRegistry $registry, ?object $hostFlushReporter = null)
     {
+        unset($hostFlushReporter);
         parent::__construct($registry, CookieConsentConfig::class);
     }
 
@@ -88,10 +90,13 @@ class CookieConsentConfigRepository extends ServiceEntityRepository implements R
      * @param EntityManagerInterface $entityManager the manager of the bundle entities (it holds the form's changes)
      * @param int|null $expectedVersion the row version of the edited page (the form's hidden token); null saves without the check but still advances the version (a host's own code)
      *
+     * @throws LogicException 2.0: when `$entityManager` is not the bundle's manager or does not hold the entity (nothing is written)
      * @throws StaleVersionException when `$expectedVersion` is no longer the profile's version
      */
     public function saveSettings(CookieConsentConfig $config, EntityManagerInterface $entityManager, ?int $expectedVersion = null): void
     {
+        BundleManagerGuard::assertBundleManager($entityManager, $this->getEntityManager(), $config, __METHOD__);
+
         DoctrineTransactionRunner::forConnection($entityManager->getConnection())->run(function () use ($config, $entityManager, $expectedVersion): void {
             $default = $config->isDefault();
             if ($default) {
@@ -101,8 +106,6 @@ class CookieConsentConfigRepository extends ServiceEntityRepository implements R
             // With no token (host code) the version still advances, unchecked: pages opened before are stale.
             RowVersionGuard::advance($entityManager, $config, $expectedVersion);
 
-            // 1.35: lists the application's pending changes this flush writes (2.0 no longer does); read-only.
-            $this->hostFlushReporter?->beforeFlush($entityManager);
             $entityManager->flush();
 
             if ($default) {

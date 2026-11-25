@@ -7,8 +7,8 @@ namespace Nowo\CookieConsentBundle\Cookie;
 /**
  * Decides which consent cookies to write or expire, without any HTTP type (1.30, REQ-ARCH-001 rule 3).
  *
- * Framework-free twin of the deprecated {@see CookieHandlerInterface}: it returns a {@see ConsentCookieJar} and the
- * bundle applies it to the response. {@see CookieHandler} is the default implementation; alias this interface to your
+ * The only consent cookie port since 2.0 (it replaced `CookieHandlerInterface`): it returns a {@see ConsentCookieJar}
+ * and the bundle applies it to the response. {@see CookieHandler} is the default implementation; alias this interface to your
  * own service to change how the consent is stored in the browser.
  */
 interface ConsentCookieWriterInterface

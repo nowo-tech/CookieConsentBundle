@@ -6,7 +6,9 @@ namespace Nowo\CookieConsentBundle\Tests\Unit\EventSubscriber;
 
 use DateTimeImmutable;
 use Doctrine\DBAL\Exception as DBALException;
-use Nowo\CookieConsentBundle\Cookie\CookieHandlerInterface;
+use Nowo\CookieConsentBundle\Cookie\ConsentCookieJar;
+use Nowo\CookieConsentBundle\Cookie\ConsentCookieWriterInterface;
+use Nowo\CookieConsentBundle\Cookie\ConsentRequestCookies;
 use Nowo\CookieConsentBundle\Cookie\CookieLoggerInterface;
 use Nowo\CookieConsentBundle\Enum\CookieNameEnum;
 use Nowo\CookieConsentBundle\Event\ConsentSavedEvent;
@@ -188,22 +190,25 @@ final class CookieConsentFormSubscriberEventTest extends TestCase
         };
     }
 
-    private function hostHandler(): CookieHandlerInterface
+    private function hostHandler(): ConsentCookieWriterInterface
     {
         $test = $this;
 
-        return new class($test) implements CookieHandlerInterface {
+        return new class($test) implements ConsentCookieWriterInterface {
             public function __construct(private readonly CookieConsentFormSubscriberEventTest $test)
             {
             }
 
-            public function save(array $categories, string $key, Response $response, array $granularCookies = []): void
+            public function consentCookies(array $categories, string $key, array $granularCookies = []): ConsentCookieJar
             {
                 $this->test->record('save');
+
+                return new ConsentCookieJar();
             }
 
-            public function clear(Request $request, Response $response): void
+            public function expiredConsentCookies(ConsentRequestCookies $requestCookies): ConsentCookieJar
             {
+                return new ConsentCookieJar();
             }
         };
     }

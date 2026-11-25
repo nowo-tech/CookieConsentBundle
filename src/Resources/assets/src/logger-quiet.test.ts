@@ -3,12 +3,13 @@
  * `globalThis.NOWO_CONSOLE = 'quiet'` silences it; anything else keeps the default.
  */
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { createBundleLogger } from './logger';
+import { clearScriptLoadedForTest, createBundleLogger } from './logger';
 
 describe('scriptLoaded() quiet switch', () => {
   let consoleLog: ReturnType<typeof vi.spyOn>;
 
   beforeEach(() => {
+    clearScriptLoadedForTest();
     consoleLog = vi.spyOn(console, 'log').mockImplementation(() => undefined);
   });
 
@@ -57,6 +58,21 @@ describe('scriptLoaded() quiet switch', () => {
         throw new Error('blocked');
       },
     });
+    createBundleLogger('test').scriptLoaded();
+    expect(consoleLog).toHaveBeenCalledTimes(1);
+  });
+
+  it('prints once per name when the script runs twice on the page', () => {
+    createBundleLogger('test').scriptLoaded();
+    createBundleLogger('test').scriptLoaded();
+    createBundleLogger('other').scriptLoaded();
+    expect(consoleLog).toHaveBeenCalledTimes(2);
+  });
+
+  it('does not mark a name as printed while the console is quiet', () => {
+    document.documentElement.dataset.nowoConsole = 'quiet';
+    createBundleLogger('test').scriptLoaded();
+    delete document.documentElement.dataset.nowoConsole;
     createBundleLogger('test').scriptLoaded();
     expect(consoleLog).toHaveBeenCalledTimes(1);
   });

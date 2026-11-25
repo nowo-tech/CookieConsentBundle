@@ -8,7 +8,6 @@ use Doctrine\ORM\EntityManagerInterface;
 use Nowo\CookieConsentBundle\Admin\AdminPageFactory;
 use Nowo\CookieConsentBundle\Concurrency\RowVersionGuard;
 use Nowo\CookieConsentBundle\Concurrency\StaleVersionException;
-use Nowo\CookieConsentBundle\Doctrine\CookieConsentHostFlushReporter;
 use Nowo\CookieConsentBundle\Entity\CookieConsentConfig;
 use Nowo\CookieConsentBundle\Entity\CookieDefinition;
 use Nowo\CookieConsentBundle\Form\CookieDefinitionType;
@@ -50,7 +49,7 @@ final class CookieDefinitionAdminController extends AbstractController
      * @param ParameterBagInterface $parameterBag Container parameters (list page size)
      * @param AdminPageFactory $pages UiKit view models and templates of the admin pages (REQ-UI-003)
      * @param FormFactoryInterface|null $formFactory Form factory for the per-row delete forms (autowired)
-     * @param CookieConsentHostFlushReporter|null $hostFlushReporter 1.35: reports the application's pending changes a create or delete flushes (host mode only)
+     * @param object|null $hostFlushReporter @deprecated since 2.0, ignored (the 1.35 host-flush probe of the removed host mode); removed in 3.0
      */
     public function __construct(
         private readonly CookieConsentConfigRepository $configRepository,
@@ -59,8 +58,9 @@ final class CookieDefinitionAdminController extends AbstractController
         private readonly ParameterBagInterface $parameterBag,
         private readonly AdminPageFactory $pages,
         private readonly ?FormFactoryInterface $formFactory = null,
-        private readonly ?CookieConsentHostFlushReporter $hostFlushReporter = null,
+        ?object $hostFlushReporter = null,
     ) {
+        unset($hostFlushReporter);
     }
 
     /**
@@ -156,8 +156,6 @@ final class CookieDefinitionAdminController extends AbstractController
         }
 
         $entityManager->remove($definition);
-        // 1.35: lists the application's pending changes this flush writes (2.0 no longer does); read-only.
-        $this->hostFlushReporter?->beforeFlush($entityManager);
         $entityManager->flush();
 
         $this->addFlash('success', $this->translator->trans('nowo_cookie_consent.admin.cookie_definition.deleted', [], 'NowoCookieConsentBundle'));
@@ -239,7 +237,6 @@ final class CookieDefinitionAdminController extends AbstractController
             if ($isNew) {
                 $config->addCookieDefinition($definition);
                 $entityManager->persist($definition);
-                $this->hostFlushReporter?->beforeFlush($entityManager);
                 $entityManager->flush();
             } else {
                 // 1.33 (REQ-RUNTIME-003 rule 4): the page's row version is checked and advanced in the save's

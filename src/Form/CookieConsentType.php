@@ -33,11 +33,9 @@ use function is_string;
  * Symfony form type for the cookie consent modal.
  *
  * @extends AbstractType<array<string, mixed>|null>
- *
- * @final since 1.19, will be final in 2.0 (not an extension point; decorate or replace the service instead)
  */
 #[FormKitConfig('cookie_consent')]
-class CookieConsentType extends AbstractType
+final class CookieConsentType extends AbstractType
 {
     use FormOptionsTrait;
 

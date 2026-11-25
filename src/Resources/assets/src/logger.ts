@@ -26,6 +26,31 @@ function isQuiet(): boolean {
   }
 }
 
+/** Key on `globalThis` of the names whose "script loaded" line this page already printed (REQ-ASSETS-005 once-guard). */
+const SCRIPT_LOADED_KEY = '__nowoScriptLoaded';
+
+/**
+ * Remembers `name` for this page and tells whether its line was already printed: a script loaded twice (Turbo, a
+ * fragment, two copies of the asset) logs one line.
+ */
+function alreadyPrinted(name: string): boolean {
+  const registry = globalThis as { [SCRIPT_LOADED_KEY]?: unknown };
+  let printed = registry[SCRIPT_LOADED_KEY];
+  if (!(printed instanceof Set)) {
+    printed = new Set<string>();
+    registry[SCRIPT_LOADED_KEY] = printed;
+  }
+  const names = printed as Set<string>;
+  if (names.has(name)) return true;
+  names.add(name);
+  return false;
+}
+
+/** Forgets the printed "script loaded" names (tests only). */
+export function clearScriptLoadedForTest(): void {
+  delete (globalThis as { [SCRIPT_LOADED_KEY]?: unknown })[SCRIPT_LOADED_KEY];
+}
+
 const STYLES = {
   script: 'color:#0ea5e9;font-weight:bold',
   debug: 'color:#6b7280',
@@ -120,7 +145,7 @@ export function createBundleLogger(name: string, options: BundleLoggerOptions = 
 
   return {
     scriptLoaded(): void {
-      if (isQuiet()) return;
+      if (isQuiet() || alreadyPrinted(name)) return;
       logScriptLoaded(prefix, buildTime);
     },
 

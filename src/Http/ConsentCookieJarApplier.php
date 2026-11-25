@@ -18,7 +18,7 @@ use function array_map;
  * HTTP edge of the framework-free consent cookie port (1.30, REQ-ARCH-001 rule 3).
  *
  * Reads the request cookie names into a {@see ConsentRequestCookies} and writes a {@see ConsentCookieJar} on the
- * response with exactly the `Set-Cookie` attributes the deprecated `CookieHandlerInterface` methods used. Stateless.
+ * response with exactly the `Set-Cookie` attributes of 1.x (path `/`, no domain, `Secure`, `SameSite=Lax`). Stateless.
  */
 final class ConsentCookieJarApplier
 {

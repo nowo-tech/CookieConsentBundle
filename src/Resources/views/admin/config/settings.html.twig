@@ -1,29 +1,8 @@
 {#
   Consent profile settings, one section (tab) per route (REQ-UI-003): UiKit settings scaffold.
   View model: page (View\SettingsPage, AdminPageFactory::settings(); only the current section has its form).
-  Data blocks: nowo_ui_settings_section (the deprecated web_ui.chrome.templates.form_fields partial renders inside
-  the section form first when configured).
+  Data blocks: nowo_ui_settings_section (UiKit's).
   Area navigation: page.header.tabs (View\AreaNav, rendered by the UiKit page header). Form theme: the host's
-  twig.form_themes; the deprecated web_ui.chrome.templates.form_theme reaches the scaffold as
-  section.formThemes (current section).
+  twig.form_themes.
 #}
 {% extends '@NowoUiKit/page/settings.html.twig' %}
-
-{% block nowo_ui_styles %}
-    {{ parent() }}
-    {%- if nowo_cookie_consent_admin_chrome.templates.styles_after|default(null) %}{{ include(nowo_cookie_consent_admin_chrome.templates.styles_after) }}{% endif -%}
-{% endblock %}
-
-{% block nowo_ui_settings_section %}
-    {%- if section.form and nowo_cookie_consent_admin_chrome.templates.form_fields|default(null) %}
-        {{ form_start(section.form, {attr: {class: nowo_ui_class('form', page.bundle), 'data-nowo-ui-region': 'form'}}) }}
-            {{ include(nowo_cookie_consent_admin_chrome.templates.form_fields, {form: section.form}, false) }}
-            {{ form_rest(section.form) }}
-            <div class="{{ nowo_ui_class('form_actions', page.bundle) }}"{{ nowo_ui_attrs('form_actions', page.bundle) }}>
-                <button type="submit" class="{{ nowo_ui_class('btn_primary', page.bundle) }}">{{ section.submitLabel|nowo_ui_trans }}</button>
-            </div>
-        {{ form_end(section.form) }}
-    {% else %}
-        {{ parent() }}
-    {% endif -%}
-{% endblock %}

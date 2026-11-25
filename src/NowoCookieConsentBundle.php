@@ -8,9 +8,9 @@ use Doctrine\Bundle\DoctrineBundle\DependencyInjection\Compiler\DoctrineOrmMappi
 use Nowo\CookieConsentBundle\DependencyInjection\Compiler\ConsentCookieWriterPass;
 use Nowo\CookieConsentBundle\DependencyInjection\Compiler\CookieConsentCommitTrackingPass;
 use Nowo\CookieConsentBundle\DependencyInjection\Compiler\CookieConsentEntityManagerPass;
-use Nowo\CookieConsentBundle\DependencyInjection\Compiler\CookieConsentHostFlushNoticePass;
 use Nowo\CookieConsentBundle\DependencyInjection\Compiler\CookieConsentPrivateEntityManagerPass;
 use Nowo\CookieConsentBundle\DependencyInjection\Compiler\CookieConsentProvisionerPass;
+use Nowo\CookieConsentBundle\DependencyInjection\Compiler\CookieConsentRemovedPortsPass;
 use Nowo\CookieConsentBundle\DependencyInjection\Compiler\CookieConsentSecurityPass;
 use Nowo\CookieConsentBundle\DependencyInjection\Compiler\CookieConsentWithoutDoctrinePass;
 use Nowo\CookieConsentBundle\DependencyInjection\Compiler\TwigPathsPass;
@@ -55,18 +55,19 @@ class NowoCookieConsentBundle extends Bundle
         // 1.31 (REQ-RUNTIME-003): scope the commit-tracking middleware before DoctrineBundle's MiddlewaresPass (priority 0).
         $container->addCompilerPass(new CookieConsentCommitTrackingPass(), PassConfig::TYPE_BEFORE_OPTIMIZATION, 5);
 
-        // 1.34 (doctrine.private_entity_manager: true): the private manager's source and its DBAL middleware, before
-        // DoctrineBundle's MiddlewaresPass (priority 0).
+        // 1.34 / 2.0: the private manager (the only mode on the default manager), its source and its DBAL middleware,
+        // before DoctrineBundle's MiddlewaresPass (priority 0).
         $container->addCompilerPass(new CookieConsentPrivateEntityManagerPass(), PassConfig::TYPE_BEFORE_OPTIMIZATION, 5);
 
         // 1.36: the provisioning port's manager is created on doctrine.entity_manager, else the default manager.
         $container->addCompilerPass(new CookieConsentProvisionerPass(), PassConfig::TYPE_BEFORE_OPTIMIZATION);
 
-        // 1.35 (REQ-ARCH-001 rule 6 deprecation layer): the private_entity_manager notice and the host-flush probe when
-        // the bundle writes through the application's default manager.
-        $container->addCompilerPass(new CookieConsentHostFlushNoticePass(), PassConfig::TYPE_BEFORE_OPTIMIZATION);
+        // 2.0: a host service still using a removed type fails the build (before optimization: loader errors still exist).
+        $container->addCompilerPass(new CookieConsentRemovedPortsPass(), PassConfig::TYPE_BEFORE_OPTIMIZATION, 1000);
+        // ... and again after AutowireAsDecoratorPass (100), for an #[AsDecorator] of a removed port.
+        $container->addCompilerPass(new CookieConsentRemovedPortsPass(), PassConfig::TYPE_BEFORE_OPTIMIZATION, 99);
 
-        // 1.30: after decoration and alias resolution, pick the consent cookie port once (REQ-ARCH-001 rule 3).
+        // 2.0: after decoration and alias resolution, refuse a decorated / replaced CookieHandler (REQ-ARCH-001 rule 3).
         $container->addCompilerPass(new ConsentCookieWriterPass(), PassConfig::TYPE_BEFORE_REMOVING);
     }
 

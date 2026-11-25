@@ -13,7 +13,6 @@ use Doctrine\DBAL\Schema\ColumnEditor;
 use Doctrine\DBAL\Schema\Schema;
 use Doctrine\DBAL\Schema\Table;
 use Doctrine\ORM\Tools\Event\GenerateSchemaEventArgs;
-use Doctrine\ORM\Tools\Event\GenerateSchemaTableEventArgs;
 use Doctrine\Persistence\ManagerRegistry;
 use Nowo\CookieConsentBundle\Entity\CookieConsentLog;
 use Psr\Log\LoggerInterface;
@@ -25,7 +24,6 @@ use function is_object;
 use function is_string;
 use function method_exists;
 use function preg_match;
-use function trigger_deprecation;
 use function version_compare;
 
 /**
@@ -137,18 +135,6 @@ final readonly class ConsentLogCollationListener
         if ($table !== $original) {
             $args->setSchema($schema->edit()->dropTableByUnquotedName($tableName)->addTable($table)->create());
         }
-    }
-
-    /**
-     * No longer subscribed (1.33.1, audit XI): replacing the table there lost its foreign keys. Kept for BC; does nothing
-     * but trigger a deprecation (1.35).
-     *
-     * @deprecated since 1.33.1, the collation is applied on postGenerateSchema ({@see self::postGenerateSchema()}); removed in 2.0
-     */
-    public function postGenerateSchemaTable(GenerateSchemaTableEventArgs $args): void
-    {
-        unset($args);
-        trigger_deprecation('nowo-tech/cookie-consent-bundle', '1.35', 'Calling "%s::postGenerateSchemaTable()" is deprecated since 1.33.1 and does nothing (the collation is applied on postGenerateSchema); it is removed in 2.0.', self::class);
     }
 
     /**

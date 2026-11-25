@@ -7,7 +7,6 @@ namespace Nowo\CookieConsentBundle\DependencyInjection;
 use DateInterval;
 use Exception;
 use InvalidArgumentException;
-use Nowo\CookieConsentBundle\Admin\AdminChrome;
 use Nowo\CookieConsentBundle\Config\PreferencesBubbleIconSanitizer;
 use Nowo\CookieConsentBundle\Enum\CategoryEnum;
 use Nowo\CookieConsentBundle\Enum\DisabledRoutesEnum;
@@ -15,6 +14,7 @@ use Nowo\TransactionDoctrine\Symfony\Conflict\ConflictResponsePolicy;
 use Symfony\Component\Config\Definition\Builder\ArrayNodeDefinition;
 use Symfony\Component\Config\Definition\Builder\TreeBuilder;
 use Symfony\Component\Config\Definition\ConfigurationInterface;
+use Symfony\Component\Config\Definition\Exception\InvalidConfigurationException;
 
 use function array_diff_key;
 use function array_key_exists;
@@ -25,6 +25,8 @@ use function is_array;
 use function is_bool;
 use function is_string;
 use function sprintf;
+use function strpos;
+use function substr;
 use function trim;
 
 use const FILTER_NULL_ON_FAILURE;
@@ -32,10 +34,8 @@ use const FILTER_VALIDATE_BOOL;
 
 /**
  * Defines the configuration tree for the cookie consent bundle.
- *
- * @final since 1.19, will be final in 2.0 (not an extension point; decorate or replace the service instead)
  */
-class Configuration implements ConfigurationInterface
+final class Configuration implements ConfigurationInterface
 {
     public const ALIAS = 'nowo_cookie_consent';
 
@@ -52,6 +52,24 @@ class Configuration implements ConfigurationInterface
         'settings'                => '@NowoCookieConsentBundle/admin/config/settings.html.twig',
     ];
 
+    /**
+     * 2.0: keys removed with their replacement (UPGRADING "To 2.0.0"). A host config that still sets one fails the build
+     * with this message instead of a generic "unrecognized option".
+     *
+     * @var array<string, string>
+     */
+    public const REMOVED_KEYS = [
+        'table_prefix'         => 'use "nowo_cookie_consent.doctrine.table_prefix" (deprecated since 1.3)',
+        'doctrine.connection'  => 'use "nowo_cookie_consent.doctrine.entity_manager" to map the bundle entities on another entity manager (ignored since 1.15)',
+        'web_ui.path_prefix'   => 'use the "prefix" of the bundle routes import (ignored since 1.15)',
+        'web_ui.css_framework' => 'set "nowo_ui_kit.css_framework" (deprecated since 1.16)',
+        'web_ui.icon_set'      => 'set "nowo_ui_kit.icon_set" (deprecated since 1.16)',
+        'web_ui.chrome'        => 'configure "nowo_ui_kit.theme.bundles.NowoCookieConsentBundle" (UiKit theme slots, partials and page scaffolds; deprecated since 1.16)',
+    ];
+
+    /** 2.0: the build error of `doctrine.private_entity_manager: false` (the option no longer turns the private manager off). */
+    public const PRIVATE_ENTITY_MANAGER_FALSE_REMOVED = '"nowo_cookie_consent.doctrine.private_entity_manager: false" was removed in 2.0: profiles and cookie definitions on your default entity manager are always written through the bundle\'s private entity manager (same connection and tables), which never flushes your manager. Remove the key (a dedicated "doctrine.entity_manager" keeps working unchanged). See UPGRADING.md "To 2.0.0".';
+
     /** 1.x default of web_ui.layout_template (removed in 1.16: it loaded Bootstrap from a CDN). */
     public const LEGACY_LAYOUT_TEMPLATE = '@NowoCookieConsentBundle/admin/layout.html.twig';
 
@@ -66,7 +84,11 @@ class Configuration implements ConfigurationInterface
         $rootNode    = $treeBuilder->getRootNode();
 
         $rootNode
-            ->addDefaultsIfNotSet();
+            ->addDefaultsIfNotSet()
+            ->beforeNormalization()
+                ->ifArray()
+                ->then(static fn (array $v): array => self::refuseRemovedKeys($v))
+            ->end();
         $this->addDoctrineToUseCookieInventorySections($rootNode);
         $this->addCookieInventoryToRouteTargetingModeSections($rootNode);
         $this->addTargetRoutesToPreferenceSectionsSections($rootNode);
@@ -87,30 +109,25 @@ class Configuration implements ConfigurationInterface
                     ->info('Doctrine DBAL connection and table prefix for cookie consent entities.')
                     ->addDefaultsIfNotSet()
                     ->children()
-                        ->scalarNode('connection')
-                            ->info('Deprecated since 1.15 and ignored: use doctrine.entity_manager to map the entities on another entity manager.')
-                            ->defaultValue('default')
-                            ->setDeprecated('nowo-tech/cookie-consent-bundle', '1.15', 'The "%path%.%node%" option is ignored; use "nowo_cookie_consent.doctrine.entity_manager" to map the bundle entities on another entity manager. It will be removed in 2.0.')
-                        ->end()
                         ->scalarNode('entity_manager')
                             ->info('Name of the Doctrine entity manager the bundle entities are mapped on (e.g. a dedicated "cookie_consent" manager). Null = the default entity manager.')
                             ->defaultNull()
                         ->end()
                         ->booleanNode('private_entity_manager')
-                            ->info('Since 1.34.0 (REQ-ARCH-001 rule 6, opt-in): true = the bundle reads and writes its profiles and cookie definitions through a private entity manager of its own, created on the connection, mapping and event manager of doctrine.entity_manager (else the default entity manager). Same tables, nothing else to configure; a profile or cookie definition save never flushes the application\'s manager. false = the 1.x behaviour (the bundle writes through the manager that maps its entities), deprecated since 1.35 and removed in 2.0. Null (default) = false. Since 1.35, null and false trigger a deprecation notice when the entities are on the application\'s default manager (doctrine.entity_manager unset or naming it): 2.0 always writes through the private manager (a dedicated doctrine.entity_manager stays as the DDD option, without notice).')
+                            ->info('Since 2.0 the bundle always reads and writes its profiles and cookie definitions through a private entity manager of its own, created on the connection, mapping and event manager of your default entity manager: same tables, and a profile or cookie definition save never flushes your manager. true = no effect (deprecated, removed in 3.0; with a dedicated doctrine.entity_manager it keeps the 1.34 meaning: the private manager is created on that manager). false = build error (removed in 2.0). Null (default) = the private manager, or the dedicated doctrine.entity_manager as is.')
                             ->defaultNull()
+                            ->validate()
+                                ->ifTrue(static fn ($v): bool => $v === false)
+                                ->then(static function (): never {
+                                    throw new InvalidArgumentException(self::PRIVATE_ENTITY_MANAGER_FALSE_REMOVED);
+                                })
+                            ->end()
                         ->end()
                         ->scalarNode('table_prefix')
                             ->info('Prefix prepended to table names (dashboard_cookie_log, dashboard_cookie_config, …). Empty = no prefix.')
                             ->defaultValue('')
                         ->end()
                     ->end()
-                ->end()
-                ->scalarNode('table_prefix')
-                    ->defaultValue('')
-                    ->setDeprecated('nowo-tech/cookie-consent-bundle', '1.3', 'The "%path%.%node%" option is deprecated: use "nowo_cookie_consent.doctrine.table_prefix" instead. It will be removed in 2.0.')
-                    ->info('Deprecated. Use doctrine.table_prefix (e.g. "app_" yields app_dashboard_cookie_log).')
-                    ->example('app_')
                 ->end()
                 ->arrayNode('categories')
                     ->scalarPrototype()->end()
@@ -333,16 +350,6 @@ class Configuration implements ConfigurationInterface
                     ->defaultTrue()
                     ->info('When false, admin access subscriber is not registered (routes still load; prefer security firewall).')
                 ->end()
-                ->scalarNode('path_prefix')
-                    ->defaultValue('/cookie-consent-config')
-                    ->cannotBeEmpty()
-                    ->info('Deprecated since 1.15 and ignored: admin routes are always mounted under /cookie-consent-config (use the import prefix of the bundle routes to move them).')
-                    ->setDeprecated('nowo-tech/cookie-consent-bundle', '1.15', 'The "%path%.%node%" option is ignored (admin routes are always /cookie-consent-config/...; use the "prefix" of the routes import to move them) and will be removed in 2.0.')
-                    ->validate()
-                        ->ifTrue(static fn ($v): bool => !is_string($v) || !str_starts_with($v, '/'))
-                        ->thenInvalid('path_prefix must be a string starting with /')
-                    ->end()
-                ->end()
                 ->scalarNode('layout_template')
                     ->defaultNull()
                     ->info('Per-bundle layout override of the admin pages (REQ-UI-003). Null (default) = the UiKit admin layout (nowo_ui_kit.layouts.admin). The layout must render the UiKit canonical blocks (nowo_ui_content, nowo_ui_page_header, …).')
@@ -359,90 +366,11 @@ class Configuration implements ConfigurationInterface
                         })
                     ->end()
                 ->end()
-                ->enumNode('css_framework')
-                    ->values([...self::CSS_FRAMEWORKS, null])
-                    ->defaultNull()
-                    ->info('Deprecated since 1.16: set nowo_ui_kit.css_framework. When set (and nowo_ui_kit.css_framework is not), seeds the UiKit stack.')
-                    ->setDeprecated('nowo-tech/cookie-consent-bundle', '1.16', 'The "%path%.%node%" option is deprecated: the admin pages inherit nowo_ui_kit.css_framework. It will be removed in 2.0.')
-                ->end()
-                ->enumNode('icon_set')
-                    ->values(['bootstrap-icons', 'tabler-icons', 'ux_icon', 'svg_inline', 'none', null])
-                    ->defaultNull()
-                    ->info('Deprecated since 1.16: set nowo_ui_kit.icon_set. When set (and nowo_ui_kit.icon_set is not), seeds the UiKit icon set.')
-                    ->setDeprecated('nowo-tech/cookie-consent-bundle', '1.16', 'The "%path%.%node%" option is deprecated: the admin pages inherit nowo_ui_kit.icon_set. It will be removed in 2.0.')
-                ->end()
                 ->integerNode('list_page_size')
                     ->defaultValue(20)
                     ->min(1)
                     ->max(200)
                     ->info('Default page size for admin cookie definition lists.')
-                ->end()
-            ->end();
-    }
-
-    /**
-     * Adds the `chrome` section.
-     */
-    private function addWebUiChromeSection(ArrayNodeDefinition $webUi): void
-    {
-        $webUi
-            ->children()
-                ->arrayNode('chrome')
-                    ->info('Deprecated since 1.16 (1.13 admin chrome hooks): bridged into nowo_ui_kit.theme.bundles.NowoCookieConsentBundle; see docs/UPGRADING.md "Template contract".')
-                    ->setDeprecated('nowo-tech/cookie-consent-bundle', '1.16', 'The "%path%.%node%" option is deprecated: the admin pages use the UiKit page scaffolds and theme slots; configure nowo_ui_kit.theme.bundles.NowoCookieConsentBundle (see UPGRADING "Template contract"). It will be removed in 2.0.')
-                    ->addDefaultsIfNotSet()
-                    ->children()
-                        ->enumNode('page_title_tag')
-                            ->values(AdminChrome::PAGE_TITLE_TAGS)
-                            ->defaultValue('h1')
-                            ->info('Ignored since 1.16: the heading comes from the UiKit page_header partial (override it through theme.partials.page_header).')
-                        ->end()
-                        ->enumNode('row_actions_display')
-                            ->values(AdminChrome::ROW_ACTIONS_DISPLAYS)
-                            ->defaultValue('inherit')
-                            ->info('Row actions display of the cookie list: text | icon | icon_text | inherit (default: nowo_ui_kit.row_actions_display).')
-                        ->end()
-                        ->arrayNode('classes')
-                            ->info('1.x element key => classes (see AdminChrome::SLOT_MAP), bridged into the UiKit theme slots.')
-                            ->useAttributeAsKey('name')
-                            ->normalizeKeys(false)
-                            ->scalarPrototype()->end()
-                            ->validate()
-                                ->ifTrue(static fn (array $v): bool => array_diff_key($v, AdminChrome::DEFAULT_CLASSES) !== [])
-                                ->then(static function (array $v): never {
-                                    throw new InvalidArgumentException(sprintf('Unknown web_ui.chrome.classes key(s): %s. Known keys: %s.', implode(', ', array_keys(array_diff_key($v, AdminChrome::DEFAULT_CLASSES))), implode(', ', array_keys(AdminChrome::DEFAULT_CLASSES))));
-                                })
-                            ->end()
-                        ->end()
-                        ->arrayNode('attributes')
-                            ->info('1.x element key (same keys as classes) => extra HTML attributes, bridged into the UiKit theme slot attributes.')
-                            ->useAttributeAsKey('name')
-                            ->normalizeKeys(false)
-                            ->arrayPrototype()
-                                ->useAttributeAsKey('name')
-                                ->normalizeKeys(false)
-                                ->scalarPrototype()->end()
-                            ->end()
-                            ->validate()
-                                ->ifTrue(static fn (array $v): bool => array_diff_key($v, AdminChrome::DEFAULT_CLASSES) !== [])
-                                ->then(static function (array $v): never {
-                                    throw new InvalidArgumentException(sprintf('Unknown web_ui.chrome.attributes key(s): %s. Known keys: %s.', implode(', ', array_keys(array_diff_key($v, AdminChrome::DEFAULT_CLASSES))), implode(', ', array_keys(AdminChrome::DEFAULT_CLASSES))));
-                                })
-                            ->end()
-                        ->end()
-                        ->arrayNode('templates')
-                            ->info('Partial paths: tabs / pagination (bridged to the UiKit partials), form_theme, form_fields, styles_after (still applied by the admin pages).')
-                            ->useAttributeAsKey('name')
-                            ->normalizeKeys(false)
-                            ->scalarPrototype()->end()
-                            ->validate()
-                                ->ifTrue(static fn (array $v): bool => array_diff_key($v, AdminChrome::DEFAULT_TEMPLATES) !== [])
-                                ->then(static function (array $v): never {
-                                    throw new InvalidArgumentException(sprintf('Unknown web_ui.chrome.templates key(s): %s. Known keys: %s.', implode(', ', array_keys(array_diff_key($v, AdminChrome::DEFAULT_TEMPLATES))), implode(', ', array_keys(AdminChrome::DEFAULT_TEMPLATES))));
-                                })
-                            ->end()
-                        ->end()
-                    ->end()
                 ->end()
             ->end();
     }
@@ -460,7 +388,6 @@ class Configuration implements ConfigurationInterface
                 ->then(static fn (array $v): array => self::normalizeWebUi($v))
             ->end();
         $this->addWebUiEnabledToListPageSizeSections($webUi);
-        $this->addWebUiChromeSection($webUi);
     }
 
     /**
@@ -541,6 +468,29 @@ class Configuration implements ConfigurationInterface
                     ->end()
                 ->end()
             ->end();
+    }
+
+    /**
+     * 2.0: fails with a message naming the replacement when the host config still sets a key removed in 2.0
+     * ({@see self::REMOVED_KEYS}), instead of Symfony's generic "unrecognized option".
+     *
+     * @param array<mixed> $config one raw `nowo_cookie_consent` config array
+     *
+     * @return array<mixed>
+     */
+    private static function refuseRemovedKeys(array $config): array
+    {
+        foreach (self::REMOVED_KEYS as $path => $replacement) {
+            $dot     = strpos($path, '.');
+            $section = $dot === false ? null : substr($path, 0, $dot);
+            $key     = $dot === false ? $path : substr($path, $dot + 1);
+            $node    = $section === null ? $config : ($config[$section] ?? null);
+            if (is_array($node) && array_key_exists($key, $node)) {
+                throw new InvalidConfigurationException(sprintf('The "nowo_cookie_consent.%s" option was removed in 2.0: %s. See UPGRADING.md "To 2.0.0".', $path, $replacement));
+            }
+        }
+
+        return $config;
     }
 
     /**

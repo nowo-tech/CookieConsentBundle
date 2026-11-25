@@ -4,6 +4,10 @@ services:
     _defaults:
         autowire: true
         autoconfigure: true
+        bind:
+            # CookieConsent 2.0: the bundle's entities belong to its private entity manager, so the demo's own
+            # profile / cookie pages and seeders write them through it (never through the application's manager).
+            Doctrine\ORM\EntityManagerInterface $entityManager: '@nowo_cookie_consent.private_entity_manager'
 
     App\:
         resource: '../src/'

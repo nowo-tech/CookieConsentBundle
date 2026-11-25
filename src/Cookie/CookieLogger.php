@@ -22,10 +22,8 @@ use Symfony\Component\HttpFoundation\RequestStack;
  * The request and the entity manager are resolved on every {@see self::log()} call: the
  * service is shared and may outlive a single request (FrankenPHP worker mode). Rows are written with DBAL
  * (no entity manager is flushed or reset), so pending host changes are never committed by a consent.
- *
- * @final since 1.19, will be final in 2.0 (not an extension point; decorate or replace the service instead)
  */
-class CookieLogger implements CookieLoggerInterface
+final class CookieLogger implements CookieLoggerInterface
 {
     /** Request attribute: the profile of the page the visitor answered on (1.25, audit JR-L3). */
     public const ANSWERED_CONFIG_ATTRIBUTE = 'nowo_cookie_consent_answered_config';
@@ -100,7 +98,7 @@ class CookieLogger implements CookieLoggerInterface
     /**
      * Builds the log row of one category and queues it for {@see self::log()} (it is not persisted on any entity manager).
      */
-    protected function persistCookieConsentLog(string $category, bool $value, string $ip, string $key): void
+    private function persistCookieConsentLog(string $category, bool $value, string $ip, string $key): void
     {
         $cookieConsentLog = (new CookieConsentLog())
             ->setIpAddress($ip)
@@ -205,7 +203,7 @@ class CookieLogger implements CookieLoggerInterface
      * Anonymizes the client IP before it is stored: IPv4 masks the last octet with `x`,
      * IPv6 keeps only the first 48 bits (the rest is zeroed, same on every Symfony version).
      */
-    protected function anonymizeIp(?string $ip): string
+    private function anonymizeIp(?string $ip): string
     {
         return ConsentIpAnonymizer::anonymize($ip);
     }

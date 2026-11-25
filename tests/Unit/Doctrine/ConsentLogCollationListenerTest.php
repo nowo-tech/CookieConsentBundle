@@ -22,7 +22,6 @@ use Doctrine\ORM\Mapping\ClassMetadata;
 use Doctrine\ORM\Mapping\ClassMetadataFactory;
 use Doctrine\ORM\ORMSetup;
 use Doctrine\ORM\Tools\Event\GenerateSchemaEventArgs;
-use Doctrine\ORM\Tools\Event\GenerateSchemaTableEventArgs;
 use Doctrine\ORM\Tools\SchemaTool;
 use Doctrine\ORM\Tools\ToolEvents;
 use Nowo\CookieConsentBundle\Doctrine\ConsentLogCollationListener;
@@ -31,6 +30,7 @@ use Nowo\CookieConsentBundle\Entity\CookieDefinition;
 use Nowo\CookieConsentBundle\Tests\Support\RecordingLogger;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
+use ReflectionClass;
 
 use function array_map;
 use function array_values;
@@ -38,11 +38,8 @@ use function dirname;
 use function implode;
 use function is_string;
 use function ksort;
-use function restore_error_handler;
-use function set_error_handler;
 use function sort;
 
-use const E_USER_DEPRECATED;
 use const PHP_VERSION_ID;
 
 /**
@@ -168,30 +165,10 @@ final class ConsentLogCollationListenerTest extends TestCase
         self::assertSame('utf8mb4_nopad_bin', $this->collation($args->getSchema()->getTable('t'), 'consent_key_col'));
     }
 
-    public function testTheFormerTableEventDoesNothing(): void
+    public function testTheFormerTableEventMethodIsGone(): void
     {
-        $table = new Table('t');
-        $table->addColumn('cookie_consent_key', 'string', ['length' => 64]);
-        $args = new GenerateSchemaTableEventArgs(new ClassMetadata(CookieConsentLog::class), new Schema(), $table);
-
-        $deprecations = [];
-        // @phpstan-ignore frankenphp.worker.noSetErrorExceptionHandler (test only; restored below)
-        set_error_handler(static function (int $level, string $message) use (&$deprecations): bool {
-            $deprecations[] = $message;
-
-            return true;
-        }, E_USER_DEPRECATED);
-
-        try {
-            (new ConsentLogCollationListener())->postGenerateSchemaTable($args);
-        } finally {
-            restore_error_handler();
-        }
-
-        // 1.35: the no-op announces its removal in 2.0.
-        self::assertSame(['Since nowo-tech/cookie-consent-bundle 1.35: Calling "' . ConsentLogCollationListener::class . '::postGenerateSchemaTable()" is deprecated since 1.33.1 and does nothing (the collation is applied on postGenerateSchema); it is removed in 2.0.'], $deprecations);
-        self::assertSame($table, $args->getClassTable());
-        self::assertNull($this->collation($table, 'cookie_consent_key'));
+        // Removed in 2.0 (a no-op since 1.33.1, audit XI): the collation is applied on postGenerateSchema only.
+        self::assertFalse((new ReflectionClass(ConsentLogCollationListener::class))->hasMethod('postGenerateSchemaTable'));
     }
 
     /**
