@@ -11,6 +11,7 @@ use Symfony\Bundle\FrameworkBundle\KernelBrowser;
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
 
 use function sprintf;
+use function str_contains;
 
 final class CookieConsentConfigControllerTest extends WebTestCase
 {
@@ -35,7 +36,7 @@ final class CookieConsentConfigControllerTest extends WebTestCase
 
         self::assertResponseIsSuccessful();
         self::assertSelectorTextContains('h1', 'Cookie Consent Bundle');
-        self::assertSelectorTextContains('.list-group-item', 'Consenso salvato');
+        self::assertSelectorTextContains('.nowo-ui-list-item', 'Consenso salvato');
         self::assertSelectorTextContains('.nowo-cookie-consent__title', 'Impostazioni cookie');
         self::assertSelectorTextContains('.nowo-cookie-consent__category-title', 'Necessari');
     }
@@ -77,13 +78,18 @@ final class CookieConsentConfigControllerTest extends WebTestCase
         ]);
 
         self::assertResponseRedirects(sprintf('/en/demo/admin/cookie-consent-config/%d', $configId));
-        $client->followRedirect();
+        $crawler = $client->followRedirect();
         self::assertSelectorTextContains('table', 'Cookies FR');
 
-        $client->submitForm('Delete');
+        // The row's Delete button only opens the UiKit confirm dialog; the dialog holds the CSRF delete form.
+        $dialogId = $crawler->filter('tr')->reduce(static fn ($row): bool => str_contains($row->text(), 'Cookies FR'))
+            ->filter('[data-nowo-confirm-open]')->attr('data-nowo-confirm-target');
+        $client->submit($crawler->filter(sprintf('dialog#%s form', $dialogId))->form());
         self::assertResponseRedirects(sprintf('/en/demo/admin/cookie-consent-config/%d', $configId));
         $client->followRedirect();
-        self::assertSelectorTextNotContains('table', 'Cookies FR');
+        // The only translation is gone: the section shows its empty state instead of the table.
+        self::assertSelectorNotExists('table');
+        self::assertStringNotContainsString('Cookies FR', (string) $client->getResponse()->getContent());
     }
 
     public function testNavigationLinksToConfigurationCrud(): void
@@ -93,7 +99,7 @@ final class CookieConsentConfigControllerTest extends WebTestCase
         $client->request('GET', '/en/');
 
         self::assertResponseIsSuccessful();
-        self::assertSelectorExists('a.nav-link[href="/en/demo/admin/cookie-consent-config"]');
+        self::assertSelectorExists('a[data-testid="demo-nav-demo_cookie_consent_config_index"][href="/en/demo/admin/cookie-consent-config"]');
 
         $client->clickLink('Cookie consent config');
         self::assertResponseIsSuccessful();

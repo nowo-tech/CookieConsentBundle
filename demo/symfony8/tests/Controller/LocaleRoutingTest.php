@@ -25,7 +25,7 @@ final class LocaleRoutingTest extends WebTestCase
 
         self::assertResponseIsSuccessful();
         self::assertSelectorExists('html[lang="es"]');
-        self::assertSelectorTextContains('#demoLocaleDropdown', 'ES');
+        self::assertSelectorExists('[data-testid="demo-platform-locales"] a[hreflang="es"][aria-current="true"]');
     }
 
     public function testLocaleSwitcherKeepsCurrentRoute(): void
@@ -36,7 +36,7 @@ final class LocaleRoutingTest extends WebTestCase
         self::assertResponseIsSuccessful();
 
         foreach (['en', 'es', 'it', 'fr', 'de', 'pt', 'nl', 'pl', 'ca'] as $locale) {
-            self::assertSelectorExists(sprintf('a.dropdown-item[href="/%s/demo/admin/cookie-consent-config"]', $locale));
+            self::assertSelectorExists(sprintf('[data-testid="demo-platform-locales"] a[href="/%s/demo/admin/cookie-consent-config"]', $locale));
         }
     }
 
