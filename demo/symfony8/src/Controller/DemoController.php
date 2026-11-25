@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Controller;
 
 use App\Demo\DemoLocale;
+use DateTimeImmutable;
 use Nowo\CookieConsentBundle\Enum\CookieNameEnum;
 use Nowo\FormKitBundle\Form\CsrfOnlyFormFactory;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -53,8 +54,8 @@ class DemoController extends AbstractController
             throw new UnprocessableEntityHttpException('Invalid CSRF token.');
         }
 
-        $response = $this->redirectToRoute('demo_home');
-        $expiredAt = new \DateTimeImmutable('1970-01-01');
+        $response  = $this->redirectToRoute('demo_home');
+        $expiredAt = new DateTimeImmutable('1970-01-01');
 
         foreach ($this->getConsentCookieNames() as $cookieName) {
             $response->headers->setCookie(
@@ -63,7 +64,7 @@ class DemoController extends AbstractController
                     ->withExpires($expiredAt)
                     ->withPath('/')
                     ->withHttpOnly($this->httpOnly)
-                    ->withSameSite(Cookie::SAMESITE_LAX)
+                    ->withSameSite(Cookie::SAMESITE_LAX),
             );
         }
 

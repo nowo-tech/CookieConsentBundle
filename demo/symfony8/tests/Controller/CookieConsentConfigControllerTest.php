@@ -5,7 +5,12 @@ declare(strict_types=1);
 namespace App\Tests\Controller;
 
 use Doctrine\ORM\Tools\SchemaTool;
+use Nowo\CookieConsentBundle\Entity\CookieConsentConfig;
+use Nowo\CookieConsentBundle\Repository\CookieConsentConfigRepository;
+use Symfony\Bundle\FrameworkBundle\KernelBrowser;
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
+
+use function sprintf;
 
 final class CookieConsentConfigControllerTest extends WebTestCase
 {
@@ -45,13 +50,13 @@ final class CookieConsentConfigControllerTest extends WebTestCase
         self::assertResponseIsSuccessful();
 
         $client->submitForm('Create translation', [
-            'cookie_consent_config_translation[locale]' => 'fr',
-            'cookie_consent_config_translation[consentModalTitle]' => 'Cookies',
-            'cookie_consent_config_translation[consentModalDescription]' => 'Nous utilisons des cookies.',
-            'cookie_consent_config_translation[consentModalFooter]' => 'En savoir plus',
-            'cookie_consent_config_translation[consentModalAcceptAllBtn]' => 'Tout accepter',
+            'cookie_consent_config_translation[locale]'                         => 'fr',
+            'cookie_consent_config_translation[consentModalTitle]'              => 'Cookies',
+            'cookie_consent_config_translation[consentModalDescription]'        => 'Nous utilisons des cookies.',
+            'cookie_consent_config_translation[consentModalFooter]'             => 'En savoir plus',
+            'cookie_consent_config_translation[consentModalAcceptAllBtn]'       => 'Tout accepter',
             'cookie_consent_config_translation[consentModalAcceptNecessaryBtn]' => 'Fonctionnels',
-            'cookie_consent_config_translation[privacyRoute]' => '',
+            'cookie_consent_config_translation[privacyRoute]'                   => '',
         ]);
 
         self::assertResponseRedirects(sprintf('/en/demo/admin/cookie-consent-config/%d', $configId));
@@ -62,13 +67,13 @@ final class CookieConsentConfigControllerTest extends WebTestCase
         self::assertResponseIsSuccessful();
 
         $client->submitForm('Save changes', [
-            'cookie_consent_config_translation[locale]' => 'fr',
-            'cookie_consent_config_translation[consentModalTitle]' => 'Cookies FR',
-            'cookie_consent_config_translation[consentModalDescription]' => 'Texte mis à jour.',
-            'cookie_consent_config_translation[consentModalFooter]' => 'Politique',
-            'cookie_consent_config_translation[consentModalAcceptAllBtn]' => 'Tout accepter',
+            'cookie_consent_config_translation[locale]'                         => 'fr',
+            'cookie_consent_config_translation[consentModalTitle]'              => 'Cookies FR',
+            'cookie_consent_config_translation[consentModalDescription]'        => 'Texte mis à jour.',
+            'cookie_consent_config_translation[consentModalFooter]'             => 'Politique',
+            'cookie_consent_config_translation[consentModalAcceptAllBtn]'       => 'Tout accepter',
             'cookie_consent_config_translation[consentModalAcceptNecessaryBtn]' => 'Fonctionnels',
-            'cookie_consent_config_translation[privacyRoute]' => '',
+            'cookie_consent_config_translation[privacyRoute]'                   => '',
         ]);
 
         self::assertResponseRedirects(sprintf('/en/demo/admin/cookie-consent-config/%d', $configId));
@@ -105,12 +110,12 @@ final class CookieConsentConfigControllerTest extends WebTestCase
         self::assertResponseIsSuccessful();
 
         $client->submitForm('Save settings', $this->buildSettingsFormData([
-            'cookie_consent_config_settings[consentModalLayout]' => 'box',
-            'cookie_consent_config_settings[consentModalVariant]' => 'wide',
+            'cookie_consent_config_settings[consentModalLayout]'    => 'box',
+            'cookie_consent_config_settings[consentModalVariant]'   => 'wide',
             'cookie_consent_config_settings[consentModalPositionY]' => 'bottom',
             'cookie_consent_config_settings[consentModalPositionX]' => 'center',
-            'cookie_consent_config_settings[autoShowRouteMode]' => 'except',
-            'cookie_consent_config_settings[autoShowRoutesText]' => 'demo_cookie_consent_config_*',
+            'cookie_consent_config_settings[autoShowRouteMode]'     => 'except',
+            'cookie_consent_config_settings[autoShowRoutesText]'    => 'demo_cookie_consent_config_*',
         ]));
 
         self::assertResponseRedirects(sprintf('/en/demo/admin/cookie-consent-config/%d', $configId));
@@ -134,11 +139,11 @@ final class CookieConsentConfigControllerTest extends WebTestCase
         self::assertResponseIsSuccessful();
 
         $client->submitForm('Save settings', $this->buildSettingsFormData([
-            'cookie_consent_config_settings[name]' => 'Admin profile',
-            'cookie_consent_config_settings[routePatternsText]' => 'demo_cookie_consent_config_*',
-            'cookie_consent_config_settings[priority]' => '10',
-            'cookie_consent_config_settings[default]' => '',
-            'cookie_consent_config_settings[consentModalLayout]' => 'bar',
+            'cookie_consent_config_settings[name]'                  => 'Admin profile',
+            'cookie_consent_config_settings[routePatternsText]'     => 'demo_cookie_consent_config_*',
+            'cookie_consent_config_settings[priority]'              => '10',
+            'cookie_consent_config_settings[default]'               => '',
+            'cookie_consent_config_settings[consentModalLayout]'    => 'bar',
             'cookie_consent_config_settings[consentModalPositionY]' => 'bottom',
         ]));
 
@@ -197,9 +202,9 @@ final class CookieConsentConfigControllerTest extends WebTestCase
         self::assertResponseIsSuccessful();
 
         $client->submitForm('Save settings', $this->buildSettingsFormData([
-            'cookie_consent_config_settings[colorTheme]' => 'light',
+            'cookie_consent_config_settings[colorTheme]'      => 'light',
             'cookie_consent_config_settings[darkModeEnabled]' => '',
-            'cookie_consent_config_settings[twoStepModal]' => '1',
+            'cookie_consent_config_settings[twoStepModal]'    => '1',
         ]));
 
         self::assertResponseRedirects(sprintf('/en/demo/admin/cookie-consent-config/%d', $configId));
@@ -217,63 +222,63 @@ final class CookieConsentConfigControllerTest extends WebTestCase
     private function buildSettingsFormData(array $overrides = []): array
     {
         $checkboxFields = [
-            'cookie_consent_config_settings[enabled]' => true,
-            'cookie_consent_config_settings[default]' => true,
-            'cookie_consent_config_settings[autoShow]' => true,
-            'cookie_consent_config_settings[manageScriptTags]' => true,
-            'cookie_consent_config_settings[autoClearCookies]' => true,
-            'cookie_consent_config_settings[hideFromBots]' => true,
-            'cookie_consent_config_settings[disablePageInteraction]' => true,
-            'cookie_consent_config_settings[lazyHtmlGeneration]' => true,
-            'cookie_consent_config_settings[darkModeEnabled]' => true,
-            'cookie_consent_config_settings[disableTransitions]' => true,
-            'cookie_consent_config_settings[twoStepModal]' => true,
-            'cookie_consent_config_settings[openPreferencesModal]' => true,
-            'cookie_consent_config_settings[manageIframePlaceholders]' => true,
-            'cookie_consent_config_settings[granularCookieSelection]' => true,
-            'cookie_consent_config_settings[preferencesBubbleEnabled]' => true,
-            'cookie_consent_config_settings[consentModalEqualWeightButtons]' => true,
-            'cookie_consent_config_settings[consentModalFlipButtons]' => true,
+            'cookie_consent_config_settings[enabled]'                            => true,
+            'cookie_consent_config_settings[default]'                            => true,
+            'cookie_consent_config_settings[autoShow]'                           => true,
+            'cookie_consent_config_settings[manageScriptTags]'                   => true,
+            'cookie_consent_config_settings[autoClearCookies]'                   => true,
+            'cookie_consent_config_settings[hideFromBots]'                       => true,
+            'cookie_consent_config_settings[disablePageInteraction]'             => true,
+            'cookie_consent_config_settings[lazyHtmlGeneration]'                 => true,
+            'cookie_consent_config_settings[darkModeEnabled]'                    => true,
+            'cookie_consent_config_settings[disableTransitions]'                 => true,
+            'cookie_consent_config_settings[twoStepModal]'                       => true,
+            'cookie_consent_config_settings[openPreferencesModal]'               => true,
+            'cookie_consent_config_settings[manageIframePlaceholders]'           => true,
+            'cookie_consent_config_settings[granularCookieSelection]'            => true,
+            'cookie_consent_config_settings[preferencesBubbleEnabled]'           => true,
+            'cookie_consent_config_settings[consentModalEqualWeightButtons]'     => true,
+            'cookie_consent_config_settings[consentModalFlipButtons]'            => true,
             'cookie_consent_config_settings[preferencesModalEqualWeightButtons]' => true,
-            'cookie_consent_config_settings[preferencesModalFlipButtons]' => true,
+            'cookie_consent_config_settings[preferencesModalFlipButtons]'        => true,
         ];
 
         $data = array_merge([
-            'cookie_consent_config_settings[enabled]' => '1',
-            'cookie_consent_config_settings[name]' => 'Default',
-            'cookie_consent_config_settings[routePatternsText]' => '',
-            'cookie_consent_config_settings[priority]' => '0',
-            'cookie_consent_config_settings[default]' => '1',
-            'cookie_consent_config_settings[autoShow]' => '1',
-            'cookie_consent_config_settings[revision]' => '0',
-            'cookie_consent_config_settings[manageScriptTags]' => '',
-            'cookie_consent_config_settings[autoClearCookies]' => '',
-            'cookie_consent_config_settings[hideFromBots]' => '1',
-            'cookie_consent_config_settings[disablePageInteraction]' => '',
-            'cookie_consent_config_settings[lazyHtmlGeneration]' => '',
-            'cookie_consent_config_settings[colorTheme]' => 'dark-turquoise',
-            'cookie_consent_config_settings[darkModeEnabled]' => '',
-            'cookie_consent_config_settings[disableTransitions]' => '',
-            'cookie_consent_config_settings[twoStepModal]' => '',
-            'cookie_consent_config_settings[openPreferencesModal]' => '',
-            'cookie_consent_config_settings[manageIframePlaceholders]' => '',
-            'cookie_consent_config_settings[granularCookieSelection]' => '',
-            'cookie_consent_config_settings[preferencesBubbleEnabled]' => '1',
-            'cookie_consent_config_settings[preferencesBubblePosition]' => 'bottom-right',
-            'cookie_consent_config_settings[consentModalLayout]' => 'box',
-            'cookie_consent_config_settings[consentModalVariant]' => 'wide',
-            'cookie_consent_config_settings[consentModalPositionY]' => 'bottom',
-            'cookie_consent_config_settings[consentModalPositionX]' => 'center',
-            'cookie_consent_config_settings[consentModalEqualWeightButtons]' => '',
-            'cookie_consent_config_settings[consentModalFlipButtons]' => '',
-            'cookie_consent_config_settings[preferencesModalLayout]' => 'box',
-            'cookie_consent_config_settings[preferencesModalVariant]' => 'wide',
-            'cookie_consent_config_settings[preferencesModalPositionY]' => 'middle',
-            'cookie_consent_config_settings[preferencesModalPositionX]' => 'center',
+            'cookie_consent_config_settings[enabled]'                            => '1',
+            'cookie_consent_config_settings[name]'                               => 'Default',
+            'cookie_consent_config_settings[routePatternsText]'                  => '',
+            'cookie_consent_config_settings[priority]'                           => '0',
+            'cookie_consent_config_settings[default]'                            => '1',
+            'cookie_consent_config_settings[autoShow]'                           => '1',
+            'cookie_consent_config_settings[revision]'                           => '0',
+            'cookie_consent_config_settings[manageScriptTags]'                   => '',
+            'cookie_consent_config_settings[autoClearCookies]'                   => '',
+            'cookie_consent_config_settings[hideFromBots]'                       => '1',
+            'cookie_consent_config_settings[disablePageInteraction]'             => '',
+            'cookie_consent_config_settings[lazyHtmlGeneration]'                 => '',
+            'cookie_consent_config_settings[colorTheme]'                         => 'dark-turquoise',
+            'cookie_consent_config_settings[darkModeEnabled]'                    => '',
+            'cookie_consent_config_settings[disableTransitions]'                 => '',
+            'cookie_consent_config_settings[twoStepModal]'                       => '',
+            'cookie_consent_config_settings[openPreferencesModal]'               => '',
+            'cookie_consent_config_settings[manageIframePlaceholders]'           => '',
+            'cookie_consent_config_settings[granularCookieSelection]'            => '',
+            'cookie_consent_config_settings[preferencesBubbleEnabled]'           => '1',
+            'cookie_consent_config_settings[preferencesBubblePosition]'          => 'bottom-right',
+            'cookie_consent_config_settings[consentModalLayout]'                 => 'box',
+            'cookie_consent_config_settings[consentModalVariant]'                => 'wide',
+            'cookie_consent_config_settings[consentModalPositionY]'              => 'bottom',
+            'cookie_consent_config_settings[consentModalPositionX]'              => 'center',
+            'cookie_consent_config_settings[consentModalEqualWeightButtons]'     => '',
+            'cookie_consent_config_settings[consentModalFlipButtons]'            => '',
+            'cookie_consent_config_settings[preferencesModalLayout]'             => 'box',
+            'cookie_consent_config_settings[preferencesModalVariant]'            => 'wide',
+            'cookie_consent_config_settings[preferencesModalPositionY]'          => 'middle',
+            'cookie_consent_config_settings[preferencesModalPositionX]'          => 'center',
             'cookie_consent_config_settings[preferencesModalEqualWeightButtons]' => '',
-            'cookie_consent_config_settings[preferencesModalFlipButtons]' => '',
-            'cookie_consent_config_settings[autoShowRouteMode]' => 'all',
-            'cookie_consent_config_settings[autoShowRoutesText]' => '',
+            'cookie_consent_config_settings[preferencesModalFlipButtons]'        => '',
+            'cookie_consent_config_settings[autoShowRouteMode]'                  => 'all',
+            'cookie_consent_config_settings[autoShowRoutesText]'                 => '',
         ], $overrides);
 
         foreach (array_keys($data) as $key) {
@@ -285,19 +290,19 @@ final class CookieConsentConfigControllerTest extends WebTestCase
         return $data;
     }
 
-    private function ensureDatabaseSchema(\Symfony\Bundle\FrameworkBundle\KernelBrowser $client): void
+    private function ensureDatabaseSchema(KernelBrowser $client): void
     {
         if (self::$schemaReady) {
             return;
         }
 
         $entityManager = $client->getContainer()->get('doctrine')->getManager();
-        $metadata = $entityManager->getMetadataFactory()->getAllMetadata();
-        $schemaTool = new SchemaTool($entityManager);
+        $metadata      = $entityManager->getMetadataFactory()->getAllMetadata();
+        $schemaTool    = new SchemaTool($entityManager);
         $schemaTool->dropSchema($metadata);
         $schemaTool->createSchema($metadata);
 
-        $default = (new \Nowo\CookieConsentBundle\Entity\CookieConsentConfig())
+        $default = (new CookieConsentConfig())
             ->setDefault(true)
             ->setEnabled(true)
             ->setName('Default');
@@ -307,9 +312,9 @@ final class CookieConsentConfigControllerTest extends WebTestCase
         self::$schemaReady = true;
     }
 
-    private function getDefaultConfigId(\Symfony\Bundle\FrameworkBundle\KernelBrowser $client): int
+    private function getDefaultConfigId(KernelBrowser $client): int
     {
-        $config = $client->getContainer()->get(\Nowo\CookieConsentBundle\Repository\CookieConsentConfigRepository::class)
+        $config = $client->getContainer()->get(CookieConsentConfigRepository::class)
             ->findDefaultEnabled();
 
         self::assertNotNull($config);

@@ -21,6 +21,8 @@ use Symfony\Component\HttpKernel\Exception\UnprocessableEntityHttpException;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Contracts\Translation\TranslatorInterface;
 
+use function sprintf;
+
 #[Route(
     '/{_locale}/demo/admin/cookie-consent-config',
     name: 'demo_cookie_consent_config_',
@@ -91,9 +93,9 @@ class CookieConsentConfigController extends AbstractController
         }
 
         return $this->render('demo/config/show.html.twig', [
-            'config' => $config,
-            'translations' => $config->getTranslations(),
-            'delete_forms' => $deleteForms,
+            'config'              => $config,
+            'translations'        => $config->getTranslations(),
+            'delete_forms'        => $deleteForms,
             'delete_profile_form' => $this->csrfForm(
                 'demo_cookie_consent_config_delete_profile',
                 ['configId' => $config->getId()],
@@ -105,7 +107,7 @@ class CookieConsentConfigController extends AbstractController
     #[Route('/{configId}/new', name: 'new', requirements: ['configId' => '\d+'], methods: ['GET', 'POST'])]
     public function new(int $configId, Request $request, EntityManagerInterface $entityManager): Response
     {
-        $config = $this->getConfig($configId);
+        $config      = $this->getConfig($configId);
         $translation = new CookieConsentConfigTranslation();
         $translation->setConfig($config);
 
@@ -124,7 +126,7 @@ class CookieConsentConfigController extends AbstractController
 
         return $this->render('demo/config/new.html.twig', [
             'config' => $config,
-            'form' => $form,
+            'form'   => $form,
         ]);
     }
 
@@ -132,7 +134,7 @@ class CookieConsentConfigController extends AbstractController
     public function edit(int $id, Request $request, EntityManagerInterface $entityManager): Response
     {
         $translation = $this->getTranslation($id);
-        $form = $this->createForm(CookieConsentConfigTranslationType::class, $translation);
+        $form        = $this->createForm(CookieConsentConfigTranslationType::class, $translation);
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
@@ -145,8 +147,8 @@ class CookieConsentConfigController extends AbstractController
 
         return $this->render('demo/config/edit.html.twig', [
             'translation' => $translation,
-            'config' => $translation->getConfig(),
-            'form' => $form,
+            'config'      => $translation->getConfig(),
+            'form'        => $form,
         ]);
     }
 
@@ -154,14 +156,14 @@ class CookieConsentConfigController extends AbstractController
     public function delete(int $id, Request $request, EntityManagerInterface $entityManager): Response
     {
         $translation = $this->getTranslation($id);
-        $tokenId = 'delete-cookie-consent-config-' . $translation->getId();
+        $tokenId     = 'delete-cookie-consent-config-' . $translation->getId();
 
         if (!$this->isCsrfFormValid('demo_cookie_consent_config_delete', ['id' => $translation->getId()], $tokenId, $request)) {
             throw new UnprocessableEntityHttpException('Invalid CSRF token.');
         }
 
         $configId = $translation->getConfig()?->getId();
-        $locale = $translation->getLocale();
+        $locale   = $translation->getLocale();
         $entityManager->remove($translation);
         $entityManager->flush();
 
@@ -250,8 +252,8 @@ class CookieConsentConfigController extends AbstractController
         }
 
         return $this->render('demo/config/settings.html.twig', [
-            'config' => $config,
-            'form' => $form,
+            'config'         => $config,
+            'form'           => $form,
             'is_new_profile' => $isNew,
         ]);
     }

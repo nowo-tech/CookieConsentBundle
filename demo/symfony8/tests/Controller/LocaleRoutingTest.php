@@ -6,6 +6,8 @@ namespace App\Tests\Controller;
 
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
 
+use function sprintf;
+
 final class LocaleRoutingTest extends WebTestCase
 {
     public function testRootRedirectsToDefaultLocale(): void

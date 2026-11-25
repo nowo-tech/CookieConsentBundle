@@ -11,6 +11,8 @@ use Nowo\CookieConsentBundle\Entity\CookieDefinitionTranslation;
 use Symfony\Bundle\FrameworkBundle\KernelBrowser;
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
 
+use function sprintf;
+
 /**
  * The bundle admin pages (REQ-UI-003 UiKit scaffolds) inside the demo host layout (nowo_ui_kit.layouts.admin).
  */
@@ -33,7 +35,7 @@ final class BundleAdminPagesTest extends WebTestCase
      */
     public function testPageRendersInTheHostLayout(string $path, string $pageType): void
     {
-        $client = static::createClient();
+        $client   = static::createClient();
         $configId = $this->seed($client);
 
         $client->request('GET', sprintf($path, $configId));
@@ -50,7 +52,7 @@ final class BundleAdminPagesTest extends WebTestCase
 
     public function testInventoryCreateAndDeleteThroughTheConfirmDialog(): void
     {
-        $client = static::createClient();
+        $client   = static::createClient();
         $configId = $this->seed($client);
 
         $crawler = $client->request('GET', sprintf('/cookie-consent-config/%d/cookies', $configId));
@@ -60,11 +62,11 @@ final class BundleAdminPagesTest extends WebTestCase
 
         $client->request('GET', sprintf('/cookie-consent-config/%d/cookies/new', $configId));
         $client->submitForm('Save cookie', [
-            'cookie_definition[name]' => '_gid',
-            'cookie_definition[duration]' => '1 day',
-            'cookie_definition[category]' => 'analytics',
+            'cookie_definition[name]'                       => '_gid',
+            'cookie_definition[duration]'                   => '1 day',
+            'cookie_definition[category]'                   => 'analytics',
             'cookie_definition[translations][en][provider]' => 'Google',
-            'cookie_definition[translations][en][purpose]' => 'Distinguishes users.',
+            'cookie_definition[translations][en][purpose]'  => 'Distinguishes users.',
         ]);
         self::assertResponseRedirects(sprintf('/cookie-consent-config/%d/cookies', $configId));
         $crawler = $client->followRedirect();
@@ -80,12 +82,12 @@ final class BundleAdminPagesTest extends WebTestCase
 
     public function testSettingsSectionSaves(): void
     {
-        $client = static::createClient();
+        $client   = static::createClient();
         $configId = $this->seed($client);
 
         $crawler = $client->request('GET', sprintf('/cookie-consent-config/%d/settings/profile', $configId));
         self::assertSelectorExists('[data-nowo-ui-region="tabs"] a[aria-current="page"][href$="/settings/profile"]');
-        $form = $crawler->filter('[data-nowo-ui-region="section"] form')->form();
+        $form                                                 = $crawler->filter('[data-nowo-ui-region="section"] form')->form();
         $form['cookie_consent_config_profile_settings[name]'] = 'Public site';
         $client->submit($form);
 
@@ -97,7 +99,7 @@ final class BundleAdminPagesTest extends WebTestCase
 
     public function testDemoProfilePageLinksTheBundleAdmin(): void
     {
-        $client = static::createClient();
+        $client   = static::createClient();
         $configId = $this->seed($client);
 
         $client->request('GET', sprintf('/en/demo/admin/cookie-consent-config/%d', $configId));
@@ -108,12 +110,12 @@ final class BundleAdminPagesTest extends WebTestCase
     private function seed(KernelBrowser $client): int
     {
         $entityManager = $client->getContainer()->get('doctrine')->getManager();
-        $metadata = $entityManager->getMetadataFactory()->getAllMetadata();
-        $schemaTool = new SchemaTool($entityManager);
+        $metadata      = $entityManager->getMetadataFactory()->getAllMetadata();
+        $schemaTool    = new SchemaTool($entityManager);
         $schemaTool->dropSchema($metadata);
         $schemaTool->createSchema($metadata);
 
-        $config = (new CookieConsentConfig())->setDefault(true)->setEnabled(true)->setName('Default');
+        $config     = (new CookieConsentConfig())->setDefault(true)->setEnabled(true)->setName('Default');
         $definition = (new CookieDefinition())->setName('_ga')->setCategory('analytics')->setDuration('2 years')
             ->addTranslation((new CookieDefinitionTranslation())->setLocale('en')->setProvider('Google')->setPurpose('Analytics'));
         $config->addCookieDefinition($definition);

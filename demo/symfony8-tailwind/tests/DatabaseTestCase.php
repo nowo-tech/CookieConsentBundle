@@ -15,8 +15,8 @@ abstract class DatabaseTestCase extends KernelTestCase
         self::bootKernel();
 
         $entityManager = static::getContainer()->get('doctrine')->getManager();
-        $metadata = $entityManager->getMetadataFactory()->getAllMetadata();
-        $schemaTool = new SchemaTool($entityManager);
+        $metadata      = $entityManager->getMetadataFactory()->getAllMetadata();
+        $schemaTool    = new SchemaTool($entityManager);
         $schemaTool->dropSchema($metadata);
         $schemaTool->createSchema($metadata);
     }

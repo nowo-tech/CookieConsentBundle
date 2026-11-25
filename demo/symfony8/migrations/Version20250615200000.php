@@ -7,6 +7,8 @@ namespace DoctrineMigrations;
 use Doctrine\DBAL\Schema\Schema;
 use Doctrine\Migrations\AbstractMigration;
 
+use function sprintf;
+
 final class Version20250615200000 extends AbstractMigration
 {
     public function getDescription(): string
@@ -16,7 +18,7 @@ final class Version20250615200000 extends AbstractMigration
 
     public function up(Schema $schema): void
     {
-        $configTable = 'demo_dashboard_cookie_config';
+        $configTable      = 'demo_dashboard_cookie_config';
         $translationTable = 'demo_dashboard_cookie_config_translation';
 
         if (!$this->columnExists($configTable, 'color_theme')) {

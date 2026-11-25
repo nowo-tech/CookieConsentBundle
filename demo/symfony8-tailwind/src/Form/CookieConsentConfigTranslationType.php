@@ -18,47 +18,47 @@ class CookieConsentConfigTranslationType extends AbstractType
         $builder
             ->add('locale', TextType::class, [
                 'label' => 'demo.config.form.fields.locale',
-                'help' => 'demo.config.form.fields.locale_help',
-                'attr' => ['placeholder' => 'en'],
+                'help'  => 'demo.config.form.fields.locale_help',
+                'attr'  => ['placeholder' => 'en'],
             ])
             ->add('consentModalTitle', TextType::class, [
                 'label' => 'demo.config.form.fields.modal_title',
-                'help' => 'demo.config.form.fields.modal_title_help',
+                'help'  => 'demo.config.form.fields.modal_title_help',
             ])
             ->add('consentModalDescription', TextareaType::class, [
                 'label' => 'demo.config.form.fields.intro',
-                'help' => 'demo.config.form.fields.intro_help',
-                'attr' => ['rows' => 4],
+                'help'  => 'demo.config.form.fields.intro_help',
+                'attr'  => ['rows' => 4],
             ])
             ->add('consentModalFooter', TextType::class, [
-                'label' => 'demo.config.form.fields.read_more',
-                'help' => 'demo.config.form.fields.read_more_help',
+                'label'    => 'demo.config.form.fields.read_more',
+                'help'     => 'demo.config.form.fields.read_more_help',
                 'required' => false,
             ])
             ->add('consentModalAcceptAllBtn', TextType::class, [
                 'label' => 'demo.config.form.fields.accept_all',
-                'help' => 'demo.config.form.fields.accept_all_help',
+                'help'  => 'demo.config.form.fields.accept_all_help',
             ])
             ->add('consentModalAcceptNecessaryBtn', TextType::class, [
                 'label' => 'demo.config.form.fields.accept_necessary',
-                'help' => 'demo.config.form.fields.accept_necessary_help',
+                'help'  => 'demo.config.form.fields.accept_necessary_help',
             ])
             ->add('preferencesModalSavePreferencesBtn', TextType::class, [
-                'label' => 'demo.config.form.fields.save',
-                'help' => 'demo.config.form.fields.save_help',
+                'label'    => 'demo.config.form.fields.save',
+                'help'     => 'demo.config.form.fields.save_help',
                 'required' => false,
             ])
             ->add('privacyRoute', TextType::class, [
-                'label' => 'demo.config.form.fields.privacy_route',
+                'label'    => 'demo.config.form.fields.privacy_route',
                 'required' => false,
-                'help' => 'demo.config.form.fields.privacy_route_help',
+                'help'     => 'demo.config.form.fields.privacy_route_help',
             ]);
     }
 
     public function configureOptions(OptionsResolver $resolver): void
     {
         $resolver->setDefaults([
-            'data_class' => CookieConsentConfigTranslation::class,
+            'data_class'         => CookieConsentConfigTranslation::class,
             'translation_domain' => 'messages',
         ]);
     }
