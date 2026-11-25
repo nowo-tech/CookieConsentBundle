@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## Table of contents
 
 - [[Unreleased]](#unreleased)
+- [[2.0.0] - 2026-11-25](#200---2026-11-25)
 - [[1.36.1] - 2026-11-23](#1361---2026-11-23)
 - [[1.36.0] - 2026-11-23](#1360---2026-11-23)
 - [[1.35.0] - 2026-11-23](#1350---2026-11-23)
@@ -103,6 +104,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - [[1.0.0] - 2026-06-15](#100---2026-06-15)
 
 ## [Unreleased]
+
+## [2.0.0] - 2026-11-25
 
 2.0.0 (REQ-ARCH-001 rules 3 and 6): only the changes announced in 1.x. An application that runs 1.35+ without
 deprecation notices from this bundle, and does none of the by-hand checks of UPGRADING "Preparing for 2.0", upgrades
