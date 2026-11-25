@@ -26,8 +26,8 @@ scaffolds and keeps its own templates and CSS (no CDN assets).
 | Page | Template | Scaffold | View model | Data blocks filled |
 | --- | --- | --- | --- | --- |
 | Cookie inventory of a profile | `admin/cookie_definition/index.html.twig` | `page/list` | `ListPage` (columns: name, provider, purpose, category, duration, allowedByDefault; rowActions: edit, delete with `Confirm`; pagination; empty state with a create action; header action: create) | `nowo_ui_list_row` |
-| Cookie definition (new / edit) | `admin/cookie_definition/form.html.twig` | `page/form` | `FormPage` (submit "Save cookie", cancel → inventory) | `nowo_ui_form_body` (scalar fields in a two-column grid, "allowed by default", translations as locale tabs `_translations_tabs.html.twig`, then `parent()` for the rest; deprecated `form_fields` partial first when configured — the fields it renders are skipped) |
-| Profile settings (one section per route: profile, behavior, appearance, consent-modal, preferences-modal, route-targeting) | `admin/config/settings.html.twig` | `page/settings` | `SettingsPage` (six `SettingsSection`s with `href` = tabs, `current` = the route section; only the current one carries its form) | `nowo_ui_settings_section` (`parent()`; deprecated `form_fields` partial when configured) |
+| Cookie definition (new / edit) | `admin/cookie_definition/form.html.twig` | `page/form` | `FormPage` (submit "Save cookie", cancel → inventory) | `nowo_ui_form_body` (scalar fields in a two-column grid, "allowed by default", translations as locale tabs `_translations_tabs.html.twig`, then `parent()` for the rest) |
+| Profile settings (one section per route: profile, behavior, appearance, consent-modal, preferences-modal, route-targeting) | `admin/config/settings.html.twig` | `page/settings` | `SettingsPage` (six `SettingsSection`s with `href` = tabs, `current` = the route section; only the current one carries its form) | `nowo_ui_settings_section` (UiKit's) |
 
 Root attributes (`ListPage::attributes` etc.) for tests: `data-testid="cookie-consent-definitions"`,
 `cookie-consent-definition-form`, `cookie-consent-settings`; standard regions are reachable with
@@ -43,7 +43,7 @@ Every page receives:
 
 | Variable | Content |
 | --- | --- |
-| `page` | the view model (`ListPage`, `FormPage`, `SettingsPage`); `page.bundle` = `NowoCookieConsentBundle`, `page.layout` = `web_ui.layout_template`; `page.header.tabs` = the area navigation (`View\AreaNav`: Settings / Cookie inventory, `data-turbo="false"`), rendered by the UiKit page header through the `tabs` partial (region `area-nav`); `page.formThemes` (form page) / `section.formThemes` (current settings section) = the deprecated `web_ui.chrome.templates.form_theme`, else empty |
+| `page` | the view model (`ListPage`, `FormPage`, `SettingsPage`); `page.bundle` = `NowoCookieConsentBundle`, `page.layout` = `web_ui.layout_template`; `page.header.tabs` = the area navigation (`View\AreaNav`: Settings / Cookie inventory, `data-turbo="false"`), rendered by the UiKit page header through the `tabs` partial (region `area-nav`); `page.formThemes` (form page) / `section.formThemes` (current settings section) = empty (the host's `twig.form_themes` apply; 2.0 removed `web_ui.chrome.templates.form_theme`) |
 | 1.x variables | `config`; inventory: `definitions`, `delete_forms`, `pages`, `total`, `pageSize`; form: `definition`, `form` (FormView), `isNew`; settings: `form`, `section`, `sections` — kept for host templates set through `web_ui.templates.<page>` |
 
 **Area navigation.** `Admin\CookieConsentAreaNavProvider` publishes it to the UiKit area-nav registry (area
@@ -119,11 +119,10 @@ The bundle ships no layout of its own (the 1.x Bootstrap-CDN `admin/layout.html.
 
 ## Theme exception (`theme.bundles.NowoCookieConsentBundle`)
 
-Per-bundle classes / attributes / partials go in `nowo_ui_kit.theme.bundles.NowoCookieConsentBundle`. The deprecated
-`nowo_cookie_consent.web_ui.chrome` map (1.13–1.15) is bridged there automatically (prepended, so a host's own
-exception wins); the 1.x keys of a single page (`page_header`, `page_header_form`, `form_actions`,
-`settings_actions`) go to `theme.bundles.NowoCookieConsentBundle.pages.<type>` (UiKit 2.1). Mapping table:
-[UPGRADING — Template contract](UPGRADING.md#template-contract-116).
+Per-bundle classes / attributes / partials go in `nowo_ui_kit.theme.bundles.NowoCookieConsentBundle`; one page's
+classes go to `theme.bundles.NowoCookieConsentBundle.pages.<type>` (UiKit 2.1). The 1.13–1.15
+`nowo_cookie_consent.web_ui.chrome` map was removed in 2.0; the 1.16 mapping table in
+[UPGRADING — Template contract](UPGRADING.md#template-contract-116) says which slot each of its keys became.
 
 ## Allowed exceptions
 

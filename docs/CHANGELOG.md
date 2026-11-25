@@ -104,11 +104,95 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+2.0.0 (REQ-ARCH-001 rules 3 and 6): only the changes announced in 1.x. An application that runs 1.35+ without
+deprecation notices from this bundle, and does none of the by-hand checks of UPGRADING "Preparing for 2.0", upgrades
+without code changes. See UPGRADING "To 2.0.0".
+
 ### Changed
 
+- **BREAKING:** the private entity manager is the only mode on your default entity manager (REQ-ARCH-001 rule 6,
+  announced in 1.35). With DoctrineBundle and `doctrine.entity_manager` unset (or naming your default manager), the
+  bundle reads and writes its profiles, profile translations, cookie definitions and their translations through a
+  private entity manager on the same connection, mapping and tables, which never flushes, clears or detaches your
+  manager. Your pending changes are no longer written by an admin save (1.35's host-flush probe listed them). Code of
+  yours that loads a bundle entity through the bundle's repositories (also through your manager's
+  `getRepository()`), changes it and flushes your manager saves nothing, and persisting a new bundle entity related
+  to one of them through your manager fails ("A new entity was found through the relationship"). Write through the
+  admin, the repository saves or `CookieConsentProvisionerInterface`.
+- **BREAKING:** `doctrine.private_entity_manager: false` fails the container build ("was removed in 2.0"). `true`
+  is still accepted: it has no effect on the default manager and triggers one build-time deprecation (removed in
+  3.0); with a dedicated `doctrine.entity_manager` it keeps its 1.34 meaning (the private manager on that manager).
+  A dedicated `doctrine.entity_manager` without the option (the DDD option) is unchanged: no private manager, no
+  notice.
+- **BREAKING:** `CookieConsentConfigRepository::saveSettings()` and `CookieDefinitionRepository::saveEdit()` refuse,
+  with a `LogicException` and before anything is written, an entity manager that is not the bundle's own or an
+  entity that manager does not hold (2.0 lesson W1-2: a save given your manager would flush your pending changes, a
+  save given an entity of your manager would write nothing or insert it again).
+- **BREAKING:** the 14 classes marked `@final` since 1.19 / 1.25 are `final`: `NowoCookieConsentExtension`,
+  `Configuration`, `TablePrefixListener`, `CookieConsentController`, `CookieConsentType`, `CookieDefinitionType`,
+  `CookieDefinitionTranslationType`, `CookieChecker`, `CookieHandler`, `CookieLogger`, `CookieConsentTwigExtension`,
+  `CookieConsentFormSubscriber`, `CookieConsentOutdatedConsentSubscriber` (and `CookieConsentConfigSettingsType`,
+  removed below). Decorate or replace the services instead.
+- **BREAKING:** the third constructor argument of `CookieConsentFormSubscriber` and the second of
+  `CookieConsentOutdatedConsentSubscriber` (`$cookieHandler`, same name and position) take a
+  `ConsentCookieWriterInterface` instead of the removed `CookieHandlerInterface`.
+- A decorated or replaced `CookieHandler` service fails the container build while `ConsentCookieWriterInterface` is
+  still the bundle's writer (1.x called it through the removed `CookieHandlerInterface`; 2.0 would silently stop
+  calling it). Decorate `nowo_cookie_consent.cookie_writer` or alias the port to your writer.
+- The admin templates no longer render the removed `web_ui.chrome.templates.form_fields` / `styles_after` partials;
+  `admin/config/settings.html.twig` only extends the UiKit settings scaffold. The `nowo_cookie_consent_admin_chrome`
+  Twig global keeps its 1.x shape with the values of a host without `web_ui.chrome`.
+- `CookieConsentAdminTwigExtension::UI_KIT_ADMIN_LAYOUT` is kept and deprecated (removed in 3.0; read
+  `nowo_ui_layout.admin`).
+- The constructor argument `$hostFlushReporter` of `CookieConsentConfigRepository`, `CookieDefinitionRepository` and
+  `CookieDefinitionAdminController` is now `?object`, ignored and deprecated (removed in 3.0).
+- CI: the `1.x` maintenance branch runs the workflow on push and pull request.
+- Browser console: the "script loaded" line prints once per page, also when the script is loaded twice (Turbo, a
+  fragment, two copies of the asset): the logger remembers the printed names on `globalThis` (REQ-ASSETS-005
+  once-guard). The quiet switch and the line itself are unchanged.
+- Dev: `composer.lock` and both demo locks take `twig/twig` 3.31.1 (sandbox advisories CVE-2026-133765,
+  CVE-2026-133767, CVE-2026-133772; `composer audit` is clean). The Composer requirements are unchanged.
+- Dev: PHP-CS-Fixer uses the PER Coding Style sets (`@PER-CS`, `@PER-CS:risky`) instead of `@PSR12`, with `@Symfony`
+  on top and the house overrides last (REQ-CS-009); the demo PHP is checked too, except the Flex-managed
+  `demo/*/config/bundles.php` and `reference.php`.
 - CI (not shipped): the Dependabot asset rebuild (`.github/workflows/dependabot-assets.yml`, was `dependabot.yml`) is split into a read-only build job (no persisted credentials, `pnpm install --frozen-lockfile --ignore-scripts`) and a commit job, the only one with write access, that never installs or builds: it accepts only regular files under the asset paths from the build artifact, commits them and dispatches `ci.yml` (now `workflow_dispatch`-able) so the required checks run on the rebuilt head (audits ZAWD-M1, ZAWD-L2). It now runs on Dependabot npm branches only.
 - Dev: `igor-php/igor-php` require-dev widened to `^0.11.0` (lock updated for that package only); the Igor audit is clean (135 service files OK, 0 KO, 0 WARN).
 - Igor 0.11: `reset()` of `CookieConsentConfigResolver`, `CookieInventoryProvider` and `CookieConsentConfigRepository` now holds the assignments that clear the memo (`clearRuntimeCache()` calls `reset()`, it was the other way round), so Igor sees the properties cleared. Same caches cleared at the same moments; no behaviour change.
+
+### Removed
+
+- **BREAKING:** `Cookie\CookieHandlerInterface` (deprecated since 1.30) and its service alias; use
+  `Cookie\ConsentCookieWriterInterface`. A service or alias with that id, an application class still implementing it,
+  or an `#[AsAlias]` / `#[AsDecorator]` of it fails the container build with a message naming the replacement.
+- **BREAKING:** `CookieHandler::save()`, `clear()` and `saveCookie()` (deprecated since 1.30); use
+  `consentCookies()` / `expiredConsentCookies()` and `Http\ConsentCookieJarApplier::apply()`.
+- **BREAKING:** `Form\CookieConsentConfigSettingsType` (deprecated since 1.5.0, notice since 1.35); use
+  `Form\Settings\CookieConsentConfigFullSettingsType`. An application class still extending it fails the build.
+- **BREAKING:** `Admin\AdminChrome` (deprecated since 1.16) and the `web_ui.chrome` map (all keys); configure
+  `nowo_ui_kit.theme.bundles.NowoCookieConsentBundle`. The bundle no longer prepends anything into `nowo_ui_kit`.
+- **BREAKING:** the configuration keys root `table_prefix` (deprecated since 1.3), `doctrine.connection` (ignored
+  since 1.15), `web_ui.path_prefix` (ignored since 1.15), `web_ui.css_framework` and `web_ui.icon_set` (deprecated
+  since 1.16). Each fails the build with its replacement. The container parameters that only mirrored them are
+  gone: `nowo_cookie_consent.doctrine.connection`, `nowo_cookie_consent.web_ui.path_prefix`,
+  `nowo_cookie_consent.web_ui.css_framework`, `nowo_cookie_consent.web_ui.icon_set`,
+  `nowo_cookie_consent.web_ui.row_actions_display`.
+- **BREAKING:** the Twig globals `nowo_cookie_consent_layout_template`, `nowo_cookie_consent_css_framework`,
+  `nowo_cookie_consent_icon_set` (deprecated since 1.16), with the `CookieConsentAdminTwigExtension` constants
+  `GLOBAL_LAYOUT_TEMPLATE`, `GLOBAL_CSS_FRAMEWORK`, `GLOBAL_ICON_SET` and its constructor
+  arguments. Read `nowo_ui_layout.admin` (or `web_ui.layout_template`), `nowo_ui_kit_css_framework`,
+  `nowo_ui_kit_icon_set`.
+- `Doctrine\ConsentLogCollationListener::postGenerateSchemaTable()` (`@internal`, a no-op since 1.33.1).
+- The 1.35 deprecation layer of the removed host mode: the `private_entity_manager` notices
+  (`NowoCookieConsentExtension::PRIVATE_ENTITY_MANAGER_UNSET_DEPRECATION`, `PRIVATE_ENTITY_MANAGER_FALSE_DEPRECATION`,
+  `privateEntityManagerNotice()`), `DependencyInjection\Compiler\CookieConsentHostFlushNoticePass` and the
+  `@internal` `Doctrine\CookieConsentHostFlushReporter` with its boundary subscriber service.
+
+### Security
+
+- After 2.0.0 is released, the 1.x line receives security fixes for 6 months: Moderate and above are backported to
+  the last 1.x minor; Low ones are fixed in 2.x only. Unchanged by 2.0: the consent log (its columns, the exact-key
+  collation of REQ-SEC-006, the log written before any consent cookie), the GDPR export and erasure, the admin access
+  check, CSRF, the conflict answers.
 
 ## [1.36.1] - 2026-11-23
 
@@ -366,7 +450,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [1.30.2] - 2026-11-13
 
 Next patch: 1.30.2. REQ-SEC-006 (look-alike ids) for the consent key and the consent log. See
-[UPGRADING](UPGRADING.md#unreleased).
+[UPGRADING](UPGRADING.md#to-1302).
 
 ### Security
 
@@ -432,7 +516,7 @@ Next patch: 1.30.2. REQ-SEC-006 (look-alike ids) for the consent key and the con
   `CookieHandler::clear()` and `CookieHandler::saveCookie()`: use `ConsentCookieWriterInterface`; removed in 2.0. A host
   service that implements only the old interface keeps working; one `E_USER_DEPRECATED` notice is reported at container
   build (not per request). See
-  [UPGRADING](UPGRADING.md#unreleased).
+  [UPGRADING](UPGRADING.md#to-1300).
 
 ## [1.29.0] - 2026-11-11
 
@@ -915,7 +999,7 @@ Requires UiKit ^2.2; locale and route-pattern placeholders are translated keys. 
 
 - Requires `nowo-tech/ui-kit-bundle` **^2.2** (default-theme polish: table header hierarchy, striped rows, subtle
   badges, secondary-level section tabs under the area nav, solid destructive confirm button with a close button). See
-  [UPGRADING](UPGRADING.md#unreleased).
+  [UPGRADING](UPGRADING.md#to-1162).
 
 ### Removed
 
