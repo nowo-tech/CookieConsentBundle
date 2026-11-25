@@ -159,6 +159,14 @@ without code changes. See UPGRADING "To 2.0.0".
 - Dev: `igor-php/igor-php` require-dev widened to `^0.11.0` (lock updated for that package only); the Igor audit is clean (135 service files OK, 0 KO, 0 WARN).
 - Igor 0.11: `reset()` of `CookieConsentConfigResolver`, `CookieInventoryProvider` and `CookieConsentConfigRepository` now holds the assignments that clear the memo (`clearRuntimeCache()` calls `reset()`, it was the other way round), so Igor sees the properties cleared. Same caches cleared at the same moments; no behaviour change.
 
+### Fixed
+
+- Browser console: the init, config-fetch, "Consent saved" and warning lines of the consent script printed on every
+  page and ignored the quiet switch (the logger was built with `alwaysLog: true`). They now print only with the debug
+  flag (`data-nowo-debug="true"` on the modal or `<html data-nowo-console="debug">`) and never in quiet mode; the
+  "script loaded" line is the only default output (REQ-ASSETS-005 rule 5, audit ZBN-L1).
+- Demos: the `Kernel.php` docblock named the wrong bundle.
+
 ### Removed
 
 - **BREAKING:** `Cookie\CookieHandlerInterface` (deprecated since 1.30) and its service alias; use

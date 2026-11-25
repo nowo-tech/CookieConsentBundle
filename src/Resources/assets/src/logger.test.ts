@@ -56,4 +56,35 @@ describe('logger', () => {
     getLogger().info('shared');
     expect(console.info).toHaveBeenCalled();
   });
+
+  it('prints nothing but the script-loaded line by default', () => {
+    const log = createBundleLogger('cookie-consent');
+    log.debug('d');
+    log.info('Cookie Consent init');
+    log.warn('w');
+    log.error('e');
+    expect(console.debug).not.toHaveBeenCalled();
+    expect(console.info).not.toHaveBeenCalled();
+    expect(console.warn).not.toHaveBeenCalled();
+    expect(console.error).not.toHaveBeenCalled();
+  });
+
+  it('setDebug turns the level output on and off', () => {
+    const log = createBundleLogger('cookie-consent');
+    log.setDebug(true);
+    log.info('on');
+    log.setDebug(false);
+    log.info('off');
+    expect(console.info).toHaveBeenCalledTimes(1);
+  });
+
+  it('the debug flag never prints in quiet mode', () => {
+    document.documentElement.dataset.nowoConsole = 'quiet';
+    const log = createBundleLogger('cookie-consent', { alwaysLog: true });
+    log.info('silent');
+    log.warn('silent');
+    delete document.documentElement.dataset.nowoConsole;
+    expect(console.info).not.toHaveBeenCalled();
+    expect(console.warn).not.toHaveBeenCalled();
+  });
 });
