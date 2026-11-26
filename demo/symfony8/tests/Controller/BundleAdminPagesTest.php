@@ -43,7 +43,8 @@ final class BundleAdminPagesTest extends WebTestCase
         self::assertResponseIsSuccessful();
         self::assertSelectorExists('main#nowo-ui-content[data-nowo-ui-bundle="NowoCookieConsentBundle"] [data-nowo-ui-page="' . $pageType . '"]');
         self::assertSelectorExists('[data-nowo-ui-region="area-nav"]');
-        self::assertSelectorExists('html[data-nowo-ui-host-tokens]');
+        // REQ-DEMO-014: UiKit's default theme, unchanged — no host theme tokens in this demo.
+        self::assertSelectorNotExists('html[data-nowo-ui-host-tokens]');
         self::assertSelectorNotExists('.nowo-cookie-consent', 'skip_render_routes: no consent banner on admin pages');
         $html = (string) $client->getResponse()->getContent();
         self::assertStringNotContainsString('.placeholder"', $html);
@@ -57,7 +58,7 @@ final class BundleAdminPagesTest extends WebTestCase
 
         $crawler = $client->request('GET', sprintf('/cookie-consent-config/%d/cookies', $configId));
         self::assertSelectorTextContains('[data-nowo-ui-region="table"]', '_ga');
-        self::assertSelectorExists('table[data-demo-table="cookie-consent"]');
+        self::assertSelectorExists('[data-nowo-ui-region="table"] table');
         self::assertCount(1, $crawler->filter('dialog[data-nowo-ui-confirm] form[name^="delete_cookie_definition_"]'));
 
         $client->request('GET', sprintf('/cookie-consent-config/%d/cookies/new', $configId));
